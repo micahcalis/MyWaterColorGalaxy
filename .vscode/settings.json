@@ -1,0 +1,17 @@
+{
+// 1. Tell C++ IntelliSense to look at CMake for include paths
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.clang_format_style": "file",
+
+    // 2. Slang Configuration
+    // If you use 'import MyModule;', Slang needs to know where to look.
+    "slang.additionalSearchPaths": [
+        "${workspaceFolder}/assets",
+        "${workspaceFolder}/assets/shaders" 
+    ],
+    // Helps Slang understand typical Vulkan defines
+    "slang.predefinedMacros": [
+        "__VULKAN__",
+        "ENABLE_SPIRV_CODEGEN"
+    ]
+}

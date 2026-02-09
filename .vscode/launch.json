@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Game",
+            "type": "cppvsdbg",
+            "request": "launch",
+            // POINTS TO YOUR BIN FOLDER (Matched to your CMake)
+            "program": "${workspaceFolder}/bin/Game.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin", // CRITICAL: Sets working dir to /bin
+            "environment": [
+                // Ensures the game finds Vulkan/SDL DLLs
+                { "name": "PATH", "value": "${env:VULKAN_SDK}/Bin;${env:PATH}" }
+            ],
+            "console": "externalTerminal"
+        }
+    ]
+}

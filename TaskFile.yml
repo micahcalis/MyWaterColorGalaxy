@@ -1,0 +1,32 @@
+version: '3'
+
+vars:
+  PROJECT_NAME: "Game"
+  BUILD_DIR: "build"
+  GAME_DIR: "bin"
+  BUILD_TYPE: '{{.BUILD_TYPE | default "Debug"}}'
+
+tasks:
+  configure:
+    desc: Configure the project using CMake and Ninja
+    cmds:
+      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE={{.BUILD_TYPE}}
+    status:
+      - test -f {{.BUILD_DIR}}/build.ninja
+
+  build:
+    desc: Build the project
+    deps: [configure]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} --config {{.BUILD_TYPE}}
+
+  run:
+    desc: Run the compiled executable
+    deps: [build]
+    cmds:
+      - ./{{.GAME_DIR}}/{{.PROJECT_NAME}}
+
+  clean:
+    desc: Remove the build directory
+    cmds:
+      - rm -rf {{.GAME_DIR}}
