@@ -1,6 +1,8 @@
+#include "SDL_events.h"
 #include "SDL_stdinc.h"
 #include "vulkan/vulkan.hpp"
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <fstream>
 #include <vector>
@@ -22,7 +24,7 @@
 
 constexpr uint32_t APP_WIDTH = 800;
 constexpr uint32_t APP_HEIGHT = 600;
-
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<char const*> validationLayers = 
 {
@@ -59,11 +61,12 @@ class HelloTriangleApplication
         vk::raii::PipelineLayout pipelineLayout = nullptr;
         vk::raii::Pipeline graphicsPipeline = nullptr;
         vk::raii::CommandPool commandPool = nullptr;
-        vk::raii::CommandBuffer commandBuffer = nullptr;
-        vk::raii::Semaphore presentCompleteSemaphore = nullptr;
-        vk::raii::Semaphore renderFinishedSemaphore = nullptr;
-        vk::raii::Fence drawFence = nullptr;
-        uint32_t frameIndex;
+        std::vector<vk::raii::CommandBuffer> commandBuffers;
+        std::vector<vk::raii::Semaphore> presentCompleteSemaphores;
+        std::vector<vk::raii::Semaphore> renderFinishedSemaphores;
+        std::vector<vk::raii::Fence> inFlightFences;
+        uint32_t frameIndex = 0;
+        bool frameBufferResized = false;
 
     public:
         void Run()
@@ -94,7 +97,7 @@ class HelloTriangleApplication
             CreateImageViews();
             CreateGraphicsPipeline();
             CreateCommandPool();
-            CreateCommandBuffer();
+            CreateCommandBuffers();
             CreateSyncObjects();
         }
 
@@ -110,8 +113,32 @@ class HelloTriangleApplication
 
         void Cleanup()
         {
+            CleanupSwapchain();
             SDL_DestroyWindow(window);
             SDL_Quit();
+        }
+
+        void CleanupSwapchain()
+        {
+            swapChainImageViews.clear();
+            swapchain = nullptr;
+        }
+
+        void RecreateSwapchain()
+        {
+            int width, height = 0;
+            SDL_GetWindowSizeInPixels(window, &width, &height);
+            while (width == 0 || height == 0)
+            {
+                SDL_GetWindowSizeInPixels(window, &width, &height);
+                SDL_WaitEvent(nullptr);
+            }
+
+            device.waitIdle();
+
+            CleanupSwapchain();
+            CreateSwapchain();
+            CreateImageViews();
         }
 
         void CreateInstance()
@@ -408,11 +435,47 @@ class HelloTriangleApplication
             commandPool = vk::raii::CommandPool(device, commandPoolCreateInfo);
         }
 
-        void RecordCommandBuffer(uint32_t imageIndex)
+        void CreateCommandBuffers()
+        {
+            vk::CommandBufferAllocateInfo commandBufferAllocateInfo{};
+            commandBufferAllocateInfo.commandPool = commandPool;
+            commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+            commandBufferAllocateInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
+
+            commandBuffers = vk::raii::CommandBuffers(device, commandBufferAllocateInfo);
+        }
+
+        void CreateSyncObjects()
+        {
+            presentCompleteSemaphores.clear();
+            renderFinishedSemaphores.clear();
+            inFlightFences.clear();
+
+		   // assert(presentCompleteSemaphores.empty() && renderFinishedSemaphores.empty() && inFlightFences.empty());
+
+            for (size_t i = 0; i < swapchainImages.size(); i++)
+            {
+                renderFinishedSemaphores.emplace_back(device, vk::SemaphoreCreateInfo());
+            }
+
+            for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+            {
+                presentCompleteSemaphores.emplace_back(device, vk::SemaphoreCreateInfo());
+                inFlightFences.emplace_back(vk::raii::Fence(device, { vk::FenceCreateFlagBits::eSignaled }));
+            }
+        }
+
+        void RecordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex)
         {
             commandBuffer.begin({});
 
-            TransitionImageLayout(imageIndex,
+            // if (result != vk::Result::eSuccess)
+            // {
+            //     throw std::runtime_error("CommandBuffer Invalid");
+            // }
+
+            TransitionImageLayout(commandBuffers[frameIndex],
+                imageIndex,
                 vk::ImageLayout::eUndefined,
                 vk::ImageLayout::eColorAttachmentOptimal,
                 {},
@@ -450,7 +513,8 @@ class HelloTriangleApplication
 
             commandBuffer.endRendering();
 
-            TransitionImageLayout(imageIndex,
+            TransitionImageLayout(commandBuffers[frameIndex],
+                imageIndex,
                 vk::ImageLayout::eColorAttachmentOptimal,
                 vk::ImageLayout::ePresentSrcKHR,
                 vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -461,52 +525,81 @@ class HelloTriangleApplication
             commandBuffer.end();
         }
 
-        void CreateCommandBuffer()
-        {
-            vk::CommandBufferAllocateInfo commandBufferAllocateInfo{};
-            commandBufferAllocateInfo.commandPool = commandPool;
-            commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-            commandBufferAllocateInfo.commandBufferCount = 1;
-
-            commandBuffer = std::move(vk::raii::CommandBuffers(device, commandBufferAllocateInfo).front());
-        }
-
-        void CreateSyncObjects()
-        {
-            presentCompleteSemaphore = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
-            renderFinishedSemaphore = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
-            drawFence = vk::raii::Fence(device, { vk::FenceCreateFlagBits::eSignaled });
-        }
-
         void DrawFrame()
         {
-            auto fenceResult = device.waitForFences(*drawFence, vk::True, UINT64_MAX);
-            auto [result, imageIndex] = swapchain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphore, nullptr);
-            RecordCommandBuffer(imageIndex);
-            device.resetFences(*drawFence);
+            auto fenceResult = device.waitForFences(*inFlightFences[frameIndex], vk::True, UINT64_MAX);
+
+            if (fenceResult != vk::Result::eSuccess)
+            {
+                throw std::runtime_error("failed to wait for fence");
+            }
+
+            uint32_t imageIndex = 0;
+            vk::Result result;
+            
+            try 
+            {
+                auto acquireResult = swapchain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphores[frameIndex], nullptr);
+                
+                result = acquireResult.result;  
+                imageIndex = acquireResult.value; 
+            } 
+            catch (const vk::OutOfDateKHRError& e) 
+            {
+                RecreateSwapchain();
+                return; 
+            }
+
+            if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+            {
+                assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady);
+                throw std::runtime_error("failed to acquire swap chain image!");
+            }
+
+            device.resetFences(*inFlightFences[frameIndex]);
+            RecordCommandBuffer(commandBuffers[frameIndex], imageIndex);
             
             auto waitDestinationStageMask = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
             
             vk::SubmitInfo submitInfo{};
             submitInfo.waitSemaphoreCount = 1;
-            submitInfo.pWaitSemaphores = &*presentCompleteSemaphore;
+            submitInfo.pWaitSemaphores = &*presentCompleteSemaphores[frameIndex];
             submitInfo.pWaitDstStageMask = &waitDestinationStageMask;
             submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &*commandBuffer;
+            submitInfo.pCommandBuffers = &*commandBuffers[frameIndex];
             submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pSignalSemaphores = &*renderFinishedSemaphore;
+            submitInfo.pSignalSemaphores = &*renderFinishedSemaphores[frameIndex];
 
-            graphicsQueue.submit(submitInfo, *drawFence);
+            graphicsQueue.submit(submitInfo, *inFlightFences[frameIndex]);
 
             vk::PresentInfoKHR presentInfoKHR{};
             presentInfoKHR.waitSemaphoreCount = 1;
-            presentInfoKHR.pWaitSemaphores = &*renderFinishedSemaphore;
+            presentInfoKHR.pWaitSemaphores = &*renderFinishedSemaphores[frameIndex];
             presentInfoKHR.swapchainCount = 1;
             presentInfoKHR.pSwapchains = &*swapchain;
             presentInfoKHR.pImageIndices = &imageIndex;
             presentInfoKHR.pResults = nullptr;
 
-            result = presentQueue.presentKHR(presentInfoKHR);
+            try 
+            {
+                result = presentQueue.presentKHR(presentInfoKHR);
+            } 
+            catch (const vk::OutOfDateKHRError& e) 
+            {
+                RecreateSwapchain();
+            }
+
+            if ((result == vk::Result::eSuboptimalKHR) || (result == vk::Result::eErrorOutOfDateKHR) || frameBufferResized)
+            {
+                frameBufferResized = false;
+                RecreateSwapchain();
+            }
+            else
+            {
+                assert(result == vk::Result::eSuccess);
+            }
+
+            frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
         }
 
         SDL_Window* CreateWindow()
@@ -537,6 +630,13 @@ class HelloTriangleApplication
                 if (event.type == SDL_QUIT) 
                 {
                     return false; 
+                }
+                else if (event.type == SDL_WINDOWEVENT)
+                {
+                    if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    {
+                        this->frameBufferResized = true;
+                    }
                 }
             }
             return true;
@@ -793,7 +893,8 @@ class HelloTriangleApplication
             return shaderModule;
         }
 
-        void TransitionImageLayout(uint32_t imageIndex,
+        void TransitionImageLayout(vk::CommandBuffer commandBuffer,
+            uint32_t imageIndex,
             vk::ImageLayout oldLayout,
             vk::ImageLayout newLayout,
             vk::AccessFlags2 srcAccessMask,
