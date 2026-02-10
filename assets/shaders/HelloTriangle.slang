@@ -12,7 +12,7 @@ static float3 colors[3] = float3[](
 
 struct VertexData 
 {
-    float4 sv_position : SV_Position;
+    float4 positionCS : SV_Position;
     float3 color;
 };
 
@@ -20,7 +20,7 @@ struct VertexData
 VertexData HelloTriangleVert(uint vertexId : SV_VertexID)
 {
     VertexData output;
-    output.sv_position = float4(positions[vertexId], 0.0, 1.0);
+    output.positionCS = float4(positions[vertexId], 0.0, 1.0);
     output.color = colors[vertexId];
     return output;
 }
@@ -28,5 +28,6 @@ VertexData HelloTriangleVert(uint vertexId : SV_VertexID)
 [shader("fragment")]
 float4 HelloTriangleFrag(VertexData input) : SV_Target
 {
-    return float4(input.color, 1);
+    float2 uv = input.positionCS.xy;
+    return float4(frac(uv / 100.0f), 0, 1);
 }
