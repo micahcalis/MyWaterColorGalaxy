@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL.h>
-#include <filesystem>
 
 namespace Beer::Core
 {
@@ -64,13 +63,6 @@ namespace Beer::Core
         void CreateSyncObjects();
         void RecordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex);
         void DrawFrame();
-        std::vector<char const*> GetRequiredLayers();
-        bool ValidationLayersUnsupported(std::vector<char const*> requiredLayers, std::vector<vk::LayerProperties> layerProperties);
-        static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity, vk::DebugUtilsMessageTypeFlagsEXT type, const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void*);
-        void FilterPhysicalDevices(std::vector<vk::raii::PhysicalDevice>& devices);
-        static uint32_t GetPhysicalDeviceScore(const vk::raii::PhysicalDevice& device, bool& hasGeomShader);
-        void GetQueueFamilyIndices(const std::vector<vk::QueueFamilyProperties> queueFamilyProperties, uint32_t& graphicsIndex, uint32_t& presentIndex);
-        bool IndexIsCompatible(const int presentIndex, const int queueFamilyLength);
         vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> availableFormats);
         static bool IsCorrectFormat(const vk::SurfaceFormatKHR format);
         vk::PresentModeKHR ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes);

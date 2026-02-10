@@ -1,6 +1,7 @@
 #include "Core/Application/Application.hpp"
 #include "Core/Application/SDLUtilities.hpp"
 #include "Core/Application/AssetUtilities.hpp"
+#include "Core/Application/VulkanInitUtilities.hpp"
 #include "SDLUtilities.hpp"
 #include "SDL_events.h"
 #include "SDL_video.h"
@@ -91,7 +92,10 @@ namespace Beer::Core
             context,
             ENABLE_VALIDATION_LAYERS);
 
-        std::vector<const char*> requiredLayers = GetRequiredLayers();
+        std::vector<const char*> requiredLayers = VulkanInitUtilities::GetRequiredLayers(ENABLE_VALIDATION_LAYERS,
+            validationLayers,
+            context);
+
         vk::InstanceCreateInfo createInfo({}, &appInfo, requiredLayers, sdlExtensions);
 
         instance = vk::raii::Instance(context, createInfo);
@@ -109,7 +113,7 @@ namespace Beer::Core
         vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
         debugMessengerCreateInfo.messageSeverity = severityFlags;
         debugMessengerCreateInfo.messageType = messageTypeFlags;
-        debugMessengerCreateInfo.pfnUserCallback = &DebugCallback;
+        debugMessengerCreateInfo.pfnUserCallback = &VulkanInitUtilities::DebugCallback;
 
         debugMessenger = instance.createDebugUtilsMessengerEXT(debugMessengerCreateInfo);
     }
@@ -135,14 +139,15 @@ namespace Beer::Core
             throw std::runtime_error("failed to find GPU's with Vulkan support");
         }
 
-        FilterPhysicalDevices(devices);
+        VulkanInitUtilities::FilterPhysicalDevices(devices,
+            deviceExtensions);
 
         std::multimap<int, vk::raii::PhysicalDevice> deviceCandidates;
 
         for (const auto& device : devices)
         {
             bool hasGeomShader = false;
-            uint32_t score = GetPhysicalDeviceScore(device, hasGeomShader);
+            uint32_t score = VulkanInitUtilities::GetPhysicalDeviceScore(device, hasGeomShader);
 
             if (!hasGeomShader)
             {
@@ -167,10 +172,18 @@ namespace Beer::Core
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
         graphicsIndex = 0;
         uint32_t presentIndex = 0;
-        GetQueueFamilyIndices(queueFamilyProperties, graphicsIndex, presentIndex);
 
-        bool graphicsCompatible = IndexIsCompatible(graphicsIndex, queueFamilyProperties.size());
-        bool presentCompatible = IndexIsCompatible(presentIndex, queueFamilyProperties.size());
+        VulkanInitUtilities::GetQueueFamilyIndices(queueFamilyProperties,
+            graphicsIndex,
+            presentIndex,
+            physicalDevice,
+            surface);
+
+        bool graphicsCompatible = VulkanInitUtilities::IndexIsCompatible(graphicsIndex,
+            queueFamilyProperties.size());
+
+        bool presentCompatible = VulkanInitUtilities::IndexIsCompatible(presentIndex,
+            queueFamilyProperties.size());
 
         if (!graphicsCompatible || !presentCompatible)
         {
@@ -546,129 +559,6 @@ namespace Beer::Core
         }
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-    }
-
-    std::vector<char const*> Application::GetRequiredLayers()
-    {
-        std::vector<char const*> requiredLayers;
-
-        if (ENABLE_VALIDATION_LAYERS)
-        {
-            requiredLayers.assign(validationLayers.begin(), validationLayers.end());
-        }
-
-        auto layerProperties = context.enumerateInstanceLayerProperties();
-
-        if (ValidationLayersUnsupported(requiredLayers, layerProperties))
-        {
-            throw std::runtime_error("One or more required layers are not supported!");
-        }
-
-        return requiredLayers;
-    }
-
-    bool Application::ValidationLayersUnsupported(std::vector<char const*> requiredLayers, std::vector<vk::LayerProperties> layerProperties)
-    {
-        return std::ranges::any_of(requiredLayers, [&layerProperties](auto const& requiredLayer) {
-            return std::ranges::none_of(layerProperties,
-                [requiredLayer](auto const& layerProperty) { return strcmp(layerProperty.layerName, requiredLayer) == 0; });
-        });
-    }
-
-    VKAPI_ATTR vk::Bool32 VKAPI_CALL Application::DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity, vk::DebugUtilsMessageTypeFlagsEXT type, const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void*)
-    {
-        std::cerr << "validation layer: type" << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
-        return vk::False;
-    }
-
-    void Application::FilterPhysicalDevices(std::vector<vk::raii::PhysicalDevice>& devices)
-    {
-        auto devIter = std::erase_if(devices, [&](const vk::raii::PhysicalDevice& device) {
-            auto queueFamilies = device.getQueueFamilyProperties();
-            bool hasGraphicsQueue = std::ranges::any_of(queueFamilies,
-                [](const vk::QueueFamilyProperties& qfp) {
-                    return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) == vk::QueueFlagBits::eGraphics;
-                });
-
-            bool correctVersion = device.getProperties().apiVersion >= VK_API_VERSION_1_3;
-
-            auto availableExtensions = device.enumerateDeviceExtensionProperties();
-
-            bool extensionsSupported = std::ranges::all_of(deviceExtensions,
-                [&](const char* requiredExt) {
-                    return std::ranges::any_of(availableExtensions,
-                        [requiredExt](const vk::ExtensionProperties& availExt) {
-                            return std::strcmp(availExt.extensionName, requiredExt) == 0;
-                        });
-                });
-
-            bool isSuitable = hasGraphicsQueue && correctVersion && extensionsSupported;
-            return !isSuitable;
-        });
-    }
-
-    uint32_t Application::GetPhysicalDeviceScore(const vk::raii::PhysicalDevice& device, bool& hasGeomShader)
-    {
-        uint32_t score = 0;
-        auto properties = device.getProperties();
-        auto features = device.getFeatures();
-
-        if (properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
-        {
-            score += 1000;
-        }
-
-        score += properties.limits.maxImageDimension2D;
-        hasGeomShader = features.geometryShader;
-
-        return score;
-    }
-
-    void Application::GetQueueFamilyIndices(const std::vector<vk::QueueFamilyProperties> queueFamilyProperties, uint32_t& graphicsIndex, uint32_t& presentIndex)
-    {
-        auto graphicsQueueFamilyProperty = std::find_if(queueFamilyProperties.begin(),
-            queueFamilyProperties.end(),
-            [](vk::QueueFamilyProperties const& qfp) { return qfp.queueFlags & vk::QueueFlagBits::eGraphics; });
-
-        graphicsIndex = static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
-
-        bool graphicsSupportSurface = physicalDevice.getSurfaceSupportKHR(graphicsIndex, *surface);
-        presentIndex = graphicsSupportSurface ? graphicsIndex : static_cast<uint32_t>(queueFamilyProperties.size());
-
-        if (!IndexIsCompatible(presentIndex, queueFamilyProperties.size()))
-        {
-            for (size_t i = 0; i < queueFamilyProperties.size(); i++)
-            {
-                bool supportsGraphics = static_cast<bool>(queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics);
-                bool supportsPresent = physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface);
-
-                if (supportsGraphics && supportsPresent)
-                {
-                    graphicsIndex = static_cast<uint32_t>(i);
-                    presentIndex = graphicsIndex;
-                    break;
-                }
-            }
-
-            if (!IndexIsCompatible(presentIndex, queueFamilyProperties.size()))
-            {
-                for (size_t i = 0; i < queueFamilyProperties.size(); i++)
-                {
-                    bool supportsPresent = physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface);
-
-                    if (supportsPresent)
-                    {
-                        presentIndex = static_cast<uint32_t>(i);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    bool Application::IndexIsCompatible(const int presentIndex, const int queueFamilyLength)
-    {
-        return presentIndex != queueFamilyLength;
     }
 
     vk::SurfaceFormatKHR Application::ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> availableFormats)
