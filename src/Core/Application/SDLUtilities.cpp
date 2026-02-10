@@ -1,7 +1,6 @@
 #include "Core/Application/SDLUtilities.hpp"
 #include <iostream>
 #include "SDL_events.h"
-#include "SDL_video.h"
 #include <SDL2/SDL_vulkan.h>
 #include <algorithm>
 #include <cassert>
@@ -81,5 +80,19 @@ namespace Beer::Core
         }
 
         return sdlExtensions;
+    }
+
+    std::vector<const char*> SDLUtilities::GetRequiredExtensions(SDL_Window* window,
+        const vk::raii::Context& context,
+        const bool enableValidationLayers)
+    {
+        std::vector<const char*> extensions = SDLUtilities::GetSDLExtensions(window, context);
+
+        if (enableValidationLayers)
+        {
+            extensions.push_back(vk::EXTDebugUtilsExtensionName);
+        }
+
+        return extensions;
     }
 } // namespace Beer::Core

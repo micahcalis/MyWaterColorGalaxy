@@ -66,7 +66,6 @@ namespace Beer::Core
         void DrawFrame();
         std::vector<char const*> GetRequiredLayers();
         bool ValidationLayersUnsupported(std::vector<char const*> requiredLayers, std::vector<vk::LayerProperties> layerProperties);
-        std::vector<const char*> GetRequiredExtensions();
         static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity, vk::DebugUtilsMessageTypeFlagsEXT type, const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void*);
         void FilterPhysicalDevices(std::vector<vk::raii::PhysicalDevice>& devices);
         static uint32_t GetPhysicalDeviceScore(const vk::raii::PhysicalDevice& device, bool& hasGeomShader);
@@ -76,9 +75,6 @@ namespace Beer::Core
         static bool IsCorrectFormat(const vk::SurfaceFormatKHR format);
         vk::PresentModeKHR ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes);
         vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities);
-        [[nodiscard]] static std::vector<char> ReadFile(const std::filesystem::path& path);
-        std::string GetAssetPath(const std::string& subPath);
-        [[nodiscard]] vk::raii::ShaderModule CreateShaderModule(const std::vector<char>& code);
 
         void TransitionImageLayout(vk::CommandBuffer commandBuffer,
             uint32_t imageIndex,

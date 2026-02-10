@@ -1,19 +1,18 @@
 #include "Core/Application/Application.hpp"
+#include "Core/Application/SDLUtilities.hpp"
+#include "Core/Application/AssetUtilities.hpp"
 #include "SDLUtilities.hpp"
 #include "SDL_events.h"
-#include "SDL_stdinc.h"
 #include "SDL_video.h"
 #include <SDL2/SDL_vulkan.h>
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
 #include <stdexcept>
 #include <vector>
-#include "Core/Application/SDLUtilities.hpp"
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 
@@ -79,30 +78,6 @@ namespace Beer::Core
         SDL_Quit();
     }
 
-    void Application::CleanupSwapchain()
-    {
-        swapChainImageViews.clear();
-        swapchain = nullptr;
-    }
-
-    void Application::RecreateSwapchain()
-    {
-        int width, height = 0;
-        SDL_GetWindowSizeInPixels(window, &width, &height);
-        while (width == 0 || height == 0)
-        {
-            SDL_GetWindowSizeInPixels(window, &width, &height);
-            SDL_WaitEvent(nullptr);
-        }
-
-        device.waitIdle();
-
-        CleanupSwapchain();
-        CreateSwapchain();
-        CreateImageViews();
-        CreateSyncObjects();
-    }
-
     void Application::CreateInstance()
     {
         vk::ApplicationInfo appInfo{};
@@ -112,7 +87,10 @@ namespace Beer::Core
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = vk::ApiVersion14;
 
-        std::vector<const char*> sdlExtensions = GetRequiredExtensions();
+        std::vector<const char*> sdlExtensions = SDLUtilities::GetRequiredExtensions(window,
+            context,
+            ENABLE_VALIDATION_LAYERS);
+
         std::vector<const char*> requiredLayers = GetRequiredLayers();
         vk::InstanceCreateInfo createInfo({}, &appInfo, requiredLayers, sdlExtensions);
 
@@ -272,6 +250,30 @@ namespace Beer::Core
         swapchainImageFormat = swaphchainSurfaceFormat.format;
     }
 
+    void Application::CleanupSwapchain()
+    {
+        swapChainImageViews.clear();
+        swapchain = nullptr;
+    }
+
+    void Application::RecreateSwapchain()
+    {
+        int width, height = 0;
+        SDL_GetWindowSizeInPixels(window, &width, &height);
+        while (width == 0 || height == 0)
+        {
+            SDL_GetWindowSizeInPixels(window, &width, &height);
+            SDL_WaitEvent(nullptr);
+        }
+
+        device.waitIdle();
+
+        CleanupSwapchain();
+        CreateSwapchain();
+        CreateImageViews();
+        CreateSyncObjects();
+    }
+
     void Application::CreateImageViews()
     {
         swapChainImageViews.clear();
@@ -290,8 +292,8 @@ namespace Beer::Core
 
     void Application::CreateGraphicsPipeline()
     {
-        auto shaderCode = ReadFile(GetAssetPath("assets/shaders/HelloTriangle.spv"));
-        auto shaderModule = CreateShaderModule(shaderCode);
+        auto shaderCode = AssetUtilities::ReadFile(AssetUtilities::GetAssetPath("assets/shaders/HelloTriangle.spv"));
+        auto shaderModule = AssetUtilities::CreateShaderModule(shaderCode, device);
 
         vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
@@ -573,18 +575,6 @@ namespace Beer::Core
         });
     }
 
-    std::vector<const char*> Application::GetRequiredExtensions()
-    {
-        std::vector<const char*> extensions = SDLUtilities::GetSDLExtensions(window, context);
-
-        if (ENABLE_VALIDATION_LAYERS)
-        {
-            extensions.push_back(vk::EXTDebugUtilsExtensionName);
-        }
-
-        return extensions;
-    }
-
     VKAPI_ATTR vk::Bool32 VKAPI_CALL Application::DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity, vk::DebugUtilsMessageTypeFlagsEXT type, const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void*)
     {
         std::cerr << "validation layer: type" << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
@@ -720,49 +710,6 @@ namespace Beer::Core
         extent.height = std::clamp<uint32_t>(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
         return extent;
-    }
-
-    [[nodiscard]]
-    std::vector<char> Application::ReadFile(const std::filesystem::path& path)
-    {
-        std::ifstream file(path.string(), std::ios::ate | std::ios::binary);
-
-        if (!file.is_open())
-        {
-            throw std::runtime_error(std::format("ERROR: Failed to open at path '{}'!", path.string()));
-        }
-
-        std::vector<char> buffer(file.tellg());
-        file.seekg(0, std::ios::beg);
-        file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-        file.close();
-
-        return buffer;
-    }
-
-    std::string Application::GetAssetPath(const std::string& subPath)
-    {
-        char* basePath = SDL_GetBasePath();
-
-        if (basePath)
-        {
-            std::string fullPath = std::string(basePath) + subPath;
-            SDL_free(basePath);
-            return fullPath;
-        } else
-        {
-            return subPath;
-        }
-    }
-
-    [[nodiscard]] vk::raii::ShaderModule Application::CreateShaderModule(const std::vector<char>& code)
-    {
-        vk::ShaderModuleCreateInfo createInfo{};
-        createInfo.codeSize = code.size() * sizeof(char);
-        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-        vk::raii::ShaderModule shaderModule = vk::raii::ShaderModule(device, createInfo);
-        return shaderModule;
     }
 
     void Application::TransitionImageLayout(vk::CommandBuffer commandBuffer,
