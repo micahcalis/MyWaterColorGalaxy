@@ -63,10 +63,6 @@ namespace Beer::Core
         void CreateSyncObjects();
         void RecordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex);
         void DrawFrame();
-        vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> availableFormats);
-        static bool IsCorrectFormat(const vk::SurfaceFormatKHR format);
-        vk::PresentModeKHR ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes);
-        vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities);
 
         void TransitionImageLayout(vk::CommandBuffer commandBuffer,
             uint32_t imageIndex,

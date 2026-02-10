@@ -2,7 +2,7 @@
 #include "Core/Application/SDLUtilities.hpp"
 #include "Core/Application/AssetUtilities.hpp"
 #include "Core/Application/VulkanInitUtilities.hpp"
-#include "SDLUtilities.hpp"
+#include "Core/Application/SwapchainUtilities.hpp"
 #include "SDL_events.h"
 #include "SDL_video.h"
 #include <SDL2/SDL_vulkan.h>
@@ -231,8 +231,8 @@ namespace Beer::Core
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(*surface);
         std::vector<vk::SurfaceFormatKHR> availableFormats = physicalDevice.getSurfaceFormatsKHR(surface);
 
-        swaphchainSurfaceFormat = ChooseSwapSurfaceFormat(availableFormats);
-        swapchainExtent = ChooseSwapExtent(surfaceCapabilities);
+        swaphchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
+        swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, window);
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
         minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount) ? surfaceCapabilities.maxImageCount : minImageCount;
 
@@ -255,7 +255,7 @@ namespace Beer::Core
         swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
         swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
         swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-        swapchainCreateInfo.presentMode = ChooseSwapPresentMode(physicalDevice.getSurfacePresentModesKHR(*surface));
+        swapchainCreateInfo.presentMode = SwapchainUtilities::ChooseSwapPresentMode(physicalDevice.getSurfacePresentModesKHR(*surface));
         swapchainCreateInfo.clipped = true;
         swapchainCreateInfo.oldSwapchain = nullptr;
         swapchain = vk::raii::SwapchainKHR(device, swapchainCreateInfo);
@@ -559,47 +559,6 @@ namespace Beer::Core
         }
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-    }
-
-    vk::SurfaceFormatKHR Application::ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> availableFormats)
-    {
-        assert(!availableFormats.empty());
-        const auto formatIt = std::ranges::find_if(
-            availableFormats,
-            [](const auto& format) { return IsCorrectFormat(format); });
-
-        return formatIt != availableFormats.end() ? *formatIt : availableFormats[0];
-    }
-
-    bool Application::IsCorrectFormat(const vk::SurfaceFormatKHR format)
-    {
-        return format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
-    }
-
-    vk::PresentModeKHR Application::ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes)
-    {
-        for (const auto presentMode : availablePresentModes)
-        {
-            if (presentMode == vk::PresentModeKHR::eMailbox)
-            {
-                return presentMode;
-            }
-        }
-
-        return vk::PresentModeKHR::eFifo;
-    }
-
-    vk::Extent2D Application::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
-    {
-        int width;
-        int height;
-        SDL_GetWindowSizeInPixels(window, &width, &height);
-
-        vk::Extent2D extent{};
-        extent.width = std::clamp<uint32_t>(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-        extent.height = std::clamp<uint32_t>(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-
-        return extent;
     }
 
     void Application::TransitionImageLayout(vk::CommandBuffer commandBuffer,
