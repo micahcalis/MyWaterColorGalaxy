@@ -1,4 +1,5 @@
 #include "Core/Application/Renderer/Renderer.hpp"
+#include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 
@@ -18,6 +19,12 @@ namespace Beer::Core
         SetupDebugMessenger();
         CreateSurface(window);
         device.Initialize(instance, surface);
+        swapchain.InitializeSwapchain(window, surface, device);
+    }
+
+    void Renderer::RecreateSwapchain(SDL_Window* window)
+    {
+        swapchain.RecreateSwapchain(window, surface, device);
     }
 
     const vk::raii::Context& Renderer::GetContext() const { return context; }
@@ -25,6 +32,7 @@ namespace Beer::Core
     const vk::raii::DebugUtilsMessengerEXT& Renderer::GetDebugMessenger() const { return debugMessenger; }
     const vk::raii::SurfaceKHR& Renderer::GetSurface() const { return surface; }
     const Device& Renderer::GetDevice() const { return device; }
+    Swapchain& Renderer::GetSwapchain() { return swapchain; }
 
     void Renderer::CreateInstance()
     {
@@ -74,20 +82,5 @@ namespace Beer::Core
         }
 
         surface = vk::raii::SurfaceKHR(instance, rawSurface);
-    }
-
-    vk::SurfaceCapabilitiesKHR Renderer::GetSurfaceCapabilities() const
-    {
-        return device.GetPhysicalDevice().getSurfaceCapabilitiesKHR(*surface);
-    }
-
-    std::vector<vk::SurfaceFormatKHR> Renderer::GetAvailableFormats() const
-    {
-        return device.GetPhysicalDevice().getSurfaceFormatsKHR(surface);
-    }
-
-    const std::vector<vk::PresentModeKHR> Renderer::GetAvailablePresentModes() const
-    {
-        return device.GetPhysicalDevice().getSurfacePresentModesKHR(*surface);
     }
 } // namespace Beer::Core

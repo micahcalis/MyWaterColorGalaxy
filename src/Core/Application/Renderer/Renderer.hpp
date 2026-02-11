@@ -3,6 +3,7 @@
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL_video.h>
 #include "Core/Application/Renderer/Device.hpp"
+#include "Core/Application/Renderer/Swapchain.hpp"
 
 namespace Beer::Core
 {
@@ -14,17 +15,17 @@ namespace Beer::Core
         vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
         vk::raii::SurfaceKHR surface = nullptr;
         Device device{};
+        Swapchain swapchain{};
 
     public:
         void InitializeVulkanInstances(SDL_Window* window);
+        void RecreateSwapchain(SDL_Window* window);
         const vk::raii::Context& GetContext() const;
         const vk::raii::Instance& GetInstance() const;
         const vk::raii::DebugUtilsMessengerEXT& GetDebugMessenger() const;
         const vk::raii::SurfaceKHR& GetSurface() const;
         const Device& GetDevice() const;
-        vk::SurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
-        std::vector<vk::SurfaceFormatKHR> GetAvailableFormats() const;
-        const std::vector<vk::PresentModeKHR> GetAvailablePresentModes() const;
+        Swapchain& GetSwapchain();
 
     private:
         void CreateInstance();

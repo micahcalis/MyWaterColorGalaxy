@@ -17,12 +17,6 @@ namespace Beer::Core
     private:
         WindowManager windowManager = {};
         Renderer renderer = {};
-        vk::SurfaceFormatKHR swaphchainSurfaceFormat;
-        vk::Format swapchainImageFormat;
-        vk::Extent2D swapchainExtent;
-        vk::raii::SwapchainKHR swapchain = nullptr;
-        std::vector<vk::Image> swapchainImages;
-        std::vector<vk::raii::ImageView> swapChainImageViews;
         vk::raii::PipelineLayout pipelineLayout = nullptr;
         vk::raii::Pipeline graphicsPipeline = nullptr;
         vk::raii::CommandPool commandPool = nullptr;
@@ -40,10 +34,7 @@ namespace Beer::Core
         void InitializeVulkan();
         void MainLoop();
         void Cleanup();
-        void CreateSwapchain();
-        void CleanupSwapchain();
-        void RecreateSwapchain();
-        void CreateImageViews();
+        void HandleWindowResize();
         void CreateGraphicsPipeline();
         void CreateCommandPool();
         void CreateCommandBuffers();

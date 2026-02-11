@@ -1,10 +1,9 @@
 #include "Core/Application/Application.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
-#include "Core/Application/Utilities/SwapchainUtilities.hpp"
+#include "vulkan/vulkan.hpp"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
-#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 #include <stdexcept>
@@ -27,8 +26,6 @@ namespace Beer::Core
     void Application::InitializeVulkan()
     {
         renderer.InitializeVulkanInstances(windowManager.GetWindow());
-        CreateSwapchain();
-        CreateImageViews();
         CreateGraphicsPipeline();
         CreateCommandPool();
         CreateCommandBuffers();
@@ -48,84 +45,13 @@ namespace Beer::Core
     void Application::Cleanup()
     {
         windowManager.Cleanup();
-        CleanupSwapchain();
+        renderer.GetSwapchain().CleanupSwapchain();
     }
 
-    void Application::CreateSwapchain()
+    void Application::HandleWindowResize()
     {
-        vk::SurfaceCapabilitiesKHR surfaceCapabilities = renderer.GetSurfaceCapabilities();
-        std::vector<vk::SurfaceFormatKHR> availableFormats = renderer.GetAvailableFormats();
-
-        swaphchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
-        swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, windowManager.GetWindow());
-        auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
-        minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount) ? surfaceCapabilities.maxImageCount : minImageCount;
-
-        uint32_t imageCount = surfaceCapabilities.minImageCount + 1;
-
-        if (surfaceCapabilities.maxImageCount > 0 && imageCount > surfaceCapabilities.maxImageCount)
-        {
-            imageCount = surfaceCapabilities.maxImageCount;
-        }
-
-        vk::SwapchainCreateInfoKHR swapchainCreateInfo{};
-        swapchainCreateInfo.flags = vk::SwapchainCreateFlagsKHR();
-        swapchainCreateInfo.surface = renderer.GetSurface();
-        swapchainCreateInfo.minImageCount = minImageCount;
-        swapchainCreateInfo.imageFormat = swaphchainSurfaceFormat.format;
-        swapchainCreateInfo.imageColorSpace = swaphchainSurfaceFormat.colorSpace;
-        swapchainCreateInfo.imageExtent = swapchainExtent;
-        swapchainCreateInfo.imageArrayLayers = 1;
-        swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
-        swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
-        swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
-        swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-        swapchainCreateInfo.presentMode = SwapchainUtilities::ChooseSwapPresentMode(renderer.GetAvailablePresentModes());
-        swapchainCreateInfo.clipped = true;
-        swapchainCreateInfo.oldSwapchain = nullptr;
-        swapchain = vk::raii::SwapchainKHR(renderer.GetDevice().GetLogicalDevice(), swapchainCreateInfo);
-        swapchainImages = swapchain.getImages();
-        swapchainImageFormat = swaphchainSurfaceFormat.format;
-    }
-
-    void Application::CleanupSwapchain()
-    {
-        swapChainImageViews.clear();
-        swapchain = nullptr;
-    }
-
-    void Application::RecreateSwapchain()
-    {
-        int width, height = 0;
-        SDL_GetWindowSizeInPixels(windowManager.GetWindow(), &width, &height);
-        while (width == 0 || height == 0)
-        {
-            SDL_GetWindowSizeInPixels(windowManager.GetWindow(), &width, &height);
-            SDL_WaitEvent(nullptr);
-        }
-
-        renderer.GetDevice().GetLogicalDevice().waitIdle();
-
-        CleanupSwapchain();
-        CreateSwapchain();
-        CreateImageViews();
+        renderer.RecreateSwapchain(windowManager.GetWindow());
         CreateSyncObjects();
-    }
-
-    void Application::CreateImageViews()
-    {
-        swapChainImageViews.clear();
-
-        vk::ImageViewCreateInfo imageViewCreateInfo{};
-        imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-        imageViewCreateInfo.format = swapchainImageFormat;
-        imageViewCreateInfo.subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
-
-        for (vk::Image image : swapchainImages)
-        {
-            imageViewCreateInfo.image = image;
-            swapChainImageViews.emplace_back(renderer.GetDevice().GetLogicalDevice(), imageViewCreateInfo);
-        }
     }
 
     void Application::CreateGraphicsPipeline()
@@ -156,8 +82,8 @@ namespace Beer::Core
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{};
         inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
 
+        const vk::Extent2D swapchainExtent = renderer.GetSwapchain().GetExtent();
         vk::Viewport viewPort = vk::Viewport(0.0f, 0.0f, static_cast<float>(swapchainExtent.width), static_cast<float>(swapchainExtent.height), 0.0f, 1.0f);
-
         vk::Rect2D region = vk::Rect2D(vk::Offset2D{0, 0}, swapchainExtent);
 
         vk::PipelineViewportStateCreateInfo viewportCreateInfo{};
@@ -198,8 +124,9 @@ namespace Beer::Core
         pipelineLayout = vk::raii::PipelineLayout(renderer.GetDevice().GetLogicalDevice(), layoutCreateInfo);
 
         vk::PipelineRenderingCreateInfo renderingCreateInfo{};
+        vk::Format colorFormat = renderer.GetSwapchain().GetImageFormat();
         renderingCreateInfo.colorAttachmentCount = 1;
-        renderingCreateInfo.pColorAttachmentFormats = &swapchainImageFormat;
+        renderingCreateInfo.pColorAttachmentFormats = &colorFormat;
 
         vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
         graphicsPipelineCreateInfo.pNext = &renderingCreateInfo;
@@ -247,7 +174,7 @@ namespace Beer::Core
 
         // assert(presentCompleteSemaphores.empty() && renderFinishedSemaphores.empty() && inFlightFences.empty());
 
-        for (size_t i = 0; i < swapchainImages.size(); i++)
+        for (size_t i = 0; i < renderer.GetSwapchain().GetSwapchainCount(); i++)
         {
             renderFinishedSemaphores.emplace_back(renderer.GetDevice().GetLogicalDevice(), vk::SemaphoreCreateInfo());
         }
@@ -275,13 +202,14 @@ namespace Beer::Core
         vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 0.0f);
 
         vk::RenderingAttachmentInfo renderingAttachmentInfo{};
-        renderingAttachmentInfo.imageView = swapChainImageViews[imageIndex];
+        renderingAttachmentInfo.imageView = renderer.GetSwapchain().GetImageView(imageIndex);
         renderingAttachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         renderingAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
         renderingAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
         renderingAttachmentInfo.clearValue = clearColor;
 
         vk::RenderingInfo renderingInfo{};
+        vk::Extent2D swapchainExtent = renderer.GetSwapchain().GetExtent();
         renderingInfo.renderArea = vk::Rect2D({0, 0}, swapchainExtent);
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
@@ -326,13 +254,12 @@ namespace Beer::Core
 
         try
         {
-            auto acquireResult = swapchain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphores[frameIndex], nullptr);
-
+            auto acquireResult = renderer.GetSwapchain().AcquireNextImage(*presentCompleteSemaphores[frameIndex]);
             result = acquireResult.result;
             imageIndex = acquireResult.value;
         } catch (const vk::OutOfDateKHRError& e)
         {
-            RecreateSwapchain();
+            HandleWindowResize();
             return;
         }
 
@@ -357,12 +284,13 @@ namespace Beer::Core
         submitInfo.pSignalSemaphores = &*renderFinishedSemaphores[imageIndex];
 
         renderer.GetDevice().GetGraphicsQueue().submit(submitInfo, *inFlightFences[frameIndex]);
+        auto& raiiSwapchain = renderer.GetSwapchain().GetRaiiSwapchain();
 
         vk::PresentInfoKHR presentInfoKHR{};
         presentInfoKHR.waitSemaphoreCount = 1;
         presentInfoKHR.pWaitSemaphores = &*renderFinishedSemaphores[imageIndex];
         presentInfoKHR.swapchainCount = 1;
-        presentInfoKHR.pSwapchains = &*swapchain;
+        presentInfoKHR.pSwapchains = &*raiiSwapchain;
         presentInfoKHR.pImageIndices = &imageIndex;
         presentInfoKHR.pResults = nullptr;
 
@@ -371,13 +299,13 @@ namespace Beer::Core
             result = renderer.GetDevice().GetPresentQueue().presentKHR(presentInfoKHR);
         } catch (const vk::OutOfDateKHRError& e)
         {
-            RecreateSwapchain();
+            HandleWindowResize();
         }
 
         if ((result == vk::Result::eSuboptimalKHR) || (result == vk::Result::eErrorOutOfDateKHR) || frameBufferResized)
         {
             frameBufferResized = false;
-            RecreateSwapchain();
+            HandleWindowResize();
         } else
         {
             assert(result == vk::Result::eSuccess);
@@ -404,7 +332,7 @@ namespace Beer::Core
         barrier.newLayout = newLayout;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = swapchainImages[imageIndex];
+        barrier.image = renderer.GetSwapchain().GetImage(imageIndex);
         barrier.subresourceRange = {
             vk::ImageAspectFlagBits::eColor,
             0,

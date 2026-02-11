@@ -19,6 +19,21 @@ namespace Beer::Core
     const vk::raii::Queue& Device::GetPresentQueue() const { return presentQueue; }
     const uint32_t Device::GetGraphicsIndex() const { return graphicsIndex; }
 
+    vk::SurfaceCapabilitiesKHR Device::GetSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const
+    {
+        return physicalDevice.getSurfaceCapabilitiesKHR(*surface);
+    }
+
+    std::vector<vk::SurfaceFormatKHR> Device::GetAvailableFormats(const vk::raii::SurfaceKHR& surface) const
+    {
+        return physicalDevice.getSurfaceFormatsKHR(surface);
+    }
+
+    const std::vector<vk::PresentModeKHR> Device::GetAvailablePresentModes(const vk::raii::SurfaceKHR& surface) const
+    {
+        return physicalDevice.getSurfacePresentModesKHR(*surface);
+    }
+
     void Device::PickPhysicalDevice(const vk::raii::Instance& instance)
     {
         auto devices = instance.enumeratePhysicalDevices();
