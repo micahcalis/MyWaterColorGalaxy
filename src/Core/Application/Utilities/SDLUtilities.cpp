@@ -1,4 +1,4 @@
-#include "Core/Application/SDLUtilities.hpp"
+#include "Core/Application/Utilities/SDLUtilities.hpp"
 #include <SDL3/SDL_video.h>
 #include <iostream>
 #include <algorithm>

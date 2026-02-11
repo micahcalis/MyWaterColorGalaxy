@@ -1,4 +1,4 @@
-#include "Core/Application/VulkanInitUtilities.hpp"
+#include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include <iostream>
 
 namespace Beer::Core

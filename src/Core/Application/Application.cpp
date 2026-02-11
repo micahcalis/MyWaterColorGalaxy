@@ -1,8 +1,8 @@
 #include "Core/Application/Application.hpp"
-#include "Core/Application/SDLUtilities.hpp"
-#include "Core/Application/AssetUtilities.hpp"
-#include "Core/Application/VulkanInitUtilities.hpp"
-#include "Core/Application/SwapchainUtilities.hpp"
+#include "Core/Application/Utilities/SDLUtilities.hpp"
+#include "Core/Application/Utilities/AssetUtilities.hpp"
+#include "Core/Application/Utilities/VulkanInitUtilities.hpp"
+#include "Core/Application/Utilities/SwapchainUtilities.hpp"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 #include <algorithm>
@@ -44,8 +44,6 @@ namespace Beer::Core
         {
             throw std::runtime_error("SDL_Init failed: " + std::string(SDL_GetError()));
         }
-
-        std::cout << "can try initalize window" << std::endl;
 
         window = SDLUtilities::CreateWindow(APP_WIDTH, APP_HEIGHT);
 

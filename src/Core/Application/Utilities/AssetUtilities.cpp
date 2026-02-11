@@ -1,5 +1,4 @@
-#include "Core/Application/AssetUtilities.hpp"
-#include "AssetUtilities.hpp"
+#include "Core/Application/Utilities/AssetUtilities.hpp"
 #include <fstream>
 #include <SDL3/SDL.h>
 
