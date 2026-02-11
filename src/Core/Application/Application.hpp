@@ -7,13 +7,14 @@
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
+#include <Core/Application/Managers/Managers.hpp>
 
 namespace Beer::Core
 {
     class Application
     {
     private:
-        SDL_Window* window = nullptr;
+        WindowManager windowManager = {};
         vk::raii::Context context;
         vk::raii::Instance instance = nullptr;
         vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
@@ -45,7 +46,6 @@ namespace Beer::Core
         void Run();
 
     private:
-        void InitializeWindow();
         void InitializeVulkan();
         void MainLoop();
         void Cleanup();

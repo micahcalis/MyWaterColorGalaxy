@@ -18,8 +18,6 @@
 
 namespace Beer::Core
 {
-    constexpr uint32_t APP_WIDTH = 800;
-    constexpr uint32_t APP_HEIGHT = 600;
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
     const std::vector<char const*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
@@ -32,25 +30,10 @@ namespace Beer::Core
 
     void Application::Run()
     {
-        InitializeWindow();
+        windowManager.InitializeWindow();
         InitializeVulkan();
         MainLoop();
         Cleanup();
-    }
-
-    void Application::InitializeWindow()
-    {
-        if (!SDLUtilities::SDLInitialize())
-        {
-            throw std::runtime_error("SDL_Init failed: " + std::string(SDL_GetError()));
-        }
-
-        window = SDLUtilities::CreateWindow(APP_WIDTH, APP_HEIGHT);
-
-        if (window == nullptr)
-        {
-            throw std::runtime_error("Window Creation Failed: " + std::string(SDL_GetError()));
-        }
     }
 
     void Application::InitializeVulkan()
@@ -79,9 +62,8 @@ namespace Beer::Core
 
     void Application::Cleanup()
     {
+        windowManager.Cleanup();
         CleanupSwapchain();
-        SDL_DestroyWindow(window);
-        SDL_Quit();
     }
 
     void Application::CreateInstance()
@@ -126,9 +108,9 @@ namespace Beer::Core
     {
         VkSurfaceKHR rawSurface;
 
-        if (!SDL_Vulkan_CreateSurface(window, static_cast<VkInstance>(*instance), nullptr, &rawSurface))
+        if (!SDL_Vulkan_CreateSurface(windowManager.GetWindow(), static_cast<VkInstance>(*instance), nullptr, &rawSurface))
         {
-            throw std::runtime_error("Failed to create window surface!");
+            throw std::runtime_error("Failed to create windowManager.GetWindow() surface!");
         }
 
         surface = vk::raii::SurfaceKHR(instance, rawSurface);
@@ -236,7 +218,7 @@ namespace Beer::Core
         std::vector<vk::SurfaceFormatKHR> availableFormats = physicalDevice.getSurfaceFormatsKHR(surface);
 
         swaphchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
-        swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, window);
+        swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, windowManager.GetWindow());
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
         minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount) ? surfaceCapabilities.maxImageCount : minImageCount;
 
@@ -276,10 +258,10 @@ namespace Beer::Core
     void Application::RecreateSwapchain()
     {
         int width, height = 0;
-        SDL_GetWindowSizeInPixels(window, &width, &height);
+        SDL_GetWindowSizeInPixels(windowManager.GetWindow(), &width, &height);
         while (width == 0 || height == 0)
         {
-            SDL_GetWindowSizeInPixels(window, &width, &height);
+            SDL_GetWindowSizeInPixels(windowManager.GetWindow(), &width, &height);
             SDL_WaitEvent(nullptr);
         }
 
