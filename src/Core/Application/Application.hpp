@@ -5,7 +5,8 @@
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <vulkan/vulkan_raii.hpp>
-#include <SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 
 namespace Beer::Core
 {

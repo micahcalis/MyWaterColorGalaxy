@@ -1,7 +1,7 @@
 #include "Core/Application/AssetUtilities.hpp"
 #include "AssetUtilities.hpp"
 #include <fstream>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 namespace Beer::Core
 {
@@ -24,12 +24,12 @@ namespace Beer::Core
 
     std::string AssetUtilities::GetAssetPath(const std::string& subPath)
     {
-        char* basePath = SDL_GetBasePath();
+        const char* basePath = SDL_GetBasePath();
 
         if (basePath)
         {
             std::string fullPath = std::string(basePath) + subPath;
-            SDL_free(basePath);
+            SDL_free((void*)basePath);
             return fullPath;
         } else
         {

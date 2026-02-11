@@ -21,9 +21,15 @@ if(NOT EXISTS "${SLANGC_EXECUTABLE}")
     find_program(SLANGC_EXECUTABLE slangc REQUIRED)
 endif()
 
-# SDL2 Setup
-set(SDL2_INCLUDE_DIR "$ENV{VULKAN_SDK}/Include/SDL2")
-set(SDL2_LIBRARY "$ENV{VULKAN_SDK}/Lib/SDL2.lib")
+# SDL3 Setup
+set(SDL3_ROOT "C:/SDL3/SDL3-3.4.0")
+set(SDL3_INCLUDE_DIR "${SDL3_ROOT}/include")
+set(SDL3_LIBRARY "${SDL3_ROOT}/lib/x64/SDL3.lib")
+set(SDL3_DLL "${SDL3_ROOT}/lib/x64/SDL3.dll")
+
+if(NOT EXISTS "${SDL3_INCLUDE_DIR}")
+    message(FATAL_ERROR "SDL3 Include not found at: ${SDL3_INCLUDE_DIR}")
+endif()
 
 # --- 3. Define the Executable ---
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c")
@@ -34,12 +40,12 @@ target_include_directories(Game PRIVATE
     "src"
     "${Vulkan_INCLUDE_DIRS}"
     "$ENV{VULKAN_SDK}/Include"
-    "${SDL2_INCLUDE_DIR}"
+    "${SDL3_INCLUDE_DIR}"
 )
 
 target_link_libraries(Game PRIVATE 
     Vulkan::Vulkan 
-    "${SDL2_LIBRARY}"
+    "${SDL3_LIBRARY}"
 )
 
 # --- 5. Shader Compilation (Smart Auto-Detection) ---
@@ -127,6 +133,6 @@ add_dependencies(Game Shaders)
 # --- 6. Final Polish (DLL Copy) ---
 add_custom_command(TARGET Game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$ENV{VULKAN_SDK}/Bin/SDL2.dll"
+    "${SDL3_DLL}"        
     "$<TARGET_FILE_DIR:Game>"
-    COMMENT "Copying SDL2.dll to bin folder...")
+    COMMENT "Copying SDL3.dll to bin folder...")

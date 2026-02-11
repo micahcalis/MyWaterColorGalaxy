@@ -3,9 +3,8 @@
 #include "Core/Application/AssetUtilities.hpp"
 #include "Core/Application/VulkanInitUtilities.hpp"
 #include "Core/Application/SwapchainUtilities.hpp"
-#include "SDL_events.h"
-#include "SDL_video.h"
-#include <SDL2/SDL_vulkan.h>
+#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_events.h>
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
@@ -41,16 +40,24 @@ namespace Beer::Core
 
     void Application::InitializeWindow()
     {
-        if (SDLUtilities::SDLFailed())
-            return;
+        if (!SDLUtilities::SDLInitialize())
+        {
+            throw std::runtime_error("SDL_Init failed: " + std::string(SDL_GetError()));
+        }
+
+        std::cout << "can try initalize window" << std::endl;
 
         window = SDLUtilities::CreateWindow(APP_WIDTH, APP_HEIGHT);
+
+        if (window == nullptr)
+        {
+            throw std::runtime_error("Window Creation Failed: " + std::string(SDL_GetError()));
+        }
     }
 
     void Application::InitializeVulkan()
     {
         CreateInstance();
-        SetupDebugMessenger();
         CreateSurface();
         PickPhysicalDevice();
         CreateLogicalDevice();
@@ -88,8 +95,7 @@ namespace Beer::Core
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = vk::ApiVersion14;
 
-        std::vector<const char*> sdlExtensions = SDLUtilities::GetRequiredExtensions(window,
-            context,
+        std::vector<const char*> sdlExtensions = SDLUtilities::GetRequiredExtensions(context,
             ENABLE_VALIDATION_LAYERS);
 
         std::vector<const char*> requiredLayers = VulkanInitUtilities::GetRequiredLayers(ENABLE_VALIDATION_LAYERS,
@@ -122,7 +128,7 @@ namespace Beer::Core
     {
         VkSurfaceKHR rawSurface;
 
-        if (!SDL_Vulkan_CreateSurface(window, static_cast<VkInstance>(*instance), &rawSurface))
+        if (!SDL_Vulkan_CreateSurface(window, static_cast<VkInstance>(*instance), nullptr, &rawSurface))
         {
             throw std::runtime_error("Failed to create window surface!");
         }

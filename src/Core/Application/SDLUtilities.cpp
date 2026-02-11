@@ -1,36 +1,29 @@
 #include "Core/Application/SDLUtilities.hpp"
+#include <SDL3/SDL_video.h>
 #include <iostream>
-#include "SDL_events.h"
-#include <SDL2/SDL_vulkan.h>
 #include <algorithm>
-#include <cassert>
-#include <iostream>
 #include <stdexcept>
-#include <vector>
-#include <vulkan/vulkan_raii.hpp>
 
 namespace Beer::Core
 {
     SDL_Window* SDLUtilities::CreateWindow(int width, int height)
     {
         return SDL_CreateWindow("Vulkan",
-            SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED,
             width,
             height,
             SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     }
 
-    bool SDLUtilities::SDLFailed()
+    bool SDLUtilities::SDLInitialize()
     {
-        bool failed = SDL_Init(SDL_INIT_VIDEO) != 0;
+        bool success = SDL_Init(SDL_INIT_VIDEO) != 0;
 
-        if (failed)
+        if (!success)
         {
             std::cerr << "SDL Failed to Start: " << SDL_GetError() << std::endl;
         }
 
-        return failed;
+        return success;
     }
 
     bool SDLUtilities::PollEvents(bool& frameBufferResized)
@@ -38,33 +31,28 @@ namespace Beer::Core
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_EVENT_QUIT)
             {
                 return false;
-            } else if (event.type == SDL_WINDOWEVENT)
+            } else if (event.type == SDL_EVENT_WINDOW_RESIZED)
             {
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                {
-                    frameBufferResized = true;
-                }
+                frameBufferResized = true;
             }
         }
         return true;
     }
 
-    std::vector<const char*> SDLUtilities::GetSDLExtensions(SDL_Window* window, const vk::raii::Context& context)
+    std::vector<const char*> SDLUtilities::GetSDLExtensions(const vk::raii::Context& context)
     {
         unsigned int sdlExtensionCount = 0;
-        if (!SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, nullptr))
+        const char* const* sdlExtensionsRaw = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
+
+        if (sdlExtensionsRaw == nullptr)
         {
-            throw std::runtime_error("Failed to get SDL extension count");
+            throw std::runtime_error("Failed to get SDL extensions: " + std::string(SDL_GetError()));
         }
 
-        std::vector<const char*> sdlExtensions(sdlExtensionCount);
-        if (!SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, sdlExtensions.data()))
-        {
-            throw std::runtime_error("Failed to get SDL extensions");
-        }
+        std::vector<const char*> sdlExtensions(sdlExtensionsRaw, sdlExtensionsRaw + sdlExtensionCount);
 
         auto extensionProperties = context.enumerateInstanceExtensionProperties();
 
@@ -82,11 +70,10 @@ namespace Beer::Core
         return sdlExtensions;
     }
 
-    std::vector<const char*> SDLUtilities::GetRequiredExtensions(SDL_Window* window,
-        const vk::raii::Context& context,
+    std::vector<const char*> SDLUtilities::GetRequiredExtensions(const vk::raii::Context& context,
         const bool enableValidationLayers)
     {
-        std::vector<const char*> extensions = SDLUtilities::GetSDLExtensions(window, context);
+        std::vector<const char*> extensions = SDLUtilities::GetSDLExtensions(context);
 
         if (enableValidationLayers)
         {
