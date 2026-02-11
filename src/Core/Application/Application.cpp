@@ -1,16 +1,12 @@
 #include "Core/Application/Application.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
-#include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SwapchainUtilities.hpp"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
-#include <iostream>
-#include <map>
-#include <set>
 #include <stdexcept>
 #include <vector>
 
@@ -19,14 +15,6 @@
 namespace Beer::Core
 {
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
-    const std::vector<char const*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-
-#ifdef NDEBUG
-    constexpr bool ENABLE_VALIDATION_LAYERS = false;
-#else
-    constexpr bool ENABLE_VALIDATION_LAYERS = true;
-#endif
 
     void Application::Run()
     {
@@ -38,10 +26,7 @@ namespace Beer::Core
 
     void Application::InitializeVulkan()
     {
-        CreateInstance();
-        CreateSurface();
-        PickPhysicalDevice();
-        CreateLogicalDevice();
+        renderer.InitializeVulkanInstances(windowManager.GetWindow());
         CreateSwapchain();
         CreateImageViews();
         CreateGraphicsPipeline();
@@ -57,7 +42,7 @@ namespace Beer::Core
             DrawFrame();
         }
 
-        device.waitIdle();
+        renderer.GetDevice().GetLogicalDevice().waitIdle();
     }
 
     void Application::Cleanup()
@@ -66,156 +51,10 @@ namespace Beer::Core
         CleanupSwapchain();
     }
 
-    void Application::CreateInstance()
-    {
-        vk::ApplicationInfo appInfo{};
-        appInfo.pApplicationName = "Hello Triangle";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = vk::ApiVersion14;
-
-        std::vector<const char*> sdlExtensions = SDLUtilities::GetRequiredExtensions(context,
-            ENABLE_VALIDATION_LAYERS);
-
-        std::vector<const char*> requiredLayers = VulkanInitUtilities::GetRequiredLayers(ENABLE_VALIDATION_LAYERS,
-            validationLayers,
-            context);
-
-        vk::InstanceCreateInfo createInfo({}, &appInfo, requiredLayers, sdlExtensions);
-
-        instance = vk::raii::Instance(context, createInfo);
-    }
-
-    void Application::SetupDebugMessenger()
-    {
-        if (!ENABLE_VALIDATION_LAYERS)
-            return;
-
-        vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
-
-        vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
-
-        vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
-        debugMessengerCreateInfo.messageSeverity = severityFlags;
-        debugMessengerCreateInfo.messageType = messageTypeFlags;
-        debugMessengerCreateInfo.pfnUserCallback = &VulkanInitUtilities::DebugCallback;
-
-        debugMessenger = instance.createDebugUtilsMessengerEXT(debugMessengerCreateInfo);
-    }
-
-    void Application::CreateSurface()
-    {
-        VkSurfaceKHR rawSurface;
-
-        if (!SDL_Vulkan_CreateSurface(windowManager.GetWindow(), static_cast<VkInstance>(*instance), nullptr, &rawSurface))
-        {
-            throw std::runtime_error("Failed to create windowManager.GetWindow() surface!");
-        }
-
-        surface = vk::raii::SurfaceKHR(instance, rawSurface);
-    }
-
-    void Application::PickPhysicalDevice()
-    {
-        auto devices = instance.enumeratePhysicalDevices();
-
-        if (devices.empty())
-        {
-            throw std::runtime_error("failed to find GPU's with Vulkan support");
-        }
-
-        VulkanInitUtilities::FilterPhysicalDevices(devices,
-            deviceExtensions);
-
-        std::multimap<int, vk::raii::PhysicalDevice> deviceCandidates;
-
-        for (const auto& device : devices)
-        {
-            bool hasGeomShader = false;
-            uint32_t score = VulkanInitUtilities::GetPhysicalDeviceScore(device, hasGeomShader);
-
-            if (!hasGeomShader)
-            {
-                continue;
-            }
-
-            deviceCandidates.insert(std::make_pair(score, device));
-        }
-
-        if (deviceCandidates.rbegin()->first > 0)
-        {
-            physicalDevice = deviceCandidates.rbegin()->second;
-            std::cout << "Physical Device Found: " << physicalDevice.getProperties().deviceName << std::endl;
-        } else
-        {
-            throw std::runtime_error("failed to find a suitable GPU");
-        }
-    }
-
-    void Application::CreateLogicalDevice()
-    {
-        std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
-        graphicsIndex = 0;
-        uint32_t presentIndex = 0;
-
-        VulkanInitUtilities::GetQueueFamilyIndices(queueFamilyProperties,
-            graphicsIndex,
-            presentIndex,
-            physicalDevice,
-            surface);
-
-        bool graphicsCompatible = VulkanInitUtilities::IndexIsCompatible(graphicsIndex,
-            queueFamilyProperties.size());
-
-        bool presentCompatible = VulkanInitUtilities::IndexIsCompatible(presentIndex,
-            queueFamilyProperties.size());
-
-        if (!graphicsCompatible || !presentCompatible)
-        {
-            throw std::runtime_error("Could not find a queue for graphics or present -> terminating");
-        }
-
-        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = {graphicsIndex, presentIndex};
-
-        float queuePriority = 0.5f;
-        for (uint32_t queueFamily : uniqueQueueFamilies)
-        {
-            vk::DeviceQueueCreateInfo queueCreateInfo{};
-            queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = 1;
-            queueCreateInfo.pQueuePriorities = &queuePriority;
-            queueCreateInfos.push_back(queueCreateInfo);
-        }
-
-        vk::StructureChain<vk::PhysicalDeviceFeatures2,
-            vk::PhysicalDeviceVulkan11Features,
-            vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
-            featureChain{};
-
-        featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = true;
-        featureChain.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering = true;
-        featureChain.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 = true;
-        featureChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState = true;
-
-        vk::DeviceCreateInfo deviceCreateInfo{};
-        deviceCreateInfo.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>();
-        deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-        deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
-        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-        deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-        device = vk::raii::Device(physicalDevice, deviceCreateInfo);
-        graphicsQueue = vk::raii::Queue(device, graphicsIndex, 0);
-        presentQueue = vk::raii::Queue(device, presentIndex, 0);
-    }
-
     void Application::CreateSwapchain()
     {
-        vk::SurfaceCapabilitiesKHR surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(*surface);
-        std::vector<vk::SurfaceFormatKHR> availableFormats = physicalDevice.getSurfaceFormatsKHR(surface);
+        vk::SurfaceCapabilitiesKHR surfaceCapabilities = renderer.GetSurfaceCapabilities();
+        std::vector<vk::SurfaceFormatKHR> availableFormats = renderer.GetAvailableFormats();
 
         swaphchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
         swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, windowManager.GetWindow());
@@ -231,7 +70,7 @@ namespace Beer::Core
 
         vk::SwapchainCreateInfoKHR swapchainCreateInfo{};
         swapchainCreateInfo.flags = vk::SwapchainCreateFlagsKHR();
-        swapchainCreateInfo.surface = *surface;
+        swapchainCreateInfo.surface = renderer.GetSurface();
         swapchainCreateInfo.minImageCount = minImageCount;
         swapchainCreateInfo.imageFormat = swaphchainSurfaceFormat.format;
         swapchainCreateInfo.imageColorSpace = swaphchainSurfaceFormat.colorSpace;
@@ -241,10 +80,10 @@ namespace Beer::Core
         swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
         swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
         swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-        swapchainCreateInfo.presentMode = SwapchainUtilities::ChooseSwapPresentMode(physicalDevice.getSurfacePresentModesKHR(*surface));
+        swapchainCreateInfo.presentMode = SwapchainUtilities::ChooseSwapPresentMode(renderer.GetAvailablePresentModes());
         swapchainCreateInfo.clipped = true;
         swapchainCreateInfo.oldSwapchain = nullptr;
-        swapchain = vk::raii::SwapchainKHR(device, swapchainCreateInfo);
+        swapchain = vk::raii::SwapchainKHR(renderer.GetDevice().GetLogicalDevice(), swapchainCreateInfo);
         swapchainImages = swapchain.getImages();
         swapchainImageFormat = swaphchainSurfaceFormat.format;
     }
@@ -265,7 +104,7 @@ namespace Beer::Core
             SDL_WaitEvent(nullptr);
         }
 
-        device.waitIdle();
+        renderer.GetDevice().GetLogicalDevice().waitIdle();
 
         CleanupSwapchain();
         CreateSwapchain();
@@ -285,14 +124,14 @@ namespace Beer::Core
         for (vk::Image image : swapchainImages)
         {
             imageViewCreateInfo.image = image;
-            swapChainImageViews.emplace_back(device, imageViewCreateInfo);
+            swapChainImageViews.emplace_back(renderer.GetDevice().GetLogicalDevice(), imageViewCreateInfo);
         }
     }
 
     void Application::CreateGraphicsPipeline()
     {
         auto shaderCode = AssetUtilities::ReadFile(AssetUtilities::GetAssetPath("assets/shaders/HelloTriangle.spv"));
-        auto shaderModule = AssetUtilities::CreateShaderModule(shaderCode, device);
+        auto shaderModule = AssetUtilities::CreateShaderModule(shaderCode, renderer.GetDevice().GetLogicalDevice());
 
         vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
@@ -356,7 +195,7 @@ namespace Beer::Core
         layoutCreateInfo.setLayoutCount = 0;
         layoutCreateInfo.pushConstantRangeCount = 0;
 
-        pipelineLayout = vk::raii::PipelineLayout(device, layoutCreateInfo);
+        pipelineLayout = vk::raii::PipelineLayout(renderer.GetDevice().GetLogicalDevice(), layoutCreateInfo);
 
         vk::PipelineRenderingCreateInfo renderingCreateInfo{};
         renderingCreateInfo.colorAttachmentCount = 1;
@@ -378,16 +217,16 @@ namespace Beer::Core
         graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-        graphicsPipeline = vk::raii::Pipeline(device, nullptr, graphicsPipelineCreateInfo);
+        graphicsPipeline = vk::raii::Pipeline(renderer.GetDevice().GetLogicalDevice(), nullptr, graphicsPipelineCreateInfo);
     }
 
     void Application::CreateCommandPool()
     {
         vk::CommandPoolCreateInfo commandPoolCreateInfo{};
         commandPoolCreateInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-        commandPoolCreateInfo.queueFamilyIndex = graphicsIndex;
+        commandPoolCreateInfo.queueFamilyIndex = renderer.GetDevice().GetGraphicsIndex();
 
-        commandPool = vk::raii::CommandPool(device, commandPoolCreateInfo);
+        commandPool = vk::raii::CommandPool(renderer.GetDevice().GetLogicalDevice(), commandPoolCreateInfo);
     }
 
     void Application::CreateCommandBuffers()
@@ -397,7 +236,7 @@ namespace Beer::Core
         commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
         commandBufferAllocateInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 
-        commandBuffers = vk::raii::CommandBuffers(device, commandBufferAllocateInfo);
+        commandBuffers = vk::raii::CommandBuffers(renderer.GetDevice().GetLogicalDevice(), commandBufferAllocateInfo);
     }
 
     void Application::CreateSyncObjects()
@@ -410,13 +249,13 @@ namespace Beer::Core
 
         for (size_t i = 0; i < swapchainImages.size(); i++)
         {
-            renderFinishedSemaphores.emplace_back(device, vk::SemaphoreCreateInfo());
+            renderFinishedSemaphores.emplace_back(renderer.GetDevice().GetLogicalDevice(), vk::SemaphoreCreateInfo());
         }
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            presentCompleteSemaphores.emplace_back(device, vk::SemaphoreCreateInfo());
-            inFlightFences.emplace_back(vk::raii::Fence(device, {vk::FenceCreateFlagBits::eSignaled}));
+            presentCompleteSemaphores.emplace_back(renderer.GetDevice().GetLogicalDevice(), vk::SemaphoreCreateInfo());
+            inFlightFences.emplace_back(vk::raii::Fence(renderer.GetDevice().GetLogicalDevice(), {vk::FenceCreateFlagBits::eSignaled}));
         }
     }
 
@@ -475,7 +314,7 @@ namespace Beer::Core
 
     void Application::DrawFrame()
     {
-        auto fenceResult = device.waitForFences(*inFlightFences[frameIndex], vk::True, UINT64_MAX);
+        auto fenceResult = renderer.GetDevice().GetLogicalDevice().waitForFences(*inFlightFences[frameIndex], vk::True, UINT64_MAX);
 
         if (fenceResult != vk::Result::eSuccess)
         {
@@ -503,7 +342,7 @@ namespace Beer::Core
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        device.resetFences(*inFlightFences[frameIndex]);
+        renderer.GetDevice().GetLogicalDevice().resetFences(*inFlightFences[frameIndex]);
         RecordCommandBuffer(commandBuffers[frameIndex], imageIndex);
 
         auto waitDestinationStageMask = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
@@ -517,7 +356,7 @@ namespace Beer::Core
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = &*renderFinishedSemaphores[imageIndex];
 
-        graphicsQueue.submit(submitInfo, *inFlightFences[frameIndex]);
+        renderer.GetDevice().GetGraphicsQueue().submit(submitInfo, *inFlightFences[frameIndex]);
 
         vk::PresentInfoKHR presentInfoKHR{};
         presentInfoKHR.waitSemaphoreCount = 1;
@@ -529,7 +368,7 @@ namespace Beer::Core
 
         try
         {
-            result = presentQueue.presentKHR(presentInfoKHR);
+            result = renderer.GetDevice().GetPresentQueue().presentKHR(presentInfoKHR);
         } catch (const vk::OutOfDateKHRError& e)
         {
             RecreateSwapchain();

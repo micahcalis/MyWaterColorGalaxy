@@ -13,6 +13,6 @@ namespace Beer::Core
     public:
         void InitializeWindow();
         void Cleanup();
-        SDL_Window* GetWindow();
+        SDL_Window* GetWindow() const;
     };
 } // namespace Beer::Core

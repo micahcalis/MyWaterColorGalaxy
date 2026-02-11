@@ -27,7 +27,7 @@ namespace Beer::Core
         SDL_Quit();
     }
 
-    SDL_Window* WindowManager::GetWindow()
+    SDL_Window* WindowManager::GetWindow() const
     {
         return window;
     }

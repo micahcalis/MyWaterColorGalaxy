@@ -7,7 +7,8 @@
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
-#include <Core/Application/Managers/Managers.hpp>
+#include "Core/Application/Managers/WindowManager.hpp"
+#include "Core/Application/Renderer/Renderer.hpp"
 
 namespace Beer::Core
 {
@@ -15,17 +16,7 @@ namespace Beer::Core
     {
     private:
         WindowManager windowManager = {};
-        vk::raii::Context context;
-        vk::raii::Instance instance = nullptr;
-        vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
-        vk::raii::SurfaceKHR surface = nullptr;
-        vk::raii::PhysicalDevice physicalDevice = nullptr;
-        std::vector<const char*> deviceExtensions = {vk::KHRSwapchainExtensionName};
-        vk::raii::Device device = nullptr;
-        vk::PhysicalDeviceFeatures deviceFeatures;
-        vk::raii::Queue graphicsQueue = nullptr;
-        vk::raii::Queue presentQueue = nullptr;
-        uint32_t graphicsIndex;
+        Renderer renderer = {};
         vk::SurfaceFormatKHR swaphchainSurfaceFormat;
         vk::Format swapchainImageFormat;
         vk::Extent2D swapchainExtent;
@@ -49,11 +40,6 @@ namespace Beer::Core
         void InitializeVulkan();
         void MainLoop();
         void Cleanup();
-        void CreateInstance();
-        void SetupDebugMessenger();
-        void CreateSurface();
-        void PickPhysicalDevice();
-        void CreateLogicalDevice();
         void CreateSwapchain();
         void CleanupSwapchain();
         void RecreateSwapchain();
