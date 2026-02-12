@@ -13,7 +13,7 @@ namespace Beer::Core
     {
     private:
         vk::raii::SwapchainKHR swapchain = nullptr;
-        vk::SurfaceFormatKHR swaphchainSurfaceFormat;
+        vk::SurfaceFormatKHR swapchainSurfaceFormat;
         vk::Format swapchainImageFormat;
         vk::Extent2D swapchainExtent;
         std::vector<vk::Image> swapchainImages;
@@ -30,8 +30,8 @@ namespace Beer::Core
 
         void CleanupSwapchain();
         const vk::raii::SwapchainKHR& GetRaiiSwapchain() const;
-        const vk::SurfaceFormatKHR GetSurfaceFormat();
-        const vk::Format GetImageFormat();
+        const vk::SurfaceFormatKHR& GetSurfaceFormat();
+        const vk::Format& GetImageFormat() const;
         const vk::Extent2D GetExtent() const;
         vk::ResultValue<uint32_t> AcquireNextImage(vk::Semaphore semaphore);
         const vk::Image& GetImage(uint32_t imageIndex) const;

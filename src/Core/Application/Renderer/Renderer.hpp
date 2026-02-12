@@ -4,6 +4,10 @@
 #include <SDL3/SDL_video.h>
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
+#include "Core/Application/Renderer/PipelineCache.hpp"
+#include <memory>
+#include <vector>
+#include "Core/Application/Renderer/FrameResource.hpp"
 
 namespace Beer::Core
 {
@@ -16,6 +20,8 @@ namespace Beer::Core
         vk::raii::SurfaceKHR surface = nullptr;
         Device device{};
         Swapchain swapchain{};
+        std::unique_ptr<PipelineCache> pipelineCache = nullptr;
+        std::vector<FrameResource> frameResources;
 
     public:
         void InitializeVulkanInstances(SDL_Window* window);

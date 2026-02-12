@@ -2,6 +2,7 @@
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
+#include <memory>
 
 namespace Beer::Core
 {
@@ -20,6 +21,7 @@ namespace Beer::Core
         CreateSurface(window);
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
+        pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain);
     }
 
     void Renderer::RecreateSwapchain(SDL_Window* window)

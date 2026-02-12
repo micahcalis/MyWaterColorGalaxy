@@ -16,8 +16,8 @@ namespace Beer::Core
     }
 
     const vk::raii::SwapchainKHR& Swapchain::GetRaiiSwapchain() const { return swapchain; }
-    const vk::SurfaceFormatKHR Swapchain::GetSurfaceFormat() { return swaphchainSurfaceFormat; }
-    const vk::Format Swapchain::GetImageFormat() { return swapchainImageFormat; }
+    const vk::SurfaceFormatKHR& Swapchain::GetSurfaceFormat() { return swapchainSurfaceFormat; }
+    const vk::Format& Swapchain::GetImageFormat() const { return swapchainImageFormat; }
     const vk::Extent2D Swapchain::GetExtent() const { return swapchainExtent; }
     const vk::Image& Swapchain::GetImage(uint32_t imageIndex) const { return swapchainImages[imageIndex]; }
     const uint32_t Swapchain::GetSwapchainCount() const { return swapchainImages.size(); }
@@ -26,12 +26,11 @@ namespace Beer::Core
     void Swapchain::CreateSwapchain(SDL_Window* window,
         const vk::raii::SurfaceKHR& surface,
         const Device& device)
-
     {
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = device.GetSurfaceCapabilities(surface);
         std::vector<vk::SurfaceFormatKHR> availableFormats = device.GetAvailableFormats(surface);
 
-        swaphchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
+        swapchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
         swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, window);
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
         minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount) ? surfaceCapabilities.maxImageCount : minImageCount;
@@ -47,8 +46,8 @@ namespace Beer::Core
         swapchainCreateInfo.flags = vk::SwapchainCreateFlagsKHR();
         swapchainCreateInfo.surface = surface;
         swapchainCreateInfo.minImageCount = minImageCount;
-        swapchainCreateInfo.imageFormat = swaphchainSurfaceFormat.format;
-        swapchainCreateInfo.imageColorSpace = swaphchainSurfaceFormat.colorSpace;
+        swapchainCreateInfo.imageFormat = swapchainSurfaceFormat.format;
+        swapchainCreateInfo.imageColorSpace = swapchainSurfaceFormat.colorSpace;
         swapchainCreateInfo.imageExtent = swapchainExtent;
         swapchainCreateInfo.imageArrayLayers = 1;
         swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
@@ -60,7 +59,7 @@ namespace Beer::Core
         swapchainCreateInfo.oldSwapchain = nullptr;
         swapchain = vk::raii::SwapchainKHR(device.GetLogicalDevice(), swapchainCreateInfo);
         swapchainImages = swapchain.getImages();
-        swapchainImageFormat = swaphchainSurfaceFormat.format;
+        swapchainImageFormat = swapchainSurfaceFormat.format;
     }
 
     void Swapchain::CreateImageViews(const Device& device)
