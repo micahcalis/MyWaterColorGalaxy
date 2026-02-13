@@ -21,9 +21,15 @@ if(NOT EXISTS "${SLANGC_EXECUTABLE}")
     find_program(SLANGC_EXECUTABLE slangc REQUIRED)
 endif()
 
-# SDL2 Setup
-set(SDL2_INCLUDE_DIR "$ENV{VULKAN_SDK}/Include/SDL2")
-set(SDL2_LIBRARY "$ENV{VULKAN_SDK}/Lib/SDL2.lib")
+# SDL3 Setup
+set(SDL3_ROOT "C:/SDL3/SDL3-3.4.0")
+set(SDL3_INCLUDE_DIR "${SDL3_ROOT}/include")
+set(SDL3_LIBRARY "${SDL3_ROOT}/lib/x64/SDL3.lib")
+set(SDL3_DLL "${SDL3_ROOT}/lib/x64/SDL3.dll")
+
+if(NOT EXISTS "${SDL3_INCLUDE_DIR}")
+    message(FATAL_ERROR "SDL3 Include not found at: ${SDL3_INCLUDE_DIR}")
+endif()
 
 # --- 3. Define the Executable ---
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c")
@@ -34,84 +40,98 @@ target_include_directories(Game PRIVATE
     "src"
     "${Vulkan_INCLUDE_DIRS}"
     "$ENV{VULKAN_SDK}/Include"
-    "${SDL2_INCLUDE_DIR}"
+    "${SDL3_INCLUDE_DIR}"
 )
 
 target_link_libraries(Game PRIVATE 
     Vulkan::Vulkan 
-    "${SDL2_LIBRARY}"
+    "${SDL3_LIBRARY}"
 )
 
 # --- 5. Shader Compilation (Smart Auto-Detection) ---
 
+# 1. Create a "Master" target that will group all individual shaders
+add_custom_target(Shaders)
+
 function(add_slang_shader_target TARGET)
-  cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
+    cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
 
-  # Set output paths (bin/assets/shaders)
-  set(SHADERS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders")
-  set(OUTPUT_SPV "${SHADERS_OUTPUT_DIR}/shaders.spv")
+    # We assume the first source file is the main one
+    list(GET SHADER_SOURCES 0 MAIN_SOURCE)
+    get_filename_component(SHADER_BASE_NAME ${MAIN_SOURCE} NAME_WE)
 
-  # --- AUTOMATIC ENTRY POINT DETECTION ---
-  # We read the .slang file to find your [shader("vertex")] functions
-  file(READ ${SHADER_SOURCES} SHADER_CONTENT)
+    # Set output paths (bin/assets/shaders)
+    set(SHADERS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders")
+    
+    # [FIX] Use the shader name for the output file, not hardcoded "shaders.spv"
+    set(OUTPUT_SPV "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.spv")
 
-  # 1. Find the Vertex Shader name
-  # Regex: Finds [shader("vertex")], skips the return type, captures the function name
-  string(REGEX MATCH "\\[shader\\(\\\"vertex\\\"\\)\\][ \t\r\n]*[A-Za-z0-9_]+[ \t\r\n]+([A-Za-z0-9_]+)" VERTEX_MATCH "${SHADER_CONTENT}")
-  
-  if(CMAKE_MATCH_1)
-      set(VERT_ENTRY ${CMAKE_MATCH_1})
-      message(STATUS "Found Vertex Entry: ${VERT_ENTRY}")
-  else()
-      message(FATAL_ERROR "Could not find [shader(\"vertex\")] function in ${SHADER_SOURCES}")
-  endif()
+    # --- AUTOMATIC ENTRY POINT DETECTION ---
+    file(READ ${MAIN_SOURCE} SHADER_CONTENT)
 
-  # 2. Find the Fragment Shader name
-  string(REGEX MATCH "\\[shader\\(\\\"fragment\\\"\\)\\][ \t\r\n]*[A-Za-z0-9_]+[ \t\r\n]+([A-Za-z0-9_]+)" FRAGMENT_MATCH "${SHADER_CONTENT}")
-  
-  if(CMAKE_MATCH_1)
-      set(FRAG_ENTRY ${CMAKE_MATCH_1})
-      message(STATUS "Found Fragment Entry: ${FRAG_ENTRY}")
-  else()
-      message(FATAL_ERROR "Could not find [shader(\"fragment\")] function in ${SHADER_SOURCES}")
-  endif()
+    # 1. Find the Vertex Shader name
+    string(REGEX MATCH "\\[shader\\(\\\"vertex\\\"\\)\\][ \t\r\n]*[A-Za-z0-9_]+[ \t\r\n]+([A-Za-z0-9_]+)" VERTEX_MATCH "${SHADER_CONTENT}")
+    
+    if(CMAKE_MATCH_1)
+        set(VERT_ENTRY ${CMAKE_MATCH_1})
+    else()
+        message(FATAL_ERROR "Could not find [shader(\"vertex\")] in ${MAIN_SOURCE}")
+    endif()
 
-  # --- COMPILE COMMAND ---
-  add_custom_command(
-          OUTPUT  ${OUTPUT_SPV}
-          # 1. Force directory creation
-          COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_OUTPUT_DIR}
-          
-          # 2. Compile using the detected names
-          COMMAND ${SLANGC_EXECUTABLE} ${SHADER_SOURCES} 
-                  -target spirv 
-                  -profile spirv_1_4 
-                  -emit-spirv-directly 
-                  -fvk-use-entrypoint-name 
-                  -entry ${VERT_ENTRY} 
-                  -entry ${FRAG_ENTRY} 
-                  -o ${OUTPUT_SPV}
-                  
-          WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
-          DEPENDS ${SHADER_SOURCES}
-          COMMENT "Compiling Slang Shader: ${SHADER_SOURCES} (Vert: ${VERT_ENTRY}, Frag: ${FRAG_ENTRY})"
-          VERBATIM
-  )
-  
-  add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV})
+    # 2. Find the Fragment Shader name
+    string(REGEX MATCH "\\[shader\\(\\\"fragment\\\"\\)\\][ \t\r\n]*[A-Za-z0-9_]+[ \t\r\n]+([A-Za-z0-9_]+)" FRAGMENT_MATCH "${SHADER_CONTENT}")
+    
+    if(CMAKE_MATCH_1)
+        set(FRAG_ENTRY ${CMAKE_MATCH_1})
+    else()
+        message(FATAL_ERROR "Could not find [shader(\"fragment\")] in ${MAIN_SOURCE}")
+    endif()
+
+    # --- COMPILE COMMAND ---
+    add_custom_command(
+            OUTPUT  ${OUTPUT_SPV}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_OUTPUT_DIR}
+            COMMAND ${SLANGC_EXECUTABLE} ${MAIN_SOURCE} 
+                    -target spirv 
+                    -profile spirv_1_4 
+                    -emit-spirv-directly 
+                    -fvk-use-entrypoint-name 
+                    -entry ${VERT_ENTRY} 
+                    -entry ${FRAG_ENTRY} 
+                    -o ${OUTPUT_SPV}
+            WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
+            DEPENDS ${SHADER_SOURCES}
+            COMMENT "Compiling Slang Shader: ${SHADER_BASE_NAME}.slang -> ${SHADER_BASE_NAME}.spv"
+            VERBATIM
+    )
+    
+    add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV})
 endfunction()
 
-# Call the function
-add_slang_shader_target(Shaders SOURCES "${CMAKE_SOURCE_DIR}/assets/shaders/HelloTriangle.slang")
+# 1. Find all .slang files
+file(GLOB ALL_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.slang")
 
-# Link dependency
+# 2. Loop through each file
+foreach(SHADER_FILE ${ALL_SHADERS})
+    
+    get_filename_component(SHADER_NAME ${SHADER_FILE} NAME_WE)
+    set(TARGET_NAME "Shader_${SHADER_NAME}")
+
+    # Call the function
+    add_slang_shader_target(${TARGET_NAME} SOURCES ${SHADER_FILE})
+
+    # [FIX] Link the individual shader target to the master "Shaders" target
+    add_dependencies(Shaders ${TARGET_NAME})
+
+endforeach()
+
+# [FIX] Now "Shaders" actually exists, so Game can depend on it
 add_dependencies(Game Shaders)
 
 
 # --- 6. Final Polish (DLL Copy) ---
 add_custom_command(TARGET Game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$ENV{VULKAN_SDK}/Bin/SDL2.dll"
+    "${SDL3_DLL}"        
     "$<TARGET_FILE_DIR:Game>"
-    COMMENT "Copying SDL2.dll to bin folder..."
-)
+    COMMENT "Copying SDL3.dll to bin folder...")
