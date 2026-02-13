@@ -5,8 +5,8 @@
 
 namespace Beer::Core
 {
-    constexpr std::string VERT = "Vert";
-    constexpr std::string FRAG = "Frag";
+    constexpr std::string_view VERT = "Vert";
+    constexpr std::string_view FRAG = "Frag";
 
     struct PipelineData
     {

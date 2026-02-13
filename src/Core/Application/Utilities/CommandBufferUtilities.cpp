@@ -1,0 +1,44 @@
+#include "Core/Application/Utilities/CommandBufferUtilities.hpp"
+
+namespace Beer::Core
+{
+    void CommandBufferUtilities::TransitionImageLayout(vk::CommandBuffer& commandBuffer,
+        vk::Image image,
+        vk::ImageLayout oldLayout,
+        vk::ImageLayout newLayout,
+        vk::AccessFlags2 srcAccessMask,
+        vk::AccessFlags2 dstAccessMask,
+        vk::PipelineStageFlags2 srcStageMask,
+        vk::PipelineStageFlags2 dstStageMask)
+    {
+        vk::ImageMemoryBarrier2 barrier{};
+        barrier.srcStageMask = srcStageMask;
+        barrier.srcAccessMask = srcAccessMask;
+        barrier.dstStageMask = dstStageMask;
+        barrier.dstAccessMask = dstAccessMask;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange = {
+            vk::ImageAspectFlagBits::eColor,
+            0,
+            1,
+            0,
+            1};
+
+        vk::DependencyInfo dependencyInfo{};
+        dependencyInfo.dependencyFlags = {};
+        dependencyInfo.imageMemoryBarrierCount = 1;
+        dependencyInfo.pImageMemoryBarriers = &barrier;
+
+        commandBuffer.pipelineBarrier2(dependencyInfo);
+    }
+
+    void CommandBufferUtilities::DrawCall(vk::CommandBuffer commandBuffer, const vk::raii::Pipeline& pipeline)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+        commandBuffer.draw(3, 1, 0, 0);
+    }
+} // namespace Beer::Core

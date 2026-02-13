@@ -2,6 +2,6 @@
 
 namespace Beer::Core
 {
-    std::string PipelineData::GetVertexName() const { return VERT + ShaderName; }
-    std::string PipelineData::GetFragmentName() const { return FRAG + ShaderName; }
+    std::string PipelineData::GetVertexName() const { return ShaderName + std::string(VERT); }
+    std::string PipelineData::GetFragmentName() const { return ShaderName + std::string(FRAG); }
 } // namespace Beer::Core

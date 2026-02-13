@@ -28,12 +28,20 @@ namespace Beer::Core
         if (basePath)
         {
             std::string fullPath = std::string(basePath) + subPath;
-            SDL_free((void*)basePath);
             return fullPath;
         } else
         {
             return subPath;
         }
+    }
+
+    static constexpr std::string_view SHADER_HEAD = "assets/shaders/";
+    static constexpr std::string_view SHADER_TAIL = ".spv";
+
+    std::string AssetUtilities::GetShaderPath(const std::string& shaderName)
+    {
+        std::string subPath = std::string(SHADER_HEAD) + shaderName + std::string(SHADER_TAIL);
+        return GetAssetPath(subPath);
     }
 
     [[nodiscard]] vk::raii::ShaderModule AssetUtilities::CreateShaderModule(const std::vector<char>& code,

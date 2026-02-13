@@ -56,7 +56,6 @@ add_custom_target(Shaders)
 function(add_slang_shader_target TARGET)
     cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
 
-    # Get the base name of the shader file (e.g., "HelloTriangle" from "HelloTriangle.slang")
     # We assume the first source file is the main one
     list(GET SHADER_SOURCES 0 MAIN_SOURCE)
     get_filename_component(SHADER_BASE_NAME ${MAIN_SOURCE} NAME_WE)
