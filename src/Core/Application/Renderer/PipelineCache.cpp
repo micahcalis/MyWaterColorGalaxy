@@ -6,12 +6,16 @@
 #include <cstdint>
 #include <vulkan/vulkan.h>
 #include "Rendering/Vertex.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
-    PipelineCache::PipelineCache(const vk::raii::Device& device, const Swapchain& swapchain)
+    PipelineCache::PipelineCache(const vk::raii::Device& device,
+        const Swapchain& swapchain,
+        vk::DescriptorSetLayout globalSetLayout)
         : logicalDevice(device)
         , swapchain(swapchain)
+        , globalSetLayout(globalSetLayout)
     {
     }
 
@@ -77,7 +81,7 @@ namespace Beer::Core
         rasterizationCreateInfo.rasterizerDiscardEnable = vk::False;
         rasterizationCreateInfo.polygonMode = data.PolygonMode;
         rasterizationCreateInfo.cullMode = data.CullMode;
-        rasterizationCreateInfo.frontFace = vk::FrontFace::eClockwise;
+        rasterizationCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
         rasterizationCreateInfo.depthBiasEnable = vk::False;
         rasterizationCreateInfo.depthBiasSlopeFactor = 1.0f;
         rasterizationCreateInfo.lineWidth = 1.0f;
@@ -99,11 +103,21 @@ namespace Beer::Core
         colorBlendCreateInfo.attachmentCount = 1;
         colorBlendCreateInfo.pAttachments = &colorBlendAttachment;
 
-        vk::PipelineLayoutCreateInfo layoutCreateInfo{};
-        layoutCreateInfo.setLayoutCount = 0;
-        layoutCreateInfo.pushConstantRangeCount = 0;
+        std::vector<vk::DescriptorSetLayout> setLayouts;
 
-        emptyLayout = vk::raii::PipelineLayout(logicalDevice, layoutCreateInfo);
+        setLayouts.push_back(globalSetLayout);
+
+        if (data.MaterialLayout != VK_NULL_HANDLE)
+        {
+            setLayouts.push_back(data.MaterialLayout);
+        }
+
+        vk::PipelineLayoutCreateInfo layoutCreateInfo{};
+        layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+        layoutCreateInfo.pSetLayouts = setLayouts.data();
+
+        // NOTE: needs caching
+        vk::raii::PipelineLayout finalLayout(logicalDevice, layoutCreateInfo);
 
         vk::PipelineRenderingCreateInfo renderingCreateInfo{};
         vk::Format colorFormat = swapchain.GetImageFormat();
@@ -121,11 +135,14 @@ namespace Beer::Core
         graphicsPipelineCreateInfo.pMultisampleState = &multisamplingCreateInfo;
         graphicsPipelineCreateInfo.pColorBlendState = &colorBlendCreateInfo;
         graphicsPipelineCreateInfo.pDynamicState = &dynamicCreateInfo;
-        graphicsPipelineCreateInfo.layout = *emptyLayout;
+        graphicsPipelineCreateInfo.layout = *finalLayout;
         graphicsPipelineCreateInfo.renderPass = nullptr;
         graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-        return vk::raii::Pipeline(logicalDevice, nullptr, graphicsPipelineCreateInfo);
+        vk::raii::Pipeline pipeline(logicalDevice, nullptr, graphicsPipelineCreateInfo);
+        cachedLayouts.push_back(std::move(finalLayout));
+
+        return pipeline;
     }
 } // namespace Beer::Core

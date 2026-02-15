@@ -12,6 +12,10 @@
 #include <cstdint>
 #include <memory>
 #include "Rendering/Vertex.hpp"
+#include "Rendering/UniformBufferObject.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <chrono>
 
 namespace Beer::Core
 {
@@ -25,10 +29,15 @@ namespace Beer::Core
 
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
+
     const std::vector<Rendering::Vertex> helloTriangleVertices = {
-        Rendering::Vertex{glm::vec2(0.0, -0.5), glm::vec3(1.0, 1.0, 1.0)},
+        Rendering::Vertex{glm::vec2(-0.5, -0.5), glm::vec3(1.0, 0.0, 0.0)},
+        Rendering::Vertex{glm::vec2(0.5, -0.5), glm::vec3(1.0, 1.0, 1.0)},
         Rendering::Vertex{glm::vec2(0.5, 0.5), glm::vec3(0.0, 1.0, 0.0)},
         Rendering::Vertex{glm::vec2(-0.5, 0.5), glm::vec3(0.0, 0.0, 1.0)}};
+
+    const std::vector<uint16_t> helloTriangleIndices = {
+        0, 1, 2, 2, 3, 0};
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
@@ -39,13 +48,19 @@ namespace Beer::Core
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
         CreateSemaphores();
-        pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain);
+        CreateUniformBuffers();
+        CreateDesciptorSetLayout();
+        CreateDescriptorPool();
+        CreateDescriptorSets();
+        pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain, descriptorSetLayout);
+
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             frameResources.emplace_back(FrameResource(&device));
         }
 
         CreateVertexBuffer();
+        CreateIndexBuffer();
     }
 
     void Renderer::Draw()
@@ -208,6 +223,129 @@ namespace Beer::Core
         //     bufferSize);
     }
 
+    void Renderer::CreateIndexBuffer()
+    {
+        vk::DeviceSize bufferSize = sizeof(helloTriangleIndices[0]) * helloTriangleIndices.size();
+
+        vk::raii::Buffer stagingBuffer({});
+        vk::raii::DeviceMemory stagingBufferMemory({});
+
+        RendererUtilities::CreateBuffer(bufferSize,
+            vk::BufferUsageFlagBits::eTransferSrc,
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+            device,
+            stagingBuffer,
+            stagingBufferMemory);
+
+        void* data = stagingBufferMemory.mapMemory(0, bufferSize);
+        memcpy(data, helloTriangleIndices.data(), (size_t)bufferSize);
+        stagingBufferMemory.unmapMemory();
+
+        RendererUtilities::CreateBuffer(bufferSize,
+            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            device,
+            indexBuffer,
+            indexBufferMemory);
+
+        RendererUtilities::CopyBuffer(stagingBuffer,
+            indexBuffer,
+            bufferSize,
+            device,
+            frameResources[frameIndex]);
+    }
+
+    void Renderer::CreateDesciptorSetLayout()
+    {
+        vk::DescriptorSetLayoutBinding uboLayoutBinding(0,
+            vk::DescriptorType::eUniformBuffer,
+            1,
+            vk::ShaderStageFlagBits::eVertex,
+            nullptr);
+
+        vk::DescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &uboLayoutBinding;
+
+        descriptorSetLayout = vk::raii::DescriptorSetLayout(device.GetLogicalDevice(), layoutInfo);
+
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &*descriptorSetLayout;
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+        pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
+    }
+
+    void Renderer::CreateUniformBuffers()
+    {
+        uniformBuffers.clear();
+        uniformBuffersMemory.clear();
+        uniformBuffersMapped.clear();
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            vk::DeviceSize bufferSize = sizeof(Rendering::UniformBufferObject);
+            vk::raii::Buffer buffer({});
+            vk::raii::DeviceMemory bufferMemory({});
+
+            RendererUtilities::CreateBuffer(bufferSize,
+                vk::BufferUsageFlagBits::eUniformBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible,
+                device,
+                buffer,
+                bufferMemory);
+
+            uniformBuffers.emplace_back(std::move(buffer));
+            uniformBuffersMemory.emplace_back(std::move(bufferMemory));
+            uniformBuffersMapped.emplace_back(uniformBuffersMemory[i].mapMemory(0, bufferSize));
+        }
+    }
+
+    void Renderer::CreateDescriptorPool()
+    {
+        vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT);
+
+        vk::DescriptorPoolCreateInfo poolInfo{};
+        poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+        poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes = &poolSize;
+
+        descriptorPool = vk::raii::DescriptorPool(device.GetLogicalDevice(), poolInfo);
+    }
+
+    void Renderer::CreateDescriptorSets()
+    {
+        std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *descriptorSetLayout);
+
+        vk::DescriptorSetAllocateInfo allocateInfo{};
+        allocateInfo.descriptorPool = descriptorPool;
+        allocateInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
+        allocateInfo.pSetLayouts = layouts.data();
+
+        descriptorSets.clear();
+        descriptorSets = device.GetLogicalDevice().allocateDescriptorSets(allocateInfo);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            vk::DescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = uniformBuffers[i];
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(Rendering::UniformBufferObject);
+
+            vk::WriteDescriptorSet descriptorWrite{};
+            descriptorWrite.dstSet = descriptorSets[i];
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+
+            device.GetLogicalDevice().updateDescriptorSets(descriptorWrite, {});
+        }
+    }
+
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
     {
         vk::CommandBuffer commandBuffer = frameResource.GetCommandBuffer();
@@ -242,6 +380,8 @@ namespace Beer::Core
         commandBuffer.setScissor(0,
             vk::Rect2D(vk::Offset2D(0, 0), swapchainExtent));
 
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIndex], nullptr);
+
         // HARDCODED DRAW BLOCK : EXTENSION NECESSARY!!!
         PipelineData pipelineData{};
         pipelineData.ShaderName = HELLO_TRIANGLE;
@@ -249,7 +389,7 @@ namespace Beer::Core
         const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
             pipelineData);
 
-        CommandBufferUtilities::DrawCall(commandBuffer, pipeline, vertexBuffer);
+        CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer, indexBuffer, helloTriangleIndices.size());
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -269,6 +409,8 @@ namespace Beer::Core
             vk::PipelineStageFlagBits2::eBottomOfPipe);
 
         commandBuffer.end();
+
+        UpdateUniformBuffer(frameIndex);
 
         auto waitMask = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
         vk::SubmitInfo submitInfo = RendererUtilities::CreateSubmitInfo(frameResource, commandBuffer, &waitMask);
@@ -296,4 +438,23 @@ namespace Beer::Core
     }
 
     void Renderer::SetFrameBufferResized(const bool val) { frameBufferResized = val; }
+
+    void Renderer::UpdateUniformBuffer(uint32_t frameIndex)
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        const vk::Extent2D extent = swapchain.GetExtent();
+        const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
+
+        Rendering::UniformBufferObject ubo{};
+        ubo.objToWorld = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+        ubo.worldToView = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 0.0, 1.0));
+        ubo.viewToClip = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
+        ubo.viewToClip[1][1] *= -1;
+
+        memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
+    }
 } // namespace Beer::Core

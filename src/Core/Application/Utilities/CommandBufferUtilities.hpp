@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vulkan/vulkan.hpp"
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -21,5 +22,11 @@ namespace Beer::Core
         static void DrawCall(vk::CommandBuffer commandBuffer,
             const vk::raii::Pipeline& pipeline,
             const vk::raii::Buffer& vertexBuffer);
+
+        static void DrawIndexedCall(vk::CommandBuffer commandBuffer,
+            const vk::raii::Pipeline& pipeline,
+            const vk::raii::Buffer& vertexBuffer,
+            const vk::raii::Buffer& indexBuffer,
+            const uint32_t indexCount);
     };
 } // namespace Beer::Core

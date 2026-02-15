@@ -105,7 +105,7 @@ namespace Beer::Core
     {
         vk::BufferCreateInfo bufferInfo{};
         bufferInfo.size = size;
-        bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
+        bufferInfo.usage = usage;
         bufferInfo.sharingMode = vk::SharingMode::eExclusive;
 
         buffer = vk::raii::Buffer(device.GetLogicalDevice(), bufferInfo);

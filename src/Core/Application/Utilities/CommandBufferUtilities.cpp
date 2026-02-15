@@ -1,4 +1,5 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
@@ -43,5 +44,17 @@ namespace Beer::Core
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
         commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
         commandBuffer.draw(3, 1, 0, 0);
+    }
+
+    void CommandBufferUtilities::DrawIndexedCall(vk::CommandBuffer commandBuffer,
+        const vk::raii::Pipeline& pipeline,
+        const vk::raii::Buffer& vertexBuffer,
+        const vk::raii::Buffer& indexBuffer,
+        const uint32_t indexCount)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+        commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
+        commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint16);
+        commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
     }
 } // namespace Beer::Core

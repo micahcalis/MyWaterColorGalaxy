@@ -28,6 +28,15 @@ namespace Beer::Core
         bool frameBufferResized = false;
         vk::raii::Buffer vertexBuffer = nullptr;
         vk::raii::DeviceMemory vertexBufferMemory = nullptr;
+        vk::raii::Buffer indexBuffer = nullptr;
+        vk::raii::DeviceMemory indexBufferMemory = nullptr;
+        vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
+        vk::raii::PipelineLayout pipelineLayout = nullptr;
+        std::vector<vk::raii::Buffer> uniformBuffers;
+        std::vector<vk::raii::DeviceMemory> uniformBuffersMemory;
+        std::vector<void*> uniformBuffersMapped;
+        vk::raii::DescriptorPool descriptorPool = nullptr;
+        std::vector<vk::raii::DescriptorSet> descriptorSets;
 
     public:
         void InitializeVulkanInstances(SDL_Window* window);
@@ -47,8 +56,14 @@ namespace Beer::Core
         void SetupDebugMessenger();
         void CreateSurface(SDL_Window* window);
         void CreateSemaphores();
+        void CreateDesciptorSetLayout();
         void CreateVertexBuffer();
+        void CreateIndexBuffer();
+        void CreateUniformBuffers();
+        void CreateDescriptorPool();
+        void CreateDescriptorSets();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
+        void UpdateUniformBuffer(uint32_t frameIndex);
     };
 } // namespace Beer::Core
