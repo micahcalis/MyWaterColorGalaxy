@@ -4,6 +4,8 @@
 #include <vulkan/vulkan_raii.hpp>
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
+#include "Rendering/Vertex.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
@@ -30,5 +32,27 @@ namespace Beer::Core
 
         static vk::Result Queue_PresentKHR_NoExcept(const vk::raii::Queue& queue,
             const vk::PresentInfoKHR& present_info);
+
+        static void CreateBuffer(vk::DeviceSize size,
+            vk::BufferUsageFlags usage,
+            vk::MemoryPropertyFlags properties,
+            const Device& device,
+            vk::raii::Buffer& buffer,
+            vk::raii::DeviceMemory& bufferMemory);
+
+        static uint32_t FindMemoryType(uint32_t typeFilter,
+            vk::MemoryPropertyFlags properties,
+            const vk::raii::PhysicalDevice& physicalDevice);
+
+        static void MapVertices(vk::raii::Buffer& vertexBuffer,
+            vk::raii::DeviceMemory& vertexBufferMemory,
+            const std::vector<Rendering::Vertex>& vertices,
+            const size_t size);
+
+        static void CopyBuffer(vk::raii::Buffer& srcBuffer,
+            vk::raii::Buffer& dstBuffer,
+            vk::DeviceSize size,
+            const Device& device,
+            const FrameResource& frameResource);
     };
 } // namespace Beer::Core

@@ -11,7 +11,7 @@
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
-#include <print>
+#include "Rendering/Vertex.hpp"
 
 namespace Beer::Core
 {
@@ -25,6 +25,10 @@ namespace Beer::Core
 
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
+    const std::vector<Rendering::Vertex> helloTriangleVertices = {
+        Rendering::Vertex{glm::vec2(0.0, -0.5), glm::vec3(1.0, 1.0, 1.0)},
+        Rendering::Vertex{glm::vec2(0.5, 0.5), glm::vec3(0.0, 1.0, 0.0)},
+        Rendering::Vertex{glm::vec2(-0.5, 0.5), glm::vec3(0.0, 0.0, 1.0)}};
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
@@ -40,6 +44,8 @@ namespace Beer::Core
         {
             frameResources.emplace_back(FrameResource(&device));
         }
+
+        CreateVertexBuffer();
     }
 
     void Renderer::Draw()
@@ -145,6 +151,63 @@ namespace Beer::Core
         }
     }
 
+    void Renderer::CreateVertexBuffer()
+    {
+        vk::DeviceSize bufferSize = sizeof(helloTriangleVertices[0]) * helloTriangleVertices.size();
+
+        vk::BufferCreateInfo stagingInfo{};
+        stagingInfo.size = bufferSize;
+        stagingInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+        stagingInfo.sharingMode = vk::SharingMode::eExclusive;
+
+        vk::raii::Buffer stagingBuffer(device.GetLogicalDevice(), stagingInfo);
+        vk::MemoryRequirements memRequirementsStaging = stagingBuffer.getMemoryRequirements();
+
+        vk::MemoryAllocateInfo memoryAllocateInfoStaging{};
+        memoryAllocateInfoStaging.allocationSize = memRequirementsStaging.size;
+        memoryAllocateInfoStaging.memoryTypeIndex = RendererUtilities::FindMemoryType(memRequirementsStaging.memoryTypeBits,
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+            device.GetPhysicalDevice());
+
+        vk::raii::DeviceMemory stagingBufferMemory(device.GetLogicalDevice(), memoryAllocateInfoStaging);
+
+        stagingBuffer.bindMemory(stagingBufferMemory, 0);
+        void* dataStaging = stagingBufferMemory.mapMemory(0, stagingInfo.size);
+        memcpy(dataStaging, helloTriangleVertices.data(), stagingInfo.size);
+        stagingBufferMemory.unmapMemory();
+
+        vk::BufferCreateInfo bufferInfo{};
+        bufferInfo.size = bufferSize;
+        bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst;
+        bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+
+        vertexBuffer = vk::raii::Buffer(device.GetLogicalDevice(), bufferInfo);
+
+        vk::MemoryRequirements memRequirements = vertexBuffer.getMemoryRequirements();
+
+        vk::MemoryAllocateInfo memoryAllocateInfo{};
+        memoryAllocateInfo.allocationSize = memRequirements.size;
+        memoryAllocateInfo.memoryTypeIndex = RendererUtilities::FindMemoryType(memRequirements.memoryTypeBits,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            device.GetPhysicalDevice());
+
+        vertexBufferMemory = vk::raii::DeviceMemory(device.GetLogicalDevice(), memoryAllocateInfo);
+        vertexBuffer.bindMemory(vertexBufferMemory, 0);
+        RendererUtilities::CopyBuffer(stagingBuffer, vertexBuffer, stagingInfo.size, device, frameResources[frameIndex]);
+
+        // RendererUtilities::CreateBuffer(bufferSize,
+        //     vk::BufferUsageFlagBits::eVertexBuffer,
+        //     vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+        //     device,
+        //     vertexBuffer,
+        //     vertexBufferMemory);
+
+        // RendererUtilities::MapVertices(vertexBuffer,
+        //     vertexBufferMemory,
+        //     helloTriangleVertices,
+        //     bufferSize);
+    }
+
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
     {
         vk::CommandBuffer commandBuffer = frameResource.GetCommandBuffer();
@@ -186,7 +249,7 @@ namespace Beer::Core
         const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
             pipelineData);
 
-        CommandBufferUtilities::DrawCall(commandBuffer, pipeline);
+        CommandBufferUtilities::DrawCall(commandBuffer, pipeline, vertexBuffer);
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)

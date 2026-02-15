@@ -3,7 +3,9 @@
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Core/Application/Renderer/PipelineKey.hpp"
 #include "PipelineCache.hpp"
+#include <cstdint>
 #include <vulkan/vulkan.h>
+#include "Rendering/Vertex.hpp"
 
 namespace Beer::Core
 {
@@ -46,7 +48,13 @@ namespace Beer::Core
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+        auto bindingDescription = Rendering::Vertex::GetBindingDescription();
+        auto attributeDescriptions = Rendering::Vertex::GetAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
         std::vector dynamicStates = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         vk::PipelineDynamicStateCreateInfo dynamicCreateInfo{};

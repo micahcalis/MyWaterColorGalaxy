@@ -26,6 +26,8 @@ namespace Beer::Core
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
         int frameIndex = 0;
         bool frameBufferResized = false;
+        vk::raii::Buffer vertexBuffer = nullptr;
+        vk::raii::DeviceMemory vertexBufferMemory = nullptr;
 
     public:
         void InitializeVulkanInstances(SDL_Window* window);
@@ -45,6 +47,7 @@ namespace Beer::Core
         void SetupDebugMessenger();
         void CreateSurface(SDL_Window* window);
         void CreateSemaphores();
+        void CreateVertexBuffer();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
     };

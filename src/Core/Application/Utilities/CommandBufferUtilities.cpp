@@ -36,9 +36,12 @@ namespace Beer::Core
         commandBuffer.pipelineBarrier2(dependencyInfo);
     }
 
-    void CommandBufferUtilities::DrawCall(vk::CommandBuffer commandBuffer, const vk::raii::Pipeline& pipeline)
+    void CommandBufferUtilities::DrawCall(vk::CommandBuffer commandBuffer,
+        const vk::raii::Pipeline& pipeline,
+        const vk::raii::Buffer& vertexBuffer)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+        commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
         commandBuffer.draw(3, 1, 0, 0);
     }
 } // namespace Beer::Core

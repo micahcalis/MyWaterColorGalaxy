@@ -18,6 +18,8 @@ namespace Beer::Core
             vk::PipelineStageFlags2 dstStageMask);
 
         // TODO: don't hardcode vertices X)
-        static void DrawCall(vk::CommandBuffer commandBuffer, const vk::raii::Pipeline& pipeline);
+        static void DrawCall(vk::CommandBuffer commandBuffer,
+            const vk::raii::Pipeline& pipeline,
+            const vk::raii::Buffer& vertexBuffer);
     };
 } // namespace Beer::Core
