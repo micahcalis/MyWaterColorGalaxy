@@ -8,7 +8,7 @@ namespace Beer::Rendering
         VkDeviceSize size,
         VkBufferUsageFlags usage)
     {
-        auto tempAlloc = allocator.CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO);
+        auto tempAlloc = allocator.CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO, 0);
         return Buffer(allocator, tempAlloc, size);
     }
 
@@ -20,9 +20,13 @@ namespace Beer::Rendering
 
     Buffer Buffer::CreateUniform(const Core::BufferAllocator& allocator, VkDeviceSize size)
     {
+        VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
         auto tempAlloc = allocator.CreateBuffer(size,
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+            usage,
+            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+            flags);
 
         return Buffer(allocator, tempAlloc, size);
     }
@@ -37,7 +41,7 @@ namespace Beer::Rendering
 
         if (allocation.Info.pMappedData)
         {
-            memcpy(allocation.Info.pMappedData, data, size);
+            std::memcpy(allocation.Info.pMappedData, data, size);
         } else
         {
             throw std::runtime_error("Cannot direct upload to unmapped GPU memory!");

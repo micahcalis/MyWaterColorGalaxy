@@ -9,6 +9,7 @@
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/BufferAllocator.hpp"
+#include "Rendering/Buffer/Buffer.hpp"
 
 namespace Beer::Core
 {
@@ -26,18 +27,13 @@ namespace Beer::Core
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
         std::unique_ptr<BufferAllocator> bufferAllocator = nullptr;
-
+        std::unique_ptr<Rendering::Buffer> vertexBuffer;
+        std::unique_ptr<Rendering::Buffer> indexBuffer;
+        std::vector<std::unique_ptr<Rendering::Buffer>> uniformBuffers;
         int frameIndex = 0;
         bool frameBufferResized = false;
-        vk::raii::Buffer vertexBuffer = nullptr;
-        vk::raii::DeviceMemory vertexBufferMemory = nullptr;
-        vk::raii::Buffer indexBuffer = nullptr;
-        vk::raii::DeviceMemory indexBufferMemory = nullptr;
         vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
         vk::raii::PipelineLayout pipelineLayout = nullptr;
-        std::vector<vk::raii::Buffer> uniformBuffers;
-        std::vector<vk::raii::DeviceMemory> uniformBuffersMemory;
-        std::vector<void*> uniformBuffersMapped;
         vk::raii::DescriptorPool descriptorPool = nullptr;
         std::vector<vk::raii::DescriptorSet> descriptorSets;
 

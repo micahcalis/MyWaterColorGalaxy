@@ -18,7 +18,8 @@ namespace Beer::Core
         ~BufferAllocator();
         const Rendering::BufferAllocation CreateBuffer(VkDeviceSize size,
             VkBufferUsageFlags usage,
-            VmaMemoryUsage memoryUsage) const;
+            VmaMemoryUsage memoryUsage,
+            VmaAllocationCreateFlags flags) const;
         const Rendering::BufferAllocation CreateStagingBuffer(vk::DeviceSize size) const;
         void DestroyBuffer(const Rendering::BufferAllocation& buffer);
         void DestroyImage(const Rendering::BufferAllocation& image);

@@ -27,7 +27,8 @@ namespace Beer::Core
 
     const Rendering::BufferAllocation BufferAllocator::CreateBuffer(VkDeviceSize size,
         VkBufferUsageFlags usage,
-        VmaMemoryUsage memoryUsage) const
+        VmaMemoryUsage memoryUsage,
+        VmaAllocationCreateFlags flags) const
     {
         Rendering::BufferAllocation bufferAlloc;
 
@@ -39,6 +40,7 @@ namespace Beer::Core
 
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = memoryUsage;
+        allocInfo.flags = flags;
 
         VkResult result = vmaCreateBuffer(vmaAllocator,
             &bufferInfo,

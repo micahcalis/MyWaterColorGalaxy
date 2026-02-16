@@ -21,12 +21,12 @@ namespace Beer::Core
         // TODO: don't hardcode vertices X)
         static void DrawCall(vk::CommandBuffer commandBuffer,
             const vk::raii::Pipeline& pipeline,
-            const vk::raii::Buffer& vertexBuffer);
+            const VkBuffer& vertexBuffer);
 
         static void DrawIndexedCall(vk::CommandBuffer commandBuffer,
             const vk::raii::Pipeline& pipeline,
-            const vk::raii::Buffer& vertexBuffer,
-            const vk::raii::Buffer& indexBuffer,
+            const VkBuffer& vertexBuffer,
+            const VkBuffer& indexBuffer,
             const uint32_t indexCount);
     };
 } // namespace Beer::Core

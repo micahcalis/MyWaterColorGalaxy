@@ -48,13 +48,13 @@ namespace Beer::Core
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
         CreateSemaphores();
+        bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
+
         CreateUniformBuffers();
         CreateDesciptorSetLayout();
         CreateDescriptorPool();
         CreateDescriptorSets();
         pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain, descriptorSetLayout);
-        bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
-
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             frameResources.emplace_back(FrameResource(&device));
@@ -171,89 +171,30 @@ namespace Beer::Core
     {
         vk::DeviceSize bufferSize = sizeof(helloTriangleVertices[0]) * helloTriangleVertices.size();
 
-        vk::BufferCreateInfo stagingInfo{};
-        stagingInfo.size = bufferSize;
-        stagingInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
-        stagingInfo.sharingMode = vk::SharingMode::eExclusive;
+        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
+            Rendering::Buffer::CreateStaging(*bufferAllocator, bufferSize));
 
-        vk::raii::Buffer stagingBuffer(device.GetLogicalDevice(), stagingInfo);
-        vk::MemoryRequirements memRequirementsStaging = stagingBuffer.getMemoryRequirements();
+        stagingBuffer->Upload(helloTriangleVertices.data(), bufferSize);
 
-        vk::MemoryAllocateInfo memoryAllocateInfoStaging{};
-        memoryAllocateInfoStaging.allocationSize = memRequirementsStaging.size;
-        memoryAllocateInfoStaging.memoryTypeIndex = RendererUtilities::FindMemoryType(memRequirementsStaging.memoryTypeBits,
-            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-            device.GetPhysicalDevice());
+        vertexBuffer = std::make_unique<Rendering::Buffer>(
+            Rendering::Buffer::CreateDeviceLocal(*bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        vk::raii::DeviceMemory stagingBufferMemory(device.GetLogicalDevice(), memoryAllocateInfoStaging);
-
-        stagingBuffer.bindMemory(stagingBufferMemory, 0);
-        void* dataStaging = stagingBufferMemory.mapMemory(0, stagingInfo.size);
-        memcpy(dataStaging, helloTriangleVertices.data(), stagingInfo.size);
-        stagingBufferMemory.unmapMemory();
-
-        vk::BufferCreateInfo bufferInfo{};
-        bufferInfo.size = bufferSize;
-        bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst;
-        bufferInfo.sharingMode = vk::SharingMode::eExclusive;
-
-        vertexBuffer = vk::raii::Buffer(device.GetLogicalDevice(), bufferInfo);
-
-        vk::MemoryRequirements memRequirements = vertexBuffer.getMemoryRequirements();
-
-        vk::MemoryAllocateInfo memoryAllocateInfo{};
-        memoryAllocateInfo.allocationSize = memRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = RendererUtilities::FindMemoryType(memRequirements.memoryTypeBits,
-            vk::MemoryPropertyFlagBits::eDeviceLocal,
-            device.GetPhysicalDevice());
-
-        vertexBufferMemory = vk::raii::DeviceMemory(device.GetLogicalDevice(), memoryAllocateInfo);
-        vertexBuffer.bindMemory(vertexBufferMemory, 0);
-        RendererUtilities::CopyBuffer(stagingBuffer, vertexBuffer, stagingInfo.size, device, frameResources[frameIndex]);
-
-        // RendererUtilities::CreateBuffer(bufferSize,
-        //     vk::BufferUsageFlagBits::eVertexBuffer,
-        //     vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-        //     device,
-        //     vertexBuffer,
-        //     vertexBufferMemory);
-
-        // RendererUtilities::MapVertices(vertexBuffer,
-        //     vertexBufferMemory,
-        //     helloTriangleVertices,
-        //     bufferSize);
+        stagingBuffer->CopyTo(*vertexBuffer, device, frameResources[frameIndex]);
     }
 
     void Renderer::CreateIndexBuffer()
     {
         vk::DeviceSize bufferSize = sizeof(helloTriangleIndices[0]) * helloTriangleIndices.size();
 
-        vk::raii::Buffer stagingBuffer({});
-        vk::raii::DeviceMemory stagingBufferMemory({});
+        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
+            Rendering::Buffer::CreateStaging(*bufferAllocator, bufferSize));
 
-        RendererUtilities::CreateBuffer(bufferSize,
-            vk::BufferUsageFlagBits::eTransferSrc,
-            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-            device,
-            stagingBuffer,
-            stagingBufferMemory);
+        stagingBuffer->Upload(helloTriangleIndices.data(), bufferSize);
 
-        void* data = stagingBufferMemory.mapMemory(0, bufferSize);
-        memcpy(data, helloTriangleIndices.data(), (size_t)bufferSize);
-        stagingBufferMemory.unmapMemory();
+        indexBuffer = std::make_unique<Rendering::Buffer>(
+            Rendering::Buffer::CreateDeviceLocal(*bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        RendererUtilities::CreateBuffer(bufferSize,
-            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-            vk::MemoryPropertyFlagBits::eDeviceLocal,
-            device,
-            indexBuffer,
-            indexBufferMemory);
-
-        RendererUtilities::CopyBuffer(stagingBuffer,
-            indexBuffer,
-            bufferSize,
-            device,
-            frameResources[frameIndex]);
+        stagingBuffer->CopyTo(*indexBuffer, device, frameResources[frameIndex]);
     }
 
     void Renderer::CreateDesciptorSetLayout()
@@ -281,25 +222,14 @@ namespace Beer::Core
     void Renderer::CreateUniformBuffers()
     {
         uniformBuffers.clear();
-        uniformBuffersMemory.clear();
-        uniformBuffersMapped.clear();
+        vk::DeviceSize bufferSize = sizeof(Rendering::UniformBufferObject);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            vk::DeviceSize bufferSize = sizeof(Rendering::UniformBufferObject);
-            vk::raii::Buffer buffer({});
-            vk::raii::DeviceMemory bufferMemory({});
+            std::unique_ptr<Rendering::Buffer> uniformBuffer = std::make_unique<Rendering::Buffer>(
+                Rendering::Buffer::CreateUniform(*bufferAllocator, bufferSize));
 
-            RendererUtilities::CreateBuffer(bufferSize,
-                vk::BufferUsageFlagBits::eUniformBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible,
-                device,
-                buffer,
-                bufferMemory);
-
-            uniformBuffers.emplace_back(std::move(buffer));
-            uniformBuffersMemory.emplace_back(std::move(bufferMemory));
-            uniformBuffersMapped.emplace_back(uniformBuffersMemory[i].mapMemory(0, bufferSize));
+            uniformBuffers.emplace_back(std::move(uniformBuffer));
         }
     }
 
@@ -331,7 +261,7 @@ namespace Beer::Core
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             vk::DescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffers[i];
+            bufferInfo.buffer = vk::Buffer(uniformBuffers[i]->GetHandle());
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(Rendering::UniformBufferObject);
 
@@ -390,7 +320,7 @@ namespace Beer::Core
         const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
             pipelineData);
 
-        CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer, indexBuffer, helloTriangleIndices.size());
+        CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer->GetHandle(), indexBuffer->GetHandle(), helloTriangleIndices.size());
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -456,6 +386,7 @@ namespace Beer::Core
         ubo.viewToClip = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
         ubo.viewToClip[1][1] *= -1;
 
-        memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
+        // memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
+        uniformBuffers[frameIndex]->Upload(&ubo, sizeof(ubo));
     }
 } // namespace Beer::Core
