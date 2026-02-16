@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
+#include "Core/Application/Renderer/BufferAllocator.hpp"
 
 namespace Beer::Core
 {
@@ -24,6 +25,8 @@ namespace Beer::Core
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
+        std::unique_ptr<BufferAllocator> bufferAllocator = nullptr;
+
         int frameIndex = 0;
         bool frameBufferResized = false;
         vk::raii::Buffer vertexBuffer = nullptr;

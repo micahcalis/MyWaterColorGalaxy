@@ -53,6 +53,7 @@ namespace Beer::Core
         CreateDescriptorPool();
         CreateDescriptorSets();
         pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain, descriptorSetLayout);
+        bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
