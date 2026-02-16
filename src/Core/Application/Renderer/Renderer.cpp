@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
+#include <print>
 
 namespace Beer::Core
 {
@@ -48,13 +49,20 @@ namespace Beer::Core
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
         CreateSemaphores();
+        std::println("PRE ALLOC");
         bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
+        std::println("POST ALLOC");
 
         CreateUniformBuffers();
+        std::println("POST UNIFORM");
         CreateDesciptorSetLayout();
+        std::println("POST DESCRIPTORSET");
         CreateDescriptorPool();
+        std::println("POST DESCRIPTORPOOL");
         CreateDescriptorSets();
+        std::println("POST DESCRIPTORSETS");
         pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain, descriptorSetLayout);
+        std::println("POST PIPELINE CACHE");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             frameResources.emplace_back(FrameResource(&device));
@@ -62,6 +70,7 @@ namespace Beer::Core
 
         CreateVertexBuffer();
         CreateIndexBuffer();
+        std::println("POST BUFFERS");
     }
 
     void Renderer::Draw()

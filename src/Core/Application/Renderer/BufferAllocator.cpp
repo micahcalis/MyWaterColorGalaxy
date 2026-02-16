@@ -89,6 +89,11 @@ namespace Beer::Core
     void BufferAllocator::DestroyBuffer(const Rendering::BufferAllocation& buffer)
     {
         vmaDestroyBuffer(vmaAllocator, buffer.Buffer, buffer.Allocation);
+
+        if (buffer.Buffer != VK_NULL_HANDLE)
+        {
+            vmaDestroyBuffer(vmaAllocator, buffer.Buffer, buffer.Allocation);
+        }
     }
 
     void BufferAllocator::DestroyImage(const Rendering::BufferAllocation& image)

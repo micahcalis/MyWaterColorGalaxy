@@ -22,11 +22,11 @@ namespace Beer::Core
         vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
         vk::raii::SurfaceKHR surface = nullptr;
         Device device{};
+        std::unique_ptr<BufferAllocator> bufferAllocator = nullptr;
         Swapchain swapchain{};
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
-        std::unique_ptr<BufferAllocator> bufferAllocator = nullptr;
         std::unique_ptr<Rendering::Buffer> vertexBuffer;
         std::unique_ptr<Rendering::Buffer> indexBuffer;
         std::vector<std::unique_ptr<Rendering::Buffer>> uniformBuffers;

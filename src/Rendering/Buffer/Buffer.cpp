@@ -1,10 +1,11 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "BufferAllocation.hpp"
+#include "Core/Application/Renderer/BufferAllocator.hpp"
 #include <iostream>
 
 namespace Beer::Rendering
 {
-    Buffer Buffer::CreateDeviceLocal(const Core::BufferAllocator& allocator,
+    Buffer Buffer::CreateDeviceLocal(Core::BufferAllocator& allocator,
         VkDeviceSize size,
         VkBufferUsageFlags usage)
     {
@@ -12,13 +13,13 @@ namespace Beer::Rendering
         return Buffer(allocator, tempAlloc, size);
     }
 
-    Buffer Buffer::CreateStaging(const Core::BufferAllocator& allocator, VkDeviceSize size)
+    Buffer Buffer::CreateStaging(Core::BufferAllocator& allocator, VkDeviceSize size)
     {
         auto tempAlloc = allocator.CreateStagingBuffer(size);
         return Buffer(allocator, tempAlloc, size);
     }
 
-    Buffer Buffer::CreateUniform(const Core::BufferAllocator& allocator, VkDeviceSize size)
+    Buffer Buffer::CreateUniform(Core::BufferAllocator& allocator, VkDeviceSize size)
     {
         VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
         VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -76,7 +77,7 @@ namespace Beer::Rendering
         device.GetGraphicsQueue().waitIdle();
     }
 
-    Buffer::Buffer(const Core::BufferAllocator& allocator, BufferAllocation allocation, VkDeviceSize size)
+    Buffer::Buffer(Core::BufferAllocator& allocator, BufferAllocation allocation, VkDeviceSize size)
         : allocator(allocator)
         , allocation(allocation)
         , size(size)

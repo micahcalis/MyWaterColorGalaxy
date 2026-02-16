@@ -1,5 +1,4 @@
 #include "Core/Application/Application.hpp"
-#include "Core/Application/Utilities/SDLUtilities.hpp"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 #include <cassert>

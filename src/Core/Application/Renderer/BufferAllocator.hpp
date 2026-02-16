@@ -16,6 +16,7 @@ namespace Beer::Core
     public:
         BufferAllocator(const Device& device, const vk::raii::Instance& instance);
         ~BufferAllocator();
+        const VmaAllocator GetVmaAllocator() const { return vmaAllocator; }
         const Rendering::BufferAllocation CreateBuffer(VkDeviceSize size,
             VkBufferUsageFlags usage,
             VmaMemoryUsage memoryUsage,

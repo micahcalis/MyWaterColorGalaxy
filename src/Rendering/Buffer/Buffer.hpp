@@ -9,19 +9,19 @@ namespace Beer::Rendering
     class Buffer
     {
     private:
-        const Core::BufferAllocator& allocator;
+        Core::BufferAllocator& allocator;
         BufferAllocation allocation;
         VkDeviceSize size;
 
     public:
-        static Buffer CreateDeviceLocal(const Core::BufferAllocator& allocator,
+        static Buffer CreateDeviceLocal(Core::BufferAllocator& allocator,
             VkDeviceSize size,
             VkBufferUsageFlags usage);
 
-        static Buffer CreateStaging(const Core::BufferAllocator& allocator,
+        static Buffer CreateStaging(Core::BufferAllocator& allocator,
             VkDeviceSize size);
 
-        static Buffer CreateUniform(const Core::BufferAllocator& allocator,
+        static Buffer CreateUniform(Core::BufferAllocator& allocator,
             VkDeviceSize size);
 
         void Upload(const void* data, size_t size);
@@ -32,7 +32,7 @@ namespace Beer::Rendering
         const VkBuffer GetHandle() const { return allocation.Buffer; }
 
     private:
-        Buffer(const Core::BufferAllocator& allocator,
+        Buffer(Core::BufferAllocator& allocator,
             BufferAllocation allocation,
             VkDeviceSize size);
     };
