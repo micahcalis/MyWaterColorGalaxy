@@ -181,4 +181,38 @@ namespace Beer::Core
         device.GetGraphicsQueue().submit(submitInfo, nullptr);
         device.GetGraphicsQueue().waitIdle();
     }
+
+    void RendererUtilities::CreateImage(uint32_t width,
+        uint32_t height,
+        vk::Format format,
+        vk::ImageTiling tiling,
+        vk::ImageUsageFlags usage,
+        vk::MemoryPropertyFlags properties,
+        vk::raii::Image& image,
+        vk::raii::DeviceMemory& imageMemory,
+        const Device& device)
+    {
+        vk::ImageCreateInfo imageInfo{};
+        imageInfo.imageType = vk::ImageType::e2D;
+        imageInfo.format = format;
+        imageInfo.extent = vk::Extent3D{width, height, 1};
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.samples = vk::SampleCountFlagBits::e1;
+        imageInfo.tiling = tiling;
+        imageInfo.usage = usage;
+        imageInfo.sharingMode = vk::SharingMode::eExclusive;
+        imageInfo.initialLayout = vk::ImageLayout::eUndefined;
+
+        image = vk::raii::Image(device.GetLogicalDevice(), imageInfo);
+
+        vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
+
+        vk::MemoryAllocateInfo allocateInfo{};
+        allocateInfo.allocationSize = memRequirements.size;
+        allocateInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties, device.GetPhysicalDevice());
+
+        imageMemory = vk::raii::DeviceMemory(device.GetLogicalDevice(), allocateInfo);
+        image.bindMemory(imageMemory, 0);
+    }
 } // namespace Beer::Core

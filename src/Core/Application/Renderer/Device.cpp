@@ -113,6 +113,9 @@ namespace Beer::Core
             vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
             featureChain{};
 
+        vk::PhysicalDeviceFeatures features{};
+        features.samplerAnisotropy = VK_TRUE;
+        featureChain.get<vk::PhysicalDeviceFeatures2>().features = features;
         featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 = VK_TRUE;

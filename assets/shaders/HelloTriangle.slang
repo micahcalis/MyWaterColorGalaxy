@@ -1,27 +1,17 @@
-// static float2 positions[3] = float2[](
-//     float2(0.0, -0.5),
-//     float2(0.5, 0.5),
-//     float2(-0.5, 0.5)
-// );
-
-// static float3 colors[3] = float3[](
-//     float3(1.0, 0.0, 0.0),
-//     float3(0.0, 1.0, 0.0),
-//     float3(0.0, 0.0, 1.0)
-// );
-
 static float2 ASPECT = float2(800, 600);
 
 struct MeshData
 {
     float2 positionOS;
     float3 color;
+    float2 texCoord;
 };
 
 struct VertexData 
 {
     float4 positionCS : SV_Position;
     float3 color;
+    float2 texCoord;
 };
 
 struct UniformData
@@ -41,11 +31,15 @@ VertexData HelloTriangleVert(MeshData input)
     float4 positionVS = mul(_UniformBuffer.worldToViewMat, positionWS);
     output.positionCS = mul(_UniformBuffer.viewToClipMat, positionVS);
     output.color = input.color;
+    output.texCoord = input.texCoord;
     return output;
 }
+
+Sampler2D texture;
 
 [shader("fragment")]
 float4 HelloTriangleFrag(VertexData input) : SV_Target
 {
-    return float4(input.color, 1);
+    float4 sample = texture.Sample(input.texCoord);
+    return sample;
 }

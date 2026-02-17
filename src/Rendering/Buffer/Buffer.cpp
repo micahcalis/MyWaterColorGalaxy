@@ -1,6 +1,7 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "BufferAllocation.hpp"
 #include "Core/Application/Renderer/BufferAllocator.hpp"
+#include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include <iostream>
 #include <utility>
 
@@ -61,28 +62,13 @@ namespace Beer::Rendering
         const Core::Device& device,
         const Core::FrameResource& frameResource) const
     {
-        vk::CommandBufferAllocateInfo allocInfo{};
-        allocInfo.commandPool = frameResource.GetCommandPool();
-        allocInfo.level = vk::CommandBufferLevel::ePrimary;
-        allocInfo.commandBufferCount = 1;
-
-        auto cmdBuffers = device.GetLogicalDevice().allocateCommandBuffers(allocInfo);
-        vk::raii::CommandBuffer& copyCommandBuffer = cmdBuffers.front();
-
-        copyCommandBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+        vk::raii::CommandBuffer copyCommandBuffer = Core::CommandBufferUtilities::BeginSingleTimeCommands(frameResource, device);
 
         copyCommandBuffer.copyBuffer(vk::Buffer(allocation.Buffer),
             vk::Buffer(dstBuffer.allocation.Buffer),
             vk::BufferCopy(0, 0, size));
 
-        copyCommandBuffer.end();
-
-        vk::SubmitInfo submitInfo{};
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &*copyCommandBuffer;
-
-        device.GetGraphicsQueue().submit(submitInfo, nullptr);
-        device.GetGraphicsQueue().waitIdle();
+        Core::CommandBufferUtilities::EndSingleTimeCommands(copyCommandBuffer, device);
     }
 
     Buffer::Buffer(std::shared_ptr<Core::BufferAllocator> allocator, BufferAllocation allocation, VkDeviceSize size)

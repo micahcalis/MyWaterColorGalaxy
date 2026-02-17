@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(MyWatercolorGalaxy)
 
+include(FetchContent)
+
 # --- 1. Project Settings ---
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,12 +34,13 @@ if(NOT EXISTS "${SDL3_INCLUDE_DIR}")
 endif()
 
 # --- 3. Define the Executable ---
-file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c")
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c" "src/*.h" "src/*.hpp")
 add_executable(Game ${SOURCE_FILES})
 
 # --- 4. Include & Link ---
 target_include_directories(Game PRIVATE 
     "src"
+    "Vendor"
     "${Vulkan_INCLUDE_DIRS}"
     "$ENV{VULKAN_SDK}/Include"
     "${SDL3_INCLUDE_DIR}"

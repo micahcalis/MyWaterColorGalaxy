@@ -8,6 +8,8 @@
 #include "Core/Application/Utilities/RendererUtilities.hpp"
 #include "Core/Application/Renderer/PipelineKey.hpp"
 #include "Core/Application/Renderer/PipelineData.hpp"
+#include "Core/Application/Utilities/ImageUtilities.hpp"
+#include "Rendering/Buffer/Buffer.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
@@ -16,6 +18,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
+#include <stdexcept>
+#define STB_IMAGE_IMPLEMENTATION
+#include <Vendor/stb/stb_image.h>
 
 namespace Beer::Core
 {
@@ -31,10 +36,10 @@ namespace Beer::Core
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
 
     const std::vector<Rendering::Vertex> helloTriangleVertices = {
-        Rendering::Vertex{.pos = glm::vec2(-0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec2(0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0)},
-        Rendering::Vertex{.pos = glm::vec2(0.5, 0.5), .color = glm::vec3(0.0, 1.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec2(-0.5, 0.5), .color = glm::vec3(0.0, 0.0, 1.0)},
+        Rendering::Vertex{.pos = glm::vec2(-0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec2(0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec2(0.5, 0.5), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
+        Rendering::Vertex{.pos = glm::vec2(-0.5, 0.5), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
     };
 
     const std::vector<uint16_t> helloTriangleIndices = {
@@ -57,12 +62,12 @@ namespace Beer::Core
         CreateSemaphores();
         bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
 
-        CreateUniformBuffers();
         CreateDesciptorSetLayout();
-        CreateDescriptorPool();
-        CreateDescriptorSets();
 
-        pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain, descriptorSetLayout);
+        pipelineCache = std::make_unique<PipelineCache>(
+            device.GetLogicalDevice(),
+            swapchain,
+            descriptorSetLayout);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
@@ -70,8 +75,14 @@ namespace Beer::Core
             frameResources.emplace_back(&device);
         }
 
+        CreateTextureImage();
+        CreateTextureImageView();
+        CreateTextureSampler();
         CreateVertexBuffer();
         CreateIndexBuffer();
+        CreateUniformBuffers();
+        CreateDescriptorPool();
+        CreateDescriptorSets();
     }
 
     void Renderer::Draw()
@@ -211,15 +222,21 @@ namespace Beer::Core
 
     void Renderer::CreateDesciptorSetLayout()
     {
-        vk::DescriptorSetLayoutBinding uboLayoutBinding(0,
-            vk::DescriptorType::eUniformBuffer,
-            1,
-            vk::ShaderStageFlagBits::eVertex,
-            nullptr);
+        std::array bindings = {
+            vk::DescriptorSetLayoutBinding(0,
+                vk::DescriptorType::eUniformBuffer,
+                1,
+                vk::ShaderStageFlagBits::eVertex,
+                nullptr),
+            vk::DescriptorSetLayoutBinding(1,
+                vk::DescriptorType::eCombinedImageSampler,
+                1,
+                vk::ShaderStageFlagBits::eFragment,
+                nullptr)};
 
         vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.bindingCount = 1;
-        layoutInfo.pBindings = &uboLayoutBinding;
+        layoutInfo.bindingCount = bindings.size();
+        layoutInfo.pBindings = bindings.data();
 
         descriptorSetLayout = vk::raii::DescriptorSetLayout(device.GetLogicalDevice(), layoutInfo);
 
@@ -229,7 +246,7 @@ namespace Beer::Core
         pipelineLayoutInfo.pushConstantRangeCount = 0;
 
         pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
-    }
+    } // namespace Beer::Core
 
     void Renderer::CreateUniformBuffers()
     {
@@ -248,13 +265,16 @@ namespace Beer::Core
 
     void Renderer::CreateDescriptorPool()
     {
-        vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT);
+        std::array poolSize{
+            vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
+            vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT),
+        };
 
         vk::DescriptorPoolCreateInfo poolInfo{};
         poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
         poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
-        poolInfo.poolSizeCount = 1;
-        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.poolSizeCount = poolSize.size();
+        poolInfo.pPoolSizes = poolSize.data();
 
         descriptorPool = vk::raii::DescriptorPool(device.GetLogicalDevice(), poolInfo);
     }
@@ -278,16 +298,106 @@ namespace Beer::Core
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(Rendering::UniformBufferObject);
 
-            vk::WriteDescriptorSet descriptorWrite{};
-            descriptorWrite.dstSet = descriptorSets[i];
-            descriptorWrite.dstBinding = 0;
-            descriptorWrite.dstArrayElement = 0;
-            descriptorWrite.descriptorCount = 1;
-            descriptorWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
-            descriptorWrite.pBufferInfo = &bufferInfo;
+            vk::DescriptorImageInfo imageInfo{};
+            imageInfo.sampler = textureSampler;
+            imageInfo.imageView = textureImageView;
+            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
-            device.GetLogicalDevice().updateDescriptorSets(descriptorWrite, {});
+            std::array<vk::WriteDescriptorSet, 2> descriptorWrites;
+            descriptorWrites[0].dstSet = descriptorSets[i];
+            descriptorWrites[0].dstBinding = 0;
+            descriptorWrites[0].dstArrayElement = 0;
+            descriptorWrites[0].descriptorCount = 1;
+            descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+            descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+            descriptorWrites[1].dstSet = descriptorSets[i];
+            descriptorWrites[1].dstBinding = 1;
+            descriptorWrites[1].dstArrayElement = 0;
+            descriptorWrites[1].descriptorCount = 1;
+            descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+            descriptorWrites[1].pImageInfo = &imageInfo;
+
+            device.GetLogicalDevice().updateDescriptorSets(descriptorWrites, {});
         }
+    }
+
+    void Renderer::CreateTextureImage()
+    {
+        int texWidth, texHeight, texChannels;
+        stbi_uc* pixels = stbi_load("assets/textures/Tex_CatAnguish.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        vk::DeviceSize imageSize = texWidth * texHeight * 4;
+
+        if (!pixels)
+        {
+            throw std::runtime_error("failed to load texture image");
+        }
+
+        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
+            Rendering::Buffer::CreateStaging(bufferAllocator, imageSize));
+
+        stagingBuffer->Upload(pixels, imageSize);
+        stbi_image_free(pixels);
+
+        RendererUtilities::CreateImage(static_cast<uint32_t>(texWidth),
+            static_cast<uint32_t>(texHeight),
+            vk::Format::eR8G8B8A8Srgb,
+            vk::ImageTiling::eOptimal,
+            vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            textureImage,
+            textureImageMemory,
+            device);
+
+        CommandBufferUtilities::TransitionImageLayout(textureImage,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eTransferDstOptimal,
+            frameResources[frameIndex],
+            device);
+
+        CommandBufferUtilities::CopyBufferToImage(*stagingBuffer,
+            textureImage,
+            texWidth,
+            texHeight,
+            frameResources[frameIndex],
+            device);
+
+        CommandBufferUtilities::TransitionImageLayout(textureImage,
+            vk::ImageLayout::eTransferDstOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal,
+            frameResources[frameIndex],
+            device);
+    }
+
+    void Renderer::CreateTextureImageView()
+    {
+        textureImageView = ImageUtilities::CreateImageView(textureImage,
+            vk::Format::eR8G8B8A8Srgb,
+            device);
+    }
+
+    void Renderer::CreateTextureSampler()
+    {
+        vk::PhysicalDeviceProperties properties = device.GetPhysicalDevice().getProperties();
+
+        vk::SamplerCreateInfo samplerInfo{};
+        samplerInfo.magFilter = vk::Filter::eLinear;
+        samplerInfo.minFilter = vk::Filter::eLinear;
+        samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+        samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+        samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+        samplerInfo.anisotropyEnable = vk::True;
+        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+        samplerInfo.compareEnable = vk::False;
+        samplerInfo.compareOp = vk::CompareOp::eAlways;
+        samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+        samplerInfo.unnormalizedCoordinates = vk::False;
+        samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+        samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.minLod = 0.0f;
+        samplerInfo.maxLod = 0.0f;
+
+        textureSampler = vk::raii::Sampler(device.GetLogicalDevice(), samplerInfo);
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)

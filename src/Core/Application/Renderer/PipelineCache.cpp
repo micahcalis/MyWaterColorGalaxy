@@ -68,10 +68,6 @@ namespace Beer::Core
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{};
         inputAssemblyCreateInfo.topology = data.Topology;
 
-        const vk::Extent2D swapchainExtent = swapchain.GetExtent();
-        vk::Viewport viewPort = vk::Viewport(0.0f, 0.0f, static_cast<float>(swapchainExtent.width), static_cast<float>(swapchainExtent.height), 0.0f, 1.0f);
-        vk::Rect2D region = vk::Rect2D(vk::Offset2D{0, 0}, swapchainExtent);
-
         vk::PipelineViewportStateCreateInfo viewportCreateInfo{};
         viewportCreateInfo.viewportCount = 1;
         viewportCreateInfo.scissorCount = 1;

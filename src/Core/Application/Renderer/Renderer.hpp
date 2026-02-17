@@ -39,6 +39,11 @@ namespace Beer::Core
 
         std::vector<Rendering::Buffer> uniformBuffers;
 
+        vk::raii::Image textureImage = nullptr;
+        vk::raii::DeviceMemory textureImageMemory = nullptr;
+        vk::raii::ImageView textureImageView = nullptr;
+        vk::raii::Sampler textureSampler = nullptr;
+
         int frameIndex = 0;
         bool frameBufferResized = false;
 
@@ -73,6 +78,9 @@ namespace Beer::Core
         void CreateUniformBuffers();
         void CreateDescriptorPool();
         void CreateDescriptorSets();
+        void CreateTextureImage();
+        void CreateTextureImageView();
+        void CreateTextureSampler();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateUniformBuffer(uint32_t frameIndex);

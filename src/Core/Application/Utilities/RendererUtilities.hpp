@@ -53,5 +53,15 @@ namespace Beer::Core
             vk::DeviceSize size,
             const Device& device,
             const FrameResource& frameResource);
+
+        static void CreateImage(uint32_t width,
+            uint32_t height,
+            vk::Format format,
+            vk::ImageTiling tiling,
+            vk::ImageUsageFlags usage,
+            vk::MemoryPropertyFlags properties,
+            vk::raii::Image& image,
+            vk::raii::DeviceMemory& imageMemory,
+            const Device& device);
     };
 } // namespace Beer::Core
