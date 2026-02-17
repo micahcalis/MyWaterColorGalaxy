@@ -29,14 +29,14 @@ namespace Beer::Core
             const Device& device);
 
         void CleanupSwapchain();
-        const vk::raii::SwapchainKHR& GetRaiiSwapchain() const;
+        [[nodiscard]] const vk::raii::SwapchainKHR& GetRaiiSwapchain() const;
         const vk::SurfaceFormatKHR& GetSurfaceFormat();
-        const vk::Format& GetImageFormat() const;
-        const vk::Extent2D GetExtent() const;
+        [[nodiscard]] const vk::Format& GetImageFormat() const;
+        [[nodiscard]] vk::Extent2D GetExtent() const;
         vk::ResultValue<uint32_t> AcquireNextImage(vk::Semaphore semaphore);
-        const vk::Image& GetImage(uint32_t imageIndex) const;
-        const uint32_t GetSwapchainCount() const;
-        const vk::raii::ImageView& GetImageView(uint32_t imageIndex) const;
+        [[nodiscard]] const vk::Image& GetImage(uint32_t imageIndex) const;
+        [[nodiscard]] uint32_t GetSwapchainCount() const;
+        [[nodiscard]] const vk::raii::ImageView& GetImageView(uint32_t imageIndex) const;
 
     private:
         void CreateSwapchain(SDL_Window* window,

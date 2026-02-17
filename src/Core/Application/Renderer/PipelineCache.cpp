@@ -127,7 +127,7 @@ namespace Beer::Core
         vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
         graphicsPipelineCreateInfo.pNext = &renderingCreateInfo;
         graphicsPipelineCreateInfo.stageCount = 2;
-        graphicsPipelineCreateInfo.pStages = shaderStages;
+        graphicsPipelineCreateInfo.pStages = &shaderStages[0];
         graphicsPipelineCreateInfo.pVertexInputState = &vertexInputInfo;
         graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
         graphicsPipelineCreateInfo.pViewportState = &viewportCreateInfo;

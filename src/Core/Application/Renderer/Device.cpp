@@ -17,7 +17,7 @@ namespace Beer::Core
     const vk::raii::Device& Device::GetLogicalDevice() const { return device; }
     const vk::raii::Queue& Device::GetGraphicsQueue() const { return graphicsQueue; }
     const vk::raii::Queue& Device::GetPresentQueue() const { return presentQueue; }
-    const uint32_t Device::GetGraphicsIndex() const { return graphicsIndex; }
+    uint32_t Device::GetGraphicsIndex() const { return graphicsIndex; }
 
     vk::SurfaceCapabilitiesKHR Device::GetSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const
     {
@@ -29,7 +29,7 @@ namespace Beer::Core
         return physicalDevice.getSurfaceFormatsKHR(surface);
     }
 
-    const std::vector<vk::PresentModeKHR> Device::GetAvailablePresentModes(const vk::raii::SurfaceKHR& surface) const
+    std::vector<vk::PresentModeKHR> Device::GetAvailablePresentModes(const vk::raii::SurfaceKHR& surface) const
     {
         return physicalDevice.getSurfacePresentModesKHR(*surface);
     }
@@ -64,7 +64,7 @@ namespace Beer::Core
         if (deviceCandidates.rbegin()->first > 0)
         {
             physicalDevice = deviceCandidates.rbegin()->second;
-            std::cout << "Physical Device Found: " << physicalDevice.getProperties().deviceName << std::endl;
+            std::cout << "Physical Device Found: " << physicalDevice.getProperties().deviceName << '\n';
         } else
         {
             throw std::runtime_error("failed to find a suitable GPU");
@@ -113,10 +113,10 @@ namespace Beer::Core
             vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
             featureChain{};
 
-        featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = true;
-        featureChain.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering = true;
-        featureChain.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 = true;
-        featureChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState = true;
+        featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = VK_TRUE;
+        featureChain.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering = VK_TRUE;
+        featureChain.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 = VK_TRUE;
+        featureChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState = VK_TRUE;
 
         vk::DeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>();

@@ -18,7 +18,9 @@ namespace Beer::Core
         auto [result, index] = swapchain.AcquireNextImage(*frameResource.GetImageAvailableSemaphore());
         imageIndex = index;
         if (result == vk::Result::eSuccess)
+        {
             return true;
+        }
 
         assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady && "Swapchain result timeout or not ready");
 
@@ -71,7 +73,7 @@ namespace Beer::Core
         const uint32_t& imageIndex)
 
     {
-        auto& raiiSwapchain = swapchain.GetRaiiSwapchain();
+        const auto& raiiSwapchain = swapchain.GetRaiiSwapchain();
 
         vk::PresentInfoKHR presentInfoKHR{};
         presentInfoKHR.waitSemaphoreCount = 1;

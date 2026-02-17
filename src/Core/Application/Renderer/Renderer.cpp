@@ -16,7 +16,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
-#include <print>
 
 namespace Beer::Core
 {
@@ -32,13 +31,20 @@ namespace Beer::Core
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
 
     const std::vector<Rendering::Vertex> helloTriangleVertices = {
-        Rendering::Vertex{glm::vec2(-0.5, -0.5), glm::vec3(1.0, 0.0, 0.0)},
-        Rendering::Vertex{glm::vec2(0.5, -0.5), glm::vec3(1.0, 1.0, 1.0)},
-        Rendering::Vertex{glm::vec2(0.5, 0.5), glm::vec3(0.0, 1.0, 0.0)},
-        Rendering::Vertex{glm::vec2(-0.5, 0.5), glm::vec3(0.0, 0.0, 1.0)}};
+        Rendering::Vertex{.pos = glm::vec2(-0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec2(0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0)},
+        Rendering::Vertex{.pos = glm::vec2(0.5, 0.5), .color = glm::vec3(0.0, 1.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec2(-0.5, 0.5), .color = glm::vec3(0.0, 0.0, 1.0)},
+    };
 
     const std::vector<uint16_t> helloTriangleIndices = {
-        0, 1, 2, 2, 3, 0};
+        0,
+        1,
+        2,
+        2,
+        3,
+        0,
+    };
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
@@ -49,28 +55,23 @@ namespace Beer::Core
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
         CreateSemaphores();
-        std::println("PRE ALLOC");
         bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
-        std::println("POST ALLOC");
 
         CreateUniformBuffers();
-        std::println("POST UNIFORM");
         CreateDesciptorSetLayout();
-        std::println("POST DESCRIPTORSET");
         CreateDescriptorPool();
-        std::println("POST DESCRIPTORPOOL");
         CreateDescriptorSets();
-        std::println("POST DESCRIPTORSETS");
+
         pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(), swapchain, descriptorSetLayout);
-        std::println("POST PIPELINE CACHE");
+
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            frameResources.emplace_back(FrameResource(&device));
+            // When using emplace_back, you are supposed to pass the arguments to the constructor, not construct a temporary.
+            frameResources.emplace_back(&device);
         }
 
         CreateVertexBuffer();
         CreateIndexBuffer();
-        std::println("POST BUFFERS");
     }
 
     void Renderer::Draw()
@@ -138,7 +139,9 @@ namespace Beer::Core
     void Renderer::SetupDebugMessenger()
     {
         if (!ENABLE_VALIDATION_LAYERS)
+        {
             return;
+        }
 
         vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
 
@@ -154,7 +157,7 @@ namespace Beer::Core
 
     void Renderer::CreateSurface(SDL_Window* window)
     {
-        VkSurfaceKHR rawSurface;
+        VkSurfaceKHR rawSurface = nullptr;
 
         if (!SDL_Vulkan_CreateSurface(window, static_cast<VkInstance>(*instance), nullptr, &rawSurface))
         {
@@ -181,12 +184,12 @@ namespace Beer::Core
         vk::DeviceSize bufferSize = sizeof(helloTriangleVertices[0]) * helloTriangleVertices.size();
 
         std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(*bufferAllocator, bufferSize));
+            Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
 
         stagingBuffer->Upload(helloTriangleVertices.data(), bufferSize);
 
         vertexBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateDeviceLocal(*bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+            Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
         stagingBuffer->CopyTo(*vertexBuffer, device, frameResources[frameIndex]);
     }
@@ -196,12 +199,12 @@ namespace Beer::Core
         vk::DeviceSize bufferSize = sizeof(helloTriangleIndices[0]) * helloTriangleIndices.size();
 
         std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(*bufferAllocator, bufferSize));
+            Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
 
         stagingBuffer->Upload(helloTriangleIndices.data(), bufferSize);
 
         indexBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateDeviceLocal(*bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+            Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
         stagingBuffer->CopyTo(*indexBuffer, device, frameResources[frameIndex]);
     }
@@ -233,12 +236,13 @@ namespace Beer::Core
         uniformBuffers.clear();
         vk::DeviceSize bufferSize = sizeof(Rendering::UniformBufferObject);
 
+        uniformBuffers.reserve(MAX_FRAMES_IN_FLIGHT);
+
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            std::unique_ptr<Rendering::Buffer> uniformBuffer = std::make_unique<Rendering::Buffer>(
-                Rendering::Buffer::CreateUniform(*bufferAllocator, bufferSize));
+            auto buffer = Rendering::Buffer::CreateUniform(bufferAllocator, bufferSize);
 
-            uniformBuffers.emplace_back(std::move(uniformBuffer));
+            uniformBuffers.emplace_back(std::move(buffer));
         }
     }
 
@@ -270,7 +274,7 @@ namespace Beer::Core
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             vk::DescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = vk::Buffer(uniformBuffers[i]->GetHandle());
+            bufferInfo.buffer = vk::Buffer(uniformBuffers[i].GetHandle());
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(Rendering::UniformBufferObject);
 
@@ -389,13 +393,13 @@ namespace Beer::Core
         const vk::Extent2D extent = swapchain.GetExtent();
         const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
 
-        Rendering::UniformBufferObject ubo{};
+        Rendering::UniformBufferObject ubo{}; /// Don't forget to add the f, 2.0 is a double instead of a float.
         ubo.objToWorld = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
         ubo.worldToView = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 0.0, 1.0));
         ubo.viewToClip = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
         ubo.viewToClip[1][1] *= -1;
 
         // memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
-        uniformBuffers[frameIndex]->Upload(&ubo, sizeof(ubo));
+        uniformBuffers[frameIndex].Upload(&ubo, sizeof(ubo));
     }
 } // namespace Beer::Core

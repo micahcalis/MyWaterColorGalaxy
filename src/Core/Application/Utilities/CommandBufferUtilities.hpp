@@ -18,7 +18,7 @@ namespace Beer::Core
             vk::PipelineStageFlags2 srcStageMask,
             vk::PipelineStageFlags2 dstStageMask);
 
-        // TODO: don't hardcode vertices X)
+        // TODO: don't hardcode vertices X), I second that one.
         static void DrawCall(vk::CommandBuffer commandBuffer,
             const vk::raii::Pipeline& pipeline,
             const VkBuffer& vertexBuffer);
