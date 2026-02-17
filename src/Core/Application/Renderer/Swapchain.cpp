@@ -18,9 +18,9 @@ namespace Beer::Core
     const vk::raii::SwapchainKHR& Swapchain::GetRaiiSwapchain() const { return swapchain; }
     const vk::SurfaceFormatKHR& Swapchain::GetSurfaceFormat() { return swapchainSurfaceFormat; }
     const vk::Format& Swapchain::GetImageFormat() const { return swapchainImageFormat; }
-    const vk::Extent2D Swapchain::GetExtent() const { return swapchainExtent; }
+    vk::Extent2D Swapchain::GetExtent() const { return swapchainExtent; }
     const vk::Image& Swapchain::GetImage(uint32_t imageIndex) const { return swapchainImages[imageIndex]; }
-    const uint32_t Swapchain::GetSwapchainCount() const { return swapchainImages.size(); }
+    uint32_t Swapchain::GetSwapchainCount() const { return swapchainImages.size(); }
     const vk::raii::ImageView& Swapchain::GetImageView(uint32_t imageIndex) const { return swapChainImageViews[imageIndex]; }
 
     void Swapchain::CreateSwapchain(SDL_Window* window,
@@ -55,7 +55,7 @@ namespace Beer::Core
         swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
         swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
         swapchainCreateInfo.presentMode = SwapchainUtilities::ChooseSwapPresentMode(device.GetAvailablePresentModes(surface));
-        swapchainCreateInfo.clipped = true;
+        swapchainCreateInfo.clipped = VK_TRUE;
         swapchainCreateInfo.oldSwapchain = nullptr;
         swapchain = vk::raii::SwapchainKHR(device.GetLogicalDevice(), swapchainCreateInfo);
         swapchainImages = swapchain.getImages();
@@ -82,7 +82,8 @@ namespace Beer::Core
         const vk::raii::SurfaceKHR& surface,
         const Device& device)
     {
-        int width, height = 0;
+        int width = 0;
+        int height = 0;
         SDL_GetWindowSizeInPixels(window, &width, &height);
         while (width == 0 || height == 0)
         {

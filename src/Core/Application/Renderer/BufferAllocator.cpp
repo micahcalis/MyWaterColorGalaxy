@@ -4,13 +4,14 @@
 namespace Beer::Core
 {
     BufferAllocator::BufferAllocator(const Device& device, const vk::raii::Instance& instance)
-        : device(device)
+        : device(device), vmaAllocator(nullptr)
     {
-        VmaAllocatorCreateInfo allocatorInfo{};
-        allocatorInfo.physicalDevice = *device.GetPhysicalDevice();
-        allocatorInfo.device = *device.GetLogicalDevice();
-        allocatorInfo.instance = *instance;
-        allocatorInfo.vulkanApiVersion = vk::ApiVersion14;
+        VmaAllocatorCreateInfo allocatorInfo{
+            .physicalDevice = *device.GetPhysicalDevice(),
+            .device = *device.GetLogicalDevice(),
+            .instance = *instance,
+            .vulkanApiVersion = vk::ApiVersion14,
+        };
 
         VkResult result = vmaCreateAllocator(&allocatorInfo, &vmaAllocator);
 
@@ -22,15 +23,18 @@ namespace Beer::Core
 
     BufferAllocator::~BufferAllocator()
     {
-        vmaDestroyAllocator(vmaAllocator);
+        if (vmaAllocator != VK_NULL_HANDLE)
+        {
+            vmaDestroyAllocator(vmaAllocator);
+        }
     }
 
-    const Rendering::BufferAllocation BufferAllocator::CreateBuffer(VkDeviceSize size,
+    Rendering::BufferAllocation BufferAllocator::CreateBuffer(VkDeviceSize size,
         VkBufferUsageFlags usage,
         VmaMemoryUsage memoryUsage,
         VmaAllocationCreateFlags flags) const
     {
-        Rendering::BufferAllocation bufferAlloc;
+        Rendering::BufferAllocation bufferAlloc{};
 
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -57,9 +61,9 @@ namespace Beer::Core
         return bufferAlloc;
     }
 
-    const Rendering::BufferAllocation BufferAllocator::CreateStagingBuffer(vk::DeviceSize size) const
+    Rendering::BufferAllocation BufferAllocator::CreateStagingBuffer(vk::DeviceSize size) const
     {
-        Rendering::BufferAllocation bufferAlloc;
+        Rendering::BufferAllocation bufferAlloc{};
 
         VkBufferCreateInfo stagingInfo{};
         stagingInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -86,17 +90,15 @@ namespace Beer::Core
         return bufferAlloc;
     }
 
-    void BufferAllocator::DestroyBuffer(const Rendering::BufferAllocation& buffer)
+    void BufferAllocator::DestroyBuffer(Rendering::BufferAllocation& buffer)
     {
-        vmaDestroyBuffer(vmaAllocator, buffer.Buffer, buffer.Allocation);
-
         if (buffer.Buffer != VK_NULL_HANDLE)
         {
             vmaDestroyBuffer(vmaAllocator, buffer.Buffer, buffer.Allocation);
         }
     }
 
-    void BufferAllocator::DestroyImage(const Rendering::BufferAllocation& image)
+    void BufferAllocator::DestroyImage(Rendering::BufferAllocation& image)
     {
     }
 } // namespace Beer::Core

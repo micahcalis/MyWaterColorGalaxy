@@ -33,8 +33,8 @@ namespace Beer::Core
     vk::Extent2D SwapchainUtilities::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities,
         SDL_Window* window)
     {
-        int width;
-        int height;
+        int width = 0;
+        int height = 0;
         SDL_GetWindowSizeInPixels(window, &width, &height);
 
         vk::Extent2D extent{};

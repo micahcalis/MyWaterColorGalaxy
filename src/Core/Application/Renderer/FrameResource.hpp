@@ -19,10 +19,10 @@ namespace Beer::Core
     public:
         FrameResource(const Device* device);
         void Reset();
-        const vk::raii::CommandPool& GetCommandPool() const;
-        const vk::raii::Fence& GetInFlightFence() const;
-        const vk::raii::Semaphore& GetImageAvailableSemaphore() const;
-        const vk::raii::Semaphore& GetRenderFinishedSemaphore() const;
+        [[nodiscard]] const vk::raii::CommandPool& GetCommandPool() const;
+        [[nodiscard]] const vk::raii::Fence& GetInFlightFence() const;
+        [[nodiscard]] const vk::raii::Semaphore& GetImageAvailableSemaphore() const;
+        [[nodiscard]] const vk::raii::Semaphore& GetRenderFinishedSemaphore() const;
         vk::CommandBuffer GetCommandBuffer();
         void CreateSyncObjects();
 

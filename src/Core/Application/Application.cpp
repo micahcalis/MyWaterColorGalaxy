@@ -65,7 +65,7 @@ namespace Beer::Core
     }
     void Application::Cleanup()
     {
-        std::cout << "cleanup" << std::endl;
+        std::cout << "cleanup" << '\n';
         windowManager.Cleanup();
         renderer.GetSwapchain().CleanupSwapchain();
     }

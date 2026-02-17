@@ -25,14 +25,13 @@ namespace Beer::Core
     {
         const char* basePath = SDL_GetBasePath();
 
-        if (basePath)
+        if (basePath != nullptr)
         {
             std::string fullPath = std::string(basePath) + subPath;
             return fullPath;
-        } else
-        {
-            return subPath;
         }
+
+        return subPath;
     }
 
     static constexpr std::string_view SHADER_HEAD = "assets/shaders/";

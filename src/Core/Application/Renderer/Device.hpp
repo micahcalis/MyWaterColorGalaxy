@@ -19,14 +19,14 @@ namespace Beer::Core
 
     public:
         void Initialize(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface);
-        const vk::raii::PhysicalDevice& GetPhysicalDevice() const;
-        const vk::raii::Device& GetLogicalDevice() const;
-        const vk::raii::Queue& GetGraphicsQueue() const;
-        const vk::raii::Queue& GetPresentQueue() const;
-        const uint32_t GetGraphicsIndex() const;
-        vk::SurfaceCapabilitiesKHR GetSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const;
-        std::vector<vk::SurfaceFormatKHR> GetAvailableFormats(const vk::raii::SurfaceKHR& surface) const;
-        const std::vector<vk::PresentModeKHR> GetAvailablePresentModes(const vk::raii::SurfaceKHR& surface) const;
+        [[nodiscard]] const vk::raii::PhysicalDevice& GetPhysicalDevice() const;
+        [[nodiscard]] const vk::raii::Device& GetLogicalDevice() const;
+        [[nodiscard]] const vk::raii::Queue& GetGraphicsQueue() const;
+        [[nodiscard]] const vk::raii::Queue& GetPresentQueue() const;
+        [[nodiscard]] uint32_t GetGraphicsIndex() const;
+        [[nodiscard]] vk::SurfaceCapabilitiesKHR GetSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const;
+        [[nodiscard]] std::vector<vk::SurfaceFormatKHR> GetAvailableFormats(const vk::raii::SurfaceKHR& surface) const;
+        [[nodiscard]] std::vector<vk::PresentModeKHR> GetAvailablePresentModes(const vk::raii::SurfaceKHR& surface) const;
 
     private:
         void PickPhysicalDevice(const vk::raii::Instance& instance);

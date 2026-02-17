@@ -5,7 +5,6 @@
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Vertex.hpp"
-#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
@@ -47,7 +46,7 @@ namespace Beer::Core
         static void MapVertices(vk::raii::Buffer& vertexBuffer,
             vk::raii::DeviceMemory& vertexBufferMemory,
             const std::vector<Rendering::Vertex>& vertices,
-            const size_t size);
+            size_t size);
 
         static void CopyBuffer(vk::raii::Buffer& srcBuffer,
             vk::raii::Buffer& dstBuffer,

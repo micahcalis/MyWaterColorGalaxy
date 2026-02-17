@@ -15,6 +15,6 @@ namespace Beer::Core
         static bool PollEvents(bool& frameBufferResized);
         static std::vector<const char*> GetSDLExtensions(const vk::raii::Context& context);
         static std::vector<const char*> GetRequiredExtensions(const vk::raii::Context& context,
-            const bool enableValidationLayers);
+            bool enableValidationLayers);
     };
 } // namespace Beer::Core

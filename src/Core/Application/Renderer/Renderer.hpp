@@ -17,21 +17,31 @@ namespace Beer::Core
     {
     private:
         SDL_Window* window;
-        vk::raii::Context context;
+
         vk::raii::Instance instance = nullptr;
+
+        Device device{};
+
+        vk::raii::Context context;
         vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
         vk::raii::SurfaceKHR surface = nullptr;
-        Device device{};
-        std::unique_ptr<BufferAllocator> bufferAllocator = nullptr;
+
         Swapchain swapchain{};
+
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
+
+        std::shared_ptr<BufferAllocator> bufferAllocator = nullptr;
+
         std::unique_ptr<Rendering::Buffer> vertexBuffer;
         std::unique_ptr<Rendering::Buffer> indexBuffer;
-        std::vector<std::unique_ptr<Rendering::Buffer>> uniformBuffers;
+
+        std::vector<Rendering::Buffer> uniformBuffers;
+
         int frameIndex = 0;
         bool frameBufferResized = false;
+
         vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
         vk::raii::PipelineLayout pipelineLayout = nullptr;
         vk::raii::DescriptorPool descriptorPool = nullptr;
@@ -41,12 +51,14 @@ namespace Beer::Core
         void InitializeVulkanInstances(SDL_Window* window);
         void Draw();
         void HandleWindowResize();
-        void SetFrameBufferResized(const bool val);
-        const vk::raii::Context& GetContext() const;
-        const vk::raii::Instance& GetInstance() const;
-        const vk::raii::DebugUtilsMessengerEXT& GetDebugMessenger() const;
-        const vk::raii::SurfaceKHR& GetSurface() const;
-        const Device& GetDevice() const;
+        void SetFrameBufferResized(bool val);
+
+        [[nodiscard]] const vk::raii::Context& GetContext() const;
+        [[nodiscard]] const vk::raii::Instance& GetInstance() const;
+        [[nodiscard]] const vk::raii::DebugUtilsMessengerEXT& GetDebugMessenger() const;
+        [[nodiscard]] const vk::raii::SurfaceKHR& GetSurface() const;
+        [[nodiscard]] const Device& GetDevice() const;
+
         Swapchain& GetSwapchain();
         bool& GetFrameBufferResized();
 

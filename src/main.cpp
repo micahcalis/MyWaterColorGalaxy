@@ -10,7 +10,7 @@ int main()
         application.Run();
     } catch (const std::exception& exc)
     {
-        std::cerr << exc.what() << std::endl;
+        std::cerr << exc.what() << '\n';
         return EXIT_FAILURE;
     }
 
