@@ -1,4 +1,3 @@
-#define VMA_IMPLEMENTATION
 #include "Core/Application/Renderer/BufferAllocator.hpp"
 
 namespace Beer::Core

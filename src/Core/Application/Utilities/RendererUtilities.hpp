@@ -5,6 +5,7 @@
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Vertex.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
@@ -18,8 +19,12 @@ namespace Beer::Core
         static vk::RenderingAttachmentInfo CreateColorAttachmentInfo(vk::ImageView imageView,
             vk::ClearValue clearColor);
 
+        static vk::RenderingAttachmentInfo CreateDepthAttachmentInfo(vk::ImageView imageView,
+            vk::ClearValue clearValue);
+
         static vk::RenderingInfo CreateRenderingInfo(vk::Extent2D extent,
-            const vk::RenderingAttachmentInfo& colorAttachment);
+            const vk::RenderingAttachmentInfo& colorAttachment,
+            const vk::RenderingAttachmentInfo& depthAttachment);
 
         static vk::SubmitInfo CreateSubmitInfo(const FrameResource& frameResource,
             const vk::CommandBuffer& commandBuffer,
@@ -53,15 +58,5 @@ namespace Beer::Core
             vk::DeviceSize size,
             const Device& device,
             const FrameResource& frameResource);
-
-        static void CreateImage(uint32_t width,
-            uint32_t height,
-            vk::Format format,
-            vk::ImageTiling tiling,
-            vk::ImageUsageFlags usage,
-            vk::MemoryPropertyFlags properties,
-            vk::raii::Image& image,
-            vk::raii::DeviceMemory& imageMemory,
-            const Device& device);
     };
 } // namespace Beer::Core

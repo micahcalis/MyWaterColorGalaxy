@@ -11,7 +11,8 @@ namespace Beer::Core
         vk::AccessFlags2 srcAccessMask,
         vk::AccessFlags2 dstAccessMask,
         vk::PipelineStageFlags2 srcStageMask,
-        vk::PipelineStageFlags2 dstStageMask)
+        vk::PipelineStageFlags2 dstStageMask,
+        vk::ImageAspectFlags imageAspectFlags)
     {
         vk::ImageMemoryBarrier2 barrier{};
         barrier.srcStageMask = srcStageMask;
@@ -24,7 +25,7 @@ namespace Beer::Core
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.image = image;
         barrier.subresourceRange = {
-            vk::ImageAspectFlagBits::eColor,
+            imageAspectFlags,
             0,
             1,
             0,

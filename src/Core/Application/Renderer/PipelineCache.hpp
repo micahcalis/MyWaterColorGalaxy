@@ -18,9 +18,10 @@ namespace Beer::Core
         vk::DescriptorSetLayout globalSetLayout;
         std::unordered_map<PipelineKey, vk::raii::Pipeline> cache;
         std::vector<vk::raii::PipelineLayout> cachedLayouts;
+        const vk::Format depthFormat;
 
     public:
-        PipelineCache(const vk::raii::Device& device, const Swapchain& swapchain, vk::DescriptorSetLayout globalSetLayout);
+        PipelineCache(const vk::raii::Device& device, const Swapchain& swapchain, vk::DescriptorSetLayout globalSetLayout, const vk::Format depthFormat);
         const vk::raii::Pipeline& GetPipeline(const PipelineKey& key, const PipelineData& data);
 
     private:

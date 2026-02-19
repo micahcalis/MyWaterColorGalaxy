@@ -28,6 +28,10 @@ namespace Beer::Core
 
         Swapchain swapchain{};
 
+        vk::raii::Image depthImage = nullptr;
+        vk::raii::DeviceMemory depthImageMemory = nullptr;
+        vk::raii::ImageView depthImageView = nullptr;
+
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
@@ -71,6 +75,7 @@ namespace Beer::Core
         void CreateInstance();
         void SetupDebugMessenger();
         void CreateSurface(SDL_Window* window);
+        void CreateDepthResources(vk::Format& depthFormat);
         void CreateSemaphores();
         void CreateDesciptorSetLayout();
         void CreateVertexBuffer();

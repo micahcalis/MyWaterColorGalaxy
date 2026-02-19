@@ -12,10 +12,12 @@ namespace Beer::Core
 {
     PipelineCache::PipelineCache(const vk::raii::Device& device,
         const Swapchain& swapchain,
-        vk::DescriptorSetLayout globalSetLayout)
+        vk::DescriptorSetLayout globalSetLayout,
+        const vk::Format depthFormat)
         : logicalDevice(device)
         , swapchain(swapchain)
         , globalSetLayout(globalSetLayout)
+        , depthFormat(depthFormat)
     {
     }
 
@@ -99,6 +101,13 @@ namespace Beer::Core
         colorBlendCreateInfo.attachmentCount = 1;
         colorBlendCreateInfo.pAttachments = &colorBlendAttachment;
 
+        vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
+        depthStencilCreateInfo.depthTestEnable = vk::True;
+        depthStencilCreateInfo.depthWriteEnable = vk::True;
+        depthStencilCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+        depthStencilCreateInfo.depthBoundsTestEnable = vk::False;
+        depthStencilCreateInfo.stencilTestEnable = vk ::False;
+
         std::vector<vk::DescriptorSetLayout> setLayouts;
 
         setLayouts.push_back(globalSetLayout);
@@ -119,6 +128,7 @@ namespace Beer::Core
         vk::Format colorFormat = swapchain.GetImageFormat();
         renderingCreateInfo.colorAttachmentCount = 1;
         renderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+        renderingCreateInfo.depthAttachmentFormat = depthFormat;
 
         vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
         graphicsPipelineCreateInfo.pNext = &renderingCreateInfo;
@@ -130,6 +140,7 @@ namespace Beer::Core
         graphicsPipelineCreateInfo.pRasterizationState = &rasterizationCreateInfo;
         graphicsPipelineCreateInfo.pMultisampleState = &multisamplingCreateInfo;
         graphicsPipelineCreateInfo.pColorBlendState = &colorBlendCreateInfo;
+        graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilCreateInfo;
         graphicsPipelineCreateInfo.pDynamicState = &dynamicCreateInfo;
         graphicsPipelineCreateInfo.layout = *finalLayout;
         graphicsPipelineCreateInfo.renderPass = nullptr;

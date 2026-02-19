@@ -2,7 +2,7 @@ static float2 ASPECT = float2(800, 600);
 
 struct MeshData
 {
-    float2 positionOS;
+    float3 positionOS;
     float3 color;
     float2 texCoord;
 };

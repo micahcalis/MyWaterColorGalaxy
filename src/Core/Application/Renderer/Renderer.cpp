@@ -13,8 +13,10 @@
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
+#include <print>
 #include "Rendering/Vertex.hpp"
 #include "Rendering/UniformBufferObject.hpp"
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
@@ -36,20 +38,19 @@ namespace Beer::Core
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
 
     const std::vector<Rendering::Vertex> helloTriangleVertices = {
-        Rendering::Vertex{.pos = glm::vec2(-0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec2(0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec2(0.5, 0.5), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
-        Rendering::Vertex{.pos = glm::vec2(-0.5, 0.5), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
+        Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, 0.0), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, 0.0), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, 0.0), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
+        Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, 0.0), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
+
+        Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
+        Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, -0.5), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
+        Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, -0.5), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
     };
 
     const std::vector<uint16_t> helloTriangleIndices = {
-        0,
-        1,
-        2,
-        2,
-        3,
-        0,
-    };
+        0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
@@ -59,15 +60,17 @@ namespace Beer::Core
         CreateSurface(window);
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
+        vk::Format depthFormat;
+        CreateDepthResources(depthFormat);
         CreateSemaphores();
         bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
 
         CreateDesciptorSetLayout();
 
-        pipelineCache = std::make_unique<PipelineCache>(
-            device.GetLogicalDevice(),
+        pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(),
             swapchain,
-            descriptorSetLayout);
+            descriptorSetLayout,
+            depthFormat);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
@@ -116,6 +119,8 @@ namespace Beer::Core
         device.GetLogicalDevice().waitIdle();
         swapchain.RecreateSwapchain(window, surface, device);
         CreateSemaphores();
+        vk::Format emptyFormat;
+        CreateDepthResources(emptyFormat);
     }
 
     const vk::raii::Context& Renderer::GetContext() const { return context; }
@@ -176,6 +181,27 @@ namespace Beer::Core
         }
 
         surface = vk::raii::SurfaceKHR(instance, rawSurface);
+    }
+
+    void Renderer::CreateDepthResources(vk::Format& depthFormat)
+    {
+        depthFormat = ImageUtilities::FindDepthFormat(device);
+        vk::Extent2D extent = swapchain.GetExtent();
+
+        ImageUtilities::CreateImage(extent.width,
+            extent.height,
+            depthFormat,
+            vk::ImageTiling::eOptimal,
+            vk::ImageUsageFlagBits::eDepthStencilAttachment,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            depthImage,
+            depthImageMemory,
+            device);
+
+        depthImageView = ImageUtilities::CreateImageView(depthImage,
+            depthFormat,
+            vk::ImageAspectFlagBits::eDepth,
+            device);
     }
 
     void Renderer::CreateSemaphores()
@@ -325,7 +351,11 @@ namespace Beer::Core
     void Renderer::CreateTextureImage()
     {
         int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load("assets/textures/Tex_CatAnguish.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        std::string assetPath = AssetUtilities::GetTexturePath("Tex_VikingRoom");
+        assetPath = "C:\Users\micah\Desktop\Jaar 3 Games\MyWaterColorGalaxy\bin\assets/textures/Tex_VikingRoom.png"
+            // std::println("{}", assetPath);
+            stbi_uc* pixels
+            = stbi_load(assetPath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         vk::DeviceSize imageSize = texWidth * texHeight * 4;
 
         if (!pixels)
@@ -339,7 +369,7 @@ namespace Beer::Core
         stagingBuffer->Upload(pixels, imageSize);
         stbi_image_free(pixels);
 
-        RendererUtilities::CreateImage(static_cast<uint32_t>(texWidth),
+        ImageUtilities::CreateImage(static_cast<uint32_t>(texWidth),
             static_cast<uint32_t>(texHeight),
             vk::Format::eR8G8B8A8Srgb,
             vk::ImageTiling::eOptimal,
@@ -373,6 +403,7 @@ namespace Beer::Core
     {
         textureImageView = ImageUtilities::CreateImageView(textureImage,
             vk::Format::eR8G8B8A8Srgb,
+            vk::ImageAspectFlagBits::eColor,
             device);
     }
 
@@ -414,17 +445,31 @@ namespace Beer::Core
             {},
             vk::AccessFlagBits2::eColorAttachmentWrite,
             vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+            vk::ImageAspectFlagBits::eColor);
+
+        CommandBufferUtilities::TransitionImageLayout(commandBuffer,
+            depthImage,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eDepthAttachmentOptimal,
+            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+            vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+            vk::ImageAspectFlagBits::eDepth);
 
         vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 0.0f);
-
         vk::RenderingAttachmentInfo colorAttachmentInfo = RendererUtilities::CreateColorAttachmentInfo(swapchain.GetImageView(imageIndex),
             clearColor);
+
+        vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
+        vk::RenderingAttachmentInfo depthAttachmentInfo = RendererUtilities::CreateDepthAttachmentInfo(depthImageView, clearDepth);
 
         const vk::Extent2D& swapchainExtent = swapchain.GetExtent();
 
         vk::RenderingInfo renderingInfo = RendererUtilities::CreateRenderingInfo(swapchainExtent,
-            colorAttachmentInfo);
+            colorAttachmentInfo,
+            depthAttachmentInfo);
 
         commandBuffer.beginRendering(renderingInfo);
 
@@ -460,7 +505,8 @@ namespace Beer::Core
             vk::AccessFlagBits2::eColorAttachmentWrite,
             {},
             vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::PipelineStageFlagBits2::eBottomOfPipe);
+            vk::PipelineStageFlagBits2::eBottomOfPipe,
+            vk::ImageAspectFlagBits::eColor);
 
         commandBuffer.end();
 
@@ -505,7 +551,7 @@ namespace Beer::Core
 
         Rendering::UniformBufferObject ubo{}; /// Don't forget to add the f, 2.0 is a double instead of a float.
         ubo.objToWorld = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-        ubo.worldToView = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 0.0, 1.0));
+        ubo.worldToView = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
         ubo.viewToClip = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
         ubo.viewToClip[1][1] *= -1;
 

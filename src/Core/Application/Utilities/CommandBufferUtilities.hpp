@@ -19,7 +19,8 @@ namespace Beer::Core
             vk::AccessFlags2 srcAccessMask,
             vk::AccessFlags2 dstAccessMask,
             vk::PipelineStageFlags2 srcStageMask,
-            vk::PipelineStageFlags2 dstStageMask);
+            vk::PipelineStageFlags2 dstStageMask,
+            vk::ImageAspectFlags imageAspectFlags);
 
         static void TransitionImageLayout(const vk::raii::Image& image,
             vk::ImageLayout oldLayout,

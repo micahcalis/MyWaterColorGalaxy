@@ -8,6 +8,7 @@
 #include <iostream>
 #include <print>
 #include <cstring>
+#include <stdexcept>
 
 namespace Beer::Core
 {
@@ -41,13 +42,29 @@ namespace Beer::Core
         return colorAttachment;
     }
 
-    vk::RenderingInfo RendererUtilities::CreateRenderingInfo(vk::Extent2D extent, const vk::RenderingAttachmentInfo& colorAttachment)
+    vk::RenderingAttachmentInfo RendererUtilities::CreateDepthAttachmentInfo(vk::ImageView imageView,
+        vk::ClearValue clearValue)
+    {
+        vk::RenderingAttachmentInfo depthAttachmentInfo{};
+        depthAttachmentInfo.imageView = imageView;
+        depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+        depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+        depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+        depthAttachmentInfo.clearValue = clearValue;
+
+        return depthAttachmentInfo;
+    }
+
+    vk::RenderingInfo RendererUtilities::CreateRenderingInfo(vk::Extent2D extent,
+        const vk::RenderingAttachmentInfo& colorAttachment,
+        const vk::RenderingAttachmentInfo& depthAttachment)
     {
         vk::RenderingInfo renderingInfo{};
         renderingInfo.renderArea = vk::Rect2D({0, 0}, extent);
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = &depthAttachment;
 
         return renderingInfo;
     }
@@ -132,11 +149,7 @@ namespace Beer::Core
 
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
         {
-            // 1. Check if the memory type bit is set in the filter
             bool typeIsSuitable = (typeFilter & (1 << i));
-
-            // 2. CHECK THE PROPERTIES! (This was missing)
-            // We ensure the memory type supports ALL the flags we asked for.
             bool propertiesAreSuitable = (memProperties.memoryTypes[i].propertyFlags & properties) == properties;
 
             if (typeIsSuitable && propertiesAreSuitable)
@@ -180,39 +193,5 @@ namespace Beer::Core
 
         device.GetGraphicsQueue().submit(submitInfo, nullptr);
         device.GetGraphicsQueue().waitIdle();
-    }
-
-    void RendererUtilities::CreateImage(uint32_t width,
-        uint32_t height,
-        vk::Format format,
-        vk::ImageTiling tiling,
-        vk::ImageUsageFlags usage,
-        vk::MemoryPropertyFlags properties,
-        vk::raii::Image& image,
-        vk::raii::DeviceMemory& imageMemory,
-        const Device& device)
-    {
-        vk::ImageCreateInfo imageInfo{};
-        imageInfo.imageType = vk::ImageType::e2D;
-        imageInfo.format = format;
-        imageInfo.extent = vk::Extent3D{width, height, 1};
-        imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.samples = vk::SampleCountFlagBits::e1;
-        imageInfo.tiling = tiling;
-        imageInfo.usage = usage;
-        imageInfo.sharingMode = vk::SharingMode::eExclusive;
-        imageInfo.initialLayout = vk::ImageLayout::eUndefined;
-
-        image = vk::raii::Image(device.GetLogicalDevice(), imageInfo);
-
-        vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
-
-        vk::MemoryAllocateInfo allocateInfo{};
-        allocateInfo.allocationSize = memRequirements.size;
-        allocateInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties, device.GetPhysicalDevice());
-
-        imageMemory = vk::raii::DeviceMemory(device.GetLogicalDevice(), allocateInfo);
-        image.bindMemory(imageMemory, 0);
     }
 } // namespace Beer::Core
