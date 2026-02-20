@@ -24,16 +24,28 @@ endforeach()
 
 include(FetchContent)
 
-FetchContent_Declare(
-    SDL3
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        main
-)
-set(SDL_TESTS OFF CACHE BOOL "" FORCE)
-set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+# FetchContent_Declare(
+#     SDL3
+#     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+#     GIT_TAG        main
+# )
+# set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+# set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+# set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+# set(SDL_STATIC ON CACHE BOOL "" FORCE)
+# set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+find_package(Vulkan REQUIRED)
+
+# SDL3 Setup
+set(SDL3_ROOT "C:/SDL3/SDL3-3.4.0")
+set(SDL3_INCLUDE_DIR "${SDL3_ROOT}/include")
+set(SDL3_LIBRARY "${SDL3_ROOT}/lib/x64/SDL3.lib")
+set(SDL3_DLL "${SDL3_ROOT}/lib/x64/SDL3.dll")
+
+if(NOT EXISTS "${SDL3_INCLUDE_DIR}")
+    message(FATAL_ERROR "SDL3 Include not found at: ${SDL3_INCLUDE_DIR}")
+endif()
 
 FetchContent_Declare(
     glm
@@ -47,7 +59,13 @@ FetchContent_Declare(
     GIT_TAG        master
 )
 
-FetchContent_MakeAvailable(SDL3 glm VMA)
+FetchContent_Declare(
+    tinyobjloader
+    GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
+    GIT_TAG        release
+)
+
+FetchContent_MakeAvailable(glm VMA tinyobjloader)
 
 include_directories(external)
 
@@ -80,17 +98,35 @@ endif()
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c")
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${VMA_IMP_FILE})
 
-target_include_directories(${PROJECT_NAME} PRIVATE "src")
+target_include_directories(${PROJECT_NAME} PRIVATE "src" "${SDL3_INCLUDE_DIR}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Vulkan::Vulkan
-    SDL3::SDL3
+    "${SDL3_LIBRARY}"
     glm::glm
+    tinyobjloader
     GPUOpen::VulkanMemoryAllocator
 )
 
+set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
+set(ASSETS_DST "${CMAKE_SOURCE_DIR}/bin/assets")
+
+# 1. Write a mini CMake script to handle the smart copying
+set(COPY_SCRIPT "${CMAKE_BINARY_DIR}/copy_assets.cmake")
+file(WRITE "${COPY_SCRIPT}" 
+    "file(COPY \"${ASSETS_SRC}/\" DESTINATION \"${ASSETS_DST}/\" PATTERN \"shaders\" EXCLUDE)\n"
+)
+
+# 2. Run this script as an 'ALL' target (runs on every build automatically)
+add_custom_target(SyncAssets ALL
+    COMMAND ${CMAKE_COMMAND} -P "${COPY_SCRIPT}"
+    COMMENT "Smart syncing assets (ignoring shader sources)..."
+)
+
+# --- YOU WERE MISSING THESE TWO LINES ---
 find_program(SLANGC_EXECUTABLE slangc REQUIRED)
-add_custom_target(Shaders)
+add_custom_target(Shaders) 
+# ----------------------------------------
 
 function(add_slang_shader_target TARGET)
     cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
@@ -118,7 +154,10 @@ foreach(SHADER_FILE ${ALL_SHADERS})
     get_filename_component(SHADER_NAME ${SHADER_FILE} NAME_WE)
     set(TARGET_NAME "Shader_${SHADER_NAME}")
     add_slang_shader_target(${TARGET_NAME} SOURCES ${SHADER_FILE})
+    
+    # This line now works because add_custom_target(Shaders) exists above!
     add_dependencies(Shaders ${TARGET_NAME})
 endforeach()
 
+# Finally, link the shader building to your main executable
 add_dependencies(${PROJECT_NAME} Shaders)

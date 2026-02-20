@@ -13,7 +13,6 @@
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
-#include <print>
 #include "Rendering/Vertex.hpp"
 #include "Rendering/UniformBufferObject.hpp"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -23,6 +22,7 @@
 #include <stdexcept>
 #define STB_IMAGE_IMPLEMENTATION
 #include <Vendor/stb/stb_image.h>
+#include <tiny_obj_loader.h>
 
 namespace Beer::Core
 {
@@ -328,6 +328,7 @@ namespace Beer::Core
             imageInfo.sampler = textureSampler;
             imageInfo.imageView = textureImageView;
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
             std::array<vk::WriteDescriptorSet, 2> descriptorWrites;
             descriptorWrites[0].dstSet = descriptorSets[i];
@@ -351,11 +352,8 @@ namespace Beer::Core
     void Renderer::CreateTextureImage()
     {
         int texWidth, texHeight, texChannels;
-        std::string assetPath = AssetUtilities::GetTexturePath("Tex_VikingRoom");
-        assetPath = "C:\Users\micah\Desktop\Jaar 3 Games\MyWaterColorGalaxy\bin\assets/textures/Tex_VikingRoom.png"
-            // std::println("{}", assetPath);
-            stbi_uc* pixels
-            = stbi_load(assetPath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        std::filesystem::path texturePath = AssetUtilities::GetTexturePath("Tex_CatAnguish");
+        stbi_uc* pixels = stbi_load(texturePath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         vk::DeviceSize imageSize = texWidth * texHeight * 4;
 
         if (!pixels)
@@ -484,7 +482,7 @@ namespace Beer::Core
         // HARDCODED DRAW BLOCK : EXTENSION NECESSARY!!!
         PipelineData pipelineData{};
         pipelineData.ShaderName = HELLO_TRIANGLE;
-        pipelineData.ShaderPath = AssetUtilities::GetShaderPath(std::string(HELLO_TRIANGLE));
+        pipelineData.ShaderPath = AssetUtilities::GetShaderPath(std::string(HELLO_TRIANGLE)).string();
         const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
             pipelineData);
 

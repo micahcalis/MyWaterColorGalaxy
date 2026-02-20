@@ -1,7 +1,6 @@
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include <fstream>
 #include <SDL3/SDL.h>
-#include <print>
 
 namespace Beer::Core
 {
@@ -22,45 +21,43 @@ namespace Beer::Core
         return buffer;
     }
 
-    std::string AssetUtilities::GetAssetPath(const std::string& subPath)
+    std::filesystem::path AssetUtilities::GetBasePath(const std::string& subPath)
     {
         const char* basePath = SDL_GetBasePath();
 
         if (basePath != nullptr)
         {
-            std::string fullPath = std::string(basePath) + subPath;
-            std::println("{}", fullPath);
-            return fullPath;
+            return std::filesystem::path(basePath) / subPath;
         }
 
-        return subPath;
+        return std::filesystem::current_path() / subPath;
     }
 
     static constexpr std::string_view SHADER_HEAD = "assets/shaders/";
     static constexpr std::string_view SHADER_TAIL = ".spv";
 
-    std::string AssetUtilities::GetShaderPath(const std::string& shaderName)
+    std::filesystem::path AssetUtilities::GetShaderPath(const std::string& shaderName)
     {
         std::string subPath = std::string(SHADER_HEAD) + shaderName + std::string(SHADER_TAIL);
-        return GetAssetPath(subPath);
+        return GetBasePath(subPath);
     }
 
     static constexpr std::string_view MODEL_HEAD = "assets/models/";
     static constexpr std::string_view MODEL_TAIL = ".obj";
 
-    std::string AssetUtilities::GetModelPath(const std::string& modelName)
+    std::filesystem::path AssetUtilities::GetModelPath(const std::string& modelName)
     {
         std::string subPath = std::string(MODEL_HEAD) + modelName + std::string(MODEL_TAIL);
-        return GetAssetPath(subPath);
+        return GetBasePath(subPath);
     }
 
     static constexpr std::string_view TEXTURE_HEAD = "assets/textures/";
     static constexpr std::string_view TEXTURE_TAIL = ".png";
 
-    std::string AssetUtilities::GetTexturePath(const std::string& textureName)
+    std::filesystem::path AssetUtilities::GetTexturePath(const std::string& textureName)
     {
         std::string subPath = std::string(TEXTURE_HEAD) + textureName + std::string(TEXTURE_TAIL);
-        return GetAssetPath(subPath);
+        return GetBasePath(subPath);
     }
 
     [[nodiscard]] vk::raii::ShaderModule AssetUtilities::CreateShaderModule(const std::vector<char>& code,
