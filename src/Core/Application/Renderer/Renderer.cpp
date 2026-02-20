@@ -12,6 +12,7 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include "Rendering/Vertex.hpp"
 #include "Rendering/UniformBufferObject.hpp"
@@ -37,20 +38,20 @@ namespace Beer::Core
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
 
-    const std::vector<Rendering::Vertex> helloTriangleVertices = {
-        Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, 0.0), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, 0.0), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, 0.0), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
-        Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, 0.0), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
+    // const std::vector<Rendering::Vertex> helloTriangleVertices = {
+    //     Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, 0.0), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
+    //     Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, 0.0), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
+    //     Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, 0.0), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
+    //     Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, 0.0), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
 
-        Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
-        Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, -0.5), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
-        Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, -0.5), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
-    };
+    //     Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
+    //     Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
+    //     Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, -0.5), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
+    //     Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, -0.5), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
+    // };
 
-    const std::vector<uint16_t> helloTriangleIndices = {
-        0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
+    // const std::vector<uint16_t> helloTriangleIndices = {
+    //     0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
@@ -81,6 +82,7 @@ namespace Beer::Core
         CreateTextureImage();
         CreateTextureImageView();
         CreateTextureSampler();
+        LoadModel();
         CreateVertexBuffer();
         CreateIndexBuffer();
         CreateUniformBuffers();
@@ -216,14 +218,57 @@ namespace Beer::Core
         }
     }
 
+    void Renderer::LoadModel()
+    {
+        tinyobj::attrib_t attributes;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string warn, err;
+        std::filesystem::path modelPath = AssetUtilities::GetModelPath("MDL_VikingRoom");
+
+        if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warn, &err, modelPath.string().c_str()))
+        {
+            throw std::runtime_error(warn + err);
+        }
+
+        std::unordered_map<Rendering::Vertex, uint32_t> uniqueVertices{};
+
+        for (const auto shape : shapes)
+        {
+            for (const auto& index : shape.mesh.indices)
+            {
+                Rendering::Vertex vertex{};
+
+                vertex.pos = {
+                    attributes.vertices[3 * index.vertex_index + 0],
+                    attributes.vertices[3 * index.vertex_index + 1],
+                    attributes.vertices[3 * index.vertex_index + 2]};
+
+                vertex.texCoord = {
+                    attributes.texcoords[2 * index.texcoord_index + 0],
+                    1.0f - attributes.texcoords[2 * index.texcoord_index + 1]};
+
+                vertex.color = {1.0f, 1.0f, 1.0f};
+
+                if (!uniqueVertices.contains(vertex))
+                {
+                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex);
+                }
+
+                indices.push_back(uniqueVertices[vertex]);
+            }
+        }
+    }
+
     void Renderer::CreateVertexBuffer()
     {
-        vk::DeviceSize bufferSize = sizeof(helloTriangleVertices[0]) * helloTriangleVertices.size();
+        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
         std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
             Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
 
-        stagingBuffer->Upload(helloTriangleVertices.data(), bufferSize);
+        stagingBuffer->Upload(vertices.data(), bufferSize);
 
         vertexBuffer = std::make_unique<Rendering::Buffer>(
             Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
@@ -233,12 +278,12 @@ namespace Beer::Core
 
     void Renderer::CreateIndexBuffer()
     {
-        vk::DeviceSize bufferSize = sizeof(helloTriangleIndices[0]) * helloTriangleIndices.size();
+        vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
         std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
             Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
 
-        stagingBuffer->Upload(helloTriangleIndices.data(), bufferSize);
+        stagingBuffer->Upload(indices.data(), bufferSize);
 
         indexBuffer = std::make_unique<Rendering::Buffer>(
             Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
@@ -352,7 +397,7 @@ namespace Beer::Core
     void Renderer::CreateTextureImage()
     {
         int texWidth, texHeight, texChannels;
-        std::filesystem::path texturePath = AssetUtilities::GetTexturePath("Tex_CatAnguish");
+        std::filesystem::path texturePath = AssetUtilities::GetTexturePath("Tex_VikingRoom");
         stbi_uc* pixels = stbi_load(texturePath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         vk::DeviceSize imageSize = texWidth * texHeight * 4;
 
@@ -486,7 +531,7 @@ namespace Beer::Core
         const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
             pipelineData);
 
-        CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer->GetHandle(), indexBuffer->GetHandle(), helloTriangleIndices.size());
+        CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer->GetHandle(), indexBuffer->GetHandle(), indices.size());
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)

@@ -102,7 +102,7 @@ namespace Beer::Core
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
         commandBuffer.bindVertexBuffers(0, vk::Buffer(vertexBuffer), {0});
-        commandBuffer.bindIndexBuffer(vk::Buffer(indexBuffer), 0, vk::IndexType::eUint16);
+        commandBuffer.bindIndexBuffer(vk::Buffer(indexBuffer), 0, vk::IndexType::eUint32);
         commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
     }
 

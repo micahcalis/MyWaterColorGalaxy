@@ -19,3 +19,4 @@ namespace Beer::Rendering
     }
 
 } // namespace Beer::Rendering
+
