@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL_video.h>
+#include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Renderer/PipelineCache.hpp"
@@ -38,11 +39,12 @@ namespace Beer::Core
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
 
         std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
+        std::shared_ptr<UploadManager> uploadManager = nullptr;
 
         std::vector<Rendering::Vertex> vertices;
         std::vector<uint32_t> indices;
-        std::unique_ptr<Rendering::Buffer> vertexBuffer;
-        std::unique_ptr<Rendering::Buffer> indexBuffer;
+        std::shared_ptr<Rendering::Buffer> vertexBuffer;
+        std::shared_ptr<Rendering::Buffer> indexBuffer;
 
         std::vector<Rendering::Buffer> uniformBuffers;
 
@@ -61,6 +63,7 @@ namespace Beer::Core
 
     public:
         void InitializeVulkanInstances(SDL_Window* window);
+        void PreDraw();
         void Draw();
         void HandleWindowResize();
         void SetFrameBufferResized(bool val);

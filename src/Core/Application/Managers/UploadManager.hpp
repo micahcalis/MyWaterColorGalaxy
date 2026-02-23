@@ -22,5 +22,8 @@ namespace Beer::Core
         }
         void AddJob(std::unique_ptr<IUploadJob> job);
         void FlushQueue(const FrameResource& frameResource);
+
+    private:
+        size_t GetTotalQueueSize();
     };
 } // namespace Beer::Core

@@ -2,6 +2,7 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include <memory>
+#include <print>
 
 namespace Beer::Core
 {
@@ -12,12 +13,10 @@ namespace Beer::Core
 
     void UploadManager::FlushQueue(const FrameResource& frameResource)
     {
-        size_t totalSize = 0;
+        if (jobQueue.empty())
+            return;
 
-        for (auto& job : jobQueue)
-        {
-            totalSize += job->Size;
-        }
+        size_t totalSize = GetTotalQueueSize();
 
         std::shared_ptr<Rendering::Buffer> stagingBuffer = std::make_shared<Rendering::Buffer>(
             Rendering::Buffer::CreateStaging(bufferAllocator, totalSize));
@@ -33,5 +32,18 @@ namespace Beer::Core
         }
 
         Core::CommandBufferUtilities::EndSingleTimeCommands(copyCommandBuffer, device);
+        jobQueue.clear();
+    }
+
+    size_t UploadManager::GetTotalQueueSize()
+    {
+        size_t totalSize = 0;
+
+        for (auto& job : jobQueue)
+        {
+            totalSize += job->Size;
+        }
+
+        return totalSize;
     }
 } // namespace Beer::Core

@@ -1,4 +1,6 @@
 #include "Core/Application/Renderer/Renderer.hpp"
+#include "Core/Application/Jobs/BufferUploadJob.hpp"
+#include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
@@ -50,6 +52,7 @@ namespace Beer::Core
         CreateDepthResources(depthFormat);
         CreateSemaphores();
         bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
+        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
 
         CreateDesciptorSetLayout();
 
@@ -73,6 +76,11 @@ namespace Beer::Core
         CreateUniformBuffers();
         CreateDescriptorPool();
         CreateDescriptorSets();
+    }
+
+    void Renderer::PreDraw()
+    {
+        uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
     void Renderer::Draw()
@@ -250,30 +258,26 @@ namespace Beer::Core
     {
         vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
-
-        stagingBuffer->Upload(vertices.data(), bufferSize);
-
-        vertexBuffer = std::make_unique<Rendering::Buffer>(
+        vertexBuffer = std::make_shared<Rendering::Buffer>(
             Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        stagingBuffer->CopyToCmd(*vertexBuffer, device, frameResources[frameIndex]);
+        std::unique_ptr<BufferUploadJob> uploadJob = std::make_unique<BufferUploadJob>(
+            vertexBuffer, vertices.data(), bufferSize);
+
+        uploadManager->AddJob(std::move(uploadJob));
     }
 
     void Renderer::CreateIndexBuffer()
     {
         vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
-
-        stagingBuffer->Upload(indices.data(), bufferSize);
-
-        indexBuffer = std::make_unique<Rendering::Buffer>(
+        indexBuffer = std::make_shared<Rendering::Buffer>(
             Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        stagingBuffer->CopyToCmd(*indexBuffer, device, frameResources[frameIndex]);
+        std::unique_ptr<BufferUploadJob> uploadJob = std::make_unique<BufferUploadJob>(
+            indexBuffer, indices.data(), bufferSize);
+
+        uploadManager->AddJob(std::move(uploadJob));
     }
 
     void Renderer::CreateDesciptorSetLayout()

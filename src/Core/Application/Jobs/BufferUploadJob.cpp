@@ -1,5 +1,4 @@
 #include "Core/Application/Jobs/BufferUploadJob.hpp"
-#include "Core/Application/Renderer/Device.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include <memory>
 
