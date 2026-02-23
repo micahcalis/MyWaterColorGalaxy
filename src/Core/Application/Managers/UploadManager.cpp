@@ -2,7 +2,6 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include <memory>
-#include <print>
 
 namespace Beer::Core
 {

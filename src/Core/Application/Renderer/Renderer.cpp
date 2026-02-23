@@ -68,7 +68,7 @@ namespace Beer::Core
         }
 
         CreateTextureImage();
-        CreateTextureImageView();
+        //  CreateTextureImageView();
         CreateTextureSampler();
         LoadModel();
         CreateVertexBuffer();
@@ -360,7 +360,7 @@ namespace Beer::Core
 
             vk::DescriptorImageInfo imageInfo{};
             imageInfo.sampler = textureSampler;
-            imageInfo.imageView = textureImageView;
+            imageInfo.imageView = textureImage->GetDefaultView();
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
@@ -401,43 +401,50 @@ namespace Beer::Core
         stagingBuffer->Upload(pixels, imageSize);
         stbi_image_free(pixels);
 
-        ImageUtilities::CreateImage(static_cast<uint32_t>(texWidth),
-            static_cast<uint32_t>(texHeight),
-            vk::Format::eR8G8B8A8Srgb,
-            vk::ImageTiling::eOptimal,
-            vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-            vk::MemoryPropertyFlagBits::eDeviceLocal,
-            textureImage,
-            textureImageMemory,
-            device);
+        // ImageUtilities::CreateImage(static_cast<uint32_t>(texWidth),
+        //     static_cast<uint32_t>(texHeight),
+        //     vk::Format::eR8G8B8A8Srgb,
+        //     vk::ImageTiling::eOptimal,
+        //     vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+        //     vk::MemoryPropertyFlagBits::eDeviceLocal,
+        //     textureImage,
+        //     textureImageMemory,
+        //     device);
 
-        CommandBufferUtilities::TransitionImageLayout(textureImage,
+        textureImage = std::make_shared<Rendering::Image>(
+            Rendering::Image::CreateImage2D(bufferAllocator,
+                texWidth,
+                texHeight,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                device));
+
+        CommandBufferUtilities::TransitionImageLayout(textureImage->GetHandle(),
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eTransferDstOptimal,
             frameResources[frameIndex],
             device);
 
         CommandBufferUtilities::CopyBufferToImage(*stagingBuffer,
-            textureImage,
+            textureImage->GetHandle(),
             texWidth,
             texHeight,
             frameResources[frameIndex],
             device);
 
-        CommandBufferUtilities::TransitionImageLayout(textureImage,
+        CommandBufferUtilities::TransitionImageLayout(textureImage->GetHandle(),
             vk::ImageLayout::eTransferDstOptimal,
             vk::ImageLayout::eShaderReadOnlyOptimal,
             frameResources[frameIndex],
             device);
     }
 
-    void Renderer::CreateTextureImageView()
-    {
-        textureImageView = ImageUtilities::CreateImageView(textureImage,
-            vk::Format::eR8G8B8A8Srgb,
-            vk::ImageAspectFlagBits::eColor,
-            device);
-    }
+    // void Renderer::CreateTextureImageView()
+    // {
+    //     textureImageView = ImageUtilities::CreateImageView(textureImage,
+    //         vk::Format::eR8G8B8A8Srgb,
+    //         vk::ImageAspectFlagBits::eColor,
+    //         device);
+    // }
 
     void Renderer::CreateTextureSampler()
     {

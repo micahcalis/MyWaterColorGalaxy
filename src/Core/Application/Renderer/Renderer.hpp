@@ -11,6 +11,7 @@
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Vertex.hpp"
 
 namespace Beer::Core
@@ -48,9 +49,10 @@ namespace Beer::Core
 
         std::vector<Rendering::Buffer> uniformBuffers;
 
-        vk::raii::Image textureImage = nullptr;
-        vk::raii::DeviceMemory textureImageMemory = nullptr;
-        vk::raii::ImageView textureImageView = nullptr;
+        // vk::raii::Image textureImage = nullptr;
+        // vk::raii::DeviceMemory textureImageMemory = nullptr;
+        // vk::raii::ImageView textureImageView = nullptr;
+        std::shared_ptr<Rendering::Image> textureImage = nullptr;
         vk::raii::Sampler textureSampler = nullptr;
 
         int frameIndex = 0;

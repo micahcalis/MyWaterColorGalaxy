@@ -22,7 +22,7 @@ namespace Beer::Core
             vk::PipelineStageFlags2 dstStageMask,
             vk::ImageAspectFlags imageAspectFlags);
 
-        static void TransitionImageLayout(const vk::raii::Image& image,
+        static void TransitionImageLayout(vk::Image image,
             vk::ImageLayout oldLayout,
             vk::ImageLayout newLayout,
             const FrameResource& frameResource,
@@ -45,7 +45,7 @@ namespace Beer::Core
         static void EndSingleTimeCommands(vk::raii::CommandBuffer& commandBuffer, const Device& device);
 
         static void CopyBufferToImage(const Rendering::Buffer& buffer,
-            vk::raii::Image& image,
+            vk::Image image,
             uint32_t width,
             uint32_t height,
             const FrameResource& frameResource,

@@ -4,7 +4,12 @@
 
 namespace Beer::Core
 {
-    vk::raii::ImageView ImageUtilities::CreateImageView(vk::raii::Image& image, vk::Format format, vk::ImageAspectFlagBits aspectFlags, const Device& device)
+
+    vk::raii::ImageView ImageUtilities::CreateImageView(vk::raii::Image& image,
+        vk::Format format,
+        vk::ImageAspectFlagBits aspectFlags,
+        const Device& device)
+
     {
         vk::ImageViewCreateInfo viewInfo{};
         viewInfo.image = image;
@@ -13,6 +18,20 @@ namespace Beer::Core
         viewInfo.subresourceRange = vk::ImageSubresourceRange(aspectFlags, 0, 1, 0, 1);
 
         return vk::raii::ImageView(device.GetLogicalDevice(), viewInfo);
+    }
+
+    vk::ImageView ImageUtilities::CreateImageView(vk::Image image,
+        vk::Format format,
+        vk::ImageAspectFlagBits aspectFlags,
+        const Device& device)
+    {
+        vk::ImageViewCreateInfo viewInfo{};
+        viewInfo.image = image;
+        viewInfo.viewType = vk::ImageViewType::e2D;
+        viewInfo.format = format;
+        viewInfo.subresourceRange = vk::ImageSubresourceRange(aspectFlags, 0, 1, 0, 1);
+
+        return (*device.GetLogicalDevice()).createImageView(viewInfo);
     }
 
     void ImageUtilities::CreateImage(uint32_t width,

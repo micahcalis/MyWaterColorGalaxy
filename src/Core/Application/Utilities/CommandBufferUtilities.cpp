@@ -39,7 +39,7 @@ namespace Beer::Core
         commandBuffer.pipelineBarrier2(dependencyInfo);
     }
 
-    void CommandBufferUtilities::TransitionImageLayout(const vk::raii::Image& image,
+    void CommandBufferUtilities::TransitionImageLayout(const vk::Image image,
         vk::ImageLayout oldLayout,
         vk::ImageLayout newLayout,
         const FrameResource& frameResource,
@@ -134,7 +134,7 @@ namespace Beer::Core
     }
 
     void CommandBufferUtilities::CopyBufferToImage(const Rendering::Buffer& buffer,
-        vk::raii::Image& image,
+        vk::Image image,
         uint32_t width,
         uint32_t height,
         const FrameResource& frameResource,
