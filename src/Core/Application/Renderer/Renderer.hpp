@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
-#include "Core/Application/Renderer/BufferAllocator.hpp"
+#include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Vertex.hpp"
 
@@ -37,7 +37,7 @@ namespace Beer::Core
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
 
-        std::shared_ptr<BufferAllocator> bufferAllocator = nullptr;
+        std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
 
         std::vector<Rendering::Vertex> vertices;
         std::vector<uint32_t> indices;

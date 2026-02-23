@@ -1,8 +1,8 @@
-#include "Core/Application/Renderer/BufferAllocator.hpp"
+#include "Rendering/Buffer/BufferAllocator.hpp"
 
-namespace Beer::Core
+namespace Beer::Rendering
 {
-    BufferAllocator::BufferAllocator(const Device& device, const vk::raii::Instance& instance)
+    BufferAllocator::BufferAllocator(const Core::Device& device, const vk::raii::Instance& instance)
         : device(device), vmaAllocator(nullptr)
     {
         VmaAllocatorCreateInfo allocatorInfo{
@@ -100,4 +100,4 @@ namespace Beer::Core
     void BufferAllocator::DestroyImage(Rendering::BufferAllocation& image)
     {
     }
-} // namespace Beer::Core
+} // namespace Beer::Rendering

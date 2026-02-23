@@ -14,10 +14,9 @@ namespace Beer::Rendering
 
         // BufferAllocation& operator=(BufferAllocation&&) = default;
         // BufferAllocation(BufferAllocation&&) = default;
-
+    public:
         VkBuffer Buffer;
         VmaAllocation Allocation;
         VmaAllocationInfo Info;
-        VmaAllocator Allocator;
     };
 } // namespace Beer::Rendering

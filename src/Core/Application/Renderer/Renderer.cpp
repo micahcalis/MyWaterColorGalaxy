@@ -38,21 +38,6 @@ namespace Beer::Core
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
 
-    // const std::vector<Rendering::Vertex> helloTriangleVertices = {
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, 0.0), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, 0.0), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, 0.0), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, 0.0), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
-
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, -0.5), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, -0.5), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
-    // };
-
-    // const std::vector<uint16_t> helloTriangleIndices = {
-    //     0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
-
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
         this->window = window;
@@ -64,7 +49,7 @@ namespace Beer::Core
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
         CreateSemaphores();
-        bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
+        bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
 
         CreateDesciptorSetLayout();
 
@@ -273,7 +258,7 @@ namespace Beer::Core
         vertexBuffer = std::make_unique<Rendering::Buffer>(
             Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        stagingBuffer->CopyTo(*vertexBuffer, device, frameResources[frameIndex]);
+        stagingBuffer->CopyToCmd(*vertexBuffer, device, frameResources[frameIndex]);
     }
 
     void Renderer::CreateIndexBuffer()
@@ -288,7 +273,7 @@ namespace Beer::Core
         indexBuffer = std::make_unique<Rendering::Buffer>(
             Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        stagingBuffer->CopyTo(*indexBuffer, device, frameResources[frameIndex]);
+        stagingBuffer->CopyToCmd(*indexBuffer, device, frameResources[frameIndex]);
     }
 
     void Renderer::CreateDesciptorSetLayout()

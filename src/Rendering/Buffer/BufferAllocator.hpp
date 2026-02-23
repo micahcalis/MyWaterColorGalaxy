@@ -5,16 +5,16 @@
 #include "Core/Application/Renderer/Device.hpp"
 #include "Rendering/Buffer/BufferAllocation.hpp"
 
-namespace Beer::Core
+namespace Beer::Rendering
 {
     class BufferAllocator
     {
     private:
         VmaAllocator vmaAllocator;
-        const Device& device; // A shared_ptr would likely be preferrable.
+        const Core::Device& device; // A shared_ptr would likely be preferrable.
 
     public:
-        BufferAllocator(const Device& device, const vk::raii::Instance& instance);
+        BufferAllocator(const Core::Device& device, const vk::raii::Instance& instance);
         ~BufferAllocator();
 
         [[nodiscard]] VmaAllocator GetAllocator() const { return vmaAllocator; }
@@ -29,4 +29,4 @@ namespace Beer::Core
         void DestroyBuffer(Rendering::BufferAllocation& buffer);
         void DestroyImage(Rendering::BufferAllocation& image);
     };
-} // namespace Beer::Core
+} // namespace Beer::Rendering
