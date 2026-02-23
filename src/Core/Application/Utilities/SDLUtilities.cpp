@@ -16,11 +16,11 @@ namespace Beer::Core
 
     bool SDLUtilities::SDLInitialize()
     {
-        bool success = SDL_Init(SDL_INIT_VIDEO) != 0;
+        bool success = static_cast<int>(SDL_Init(SDL_INIT_VIDEO)) != 0;
 
         if (!success)
         {
-            std::cerr << "SDL Failed to Start: " << SDL_GetError() << std::endl;
+            std::cerr << "SDL Failed to Start: " << SDL_GetError() << '\n';
         }
 
         return success;
@@ -34,7 +34,8 @@ namespace Beer::Core
             if (event.type == SDL_EVENT_QUIT)
             {
                 return false;
-            } else if (event.type == SDL_EVENT_WINDOW_RESIZED)
+            }
+            if (event.type == SDL_EVENT_WINDOW_RESIZED)
             {
                 frameBufferResized = true;
             }

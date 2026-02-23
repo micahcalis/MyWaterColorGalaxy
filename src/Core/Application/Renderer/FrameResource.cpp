@@ -17,6 +17,7 @@ namespace Beer::Core
         commandPool.reset();
     }
 
+    const vk::raii::CommandPool& FrameResource::GetCommandPool() const { return commandPool; }
     const vk::raii::Fence& FrameResource::GetInFlightFence() const { return inFlightFence; }
     const vk::raii::Semaphore& FrameResource::GetImageAvailableSemaphore() const { return imageAvailableSemaphore; }
     const vk::raii::Semaphore& FrameResource::GetRenderFinishedSemaphore() const { return renderFinishedSemaphore; }

@@ -4,8 +4,8 @@
 namespace Beer::Core
 {
     PipelineKey::PipelineKey(const std::string& name)
+        : PipelineName(name)
     {
-        PipelineName = name;
         PipelineHash = std::hash<std::string>{}(name);
     }
 

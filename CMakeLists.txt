@@ -1,25 +1,41 @@
 cmake_minimum_required(VERSION 3.20)
 project(MyWatercolorGalaxy)
 
-# --- 1. Project Settings ---
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# [FIX] Force all outputs to "bin", regardless of Debug/Release config
-# This prevents MSBuild/Visual Studio from creating a "Debug" subfolder.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin")
+include(CheckIPOSupported)
+check_ipo_supported(RESULT LTO_SUPPORTED OUTPUT LTO_ERROR)
 
-# --- 2. Find Dependencies ---
-find_package(Vulkan REQUIRED)
-
-# Explicitly find Slang Compiler
-set(SLANGC_EXECUTABLE "C:/VulkanSDK/1.4.341.0/Bin/slangc.exe")
-if(NOT EXISTS "${SLANGC_EXECUTABLE}")
-    find_program(SLANGC_EXECUTABLE slangc REQUIRED)
+if(LTO_SUPPORTED)
+    message(STATUS "LTO/IPO is supported. Enabling for Release builds.")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+else()
+    message(WARNING "LTO/IPO is not supported: ${LTO_ERROR}")
 endif()
+
+# Makes sure all configs go into the bin directory.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_SOURCE_DIR}/bin")
+endforeach()
+
+include(FetchContent)
+
+# FetchContent_Declare(
+#     SDL3
+#     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+#     GIT_TAG        main
+# )
+# set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+# set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+# set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+# set(SDL_STATIC ON CACHE BOOL "" FORCE)
+# set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+find_package(Vulkan REQUIRED)
 
 # SDL3 Setup
 set(SDL3_ROOT "C:/SDL3/SDL3-3.4.0")
@@ -31,107 +47,117 @@ if(NOT EXISTS "${SDL3_INCLUDE_DIR}")
     message(FATAL_ERROR "SDL3 Include not found at: ${SDL3_INCLUDE_DIR}")
 endif()
 
-# --- 3. Define the Executable ---
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG        master
+)
+
+FetchContent_Declare(
+    VMA
+    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+    GIT_TAG        master
+)
+
+FetchContent_Declare(
+    tinyobjloader
+    GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
+    GIT_TAG        release
+)
+
+FetchContent_MakeAvailable(glm VMA tinyobjloader)
+
+include_directories(external)
+
+find_package(Vulkan REQUIRED)
+
+if (NOT Vulkan_FOUND) # Will use a bundled version if the sdk isn't present.
+    if (WIN32)
+        find_library(Vulkan_LIBRARY NAMES vulkan-1 vulkan PATHS ${CMAKE_SOURCE_DIR}/libs/vulkan)
+        if (Vulkan_LIBRARY)
+            set(Vulkan_FOUND ON)
+            MESSAGE("Using bundled Vulkan Library")
+        endif()
+    endif()
+endif()
+
+if (NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Could not find Vulkan library!")
+else()
+    message(STATUS ${Vulkan_LIBRARY})
+endif()
+
+# Dummy .cpp file handles the single file VMA_IMPL requirement
+set(VMA_IMP_FILE "${CMAKE_BINARY_DIR}/vma_implementation.cpp")
+if(NOT EXISTS "${VMA_IMP_FILE}")
+    file(WRITE "${VMA_IMP_FILE}"
+        "#define VMA_IMPLEMENTATION\n"
+        "#include \"vk_mem_alloc.h\"\n")
+endif()
+
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c")
-add_executable(Game ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${VMA_IMP_FILE})
 
-# --- 4. Include & Link ---
-target_include_directories(Game PRIVATE 
-    "src"
-    "${Vulkan_INCLUDE_DIRS}"
-    "$ENV{VULKAN_SDK}/Include"
-    "${SDL3_INCLUDE_DIR}"
-)
+target_include_directories(${PROJECT_NAME} PRIVATE "src" "${SDL3_INCLUDE_DIR}")
 
-target_link_libraries(Game PRIVATE 
-    Vulkan::Vulkan 
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Vulkan::Vulkan
     "${SDL3_LIBRARY}"
+    glm::glm
+    tinyobjloader
+    GPUOpen::VulkanMemoryAllocator
 )
 
-# --- 5. Shader Compilation (Smart Auto-Detection) ---
+set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
+set(ASSETS_DST "${CMAKE_SOURCE_DIR}/bin/assets")
 
-# 1. Create a "Master" target that will group all individual shaders
-add_custom_target(Shaders)
+# 1. Write a mini CMake script to handle the smart copying
+set(COPY_SCRIPT "${CMAKE_BINARY_DIR}/copy_assets.cmake")
+file(WRITE "${COPY_SCRIPT}" 
+    "file(COPY \"${ASSETS_SRC}/\" DESTINATION \"${ASSETS_DST}/\" PATTERN \"shaders\" EXCLUDE)\n"
+)
+
+# 2. Run this script as an 'ALL' target (runs on every build automatically)
+add_custom_target(SyncAssets ALL
+    COMMAND ${CMAKE_COMMAND} -P "${COPY_SCRIPT}"
+    COMMENT "Smart syncing assets (ignoring shader sources)..."
+)
+
+# --- YOU WERE MISSING THESE TWO LINES ---
+find_program(SLANGC_EXECUTABLE slangc REQUIRED)
+add_custom_target(Shaders) 
+# ----------------------------------------
 
 function(add_slang_shader_target TARGET)
     cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
-
-    # We assume the first source file is the main one
     list(GET SHADER_SOURCES 0 MAIN_SOURCE)
     get_filename_component(SHADER_BASE_NAME ${MAIN_SOURCE} NAME_WE)
 
-    # Set output paths (bin/assets/shaders)
     set(SHADERS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders")
-    
-    # [FIX] Use the shader name for the output file, not hardcoded "shaders.spv"
     set(OUTPUT_SPV "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.spv")
 
-    # --- AUTOMATIC ENTRY POINT DETECTION ---
-    file(READ ${MAIN_SOURCE} SHADER_CONTENT)
-
-    # 1. Find the Vertex Shader name
-    string(REGEX MATCH "\\[shader\\(\\\"vertex\\\"\\)\\][ \t\r\n]*[A-Za-z0-9_]+[ \t\r\n]+([A-Za-z0-9_]+)" VERTEX_MATCH "${SHADER_CONTENT}")
-    
-    if(CMAKE_MATCH_1)
-        set(VERT_ENTRY ${CMAKE_MATCH_1})
-    else()
-        message(FATAL_ERROR "Could not find [shader(\"vertex\")] in ${MAIN_SOURCE}")
-    endif()
-
-    # 2. Find the Fragment Shader name
-    string(REGEX MATCH "\\[shader\\(\\\"fragment\\\"\\)\\][ \t\r\n]*[A-Za-z0-9_]+[ \t\r\n]+([A-Za-z0-9_]+)" FRAGMENT_MATCH "${SHADER_CONTENT}")
-    
-    if(CMAKE_MATCH_1)
-        set(FRAG_ENTRY ${CMAKE_MATCH_1})
-    else()
-        message(FATAL_ERROR "Could not find [shader(\"fragment\")] in ${MAIN_SOURCE}")
-    endif()
-
-    # --- COMPILE COMMAND ---
     add_custom_command(
-            OUTPUT  ${OUTPUT_SPV}
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_OUTPUT_DIR}
-            COMMAND ${SLANGC_EXECUTABLE} ${MAIN_SOURCE} 
-                    -target spirv 
-                    -profile spirv_1_4 
-                    -emit-spirv-directly 
-                    -fvk-use-entrypoint-name 
-                    -entry ${VERT_ENTRY} 
-                    -entry ${FRAG_ENTRY} 
-                    -o ${OUTPUT_SPV}
-            WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
-            DEPENDS ${SHADER_SOURCES}
-            COMMENT "Compiling Slang Shader: ${SHADER_BASE_NAME}.slang -> ${SHADER_BASE_NAME}.spv"
-            VERBATIM
+        OUTPUT  ${OUTPUT_SPV}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_OUTPUT_DIR}
+        COMMAND ${SLANGC_EXECUTABLE} ${MAIN_SOURCE}
+                -target spirv -profile spirv_1_4 -emit-spirv-directly -o ${OUTPUT_SPV}
+        WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Compiling Slang Shader: ${SHADER_BASE_NAME}.slang"
+        VERBATIM
     )
-    
     add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV})
 endfunction()
 
-# 1. Find all .slang files
 file(GLOB ALL_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.slang")
-
-# 2. Loop through each file
 foreach(SHADER_FILE ${ALL_SHADERS})
-    
     get_filename_component(SHADER_NAME ${SHADER_FILE} NAME_WE)
     set(TARGET_NAME "Shader_${SHADER_NAME}")
-
-    # Call the function
     add_slang_shader_target(${TARGET_NAME} SOURCES ${SHADER_FILE})
-
-    # [FIX] Link the individual shader target to the master "Shaders" target
+    
+    # This line now works because add_custom_target(Shaders) exists above!
     add_dependencies(Shaders ${TARGET_NAME})
-
 endforeach()
 
-# [FIX] Now "Shaders" actually exists, so Game can depend on it
-add_dependencies(Game Shaders)
-
-
-# --- 6. Final Polish (DLL Copy) ---
-add_custom_command(TARGET Game POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${SDL3_DLL}"        
-    "$<TARGET_FILE_DIR:Game>"
-    COMMENT "Copying SDL3.dll to bin folder...")
+# Finally, link the shader building to your main executable
+add_dependencies(${PROJECT_NAME} Shaders)

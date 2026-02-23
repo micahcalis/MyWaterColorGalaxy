@@ -3,13 +3,21 @@
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Core/Application/Renderer/PipelineKey.hpp"
 #include "PipelineCache.hpp"
+#include <cstdint>
 #include <vulkan/vulkan.h>
+#include "Rendering/Vertex.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
-    PipelineCache::PipelineCache(const vk::raii::Device& device, const Swapchain& swapchain)
+    PipelineCache::PipelineCache(const vk::raii::Device& device,
+        const Swapchain& swapchain,
+        vk::DescriptorSetLayout globalSetLayout,
+        const vk::Format depthFormat)
         : logicalDevice(device)
         , swapchain(swapchain)
+        , globalSetLayout(globalSetLayout)
+        , depthFormat(depthFormat)
     {
     }
 
@@ -46,7 +54,13 @@ namespace Beer::Core
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+        auto bindingDescription = Rendering::Vertex::GetBindingDescription();
+        auto attributeDescriptions = Rendering::Vertex::GetAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
         std::vector dynamicStates = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         vk::PipelineDynamicStateCreateInfo dynamicCreateInfo{};
@@ -55,10 +69,6 @@ namespace Beer::Core
 
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{};
         inputAssemblyCreateInfo.topology = data.Topology;
-
-        const vk::Extent2D swapchainExtent = swapchain.GetExtent();
-        vk::Viewport viewPort = vk::Viewport(0.0f, 0.0f, static_cast<float>(swapchainExtent.width), static_cast<float>(swapchainExtent.height), 0.0f, 1.0f);
-        vk::Rect2D region = vk::Rect2D(vk::Offset2D{0, 0}, swapchainExtent);
 
         vk::PipelineViewportStateCreateInfo viewportCreateInfo{};
         viewportCreateInfo.viewportCount = 1;
@@ -69,7 +79,7 @@ namespace Beer::Core
         rasterizationCreateInfo.rasterizerDiscardEnable = vk::False;
         rasterizationCreateInfo.polygonMode = data.PolygonMode;
         rasterizationCreateInfo.cullMode = data.CullMode;
-        rasterizationCreateInfo.frontFace = vk::FrontFace::eClockwise;
+        rasterizationCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
         rasterizationCreateInfo.depthBiasEnable = vk::False;
         rasterizationCreateInfo.depthBiasSlopeFactor = 1.0f;
         rasterizationCreateInfo.lineWidth = 1.0f;
@@ -91,33 +101,55 @@ namespace Beer::Core
         colorBlendCreateInfo.attachmentCount = 1;
         colorBlendCreateInfo.pAttachments = &colorBlendAttachment;
 
-        vk::PipelineLayoutCreateInfo layoutCreateInfo{};
-        layoutCreateInfo.setLayoutCount = 0;
-        layoutCreateInfo.pushConstantRangeCount = 0;
+        vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
+        depthStencilCreateInfo.depthTestEnable = vk::True;
+        depthStencilCreateInfo.depthWriteEnable = vk::True;
+        depthStencilCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+        depthStencilCreateInfo.depthBoundsTestEnable = vk::False;
+        depthStencilCreateInfo.stencilTestEnable = vk ::False;
 
-        emptyLayout = vk::raii::PipelineLayout(logicalDevice, layoutCreateInfo);
+        std::vector<vk::DescriptorSetLayout> setLayouts;
+
+        setLayouts.push_back(globalSetLayout);
+
+        if (data.MaterialLayout != VK_NULL_HANDLE)
+        {
+            setLayouts.push_back(data.MaterialLayout);
+        }
+
+        vk::PipelineLayoutCreateInfo layoutCreateInfo{};
+        layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+        layoutCreateInfo.pSetLayouts = setLayouts.data();
+
+        // NOTE: needs caching
+        vk::raii::PipelineLayout finalLayout(logicalDevice, layoutCreateInfo);
 
         vk::PipelineRenderingCreateInfo renderingCreateInfo{};
         vk::Format colorFormat = swapchain.GetImageFormat();
         renderingCreateInfo.colorAttachmentCount = 1;
         renderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+        renderingCreateInfo.depthAttachmentFormat = depthFormat;
 
         vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
         graphicsPipelineCreateInfo.pNext = &renderingCreateInfo;
         graphicsPipelineCreateInfo.stageCount = 2;
-        graphicsPipelineCreateInfo.pStages = shaderStages;
+        graphicsPipelineCreateInfo.pStages = &shaderStages[0];
         graphicsPipelineCreateInfo.pVertexInputState = &vertexInputInfo;
         graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
         graphicsPipelineCreateInfo.pViewportState = &viewportCreateInfo;
         graphicsPipelineCreateInfo.pRasterizationState = &rasterizationCreateInfo;
         graphicsPipelineCreateInfo.pMultisampleState = &multisamplingCreateInfo;
         graphicsPipelineCreateInfo.pColorBlendState = &colorBlendCreateInfo;
+        graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilCreateInfo;
         graphicsPipelineCreateInfo.pDynamicState = &dynamicCreateInfo;
-        graphicsPipelineCreateInfo.layout = *emptyLayout;
+        graphicsPipelineCreateInfo.layout = *finalLayout;
         graphicsPipelineCreateInfo.renderPass = nullptr;
         graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-        return vk::raii::Pipeline(logicalDevice, nullptr, graphicsPipelineCreateInfo);
+        vk::raii::Pipeline pipeline(logicalDevice, nullptr, graphicsPipelineCreateInfo);
+        cachedLayouts.push_back(std::move(finalLayout));
+
+        return pipeline;
     }
 } // namespace Beer::Core

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vulkan/vulkan.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include <string>
 
@@ -14,8 +15,9 @@ namespace Beer::Core
         std::string ShaderPath;
         std::string ShaderName;
 
-        vk::PrimitiveTopology Topology = vk::PrimitiveTopology::eTriangleList;
+        vk::DescriptorSetLayout MaterialLayout = VK_NULL_HANDLE;
 
+        vk::PrimitiveTopology Topology = vk::PrimitiveTopology::eTriangleList;
         vk::CullModeFlags CullMode = vk::CullModeFlagBits::eBack;
         vk::PolygonMode PolygonMode = vk::PolygonMode::eFill;
 
