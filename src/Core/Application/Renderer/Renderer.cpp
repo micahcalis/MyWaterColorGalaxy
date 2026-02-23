@@ -15,6 +15,7 @@
 #include "Core/Assets/ImageAsset.hpp"
 #include "Core/Assets/ImageLoader.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Buffer/Image.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <filesystem>
@@ -49,12 +50,11 @@ namespace Beer::Core
         CreateSurface(window);
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
+        bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
+        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
         CreateSemaphores();
-        bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
-        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
-
         CreateDesciptorSetLayout();
 
         pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(),
@@ -69,7 +69,6 @@ namespace Beer::Core
         }
 
         CreateTextureImage();
-        //  CreateTextureImageView();
         CreateTextureSampler();
         LoadModel();
         CreateVertexBuffer();
@@ -184,20 +183,14 @@ namespace Beer::Core
         depthFormat = ImageUtilities::FindDepthFormat(device);
         vk::Extent2D extent = swapchain.GetExtent();
 
-        ImageUtilities::CreateImage(extent.width,
-            extent.height,
-            depthFormat,
-            vk::ImageTiling::eOptimal,
-            vk::ImageUsageFlagBits::eDepthStencilAttachment,
-            vk::MemoryPropertyFlagBits::eDeviceLocal,
-            depthImage,
-            depthImageMemory,
-            device);
-
-        depthImageView = ImageUtilities::CreateImageView(depthImage,
-            depthFormat,
-            vk::ImageAspectFlagBits::eDepth,
-            device);
+        depthImage = std::make_shared<Rendering::Image>(
+            Rendering::Image::CreateImage2D(bufferAllocator,
+                extent.width,
+                extent.height,
+                VkFormat(depthFormat),
+                VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                vk::ImageAspectFlagBits::eDepth,
+                device));
     }
 
     void Renderer::CreateSemaphores()
@@ -393,6 +386,8 @@ namespace Beer::Core
                 imageAsset.Width,
                 imageAsset.Height,
                 VK_FORMAT_R8G8B8A8_SRGB,
+                VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
+                vk::ImageAspectFlagBits::eColor,
                 device));
 
         std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(
@@ -443,7 +438,7 @@ namespace Beer::Core
             vk::ImageAspectFlagBits::eColor);
 
         CommandBufferUtilities::TransitionImageLayout(commandBuffer,
-            depthImage,
+            depthImage->GetHandle(),
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eDepthAttachmentOptimal,
             vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
@@ -457,7 +452,7 @@ namespace Beer::Core
             clearColor);
 
         vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
-        vk::RenderingAttachmentInfo depthAttachmentInfo = RendererUtilities::CreateDepthAttachmentInfo(depthImageView, clearDepth);
+        vk::RenderingAttachmentInfo depthAttachmentInfo = RendererUtilities::CreateDepthAttachmentInfo(depthImage->GetDefaultView(), clearDepth);
 
         const vk::Extent2D& swapchainExtent = swapchain.GetExtent();
 

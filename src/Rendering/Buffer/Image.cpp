@@ -17,18 +17,20 @@ namespace Beer::Rendering
         uint32_t width,
         uint32_t height,
         VkFormat format,
+        VkImageUsageFlags usage,
+        vk::ImageAspectFlagBits aspectFlags,
         const Core::Device& device)
     {
         auto allocation = allocator->CreateImage(width,
             height,
             format,
             VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-            VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
+            usage,
             VMA_MEMORY_USAGE_AUTO);
 
         auto defaultView = Core::ImageUtilities::CreateImageView(allocation.Image,
             vk::Format(format),
-            vk::ImageAspectFlagBits::eColor,
+            aspectFlags,
             device);
 
         return {std::move(allocator),

@@ -25,6 +25,8 @@ namespace Beer::Rendering
             uint32_t width,
             uint32_t height,
             VkFormat format,
+            VkImageUsageFlags usage,
+            vk::ImageAspectFlagBits aspectFlags,
             const Core::Device& device);
 
         [[nodiscard]] VkImage GetHandle() const { return allocation.Image; }
