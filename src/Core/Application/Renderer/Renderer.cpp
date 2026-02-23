@@ -300,7 +300,7 @@ namespace Beer::Core
         pipelineLayoutInfo.pushConstantRangeCount = 0;
 
         pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
-    } // namespace Beer::Core
+    }
 
     void Renderer::CreateUniformBuffers()
     {

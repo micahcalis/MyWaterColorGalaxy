@@ -31,10 +31,6 @@ namespace Beer::Core
 
         Swapchain swapchain{};
 
-        // vk::raii::Image depthImage = nullptr;
-        // vk::raii::DeviceMemory depthImageMemory = nullptr;
-        // vk::raii::ImageView depthImageView = nullptr;
-
         std::shared_ptr<Rendering::Image> depthImage = nullptr;
 
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
