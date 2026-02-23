@@ -93,7 +93,6 @@ namespace Beer::Core
         void CreateDescriptorPool();
         void CreateDescriptorSets();
         void CreateTextureImage();
-        void CreateTextureImageView();
         void CreateTextureSampler();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);

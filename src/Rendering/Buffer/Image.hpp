@@ -5,6 +5,7 @@
 #include "Rendering/Buffer/ImageAllocation.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Utilities/macros.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
 {
@@ -30,6 +31,11 @@ namespace Beer::Rendering
         VkImageView GetDefaultView() const { return defaultView; }
         vk::Extent3D GetExtent() const { return extent; }
         VkFormat GetFormat() const { return format; }
+
+        void QueueTransitionLayout(const vk::Image image,
+            const vk::raii::CommandBuffer& commandBuffer,
+            vk::ImageLayout oldLayout,
+            vk::ImageLayout newLayout);
 
         NO_COPY(Image);
         DEFAULT_MOVE(Image);

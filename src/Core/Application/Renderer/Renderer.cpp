@@ -1,5 +1,6 @@
 #include "Core/Application/Renderer/Renderer.hpp"
 #include "Core/Application/Jobs/BufferUploadJob.hpp"
+#include "Core/Application/Jobs/ImageUploadJob.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
@@ -11,6 +12,8 @@
 #include "Core/Application/Renderer/PipelineKey.hpp"
 #include "Core/Application/Renderer/PipelineData.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
+#include "Core/Assets/ImageAsset.hpp"
+#include "Core/Assets/ImageLoader.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
@@ -23,8 +26,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include <stdexcept>
-#define STB_IMAGE_IMPLEMENTATION
-#include <Vendor/stb/stb_image.h>
 #include <tiny_obj_loader.h>
 
 namespace Beer::Core
@@ -385,66 +386,20 @@ namespace Beer::Core
 
     void Renderer::CreateTextureImage()
     {
-        int texWidth, texHeight, texChannels;
-        std::filesystem::path texturePath = AssetUtilities::GetTexturePath("Tex_VikingRoom");
-        stbi_uc* pixels = stbi_load(texturePath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        vk::DeviceSize imageSize = texWidth * texHeight * 4;
-
-        if (!pixels)
-        {
-            throw std::runtime_error("failed to load texture image");
-        }
-
-        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(bufferAllocator, imageSize));
-
-        stagingBuffer->Upload(pixels, imageSize);
-        stbi_image_free(pixels);
-
-        // ImageUtilities::CreateImage(static_cast<uint32_t>(texWidth),
-        //     static_cast<uint32_t>(texHeight),
-        //     vk::Format::eR8G8B8A8Srgb,
-        //     vk::ImageTiling::eOptimal,
-        //     vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-        //     vk::MemoryPropertyFlagBits::eDeviceLocal,
-        //     textureImage,
-        //     textureImageMemory,
-        //     device);
+        ImageAsset imageAsset = ImageLoader::LoadImage("Tex_VikingRoom", 4);
 
         textureImage = std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(bufferAllocator,
-                texWidth,
-                texHeight,
+                imageAsset.Width,
+                imageAsset.Height,
                 VK_FORMAT_R8G8B8A8_SRGB,
                 device));
 
-        CommandBufferUtilities::TransitionImageLayout(textureImage->GetHandle(),
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eTransferDstOptimal,
-            frameResources[frameIndex],
-            device);
+        std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(
+            textureImage, imageAsset);
 
-        CommandBufferUtilities::CopyBufferToImage(*stagingBuffer,
-            textureImage->GetHandle(),
-            texWidth,
-            texHeight,
-            frameResources[frameIndex],
-            device);
-
-        CommandBufferUtilities::TransitionImageLayout(textureImage->GetHandle(),
-            vk::ImageLayout::eTransferDstOptimal,
-            vk::ImageLayout::eShaderReadOnlyOptimal,
-            frameResources[frameIndex],
-            device);
+        uploadManager->AddJob(std::move(uploadJob));
     }
-
-    // void Renderer::CreateTextureImageView()
-    // {
-    //     textureImageView = ImageUtilities::CreateImageView(textureImage,
-    //         vk::Format::eR8G8B8A8Srgb,
-    //         vk::ImageAspectFlagBits::eColor,
-    //         device);
-    // }
 
     void Renderer::CreateTextureSampler()
     {

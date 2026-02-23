@@ -6,6 +6,7 @@
 #include <vulkan/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 #include "Core/Application/Utilities/macros.hpp"
+#include "Rendering/Buffer/Image.hpp"
 
 namespace Beer::Rendering
 {
@@ -41,8 +42,22 @@ namespace Beer::Rendering
             const size_t size,
             const size_t offset = 0) const;
 
+        void QueueStagingTransfer(Image& image,
+            vk::raii::CommandBuffer& commandBuffer,
+            const size_t size,
+            const size_t offset = 0) const;
+
+        void QueueCopyToImage(Image& image,
+            vk::raii::CommandBuffer& commandBuffer,
+            uint32_t width,
+            uint32_t height,
+            size_t offset = 0) const;
+
         [[nodiscard]] VkBuffer
-        GetHandle() const { return allocation.Buffer; }
+        GetHandle() const
+        {
+            return allocation.Buffer;
+        }
 
         NO_COPY(Buffer);
         DEFAULT_MOVE(Buffer);

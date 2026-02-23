@@ -2,6 +2,7 @@
 #include "BufferAllocation.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
+#include "vulkan/vulkan.hpp"
 #include <iostream>
 #include <utility>
 
@@ -81,6 +82,45 @@ namespace Beer::Rendering
         copyCommandBuffer.copyBuffer(vk::Buffer(allocation.Buffer),
             vk::Buffer(dstBuffer.allocation.Buffer),
             vk::BufferCopy(offset, 0, size));
+    }
+
+    void Buffer::QueueStagingTransfer(Image& image,
+        vk::raii::CommandBuffer& commandBuffer,
+        const size_t size,
+        const size_t offset) const
+    {
+        image.QueueTransitionLayout(image.GetHandle(),
+            commandBuffer,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eTransferDstOptimal);
+
+        const vk::Extent3D extent = image.GetExtent();
+        QueueCopyToImage(image, commandBuffer, extent.width, extent.height, offset);
+
+        image.QueueTransitionLayout(image.GetHandle(),
+            commandBuffer,
+            vk::ImageLayout::eTransferDstOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+
+    void Buffer::QueueCopyToImage(Image& image,
+        vk::raii::CommandBuffer& commandBuffer,
+        uint32_t width,
+        uint32_t height,
+        size_t offset) const
+    {
+        vk::BufferImageCopy region{};
+        region.bufferOffset = offset;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource = vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1);
+        region.imageOffset = vk::Offset3D(0, 0, 0);
+        region.imageExtent = vk::Extent3D(width, height, 1);
+
+        commandBuffer.copyBufferToImage(GetHandle(),
+            image.GetHandle(),
+            vk::ImageLayout::eTransferDstOptimal,
+            {region});
     }
 
     Buffer::Buffer(std::shared_ptr<BufferAllocator> allocator, BufferAllocation allocation, VkDeviceSize size)
