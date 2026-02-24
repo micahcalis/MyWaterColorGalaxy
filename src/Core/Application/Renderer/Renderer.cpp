@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <print>
 #include "Rendering/Vertex.hpp"
 #include "Rendering/UniformBufferObject.hpp"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -30,6 +31,7 @@
 #include <chrono>
 #include <stdexcept>
 #include <tiny_obj_loader.h>
+#include "Vendor/ufbx/ufbx.h"
 
 namespace Beer::Core
 {
@@ -209,45 +211,122 @@ namespace Beer::Core
 
     void Renderer::LoadModel()
     {
-        tinyobj::attrib_t attributes;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
-        std::filesystem::path modelPath = AssetUtilities::GetModelPath("MDL_VikingRoom");
+        // tinyobj::attrib_t attributes;
+        // std::vector<tinyobj::shape_t> shapes;
+        // std::vector<tinyobj::material_t> materials;
+        // std::string warn, err;
+        // std::filesystem::path modelPath = AssetUtilities::GetModelPath("MDL_VikingRoom");
 
-        if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warn, &err, modelPath.string().c_str()))
+        // if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warn, &err, modelPath.string().c_str()))
+        // {
+        //     throw std::runtime_error(warn + err);
+        // }
+
+        // std::unordered_map<Rendering::Vertex, uint32_t> uniqueVertices{};
+
+        // for (const auto shape : shapes)
+        // {
+        //     for (const auto& index : shape.mesh.indices)
+        //     {
+        //         Rendering::Vertex vertex{};
+
+        //         vertex.pos = {
+        //             attributes.vertices[3 * index.vertex_index + 0],
+        //             attributes.vertices[3 * index.vertex_index + 1],
+        //             attributes.vertices[3 * index.vertex_index + 2]};
+
+        //         vertex.texCoord = {
+        //             attributes.texcoords[2 * index.texcoord_index + 0],
+        //             1.0f - attributes.texcoords[2 * index.texcoord_index + 1]};
+
+        //         vertex.color = {1.0f, 1.0f, 1.0f};
+
+        //         if (!uniqueVertices.contains(vertex))
+        //         {
+        //             uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+        //             vertices.push_back(vertex);
+        //         }
+
+        //         indices.push_back(uniqueVertices[vertex]);
+        //     }
+        // }
+
+        ufbx_load_opts opts = {0};
+        ufbx_error error;
+        std::filesystem::path modelPath = AssetUtilities::GetModelPath("MDL_IcoSphere", false);
+
+        ufbx_scene* scene = ufbx_load_file(modelPath.string().c_str(), &opts, &error);
+        if (!scene)
         {
-            throw std::runtime_error(warn + err);
+            fprintf(stderr, "Failed to load: %s\n", error.description.data);
+            exit(1);
         }
 
-        std::unordered_map<Rendering::Vertex, uint32_t> uniqueVertices{};
+        ufbx_mesh* mesh = scene->meshes.data[0];
+        std::vector<uint32_t> triIndices(mesh->max_face_triangles * 3);
 
-        for (const auto shape : shapes)
+        vertices.reserve(mesh->num_triangles * 3);
+
+        for (size_t i = 0; i < mesh->num_faces; i++)
         {
-            for (const auto& index : shape.mesh.indices)
+            ufbx_face face = mesh->faces.data[i];
+            uint32_t numTris = ufbx_triangulate_face(triIndices.data(), triIndices.size(), mesh, face);
+
+            for (size_t v = 0; v < numTris * 3; v++)
             {
                 Rendering::Vertex vertex{};
+                uint32_t index = triIndices[v];
 
-                vertex.pos = {
-                    attributes.vertices[3 * index.vertex_index + 0],
-                    attributes.vertices[3 * index.vertex_index + 1],
-                    attributes.vertices[3 * index.vertex_index + 2]};
+                ufbx_vec3 pos = ufbx_get_vertex_vec3(&mesh->vertex_position, index);
+                vertex.pos = {pos.x, pos.y, pos.z};
 
-                vertex.texCoord = {
-                    attributes.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attributes.texcoords[2 * index.texcoord_index + 1]};
-
-                vertex.color = {1.0f, 1.0f, 1.0f};
-
-                if (!uniqueVertices.contains(vertex))
+                if (mesh->vertex_normal.exists)
                 {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
+                    ufbx_vec3 norm = ufbx_get_vertex_vec3(&mesh->vertex_normal, index);
+                    // vertex.normal = {norm.x, norm.y, norm.z};
                 }
 
-                indices.push_back(uniqueVertices[vertex]);
+                if (mesh->vertex_uv.exists)
+                {
+                    ufbx_vec2 uv = ufbx_get_vertex_vec2(&mesh->vertex_uv, index);
+                    vertex.texCoord = {uv.x, 1.0f - uv.y};
+                }
+
+                if (mesh->vertex_color.exists)
+                {
+                    ufbx_vec4 color = ufbx_get_vertex_vec4(&mesh->vertex_color, index);
+                    vertex.color = {color.x, color.y, color.z};
+                } else
+                {
+                    vertex.color = {1.0f, 1.0f, 1.0f};
+                }
+
+                vertices.push_back(vertex);
             }
         }
+
+        indices.resize(vertices.size());
+
+        ufbx_vertex_stream stream{};
+        stream.data = vertices.data();
+        stream.vertex_size = sizeof(Rendering::Vertex);
+        stream.vertex_count = vertices.size();
+
+        ufbx_error ufbxErr;
+
+        size_t uniqueVertexCount = ufbx_generate_indices(
+            &stream, 1, indices.data(), indices.size(), nullptr, &ufbxErr);
+
+        if (uniqueVertexCount == 0)
+        {
+            fprintf(stderr, "UFBX Index Generation Failed: %s\n", ufbxErr.description.data);
+            exit(1);
+        }
+
+        vertices.resize(uniqueVertexCount);
+
+        std::println("vertex count: {}", vertices.size());
+        std::println("index count: {}", indices.size());
     }
 
     void Renderer::CreateVertexBuffer()
