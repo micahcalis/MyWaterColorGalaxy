@@ -14,6 +14,7 @@
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Vertex.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 
 namespace Beer::Core
 {
@@ -50,8 +51,7 @@ namespace Beer::Core
 
         std::vector<Rendering::Buffer> uniformBuffers;
 
-        std::shared_ptr<Rendering::Image> textureImage = nullptr;
-        // const vk::raii::Sampler& textureSampler = nullptr;
+        std::shared_ptr<Rendering::Texture2D> texture = nullptr;
 
         int frameIndex = 0;
         bool frameBufferResized = false;

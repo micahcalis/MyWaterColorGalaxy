@@ -356,11 +356,9 @@ namespace Beer::Core
 
             vk::DescriptorImageInfo imageInfo{};
 
-            imageInfo.sampler = samplerCache->GetSampler(Rendering::SamplerKey(vk::Filter::eLinear,
-                vk::SamplerAddressMode::eRepeat,
-                10.0f));
+            imageInfo.sampler = texture->GetSampler();
 
-            imageInfo.imageView = textureImage->GetDefaultView();
+            imageInfo.imageView = texture->GetImageView();
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
@@ -387,7 +385,7 @@ namespace Beer::Core
     {
         ImageAsset imageAsset = ImageLoader::LoadImage("Tex_VikingRoom", 4);
 
-        textureImage = std::make_shared<Rendering::Image>(
+        std::shared_ptr<Rendering::Image> textureImage = std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(bufferAllocator,
                 imageAsset.Width,
                 imageAsset.Height,
@@ -395,6 +393,12 @@ namespace Beer::Core
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
                 vk::ImageAspectFlagBits::eColor,
                 device));
+
+        const vk::raii::Sampler& sampler = samplerCache->GetSampler(Rendering::SamplerKey(vk::Filter::eLinear,
+            vk::SamplerAddressMode::eRepeat,
+            10.0f));
+
+        texture = std::make_shared<Rendering::Texture2D>(textureImage, *sampler);
 
         std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(
             textureImage, imageAsset);
