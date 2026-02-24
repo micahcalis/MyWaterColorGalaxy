@@ -11,8 +11,8 @@ namespace Beer::Rendering
         vk::SamplerAddressMode Tiling;
         float MaxAnisotropy;
 
-        SamplerKey(vk::Filter mag, vk::Filter min, vk::SamplerAddressMode tiling, vk::Bool32 aniso, float maxAniso)
-            : Filter(mag), Tiling(tiling), MaxAnisotropy(maxAniso)
+        SamplerKey(vk::Filter filter, vk::SamplerAddressMode tiling, float maxAniso)
+            : Filter(filter), Tiling(tiling), MaxAnisotropy(maxAniso)
         {
         }
 

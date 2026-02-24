@@ -13,6 +13,7 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Vertex.hpp"
+#include "Rendering/Sampler/SamplerCache.hpp"
 
 namespace Beer::Core
 {
@@ -34,6 +35,8 @@ namespace Beer::Core
         std::shared_ptr<Rendering::Image> depthImage = nullptr;
 
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
+        std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
+
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
 
@@ -48,7 +51,7 @@ namespace Beer::Core
         std::vector<Rendering::Buffer> uniformBuffers;
 
         std::shared_ptr<Rendering::Image> textureImage = nullptr;
-        vk::raii::Sampler textureSampler = nullptr;
+        // const vk::raii::Sampler& textureSampler = nullptr;
 
         int frameIndex = 0;
         bool frameBufferResized = false;
@@ -88,7 +91,6 @@ namespace Beer::Core
         void CreateDescriptorPool();
         void CreateDescriptorSets();
         void CreateTextureImage();
-        void CreateTextureSampler();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateUniformBuffer(uint32_t frameIndex);

@@ -16,6 +16,8 @@
 #include "Core/Assets/ImageLoader.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Sampler/SamplerCache.hpp"
+#include "Rendering/Sampler/SamplerKey.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <filesystem>
@@ -52,6 +54,7 @@ namespace Beer::Core
         swapchain.InitializeSwapchain(window, surface, device);
         bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
         uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
+        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
         CreateSemaphores();
@@ -69,7 +72,6 @@ namespace Beer::Core
         }
 
         CreateTextureImage();
-        CreateTextureSampler();
         LoadModel();
         CreateVertexBuffer();
         CreateIndexBuffer();
@@ -353,7 +355,11 @@ namespace Beer::Core
             bufferInfo.range = sizeof(Rendering::UniformBufferObject);
 
             vk::DescriptorImageInfo imageInfo{};
-            imageInfo.sampler = textureSampler;
+
+            imageInfo.sampler = samplerCache->GetSampler(Rendering::SamplerKey(vk::Filter::eLinear,
+                vk::SamplerAddressMode::eRepeat,
+                10.0f));
+
             imageInfo.imageView = textureImage->GetDefaultView();
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
@@ -394,30 +400,6 @@ namespace Beer::Core
             textureImage, imageAsset);
 
         uploadManager->AddJob(std::move(uploadJob));
-    }
-
-    void Renderer::CreateTextureSampler()
-    {
-        vk::PhysicalDeviceProperties properties = device.GetPhysicalDevice().getProperties();
-
-        vk::SamplerCreateInfo samplerInfo{};
-        samplerInfo.magFilter = vk::Filter::eLinear;
-        samplerInfo.minFilter = vk::Filter::eLinear;
-        samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-        samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-        samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
-        samplerInfo.anisotropyEnable = vk::True;
-        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-        samplerInfo.compareEnable = vk::False;
-        samplerInfo.compareOp = vk::CompareOp::eAlways;
-        samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-        samplerInfo.unnormalizedCoordinates = vk::False;
-        samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-        samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
-
-        textureSampler = vk::raii::Sampler(device.GetLogicalDevice(), samplerInfo);
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
