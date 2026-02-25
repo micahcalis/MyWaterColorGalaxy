@@ -3,15 +3,15 @@ static float2 ASPECT = float2(800, 600);
 struct MeshData
 {
     float3 positionOS;
-    float3 color;
     float2 texCoord;
+    float4 color;
 };
 
 struct VertexData 
 {
     float4 positionCS : SV_Position;
-    float3 color;
     float2 texCoord;
+    float4 color;
 };
 
 struct UniformData

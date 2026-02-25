@@ -10,11 +10,11 @@ namespace Beer::Rendering
     struct Vertex
     {
         glm::vec3 pos;
-        glm::vec3 color;
         glm::vec2 texCoord;
+        glm::vec4 color;
 
-        static vk::VertexInputBindingDescription GetBindingDescription();
-        static std::array<vk::VertexInputAttributeDescription, 3> GetAttributeDescriptions();
+        static std::vector<vk::VertexInputBindingDescription> GetBindingDescriptions();
+        static std::vector<vk::VertexInputAttributeDescription> GetAttributeDescriptions();
 
         bool operator==(const Vertex& other) const
         {

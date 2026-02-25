@@ -2,12 +2,21 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include <memory>
+#include <print>
 
 namespace Beer::Core
 {
     void UploadManager::AddJob(std::unique_ptr<IUploadJob> job)
     {
         jobQueue.emplace_back(std::move(job));
+    }
+
+    void UploadManager::AddJobs(std::vector<std::unique_ptr<IUploadJob>> jobs)
+    {
+        for (auto& job : jobs)
+        {
+            jobQueue.emplace_back(std::move(job));
+        }
     }
 
     void UploadManager::FlushQueue(const FrameResource& frameResource)
@@ -31,6 +40,7 @@ namespace Beer::Core
         }
 
         Core::CommandBufferUtilities::EndSingleTimeCommands(copyCommandBuffer, device);
+        std::println("jobs: {}", jobQueue.size());
         jobQueue.clear();
     }
 

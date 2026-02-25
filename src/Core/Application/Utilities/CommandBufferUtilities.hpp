@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Application/Renderer/FrameResource.hpp"
+#include "Rendering/Mesh/Mesh.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <vulkan/vulkan.hpp>
@@ -28,7 +29,12 @@ namespace Beer::Core
             const FrameResource& frameResource,
             const Device& device);
 
-        // TODO: don't hardcode vertices X), I second that one.
+        static inline std::vector<vk::Buffer> ConvertToVkBuffers(const std::vector<Rendering::Buffer*>& customBuffers);
+
+        static void BindMesh(vk::CommandBuffer commandBuffer,
+            const Rendering::Mesh* mesh,
+            bool& canIndex);
+
         static void DrawCall(vk::CommandBuffer commandBuffer,
             const vk::raii::Pipeline& pipeline,
             const VkBuffer& vertexBuffer);
@@ -38,6 +44,10 @@ namespace Beer::Core
             const VkBuffer& vertexBuffer,
             const VkBuffer& indexBuffer,
             const uint32_t indexCount);
+
+        static void DrawMesh(vk::CommandBuffer,
+            const vk::raii::Pipeline& pipeline,
+            const Rendering::Mesh* mesh);
 
         static vk::raii::CommandBuffer BeginSingleTimeCommands(const FrameResource& frameResource,
             const Device& device);

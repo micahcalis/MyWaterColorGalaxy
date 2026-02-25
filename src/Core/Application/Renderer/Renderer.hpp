@@ -9,12 +9,13 @@
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
+#include "Core/Assets/MeshAsset.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
-#include "Rendering/Vertex.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Mesh./Mesh.hpp"
 
 namespace Beer::Core
 {
@@ -44,10 +45,8 @@ namespace Beer::Core
         std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
         std::shared_ptr<UploadManager> uploadManager = nullptr;
 
-        std::vector<Rendering::Vertex> vertices;
-        std::vector<uint32_t> indices;
-        std::shared_ptr<Rendering::Buffer> vertexBuffer;
-        std::shared_ptr<Rendering::Buffer> indexBuffer;
+        MeshAsset meshAsset;
+        std::shared_ptr<Rendering::Mesh> mesh = nullptr;
 
         std::vector<Rendering::Buffer> uniformBuffers;
 

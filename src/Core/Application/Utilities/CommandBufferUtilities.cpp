@@ -1,6 +1,8 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
+#include "Rendering/Buffer/Buffer.hpp"
 #include "vulkan/vulkan.hpp"
+#include <print>
 
 namespace Beer::Core
 {
@@ -85,6 +87,54 @@ namespace Beer::Core
         EndSingleTimeCommands(commandBuffer, device);
     }
 
+    inline std::vector<vk::Buffer> CommandBufferUtilities::ConvertToVkBuffers(const std::vector<Rendering::Buffer*>& customBuffers)
+    {
+        std::vector<vk::Buffer> vkBuffers;
+        vkBuffers.reserve(customBuffers.size());
+
+        for (const auto* buffer : customBuffers)
+        {
+            if (buffer != nullptr)
+            {
+                vkBuffers.push_back(buffer->GetHandle());
+            }
+        }
+
+        return vkBuffers;
+    }
+
+    void CommandBufferUtilities::BindMesh(vk::CommandBuffer commandBuffer,
+        const Rendering::Mesh* mesh,
+        bool& canIndex)
+    {
+        std::vector<vk::Buffer> activeBuffers;
+        const Rendering::MeshBuffers& buffers = mesh->GetBuffers();
+
+        // std::println("vertex count {}", mesh->GetVertexCount());
+        // std::println("index count {}", mesh->GetIndexCount());
+
+        if (buffers.HasPositions())
+            activeBuffers.push_back(buffers.PositionBuffer->GetHandle());
+
+        if (buffers.HasUv())
+            activeBuffers.push_back(buffers.UvBuffer->GetHandle());
+
+        if (buffers.HasColor())
+            activeBuffers.push_back(buffers.ColorBuffer->GetHandle());
+
+        // std::vector<vk::Buffer> vkBuffers = ConvertToVkBuffers(activeBuffers);
+        std::vector<vk::DeviceSize> offsets(activeBuffers.size(), 0);
+
+        commandBuffer.bindVertexBuffers(0, activeBuffers, offsets);
+
+        canIndex = buffers.HasIndex();
+
+        if (!canIndex)
+            return;
+
+        commandBuffer.bindIndexBuffer(buffers.IndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
+    }
+
     void CommandBufferUtilities::DrawCall(vk::CommandBuffer commandBuffer,
         const vk::raii::Pipeline& pipeline,
         const VkBuffer& vertexBuffer)
@@ -104,6 +154,24 @@ namespace Beer::Core
         commandBuffer.bindVertexBuffers(0, vk::Buffer(vertexBuffer), {0});
         commandBuffer.bindIndexBuffer(vk::Buffer(indexBuffer), 0, vk::IndexType::eUint32);
         commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
+    }
+
+    void CommandBufferUtilities::DrawMesh(vk::CommandBuffer commandBuffer,
+        const vk::raii::Pipeline& pipeline,
+        const Rendering::Mesh* mesh)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+
+        bool canIndex;
+        BindMesh(commandBuffer, mesh, canIndex);
+
+        if (canIndex)
+        {
+            commandBuffer.drawIndexed(mesh->GetIndexCount(), 1, 0, 0, 0);
+        } else
+        {
+            commandBuffer.draw(mesh->GetVertexCount(), 1, 0, 0);
+        }
     }
 
     vk::raii::CommandBuffer CommandBufferUtilities::BeginSingleTimeCommands(const FrameResource& frameResource, const Device& device)

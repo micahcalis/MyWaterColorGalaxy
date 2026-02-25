@@ -21,6 +21,7 @@ namespace Beer::Core
         {
         }
         void AddJob(std::unique_ptr<IUploadJob> job);
+        void AddJobs(std::vector<std::unique_ptr<IUploadJob>> jobs);
         void FlushQueue(const FrameResource& frameResource);
 
     private:
