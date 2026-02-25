@@ -13,7 +13,7 @@ namespace Beer::Core
         [[nodiscard]] static std::vector<char> ReadFile(const std::filesystem::path& path);
         static std::filesystem::path GetBasePath(const std::string& subPath);
         static std::filesystem::path GetShaderPath(const std::string& shaderName);
-        static std::filesystem::path GetModelPath(const std::string& modelName);
+        static std::filesystem::path GetModelPath(const std::string& modelName, bool isObj = true);
         static std::filesystem::path GetTexturePath(const std::string& textureName);
         [[nodiscard]] static vk::raii::ShaderModule CreateShaderModule(const std::vector<char>& code,
             const vk::raii::Device& device);

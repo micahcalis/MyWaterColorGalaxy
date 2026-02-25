@@ -1,0 +1,24 @@
+#pragma once
+
+#include "Rendering/Mesh/MeshBuffers.hpp"
+namespace Beer::Rendering
+{
+    class Mesh
+    {
+    private:
+        MeshBuffers buffers;
+
+        uint32_t vertexCount;
+        uint32_t indexCount;
+
+    public:
+        Mesh(MeshBuffers buffers, uint32_t vertexCount, uint32_t indexCount)
+            : buffers(std::move(buffers)), vertexCount(vertexCount), indexCount(indexCount)
+        {
+        }
+
+        const MeshBuffers& GetBuffers() const { return buffers; }
+        uint32_t GetVertexCount() const { return vertexCount; }
+        uint32_t GetIndexCount() const { return indexCount; }
+    };
+} // namespace Beer::Rendering

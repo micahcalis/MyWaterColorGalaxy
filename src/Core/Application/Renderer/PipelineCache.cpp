@@ -54,11 +54,11 @@ namespace Beer::Core
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-        auto bindingDescription = Rendering::Vertex::GetBindingDescription();
+        auto bindingDescriptions = Rendering::Vertex::GetBindingDescriptions();
         auto attributeDescriptions = Rendering::Vertex::GetAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
         vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 

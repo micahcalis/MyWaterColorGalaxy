@@ -57,6 +57,7 @@ namespace Beer::Core
             // 4. Draw - Happens even if the user isn't touching the keyboard/mouse
             if (isRunning)
             {
+                renderer.PreDraw();
                 renderer.Draw();
             }
         }

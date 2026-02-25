@@ -1,14 +1,15 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "BufferAllocation.hpp"
-#include "Core/Application/Renderer/BufferAllocator.hpp"
+#include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
+#include "vulkan/vulkan.hpp"
 #include <iostream>
 #include <utility>
 
 namespace Beer::Rendering
 {
 
-    Buffer Buffer::CreateDeviceLocal(std::shared_ptr<Core::BufferAllocator> allocator, VkDeviceSize size, VkBufferUsageFlags usage)
+    Buffer Buffer::CreateDeviceLocal(std::shared_ptr<BufferAllocator> allocator, VkDeviceSize size, VkBufferUsageFlags usage)
     {
         auto allocation = allocator->CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO, 0);
         return {std::move(allocator), allocation, size};
@@ -22,13 +23,13 @@ namespace Beer::Rendering
         }
     }
 
-    Buffer Buffer::CreateStaging(std::shared_ptr<Core::BufferAllocator> allocator, VkDeviceSize size)
+    Buffer Buffer::CreateStaging(std::shared_ptr<BufferAllocator> allocator, VkDeviceSize size)
     {
         auto allocation = allocator->CreateStagingBuffer(size);
         return {std::move(allocator), allocation, size};
     }
 
-    Buffer Buffer::CreateUniform(std::shared_ptr<Core::BufferAllocator> allocator, VkDeviceSize size)
+    Buffer Buffer::CreateUniform(std::shared_ptr<BufferAllocator> allocator, VkDeviceSize size)
     {
         constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
         constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -41,9 +42,9 @@ namespace Beer::Rendering
         return {std::move(allocator), allocation, size};
     }
 
-    void Buffer::Upload(const void* data, VkDeviceSize size) const
+    void Buffer::Upload(const void* data, size_t size, size_t offset) const
     {
-        if (size > this->size)
+        if (size + offset > this->size)
         {
             std::cerr << "Buffer Overflow, can't allocate" << '\n';
             return;
@@ -51,16 +52,18 @@ namespace Beer::Rendering
 
         if (allocation.Info.pMappedData != nullptr)
         {
-            std::memcpy(allocation.Info.pMappedData, data, size);
+            void* destination = static_cast<char*>(allocation.Info.pMappedData) + offset;
+            std::memcpy(destination, data, size);
         } else
         {
             throw std::runtime_error("Cannot direct upload to unmapped GPU memory!");
         }
     }
 
-    void Buffer::CopyTo(Buffer& dstBuffer,
+    void Buffer::CopyToCmd(Buffer& dstBuffer,
         const Core::Device& device,
-        const Core::FrameResource& frameResource) const
+        const Core::FrameResource& frameResource,
+        const size_t offset) const
     {
         vk::raii::CommandBuffer copyCommandBuffer = Core::CommandBufferUtilities::BeginSingleTimeCommands(frameResource, device);
 
@@ -71,7 +74,56 @@ namespace Beer::Rendering
         Core::CommandBufferUtilities::EndSingleTimeCommands(copyCommandBuffer, device);
     }
 
-    Buffer::Buffer(std::shared_ptr<Core::BufferAllocator> allocator, BufferAllocation allocation, VkDeviceSize size)
+    void Buffer::QueueCopyTo(Buffer& dstBuffer,
+        vk::raii::CommandBuffer& copyCommandBuffer,
+        const size_t size,
+        const size_t offset) const
+    {
+        copyCommandBuffer.copyBuffer(vk::Buffer(allocation.Buffer),
+            vk::Buffer(dstBuffer.allocation.Buffer),
+            vk::BufferCopy(offset, 0, size));
+    }
+
+    void Buffer::QueueStagingTransfer(Image& image,
+        vk::raii::CommandBuffer& commandBuffer,
+        const size_t size,
+        const size_t offset) const
+    {
+        image.QueueTransitionLayout(image.GetHandle(),
+            commandBuffer,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eTransferDstOptimal);
+
+        const vk::Extent3D extent = image.GetExtent();
+        QueueCopyToImage(image, commandBuffer, extent.width, extent.height, offset);
+
+        image.QueueTransitionLayout(image.GetHandle(),
+            commandBuffer,
+            vk::ImageLayout::eTransferDstOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+
+    void Buffer::QueueCopyToImage(Image& image,
+        vk::raii::CommandBuffer& commandBuffer,
+        uint32_t width,
+        uint32_t height,
+        size_t offset) const
+    {
+        vk::BufferImageCopy region{};
+        region.bufferOffset = offset;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource = vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1);
+        region.imageOffset = vk::Offset3D(0, 0, 0);
+        region.imageExtent = vk::Extent3D(width, height, 1);
+
+        commandBuffer.copyBufferToImage(GetHandle(),
+            image.GetHandle(),
+            vk::ImageLayout::eTransferDstOptimal,
+            {region});
+    }
+
+    Buffer::Buffer(std::shared_ptr<BufferAllocator> allocator, BufferAllocation allocation, VkDeviceSize size)
         : allocator(std::move(allocator))
         , allocation(allocation)
         , size(size)

@@ -2,15 +2,20 @@
 
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL_video.h>
+#include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Renderer/PipelineCache.hpp"
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
-#include "Core/Application/Renderer/BufferAllocator.hpp"
+#include "Core/Assets/MeshAsset.hpp"
+#include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
-#include "Rendering/Vertex.hpp"
+#include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Sampler/SamplerCache.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Mesh./Mesh.hpp"
 
 namespace Beer::Core
 {
@@ -29,27 +34,22 @@ namespace Beer::Core
 
         Swapchain swapchain{};
 
-        vk::raii::Image depthImage = nullptr;
-        vk::raii::DeviceMemory depthImageMemory = nullptr;
-        vk::raii::ImageView depthImageView = nullptr;
+        std::shared_ptr<Rendering::Image> depthImage = nullptr;
 
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
+        std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
+
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
 
-        std::shared_ptr<BufferAllocator> bufferAllocator = nullptr;
+        std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
+        std::shared_ptr<UploadManager> uploadManager = nullptr;
 
-        std::vector<Rendering::Vertex> vertices;
-        std::vector<uint32_t> indices;
-        std::unique_ptr<Rendering::Buffer> vertexBuffer;
-        std::unique_ptr<Rendering::Buffer> indexBuffer;
+        std::shared_ptr<Rendering::Mesh> mesh = nullptr;
 
         std::vector<Rendering::Buffer> uniformBuffers;
 
-        vk::raii::Image textureImage = nullptr;
-        vk::raii::DeviceMemory textureImageMemory = nullptr;
-        vk::raii::ImageView textureImageView = nullptr;
-        vk::raii::Sampler textureSampler = nullptr;
+        std::shared_ptr<Rendering::Texture2D> texture = nullptr;
 
         int frameIndex = 0;
         bool frameBufferResized = false;
@@ -61,6 +61,7 @@ namespace Beer::Core
 
     public:
         void InitializeVulkanInstances(SDL_Window* window);
+        void PreDraw();
         void Draw();
         void HandleWindowResize();
         void SetFrameBufferResized(bool val);
@@ -82,14 +83,10 @@ namespace Beer::Core
         void CreateSemaphores();
         void CreateDesciptorSetLayout();
         void LoadModel();
-        void CreateVertexBuffer();
-        void CreateIndexBuffer();
         void CreateUniformBuffers();
         void CreateDescriptorPool();
         void CreateDescriptorSets();
         void CreateTextureImage();
-        void CreateTextureImageView();
-        void CreateTextureSampler();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateUniformBuffer(uint32_t frameIndex);

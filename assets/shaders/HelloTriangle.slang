@@ -3,15 +3,15 @@ static float2 ASPECT = float2(800, 600);
 struct MeshData
 {
     float3 positionOS;
-    float3 color;
     float2 texCoord;
+    float4 color;
 };
 
 struct VertexData 
 {
     float4 positionCS : SV_Position;
-    float3 color;
     float2 texCoord;
+    float4 color;
 };
 
 struct UniformData
@@ -22,6 +22,8 @@ struct UniformData
 };
 
 ConstantBuffer<UniformData> _UniformBuffer;
+
+static float4 _FunnyColor;
 
 [shader("vertex")]
 VertexData HelloTriangleVert(MeshData input)
@@ -41,5 +43,5 @@ Sampler2D texture;
 float4 HelloTriangleFrag(VertexData input) : SV_Target
 {
     float4 sample = texture.Sample(input.texCoord);
-    return sample;
+    return float4(sample.rg, _FunnyColor.rg);
 }

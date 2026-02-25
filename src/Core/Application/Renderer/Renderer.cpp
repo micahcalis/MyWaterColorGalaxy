@@ -1,4 +1,7 @@
 #include "Core/Application/Renderer/Renderer.hpp"
+#include "Core/Application/Jobs/ImageUploadJob.hpp"
+#include "Core/Application/Jobs/MeshUploadJob.hpp"
+#include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
@@ -9,20 +12,26 @@
 #include "Core/Application/Renderer/PipelineKey.hpp"
 #include "Core/Application/Renderer/PipelineData.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
+#include "Core/Assets/ImageAsset.hpp"
+#include "Core/Assets/ImageLoader.hpp"
+#include "Core/Assets/MeshAsset.hpp"
+#include "Core/Assets/MeshLoader.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Mesh/MeshBuffers.hpp"
+#include "Rendering/Sampler/SamplerCache.hpp"
+#include "Rendering/Sampler/SamplerKey.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <memory>
-#include "Rendering/Vertex.hpp"
+#include <vector>
 #include "Rendering/UniformBufferObject.hpp"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include <stdexcept>
-#define STB_IMAGE_IMPLEMENTATION
-#include <Vendor/stb/stb_image.h>
 #include <tiny_obj_loader.h>
 
 namespace Beer::Core
@@ -38,21 +47,6 @@ namespace Beer::Core
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
     constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
 
-    // const std::vector<Rendering::Vertex> helloTriangleVertices = {
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, 0.0), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, 0.0), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, 0.0), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, 0.0), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
-
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, -0.5, -0.5), .color = glm::vec3(1.0, 0.0, 0.0), .texCoord = glm::vec2(1.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, -0.5, -0.5), .color = glm::vec3(1.0, 1.0, 1.0), .texCoord = glm::vec2(0.0, 0.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(0.5, 0.5, -0.5), .color = glm::vec3(0.0, 1.0, 0.0), .texCoord = glm::vec2(0.0, 1.0)},
-    //     Rendering::Vertex{.pos = glm::vec3(-0.5, 0.5, -0.5), .color = glm::vec3(0.0, 0.0, 1.0), .texCoord = glm::vec2(1.0, 1.0)},
-    // };
-
-    // const std::vector<uint16_t> helloTriangleIndices = {
-    //     0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
-
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
         this->window = window;
@@ -61,11 +55,12 @@ namespace Beer::Core
         CreateSurface(window);
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
+        bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
+        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
+        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
         CreateSemaphores();
-        bufferAllocator = std::make_unique<BufferAllocator>(device, instance);
-
         CreateDesciptorSetLayout();
 
         pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(),
@@ -80,14 +75,15 @@ namespace Beer::Core
         }
 
         CreateTextureImage();
-        CreateTextureImageView();
-        CreateTextureSampler();
         LoadModel();
-        CreateVertexBuffer();
-        CreateIndexBuffer();
         CreateUniformBuffers();
         CreateDescriptorPool();
         CreateDescriptorSets();
+    }
+
+    void Renderer::PreDraw()
+    {
+        uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
     void Renderer::Draw()
@@ -190,20 +186,14 @@ namespace Beer::Core
         depthFormat = ImageUtilities::FindDepthFormat(device);
         vk::Extent2D extent = swapchain.GetExtent();
 
-        ImageUtilities::CreateImage(extent.width,
-            extent.height,
-            depthFormat,
-            vk::ImageTiling::eOptimal,
-            vk::ImageUsageFlagBits::eDepthStencilAttachment,
-            vk::MemoryPropertyFlagBits::eDeviceLocal,
-            depthImage,
-            depthImageMemory,
-            device);
-
-        depthImageView = ImageUtilities::CreateImageView(depthImage,
-            depthFormat,
-            vk::ImageAspectFlagBits::eDepth,
-            device);
+        depthImage = std::make_shared<Rendering::Image>(
+            Rendering::Image::CreateImage2D(bufferAllocator,
+                extent.width,
+                extent.height,
+                VkFormat(depthFormat),
+                VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                vk::ImageAspectFlagBits::eDepth,
+                device));
     }
 
     void Renderer::CreateSemaphores()
@@ -220,75 +210,19 @@ namespace Beer::Core
 
     void Renderer::LoadModel()
     {
-        tinyobj::attrib_t attributes;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
-        std::filesystem::path modelPath = AssetUtilities::GetModelPath("MDL_VikingRoom");
+        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_VikingRoom", true);
+        Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset,
+            bufferAllocator);
 
-        if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warn, &err, modelPath.string().c_str()))
-        {
-            throw std::runtime_error(warn + err);
-        }
+        mesh = std::make_shared<Rendering::Mesh>(
+            std::move(meshBuffers),
+            meshAsset.GetVertexCount(),
+            meshAsset.GetIndexCount());
 
-        std::unordered_map<Rendering::Vertex, uint32_t> uniqueVertices{};
+        std::unique_ptr<MeshUploadJob> uploadJob = std::make_unique<MeshUploadJob>(
+            mesh, meshAsset);
 
-        for (const auto shape : shapes)
-        {
-            for (const auto& index : shape.mesh.indices)
-            {
-                Rendering::Vertex vertex{};
-
-                vertex.pos = {
-                    attributes.vertices[3 * index.vertex_index + 0],
-                    attributes.vertices[3 * index.vertex_index + 1],
-                    attributes.vertices[3 * index.vertex_index + 2]};
-
-                vertex.texCoord = {
-                    attributes.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attributes.texcoords[2 * index.texcoord_index + 1]};
-
-                vertex.color = {1.0f, 1.0f, 1.0f};
-
-                if (!uniqueVertices.contains(vertex))
-                {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
-                }
-
-                indices.push_back(uniqueVertices[vertex]);
-            }
-        }
-    }
-
-    void Renderer::CreateVertexBuffer()
-    {
-        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
-
-        stagingBuffer->Upload(vertices.data(), bufferSize);
-
-        vertexBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
-
-        stagingBuffer->CopyTo(*vertexBuffer, device, frameResources[frameIndex]);
-    }
-
-    void Renderer::CreateIndexBuffer()
-    {
-        vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(bufferAllocator, bufferSize));
-
-        stagingBuffer->Upload(indices.data(), bufferSize);
-
-        indexBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
-
-        stagingBuffer->CopyTo(*indexBuffer, device, frameResources[frameIndex]);
+        uploadManager->AddJob(std::move(uploadJob));
     }
 
     void Renderer::CreateDesciptorSetLayout()
@@ -317,7 +251,7 @@ namespace Beer::Core
         pipelineLayoutInfo.pushConstantRangeCount = 0;
 
         pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
-    } // namespace Beer::Core
+    }
 
     void Renderer::CreateUniformBuffers()
     {
@@ -370,8 +304,10 @@ namespace Beer::Core
             bufferInfo.range = sizeof(Rendering::UniformBufferObject);
 
             vk::DescriptorImageInfo imageInfo{};
-            imageInfo.sampler = textureSampler;
-            imageInfo.imageView = textureImageView;
+
+            imageInfo.sampler = texture->GetSampler();
+
+            imageInfo.imageView = texture->GetImageView();
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
@@ -396,82 +332,27 @@ namespace Beer::Core
 
     void Renderer::CreateTextureImage()
     {
-        int texWidth, texHeight, texChannels;
-        std::filesystem::path texturePath = AssetUtilities::GetTexturePath("Tex_VikingRoom");
-        stbi_uc* pixels = stbi_load(texturePath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        vk::DeviceSize imageSize = texWidth * texHeight * 4;
+        ImageAsset imageAsset = ImageLoader::LoadImage("Tex_VikingRoom", 4);
 
-        if (!pixels)
-        {
-            throw std::runtime_error("failed to load texture image");
-        }
+        std::shared_ptr<Rendering::Image> textureImage = std::make_shared<Rendering::Image>(
+            Rendering::Image::CreateImage2D(bufferAllocator,
+                imageAsset.Width,
+                imageAsset.Height,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
+                vk::ImageAspectFlagBits::eColor,
+                device));
 
-        std::unique_ptr<Rendering::Buffer> stagingBuffer = std::make_unique<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(bufferAllocator, imageSize));
+        const vk::raii::Sampler& sampler = samplerCache->GetSampler(Rendering::SamplerKey(vk::Filter::eLinear,
+            vk::SamplerAddressMode::eRepeat,
+            10.0f));
 
-        stagingBuffer->Upload(pixels, imageSize);
-        stbi_image_free(pixels);
+        texture = std::make_shared<Rendering::Texture2D>(textureImage, *sampler);
 
-        ImageUtilities::CreateImage(static_cast<uint32_t>(texWidth),
-            static_cast<uint32_t>(texHeight),
-            vk::Format::eR8G8B8A8Srgb,
-            vk::ImageTiling::eOptimal,
-            vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-            vk::MemoryPropertyFlagBits::eDeviceLocal,
-            textureImage,
-            textureImageMemory,
-            device);
+        std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(
+            textureImage, imageAsset);
 
-        CommandBufferUtilities::TransitionImageLayout(textureImage,
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eTransferDstOptimal,
-            frameResources[frameIndex],
-            device);
-
-        CommandBufferUtilities::CopyBufferToImage(*stagingBuffer,
-            textureImage,
-            texWidth,
-            texHeight,
-            frameResources[frameIndex],
-            device);
-
-        CommandBufferUtilities::TransitionImageLayout(textureImage,
-            vk::ImageLayout::eTransferDstOptimal,
-            vk::ImageLayout::eShaderReadOnlyOptimal,
-            frameResources[frameIndex],
-            device);
-    }
-
-    void Renderer::CreateTextureImageView()
-    {
-        textureImageView = ImageUtilities::CreateImageView(textureImage,
-            vk::Format::eR8G8B8A8Srgb,
-            vk::ImageAspectFlagBits::eColor,
-            device);
-    }
-
-    void Renderer::CreateTextureSampler()
-    {
-        vk::PhysicalDeviceProperties properties = device.GetPhysicalDevice().getProperties();
-
-        vk::SamplerCreateInfo samplerInfo{};
-        samplerInfo.magFilter = vk::Filter::eLinear;
-        samplerInfo.minFilter = vk::Filter::eLinear;
-        samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-        samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-        samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
-        samplerInfo.anisotropyEnable = vk::True;
-        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-        samplerInfo.compareEnable = vk::False;
-        samplerInfo.compareOp = vk::CompareOp::eAlways;
-        samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-        samplerInfo.unnormalizedCoordinates = vk::False;
-        samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-        samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
-
-        textureSampler = vk::raii::Sampler(device.GetLogicalDevice(), samplerInfo);
+        uploadManager->AddJob(std::move(uploadJob));
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -492,7 +373,7 @@ namespace Beer::Core
             vk::ImageAspectFlagBits::eColor);
 
         CommandBufferUtilities::TransitionImageLayout(commandBuffer,
-            depthImage,
+            depthImage->GetHandle(),
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eDepthAttachmentOptimal,
             vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
@@ -506,7 +387,7 @@ namespace Beer::Core
             clearColor);
 
         vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
-        vk::RenderingAttachmentInfo depthAttachmentInfo = RendererUtilities::CreateDepthAttachmentInfo(depthImageView, clearDepth);
+        vk::RenderingAttachmentInfo depthAttachmentInfo = RendererUtilities::CreateDepthAttachmentInfo(depthImage->GetDefaultView(), clearDepth);
 
         const vk::Extent2D& swapchainExtent = swapchain.GetExtent();
 
@@ -531,7 +412,8 @@ namespace Beer::Core
         const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
             pipelineData);
 
-        CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer->GetHandle(), indexBuffer->GetHandle(), indices.size());
+        // CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer->GetHandle(), indexBuffer->GetHandle(), indices.size());
+        CommandBufferUtilities::DrawMesh(commandBuffer, pipeline, mesh.get());
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)

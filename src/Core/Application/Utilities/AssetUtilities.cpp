@@ -43,11 +43,12 @@ namespace Beer::Core
     }
 
     static constexpr std::string_view MODEL_HEAD = "assets/models/";
-    static constexpr std::string_view MODEL_TAIL = ".obj";
+    static constexpr std::string_view MODELOBJ_TAIL = ".obj";
+    static constexpr std::string_view MODELFBX_TAIL = ".fbx";
 
-    std::filesystem::path AssetUtilities::GetModelPath(const std::string& modelName)
+    std::filesystem::path AssetUtilities::GetModelPath(const std::string& modelName, bool isObj)
     {
-        std::string subPath = std::string(MODEL_HEAD) + modelName + std::string(MODEL_TAIL);
+        std::string subPath = std::string(MODEL_HEAD) + modelName + std::string(isObj ? MODELOBJ_TAIL : MODELFBX_TAIL);
         return GetBasePath(subPath);
     }
 
