@@ -57,6 +57,7 @@ namespace Beer::Core
         swapchainCreateInfo.presentMode = SwapchainUtilities::ChooseSwapPresentMode(device.GetAvailablePresentModes(surface));
         swapchainCreateInfo.clipped = VK_TRUE;
         swapchainCreateInfo.oldSwapchain = nullptr;
+
         swapchain = vk::raii::SwapchainKHR(device.GetLogicalDevice(), swapchainCreateInfo);
         swapchainImages = swapchain.getImages();
         swapchainImageFormat = swapchainSurfaceFormat.format;
@@ -85,6 +86,7 @@ namespace Beer::Core
         int width = 0;
         int height = 0;
         SDL_GetWindowSizeInPixels(window, &width, &height);
+
         while (width == 0 || height == 0)
         {
             SDL_GetWindowSizeInPixels(window, &width, &height);

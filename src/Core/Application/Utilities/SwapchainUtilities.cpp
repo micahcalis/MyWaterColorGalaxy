@@ -1,4 +1,5 @@
 #include "Core/Application/Utilities/SwapchainUtilities.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
@@ -21,13 +22,14 @@ namespace Beer::Core
     {
         for (const auto presentMode : availablePresentModes)
         {
-            if (presentMode == vk::PresentModeKHR::eMailbox)
+            // User should choose this
+            if (presentMode == vk::PresentModeKHR::eFifo)
             {
                 return presentMode;
             }
         }
 
-        return vk::PresentModeKHR::eFifo;
+        return vk::PresentModeKHR::eImmediate;
     }
 
     vk::Extent2D SwapchainUtilities::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities,

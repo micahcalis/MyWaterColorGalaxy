@@ -45,7 +45,6 @@ namespace Beer::Core
         std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
         std::shared_ptr<UploadManager> uploadManager = nullptr;
 
-        MeshAsset meshAsset;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;
 
         std::vector<Rendering::Buffer> uniformBuffers;

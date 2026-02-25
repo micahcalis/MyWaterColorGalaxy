@@ -210,7 +210,7 @@ namespace Beer::Core
 
     void Renderer::LoadModel()
     {
-        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_IcoSphere", false);
+        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_VikingRoom", true);
         Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset,
             bufferAllocator);
 
