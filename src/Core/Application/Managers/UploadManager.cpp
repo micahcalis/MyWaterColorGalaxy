@@ -2,7 +2,6 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include <memory>
-#include <print>
 
 namespace Beer::Core
 {
@@ -40,7 +39,6 @@ namespace Beer::Core
         }
 
         Core::CommandBufferUtilities::EndSingleTimeCommands(copyCommandBuffer, device);
-        std::println("jobs: {}", jobQueue.size());
         jobQueue.clear();
     }
 

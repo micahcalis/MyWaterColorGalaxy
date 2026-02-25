@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "Core/Assets/MeshAsset.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 
 namespace Beer::Rendering
@@ -14,6 +15,9 @@ namespace Beer::Rendering
         std::shared_ptr<Buffer> IndexBuffer = nullptr;
 
     public:
+        MeshBuffers(const Core::MeshAsset& meshAsset,
+            const std::shared_ptr<BufferAllocator>& bufferAllocator);
+
         const bool HasPositions() const { return PositionBuffer != nullptr; }
         const bool HasUv() const { return UvBuffer != nullptr; }
         const bool HasColor() const { return ColorBuffer != nullptr; }

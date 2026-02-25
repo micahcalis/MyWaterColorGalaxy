@@ -84,8 +84,6 @@ namespace Beer::Core
         void CreateSemaphores();
         void CreateDesciptorSetLayout();
         void LoadModel();
-        void CreateVertexBuffer();
-        void CreateIndexBuffer();
         void CreateUniformBuffers();
         void CreateDescriptorPool();
         void CreateDescriptorSets();

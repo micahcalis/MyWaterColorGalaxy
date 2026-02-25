@@ -1,12 +1,11 @@
 #include "Core/Application/Renderer/Renderer.hpp"
-#include "Core/Application/Jobs/IUploadJob.hpp"
 #include "Core/Application/Jobs/ImageUploadJob.hpp"
+#include "Core/Application/Jobs/MeshUploadJob.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
-#include "Core/Application/Utilities/MeshUtilities.hpp"
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/RendererUtilities.hpp"
@@ -77,8 +76,6 @@ namespace Beer::Core
 
         CreateTextureImage();
         LoadModel();
-        CreateVertexBuffer();
-        CreateIndexBuffer();
         CreateUniformBuffers();
         CreateDescriptorPool();
         CreateDescriptorSets();
@@ -213,46 +210,19 @@ namespace Beer::Core
 
     void Renderer::LoadModel()
     {
-        meshAsset = MeshLoader::LoadMesh("MDL_IcoSphere", false);
-        Rendering::MeshBuffers meshBuffers;
-
-        std::vector<std::unique_ptr<IUploadJob>> uploadJobs = MeshUtilities::GetMeshAssetUploads(
-            meshAsset,
-            meshBuffers,
+        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_IcoSphere", false);
+        Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset,
             bufferAllocator);
-
-        uploadManager->AddJobs(std::move(uploadJobs));
 
         mesh = std::make_shared<Rendering::Mesh>(
             std::move(meshBuffers),
             meshAsset.GetVertexCount(),
             meshAsset.GetIndexCount());
-    }
 
-    void Renderer::CreateVertexBuffer()
-    {
-        // vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        std::unique_ptr<MeshUploadJob> uploadJob = std::make_unique<MeshUploadJob>(
+            mesh, meshAsset);
 
-        // vertexBuffer = std::make_shared<Rendering::Buffer>(
-        //     Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
-
-        // std::unique_ptr<BufferUploadJob> uploadJob = std::make_unique<BufferUploadJob>(
-        //     vertexBuffer, vertices.data(), bufferSize);
-
-        // uploadManager->AddJob(std::move(uploadJob));
-    }
-
-    void Renderer::CreateIndexBuffer()
-    {
-        // vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-        // indexBuffer = std::make_shared<Rendering::Buffer>(
-        //     Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT));
-
-        // std::unique_ptr<BufferUploadJob> uploadJob = std::make_unique<BufferUploadJob>(
-        //     indexBuffer, indices.data(), bufferSize);
-
-        // uploadManager->AddJob(std::move(uploadJob));
+        uploadManager->AddJob(std::move(uploadJob));
     }
 
     void Renderer::CreateDesciptorSetLayout()

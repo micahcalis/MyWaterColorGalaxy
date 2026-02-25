@@ -21,6 +21,7 @@ namespace Beer::Core
         const vk::DeviceSize GetUvsSize() const { return sizeof(glm::vec2) * UVs.size(); }
         const vk::DeviceSize GetColorsSize() const { return sizeof(glm::vec4) * VertexColors.size(); }
         const vk::DeviceSize GetIndicesSize() const { return sizeof(uint32_t) * Indices.size(); }
+        const vk::DeviceSize GetTotalSize() const { return GetPositionsSize() + GetUvsSize() + GetColorsSize() + GetIndicesSize(); }
         uint32_t GetVertexCount() const { return Positions.size(); }
         uint32_t GetIndexCount() const { return Indices.size(); }
     };

@@ -2,7 +2,6 @@
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "vulkan/vulkan.hpp"
-#include <print>
 
 namespace Beer::Core
 {
