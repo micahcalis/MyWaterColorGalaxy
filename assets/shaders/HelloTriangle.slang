@@ -23,7 +23,12 @@ struct UniformData
 
 ConstantBuffer<UniformData> _UniformBuffer;
 
-static float4 _FunnyColor;
+//$ Pass Opaque
+//$ Vertex HelloTriangleVert
+//$ Fragment HelloTriangleFrag
+//$ Cull Back
+//$ Blend On
+//$ DepthWrite True
 
 [shader("vertex")]
 VertexData HelloTriangleVert(MeshData input)
@@ -43,5 +48,5 @@ Sampler2D texture;
 float4 HelloTriangleFrag(VertexData input) : SV_Target
 {
     float4 sample = texture.Sample(input.texCoord);
-    return float4(sample.rg, _FunnyColor.rg);
+    return sample;
 }

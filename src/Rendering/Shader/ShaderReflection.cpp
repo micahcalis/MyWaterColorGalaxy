@@ -1,7 +1,10 @@
 #include "Rendering/Shader/ShaderReflection.hpp"
+#include "ShaderParseDef.hpp"
+#include "ShaderPass.hpp"
 #include "Vendor/spirv_reflect/spirv_reflect.h"
-#include "Vendor/spirv_reflect/spirv.h"
+#include <fstream>
 #include <stdexcept>
+#include "Vendor./nlohmann/json.hpp"
 
 namespace Beer::Rendering
 {
@@ -64,8 +67,41 @@ namespace Beer::Rendering
         return properties;
     }
 
-    std::unordered_map<ShaderPassType, ShaderPass> ShaderReflection::ReflectPasses(const std::vector<uint32_t> spvCode)
+    std::vector<PassSettings> ShaderReflection::ReflectSettingsJson(const std::filesystem::path& jsonPath)
     {
+        std::vector<PassSettings> passesSettings;
+
+        std::ifstream file(jsonPath);
+
+        if (!file.is_open())
+            throw std::runtime_error("Failed to open Shader JSON: " + jsonPath.string());
+
+        nlohmann::json j;
+        file >> j;
+
+        for (auto& [passName, passData] : j["Passes"].items())
+        {
+            PassSettings passSettings{};
+            passSettings.Type = ShaderParseDef::GetPassType(passName);
+            passSettings.Vertex = ShaderParseDef::GetVertexEntryPoint(passData);
+            passSettings.Fragment = ShaderParseDef::GetFragmentEntryPoint(passData);
+            passSettings.PolygonMode = ShaderParseDef::GetPolygonMode(passData);
+            passSettings.CullMode = ShaderParseDef::GetCullMode(passData);
+
+            ShaderParseDef::GetBlendMode(passData,
+                passSettings.Blend,
+                passSettings.SrcBlend,
+                passSettings.DstBlend);
+
+            ShaderParseDef::GetDepthMode(passData,
+                passSettings.DepthTest,
+                passSettings.DepthWrite,
+                passSettings.CompareOp);
+
+            passesSettings.emplace_back(passSettings);
+        }
+
+        return passesSettings;
     }
 
     PropertyType ShaderReflection::GetMemberType(SpvReflectBlockVariable* member)

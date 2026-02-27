@@ -124,6 +124,7 @@ add_custom_target(SyncAssets ALL
 )
 
 # --- YOU WERE MISSING THESE TWO LINES ---
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 find_program(SLANGC_EXECUTABLE slangc REQUIRED)
 add_custom_target(Shaders) 
 # ----------------------------------------
@@ -135,18 +136,36 @@ function(add_slang_shader_target TARGET)
 
     set(SHADERS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders")
     set(OUTPUT_SPV "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.spv")
+    
+    # 1. Define where the JSON should go (right next to the SPV)
+    set(OUTPUT_JSON "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.json") 
+    
+    # 2. Tell CMake where you saved the Python script
+    set(COOKER_SCRIPT "${CMAKE_SOURCE_DIR}/tools/ShaderSettingsParser.py")
 
     add_custom_command(
-        OUTPUT  ${OUTPUT_SPV}
+        # 3. Tell CMake this command generates BOTH the .spv and the .json
+        OUTPUT  ${OUTPUT_SPV} ${OUTPUT_JSON} 
+        
         COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_OUTPUT_DIR}
+        
+        # 4. RUN PYTHON FIRST: Generate the JSON
+        COMMAND Python3::Interpreter ${COOKER_SCRIPT} ${MAIN_SOURCE} ${OUTPUT_JSON}
+        
+        # 5. RUN SLANGC SECOND: Generate the Bytecode
         COMMAND ${SLANGC_EXECUTABLE} ${MAIN_SOURCE}
                 -target spirv -profile spirv_1_4 -emit-spirv-directly -o ${OUTPUT_SPV}
+                
         WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
-        DEPENDS ${SHADER_SOURCES}
-        COMMENT "Compiling Slang Shader: ${SHADER_BASE_NAME}.slang"
+        
+        # 6. Rebuild if the Slang file OR the Python script changes
+        DEPENDS ${SHADER_SOURCES} ${COOKER_SCRIPT} 
+        COMMENT "Cooking & Compiling Shader: ${SHADER_BASE_NAME}.slang"
         VERBATIM
     )
-    add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV})
+    
+    # 7. Add both generated files as dependencies to the target
+    add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV} ${OUTPUT_JSON})
 endfunction()
 
 file(GLOB ALL_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.slang")

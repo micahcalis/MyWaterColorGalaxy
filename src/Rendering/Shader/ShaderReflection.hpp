@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
+#include <filesystem>
+#include <vector>
 
 namespace Beer::Rendering
 {
@@ -13,7 +15,7 @@ namespace Beer::Rendering
     {
     public:
         static std::unordered_map<std::string, ShaderProperty> ReflectProperties(const std::vector<uint32_t> spvCode);
-        static std::unordered_map<ShaderPassType, ShaderPass> ReflectPasses(const std::vector<uint32_t> spvCode);
+        static std::vector<PassSettings> ReflectSettingsJson(const std::filesystem::path& jsonPath);
 
     private:
         static PropertyType GetMemberType(SpvReflectBlockVariable* member);
