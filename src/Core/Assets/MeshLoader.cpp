@@ -72,6 +72,18 @@ namespace Beer::Core
                         attributes.vertices[3 * index.vertex_index + 1],
                         attributes.vertices[3 * index.vertex_index + 2]});
 
+                    if (index.normal_index >= 0)
+                    {
+                        meshAsset.Normals.push_back({attributes.normals[3 * index.normal_index + 0],
+                            attributes.normals[3 * index.normal_index + 1],
+                            attributes.normals[3 * index.normal_index + 2]});
+                    } else
+                    {
+                        meshAsset.Normals.push_back({0.0f, 0.0f, 0.0f});
+                    }
+
+                    meshAsset.Tangents.push_back({0.0f, 0.0f, 0.0f});
+
                     if (index.texcoord_index >= 0)
                     {
                         meshAsset.UVs.push_back({attributes.texcoords[2 * index.texcoord_index + 0],
@@ -127,6 +139,22 @@ namespace Beer::Core
 
                 ufbx_vec3 pos = ufbx_get_vertex_vec3(&mesh->vertex_position, index);
                 meshAsset.Positions.push_back({pos.x, pos.y, pos.z});
+
+                if (mesh->vertex_normal.exists)
+                {
+                    ufbx_vec3 normal = ufbx_get_vertex_vec3(&mesh->vertex_normal, index);
+                    meshAsset.Normals.push_back({normal.x, normal.y, normal.z});
+                }
+
+                if (mesh->vertex_tangent.exists)
+                {
+                    ufbx_vec3 tangent = ufbx_get_vertex_vec3(&mesh->vertex_tangent, index);
+                    meshAsset.Tangents.push_back({
+                        tangent.x,
+                        tangent.y,
+                        tangent.z,
+                    });
+                }
 
                 if (mesh->vertex_uv.exists)
                 {

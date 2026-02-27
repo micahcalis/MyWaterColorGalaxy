@@ -1,5 +1,6 @@
 #include "Rendering/Mesh/MeshBuffers.hpp"
 #include "Core/Assets/MeshAsset.hpp"
+#include "MeshBufferType.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include <memory>
@@ -12,28 +13,17 @@ namespace Beer::Rendering
     MeshBuffers::MeshBuffers(const Core::MeshAsset& meshAsset,
         const std::shared_ptr<BufferAllocator>& bufferAllocator)
     {
-        if (meshAsset.GetVertexCount() > 0)
+        for (int i = 0; i < static_cast<int>(MeshBufferType::Count); i++)
         {
-            PositionBuffer = std::make_shared<Rendering::Buffer>(
-                Rendering::Buffer::CreateDeviceLocal(bufferAllocator,
-                    meshAsset.GetPositionsSize(),
-                    VERTEX_ATTRIB_FLAGS));
-        }
+            MeshBufferType type = static_cast<MeshBufferType>(i);
 
-        if (meshAsset.GetUvsSize() > 0)
-        {
-            UvBuffer = std::make_shared<Rendering::Buffer>(
-                Rendering::Buffer::CreateDeviceLocal(bufferAllocator,
-                    meshAsset.GetUvsSize(),
-                    VERTEX_ATTRIB_FLAGS));
-        }
-
-        if (meshAsset.GetColorsSize() > 0)
-        {
-            ColorBuffer = std::make_shared<Rendering::Buffer>(
-                Rendering::Buffer::CreateDeviceLocal(bufferAllocator,
-                    meshAsset.GetColorsSize(),
-                    VERTEX_ATTRIB_FLAGS));
+            if (meshAsset.GetBufferSize(type) > 0)
+            {
+                vertexBuffers[type] = std::make_shared<Rendering::Buffer>(
+                    Rendering::Buffer::CreateDeviceLocal(bufferAllocator,
+                        meshAsset.GetBufferSize(type),
+                        VERTEX_ATTRIB_FLAGS));
+            }
         }
 
         if (meshAsset.GetIndexCount() > 0)

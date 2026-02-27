@@ -1,6 +1,7 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Mesh/MeshBufferType.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
@@ -109,19 +110,15 @@ namespace Beer::Core
         std::vector<vk::Buffer> activeBuffers;
         const Rendering::MeshBuffers& buffers = mesh->GetBuffers();
 
-        // std::println("vertex count {}", mesh->GetVertexCount());
-        // std::println("index count {}", mesh->GetIndexCount());
+        if (buffers.HasBuffer(Rendering::MeshBufferType::Position))
+            activeBuffers.push_back(buffers.GetBuffer(Rendering::MeshBufferType::Position)->GetHandle());
 
-        if (buffers.HasPositions())
-            activeBuffers.push_back(buffers.PositionBuffer->GetHandle());
+        if (buffers.HasBuffer(Rendering::MeshBufferType::Uv))
+            activeBuffers.push_back(buffers.GetBuffer(Rendering::MeshBufferType::Uv)->GetHandle());
 
-        if (buffers.HasUv())
-            activeBuffers.push_back(buffers.UvBuffer->GetHandle());
+        if (buffers.HasBuffer(Rendering::MeshBufferType::Color))
+            activeBuffers.push_back(buffers.GetBuffer(Rendering::MeshBufferType::Color)->GetHandle());
 
-        if (buffers.HasColor())
-            activeBuffers.push_back(buffers.ColorBuffer->GetHandle());
-
-        // std::vector<vk::Buffer> vkBuffers = ConvertToVkBuffers(activeBuffers);
         std::vector<vk::DeviceSize> offsets(activeBuffers.size(), 0);
 
         commandBuffer.bindVertexBuffers(0, activeBuffers, offsets);

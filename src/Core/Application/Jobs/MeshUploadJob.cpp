@@ -1,4 +1,5 @@
 #include "Core/Application/Jobs/MeshUploadJob.hpp"
+#include "Rendering/Mesh/MeshBufferType.hpp"
 #include "Rendering/Mesh/MeshBuffers.hpp"
 
 namespace Beer::Core
@@ -11,28 +12,17 @@ namespace Beer::Core
 
         size_t currentOffset = offset;
 
-        if (buffers.HasPositions())
+        for (int i = 0; i < static_cast<int>(Rendering::MeshBufferType::Count); i++)
         {
-            size_t size = meshAsset.GetPositionsSize();
-            stagingBuffer->Upload(meshAsset.Positions.data(), size, currentOffset);
-            stagingBuffer->QueueCopyTo(*buffers.PositionBuffer, commandBuffer, size, currentOffset);
-            currentOffset += size;
-        }
+            Rendering::MeshBufferType type = static_cast<Rendering::MeshBufferType>(i);
 
-        if (buffers.HasUv())
-        {
-            size_t size = meshAsset.GetUvsSize();
-            stagingBuffer->Upload(meshAsset.UVs.data(), size, currentOffset);
-            stagingBuffer->QueueCopyTo(*buffers.UvBuffer, commandBuffer, size, currentOffset);
-            currentOffset += size;
-        }
-
-        if (buffers.HasColor())
-        {
-            size_t size = meshAsset.GetColorsSize();
-            stagingBuffer->Upload(meshAsset.VertexColors.data(), size, currentOffset);
-            stagingBuffer->QueueCopyTo(*buffers.ColorBuffer, commandBuffer, size, currentOffset);
-            currentOffset += size;
+            if (buffers.HasBuffer(type))
+            {
+                size_t size = meshAsset.GetBufferSize(type);
+                stagingBuffer->Upload(meshAsset.GetBufferData(type), size, currentOffset);
+                stagingBuffer->QueueCopyTo(*buffers.GetBuffer(type), commandBuffer, size, currentOffset);
+                currentOffset += size;
+            }
         }
 
         if (buffers.HasIndex())

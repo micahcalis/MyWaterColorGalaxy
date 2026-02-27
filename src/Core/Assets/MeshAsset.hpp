@@ -5,6 +5,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "vulkan/vulkan.hpp"
+#include "Rendering/Mesh/MeshBufferType.hpp"
 
 namespace Beer::Core
 {
@@ -12,16 +13,55 @@ namespace Beer::Core
     {
     public:
         std::vector<glm::vec3> Positions;
+        std::vector<glm::vec3> Normals;
+        std::vector<glm::vec3> Tangents;
         std::vector<glm::vec2> UVs;
         std::vector<glm::vec4> VertexColors;
         std::vector<uint32_t> Indices;
 
     public:
-        const vk::DeviceSize GetPositionsSize() const { return sizeof(glm::vec3) * Positions.size(); }
-        const vk::DeviceSize GetUvsSize() const { return sizeof(glm::vec2) * UVs.size(); }
-        const vk::DeviceSize GetColorsSize() const { return sizeof(glm::vec4) * VertexColors.size(); }
+        const vk::DeviceSize GetBufferSize(Rendering::MeshBufferType type) const
+        {
+            size_t elementSize = Rendering::MESH_BUFFER_SIZES[static_cast<size_t>(type)];
+
+            switch (type)
+            {
+            case Rendering::MeshBufferType::Position: return elementSize * Positions.size();
+            case Rendering::MeshBufferType::Normal: return elementSize * Normals.size();
+            case Rendering::MeshBufferType::Tangent: return elementSize * Tangents.size();
+            case Rendering::MeshBufferType::Uv: return elementSize * UVs.size();
+            case Rendering::MeshBufferType::Color: return elementSize * VertexColors.size();
+            default: return 0;
+            }
+        }
+
+        const void* GetBufferData(Rendering::MeshBufferType type) const
+        {
+            switch (type)
+            {
+            case Rendering::MeshBufferType::Position: return Positions.data();
+            case Rendering::MeshBufferType::Normal: return Normals.data();
+            case Rendering::MeshBufferType::Tangent: return Tangents.data();
+            case Rendering::MeshBufferType::Uv: return UVs.data();
+            case Rendering::MeshBufferType::Color: return VertexColors.data();
+            default: return nullptr;
+            }
+        }
+
         const vk::DeviceSize GetIndicesSize() const { return sizeof(uint32_t) * Indices.size(); }
-        const vk::DeviceSize GetTotalSize() const { return GetPositionsSize() + GetUvsSize() + GetColorsSize() + GetIndicesSize(); }
+
+        const vk::DeviceSize GetTotalSize() const
+        {
+            vk::DeviceSize totalSize = GetIndicesSize();
+
+            for (int i = 0; i < static_cast<int>(Rendering::MeshBufferType::Count); i++)
+            {
+                totalSize += GetBufferSize(static_cast<Rendering::MeshBufferType>(i));
+            }
+
+            return totalSize;
+        }
+
         uint32_t GetVertexCount() const { return Positions.size(); }
         uint32_t GetIndexCount() const { return Indices.size(); }
     };

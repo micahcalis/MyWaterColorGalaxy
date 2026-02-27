@@ -16,33 +16,33 @@ namespace Beer::Core
     {
         std::vector<std::unique_ptr<IUploadJob>> uploadJobs;
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.Positions.data(),
-            meshAsset.GetPositionsSize(),
-            buffers.PositionBuffer,
-            bufferAllocator,
-            true);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.Positions.data(),
+        //     meshAsset.GetPositionsSize(),
+        //     buffers.PositionBuffer,
+        //     bufferAllocator,
+        //     true);
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.UVs.data(),
-            meshAsset.GetUvsSize(),
-            buffers.UvBuffer,
-            bufferAllocator,
-            true);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.UVs.data(),
+        //     meshAsset.GetUvsSize(),
+        //     buffers.UvBuffer,
+        //     bufferAllocator,
+        //     true);
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.VertexColors.data(),
-            meshAsset.GetColorsSize(),
-            buffers.ColorBuffer,
-            bufferAllocator,
-            true);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.VertexColors.data(),
+        //     meshAsset.GetColorsSize(),
+        //     buffers.ColorBuffer,
+        //     bufferAllocator,
+        //     true);
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.Indices.data(),
-            meshAsset.GetIndicesSize(),
-            buffers.IndexBuffer,
-            bufferAllocator,
-            false);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.Indices.data(),
+        //     meshAsset.GetIndicesSize(),
+        //     buffers.IndexBuffer,
+        //     bufferAllocator,
+        //     false);
 
         return uploadJobs;
     }
