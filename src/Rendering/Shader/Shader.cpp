@@ -1,13 +1,15 @@
 #include "Rendering/Shader/Shader.hpp"
 #include <filesystem>
+#include <print>
 #include <stdexcept>
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Rendering/Shader/ShaderReflection.hpp"
 #include "ShaderPass.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
+#include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
-#include "Rendering/Vertex.hpp"
+#include "Vendor/magic_enum/magic_enum.hpp"
 
 namespace Beer::Rendering
 {
@@ -31,9 +33,12 @@ namespace Beer::Rendering
 
         for (const auto settings : passesSettings)
         {
-            // passes.try_emplace({settings.Type},
-            //     ShaderPass(CreatePipeline(settings, shaderModule, device, swapchain),
-            //         settings));
+            VertexInput passInput = ShaderReflection::ReflectVertexInput(spvCode, settings.Vertex);
+            passes.try_emplace(
+                settings.Type,
+                CreatePipeline(settings, passInput, shaderModule, device, swapchain),
+                settings,
+                passInput.BufferOrder);
         }
     }
 
@@ -81,7 +86,8 @@ namespace Beer::Rendering
         pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), layoutCreateInfo);
     }
 
-    vk::Pipeline Shader::CreatePipeline(const PassSettings settings,
+    vk::raii::Pipeline Shader::CreatePipeline(const PassSettings& settings,
+        const VertexInput& input,
         const vk::ShaderModule shaderModule,
         const Core::Device& device,
         const Core::Swapchain& swapchain)
@@ -98,8 +104,8 @@ namespace Beer::Rendering
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-        auto bindingDescriptions = Rendering::Vertex::GetBindingDescriptions();
-        auto attributeDescriptions = Rendering::Vertex::GetAttributeDescriptions();
+        auto bindingDescriptions = input.BindingDescs;
+        auto attributeDescriptions = input.AttributeDescs;
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
         vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
         vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
@@ -177,5 +183,21 @@ namespace Beer::Rendering
 
         vk::raii::Pipeline pipeline(device.GetLogicalDevice(), nullptr, graphicsPipelineCreateInfo);
         return pipeline;
+    }
+
+    void Shader::PrintConfig()
+    {
+        for (auto& pass : passes)
+        {
+            std::println("Pass Type: {}", magic_enum::enum_name(pass.second.Settings.Type));
+            pass.second.BufferOrder.Print();
+        }
+
+        for (const auto& property : materialProperties)
+        {
+            std::println("Material Property: {} - {}",
+                property.first,
+                magic_enum::enum_name(property.second.Type));
+        }
     }
 } // namespace Beer::Rendering

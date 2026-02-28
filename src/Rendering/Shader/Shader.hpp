@@ -7,6 +7,7 @@
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
@@ -43,19 +44,43 @@ namespace Beer::Rendering
             const std::filesystem::path jsonPath,
             const Core::Device& device,
             const Core::Swapchain& swapchain);
-        ~Shader();
 
-        const ShaderPass GetPass(ShaderPassType passType) const;
-        const ShaderProperty* GetShaderProperty(std::string& propertyName) const;
+        const ShaderPass* GetPass(ShaderPassType passType) const
+        {
+            auto it = passes.find(passType);
+            if (it == passes.end())
+            {
+                return nullptr;
+            }
 
-        vk::DescriptorSetLayout GetMaterialSetLayout() const { return materialSetLayout; }
-        vk::PipelineLayout GetPipelineLayout() const { return pipelineLayout; }
+            return &it->second;
+        }
+
+        const ShaderProperty* GetShaderProperty(const std::string& propertyName) const
+        {
+            auto it = materialProperties.find(propertyName);
+            if (it == materialProperties.end())
+            {
+                return nullptr;
+            }
+
+            return &it->second;
+        }
+
+        vk::DescriptorSetLayout GetMaterialSetLayout() const
+        {
+            return materialSetLayout;
+        }
+        vk::PipelineLayout GetPipelineLayout() const { return *pipelineLayout; }
+
+        void PrintConfig();
 
     private:
         void CreateMaterialSetLayout(const Core::Device& device);
         void InitializeLayout(const Core::Device& device);
 
-        vk::Pipeline CreatePipeline(const PassSettings settings,
+        vk::raii::Pipeline CreatePipeline(const PassSettings& settings,
+            const VertexInput& input,
             const vk::ShaderModule shaderModule,
             const Core::Device& device,
             const Core::Swapchain& swapchain);

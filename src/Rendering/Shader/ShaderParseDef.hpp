@@ -10,6 +10,13 @@ namespace Beer::Rendering
 {
     class ShaderParseDef
     {
+    public:
+        static constexpr std::string_view POS_ATTRIB = "positionOS";
+        static constexpr std::string_view NORM_ATTRIB = "normalOS";
+        static constexpr std::string_view TANG_ATTRIB = "tangentOS";
+        static constexpr std::string_view UV_ATTRIB = "texCoord";
+        static constexpr std::string_view COLOR_ATTRIB = "color";
+
     private:
         static constexpr std::string_view PASS = "Pass";
         static constexpr std::string_view VERTEX = "Vertex";

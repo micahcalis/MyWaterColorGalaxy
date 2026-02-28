@@ -9,11 +9,11 @@
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
-#include "Core/Assets/MeshAsset.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
+#include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Mesh./Mesh.hpp"
 
@@ -45,6 +45,7 @@ namespace Beer::Core
         std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
         std::shared_ptr<UploadManager> uploadManager = nullptr;
 
+        std::shared_ptr<Rendering::Shader> shader = nullptr;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;
 
         std::vector<Rendering::Buffer> uniformBuffers;
@@ -82,6 +83,7 @@ namespace Beer::Core
         void CreateDepthResources(vk::Format& depthFormat);
         void CreateSemaphores();
         void CreateDesciptorSetLayout();
+        void LoadShader();
         void LoadModel();
         void CreateUniformBuffers();
         void CreateDescriptorPool();

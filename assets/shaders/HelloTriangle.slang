@@ -1,10 +1,12 @@
-static float2 ASPECT = float2(800, 600);
+#include "BeerMacros.slang"
+
+//import BeerCore;
 
 struct MeshData
 {
-    float3 positionOS;
-    float2 texCoord;
-    float4 color;
+    M_POSITION;
+    M_UV;
+    M_COLOR;
 };
 
 struct VertexData 
@@ -28,7 +30,7 @@ ConstantBuffer<UniformData> _UniformBuffer;
 //$ Fragment HelloTriangleFrag
 //$ Cull Back
 //$ Blend On
-//$ DepthWrite True
+//$ Zwrite On
 
 [shader("vertex")]
 VertexData HelloTriangleVert(MeshData input)

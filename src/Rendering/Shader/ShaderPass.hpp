@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Mesh/MeshBufferOrder.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
@@ -27,12 +28,13 @@ namespace Beer::Rendering
     struct ShaderPass
     {
     public:
-        const vk::raii::Pipeline Pipeline;
-        const PassSettings Settings;
+        vk::raii::Pipeline Pipeline;
+        PassSettings Settings;
+        MeshBufferOrder BufferOrder;
 
     public:
-        ShaderPass(vk::raii::Pipeline pipeline, const PassSettings settings)
-            : Pipeline(std::move(pipeline)), Settings(settings)
+        ShaderPass(vk::raii::Pipeline pipeline, const PassSettings settings, const MeshBufferOrder bufferOrder)
+            : Pipeline(std::move(pipeline)), Settings(settings), BufferOrder(bufferOrder)
         {
         }
     };

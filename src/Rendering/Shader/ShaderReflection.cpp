@@ -1,29 +1,21 @@
 #include "Rendering/Shader/ShaderReflection.hpp"
-#include "ShaderParseDef.hpp"
-#include "ShaderPass.hpp"
+#include "Rendering/Shader/ShaderParseDef.hpp"
+#include "Rendering/Shader/ShaderPass.hpp"
 #include "Vendor/spirv_reflect/spirv_reflect.h"
 #include <fstream>
 #include <stdexcept>
 #include "Vendor./nlohmann/json.hpp"
+#include "Rendering/Shader/VertexInput.hpp"
+#include <algorithm>
 
 namespace Beer::Rendering
 {
     std::unordered_map<std::string, ShaderProperty> ShaderReflection::ReflectProperties(const std::vector<uint32_t> spvCode)
     {
         std::unordered_map<std::string, ShaderProperty> properties;
-        SpvReflectShaderModule reflectModule;
-
-        SpvReflectResult result = spvReflectCreateShaderModule(
-            spvCode.size() * sizeof(uint32_t),
-            spvCode.data(),
-            &reflectModule);
-
-        if (result != SPV_REFLECT_RESULT_SUCCESS)
-        {
-            throw std::runtime_error("failed to reflect shader module");
-        }
-
+        SpvReflectShaderModule reflectModule = InitializeReflect(spvCode);
         uint32_t setCount = 0;
+
         spvReflectEnumerateDescriptorSets(&reflectModule, &setCount, nullptr);
         std::vector<SpvReflectDescriptorSet*> sets(setCount);
         spvReflectEnumerateDescriptorSets(&reflectModule, &setCount, sets.data());
@@ -150,4 +142,125 @@ namespace Beer::Rendering
     {
         return binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     }
+
+    MeshBufferType ShaderReflection::GetBufferTypeFromName(const char* nameString)
+    {
+        if (nameString == nullptr || nameString[0] == '\0')
+        {
+            throw std::runtime_error("Shader Semantic missing");
+        }
+
+        std::string_view semantic = std::string_view(nameString);
+
+        if (semantic.find(ShaderParseDef::POS_ATTRIB) != std::string_view::npos)
+            return MeshBufferType::Position;
+        if (semantic.find(ShaderParseDef::NORM_ATTRIB) != std::string_view::npos)
+            return MeshBufferType::Normal;
+        if (semantic.find(ShaderParseDef::TANG_ATTRIB) != std::string_view::npos)
+            return MeshBufferType::Tangent;
+        if (semantic.find(ShaderParseDef::UV_ATTRIB) != std::string_view::npos)
+            return MeshBufferType::Uv;
+        if (semantic.find(ShaderParseDef::COLOR_ATTRIB) != std::string_view::npos)
+            return MeshBufferType::Color;
+
+        throw std::runtime_error("Shader Semantic unknown");
+    }
+
+    VertexInput ShaderReflection::ReflectVertexInput(const std::vector<uint32_t>& spvCode, const std::string& vertexEntryPoint)
+    {
+        SpvReflectShaderModule reflectModule = InitializeReflect(spvCode);
+        uint32_t varCount = 0;
+
+        spvReflectEnumerateEntryPointInputVariables(&reflectModule,
+            vertexEntryPoint.c_str(),
+            &varCount,
+            nullptr);
+
+        std::vector<SpvReflectInterfaceVariable*> inputVars(varCount);
+
+        spvReflectEnumerateEntryPointInputVariables(&reflectModule,
+            vertexEntryPoint.c_str(),
+            &varCount,
+            inputVars.data());
+
+        std::sort(inputVars.begin(), inputVars.end(), [](SpvReflectInterfaceVariable* a, SpvReflectInterfaceVariable* b) {
+            return a->location < b->location;
+        });
+
+        VertexInput reflectedData{};
+        uint32_t currentBindingSlot = 0;
+
+        for (SpvReflectInterfaceVariable* var : inputVars)
+        {
+            if (var->decoration_flags & SPV_REFLECT_DECORATION_BUILT_IN)
+                continue;
+
+            MeshBufferType bufferType = GetBufferTypeFromName(var->name);
+            reflectedData.BufferOrder.AddToOrder(bufferType);
+
+            vk::Format vkFormat = GetVkFormat(var->format);
+
+            vk::VertexInputAttributeDescription attr{};
+            attr.location = var->location;
+            attr.binding = currentBindingSlot;
+            attr.format = vkFormat;
+            attr.offset = 0;
+
+            reflectedData.AttributeDescs.push_back(attr);
+
+            vk::VertexInputBindingDescription bindingDesc{};
+            bindingDesc.binding = currentBindingSlot;
+            bindingDesc.stride = GetFormatByteSize(vkFormat);
+            bindingDesc.inputRate = vk::VertexInputRate::eVertex;
+
+            reflectedData.BindingDescs.push_back(bindingDesc);
+
+            currentBindingSlot++;
+        }
+
+        spvReflectDestroyShaderModule(&reflectModule);
+        return reflectedData;
+    }
+
+    SpvReflectShaderModule ShaderReflection::InitializeReflect(const std::vector<uint32_t>& spvCode)
+    {
+        SpvReflectShaderModule reflectModule;
+
+        SpvReflectResult result = spvReflectCreateShaderModule(
+            spvCode.size() * sizeof(uint32_t),
+            spvCode.data(),
+            &reflectModule);
+
+        if (result != SPV_REFLECT_RESULT_SUCCESS)
+        {
+            throw std::runtime_error("failed to reflect shader module");
+        }
+
+        return std::move(reflectModule);
+    }
+
+    vk::Format ShaderReflection::GetVkFormat(SpvReflectFormat format)
+    {
+        switch (format)
+        {
+        case SPV_REFLECT_FORMAT_R32G32B32A32_SFLOAT: return vk::Format::eR32G32B32A32Sfloat;
+        case SPV_REFLECT_FORMAT_R32G32B32_SFLOAT: return vk::Format::eR32G32B32Sfloat;
+        case SPV_REFLECT_FORMAT_R32G32_SFLOAT: return vk::Format::eR32G32Sfloat;
+        case SPV_REFLECT_FORMAT_R32_SFLOAT: return vk::Format::eR32Sfloat;
+        default: throw std::runtime_error("Unsupported vertex attribute format in SPIR-V!");
+        }
+    }
+
+    uint32_t ShaderReflection::GetFormatByteSize(vk::Format format)
+    {
+        switch (format)
+        {
+        case vk::Format::eR32G32B32A32Sfloat: return 16;
+        case vk::Format::eR32G32B32Sfloat: return 12;
+        case vk::Format::eR32G32Sfloat: return 8;
+        case vk::Format::eR32Sfloat: return 4;
+        default: return 0;
+        }
+    }
+
 } // namespace Beer::Rendering

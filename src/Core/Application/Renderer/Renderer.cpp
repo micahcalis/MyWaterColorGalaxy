@@ -33,6 +33,7 @@
 #include <chrono>
 #include <stdexcept>
 #include <tiny_obj_loader.h>
+#include "Rendering/Shader/Shader.hpp"
 
 namespace Beer::Core
 {
@@ -75,6 +76,11 @@ namespace Beer::Core
         }
 
         CreateTextureImage();
+
+        Rendering::Shader::SetGlobalsLayout(descriptorSetLayout);
+        Rendering::Shader::SetDepthFormat(depthFormat);
+        // LoadShader();
+
         LoadModel();
         CreateUniformBuffers();
         CreateDescriptorPool();
@@ -208,9 +214,22 @@ namespace Beer::Core
         }
     }
 
+    void Renderer::LoadShader()
+    {
+        std::filesystem::path shaderPath = AssetUtilities::GetShaderPath("HelloTriangle");
+        std::filesystem::path jsonPath = AssetUtilities::GetShaderJsonPath("HelloTriangle");
+        shader = std::make_shared<Rendering::Shader>(
+            shaderPath,
+            jsonPath,
+            device,
+            swapchain);
+
+        shader->PrintConfig();
+    }
+
     void Renderer::LoadModel()
     {
-        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_VikingRoom", true);
+        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_IcoSphere", false);
         Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset,
             bufferAllocator);
 
@@ -475,12 +494,11 @@ namespace Beer::Core
         const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
 
         Rendering::UniformBufferObject ubo{}; /// Don't forget to add the f, 2.0 is a double instead of a float.
-        ubo.objToWorld = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+        ubo.objToWorld = rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
         ubo.worldToView = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
         ubo.viewToClip = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
         ubo.viewToClip[1][1] *= -1;
 
-        // memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
         uniformBuffers[frameIndex].Upload(&ubo, sizeof(ubo));
     }
 } // namespace Beer::Core
