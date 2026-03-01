@@ -1,5 +1,4 @@
 #include "Core/Assets/MeshLoader.hpp"
-#include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "MeshAsset.hpp"
 #include <tiny_obj_loader.h>
 #include "Vendor/ufbx/ufbx.h"
@@ -31,11 +30,9 @@ namespace std
 
 namespace Beer::Core
 {
-    MeshAsset MeshLoader::LoadMesh(const std::string& name, bool isObj)
+    MeshAsset MeshLoader::LoadMesh(const std::filesystem::path& path)
     {
-        std::filesystem::path path = AssetUtilities::GetModelPath(name, isObj);
-
-        if (isObj)
+        if (IsObj(path))
         {
             return LoadObj(path);
         } else
@@ -210,5 +207,20 @@ namespace Beer::Core
         ufbx_free_scene(scene);
 
         return meshAsset;
+    }
+
+    bool MeshLoader::IsObj(const std::filesystem::path& path)
+    {
+        std::string ext = path.extension().string();
+
+        if (ext == ".obj")
+        {
+            return true;
+        } else if (ext == ".fbx")
+        {
+            return false;
+        }
+
+        throw std::runtime_error("Unsupported model format: " + ext + " for path: " + path.string());
     }
 } // namespace Beer::Core

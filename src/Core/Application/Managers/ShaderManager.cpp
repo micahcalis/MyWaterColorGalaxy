@@ -4,7 +4,7 @@
 
 namespace Beer::Core
 {
-    std::shared_ptr<Rendering::Shader> ShaderManager::Load(const std::string& name, const std::filesystem::path& path)
+    std::shared_ptr<Rendering::Shader> ShaderManager::Load(const std::filesystem::path& path)
     {
         std::filesystem::path jsonPath = AssetUtilities::GetShaderJsonPath(path);
 

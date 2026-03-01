@@ -1,6 +1,7 @@
 #include "Rendering/Buffer/Image.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "vulkan/vulkan.hpp"
+#include "Core/Application/Managers/ImageAssetManager.hpp"
 
 namespace Beer::Rendering
 {
@@ -47,6 +48,11 @@ namespace Beer::Rendering
         VkFormat format)
         : allocator(allocator), allocation(allocation), defaultView(defaultView), extent(extent), format(format)
     {
+    }
+
+    std::shared_ptr<Image> Image::GetAsset(const std::string& name)
+    {
+        return imageAssetManager->Get(name);
     }
 
     void Image::QueueTransitionLayout(const vk::Image image,

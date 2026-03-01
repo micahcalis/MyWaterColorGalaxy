@@ -2,10 +2,11 @@
 
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL_video.h>
+#include "Core/Application/Managers/ImageAssetManager.hpp"
+#include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
-#include "Core/Application/Renderer/PipelineCache.hpp"
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
@@ -38,7 +39,8 @@ namespace Beer::Core
         std::shared_ptr<Rendering::Image> depthImage = nullptr;
 
         std::unique_ptr<ShaderManager> shaderManager = nullptr;
-        std::unique_ptr<PipelineCache> pipelineCache = nullptr;
+        std::unique_ptr<MeshManager> meshManager = nullptr;
+        std::unique_ptr<ImageAssetManager> imageAssetManager = nullptr;
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
 
         std::vector<FrameResource> frameResources;

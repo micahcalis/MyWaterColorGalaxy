@@ -1,6 +1,7 @@
 #include "Core/Application/Renderer/Renderer.hpp"
 #include "Core/Application/Jobs/ImageUploadJob.hpp"
-#include "Core/Application/Jobs/MeshUploadJob.hpp"
+#include "Core/Application/Managers/ImageAssetManager.hpp"
+#include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
@@ -12,17 +13,13 @@
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "Core/Assets/ImageAsset.hpp"
 #include "Core/Assets/ImageLoader.hpp"
-#include "Core/Assets/MeshAsset.hpp"
-#include "Core/Assets/MeshLoader.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
-#include "Rendering/Mesh/MeshBuffers.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include "Rendering/Sampler/SamplerKey.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <vector>
 #include "Rendering/UniformBufferObject.hpp"
@@ -64,11 +61,6 @@ namespace Beer::Core
         CreateSemaphores();
         CreateDesciptorSetLayout();
         InitializeAssetManagers(depthFormat);
-
-        pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(),
-            swapchain,
-            descriptorSetLayout,
-            depthFormat);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
@@ -193,6 +185,19 @@ namespace Beer::Core
             depthFormat);
 
         Rendering::Shader::SetShaderManager(shaderManager.get());
+
+        meshManager = std::make_unique<MeshManager>(
+            bufferAllocator,
+            uploadManager.get());
+
+        Rendering::Mesh::SetMeshManager(meshManager.get());
+
+        imageAssetManager = std::make_unique<ImageAssetManager>(
+            &device,
+            bufferAllocator,
+            uploadManager.get());
+
+        Rendering::Image::SetImageAssetManager(imageAssetManager.get());
     }
 
     void Renderer::CreateDepthResources(vk::Format& depthFormat)
@@ -230,19 +235,7 @@ namespace Beer::Core
 
     void Renderer::LoadModel()
     {
-        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_IcoSphere", false);
-        Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset,
-            bufferAllocator);
-
-        mesh = std::make_shared<Rendering::Mesh>(
-            std::move(meshBuffers),
-            meshAsset.GetVertexCount(),
-            meshAsset.GetIndexCount());
-
-        std::unique_ptr<MeshUploadJob> uploadJob = std::make_unique<MeshUploadJob>(
-            mesh, meshAsset);
-
-        uploadManager->AddJob(std::move(uploadJob));
+        mesh = Rendering::Mesh::Get("MDL_IcoSphere");
     }
 
     void Renderer::CreateDesciptorSetLayout()
@@ -352,27 +345,13 @@ namespace Beer::Core
 
     void Renderer::CreateTextureImage()
     {
-        ImageAsset imageAsset = ImageLoader::LoadImage("Tex_VikingRoom", 4);
-
-        std::shared_ptr<Rendering::Image> textureImage = std::make_shared<Rendering::Image>(
-            Rendering::Image::CreateImage2D(bufferAllocator,
-                imageAsset.Width,
-                imageAsset.Height,
-                VK_FORMAT_R8G8B8A8_SRGB,
-                VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
-                vk::ImageAspectFlagBits::eColor,
-                device));
+        std::shared_ptr<Rendering::Image> textureImage = Rendering::Image::GetAsset("Tex_VikingRoom");
 
         const vk::raii::Sampler& sampler = samplerCache->GetSampler(Rendering::SamplerKey(vk::Filter::eLinear,
             vk::SamplerAddressMode::eRepeat,
             10.0f));
 
         texture = std::make_shared<Rendering::Texture2D>(textureImage, *sampler);
-
-        std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(
-            textureImage, imageAsset);
-
-        uploadManager->AddJob(std::move(uploadJob));
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)

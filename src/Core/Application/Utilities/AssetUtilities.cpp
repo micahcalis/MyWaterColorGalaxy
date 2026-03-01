@@ -79,10 +79,25 @@ namespace Beer::Core
     static constexpr std::string_view MODELOBJ_TAIL = ".obj";
     static constexpr std::string_view MODELFBX_TAIL = ".fbx";
 
-    std::filesystem::path AssetUtilities::GetModelPath(const std::string& modelName, bool isObj)
+    std::filesystem::path AssetUtilities::GetModelPath(const std::string& modelName)
     {
-        std::string subPath = std::string(MODEL_HEAD) + modelName + std::string(isObj ? MODELOBJ_TAIL : MODELFBX_TAIL);
-        return GetBasePath(subPath);
+        std::string objPathStr = std::string(MODEL_HEAD) + modelName + std::string(MODELOBJ_TAIL);
+        std::filesystem::path objPath = GetBasePath(objPathStr);
+
+        if (std::filesystem::exists(objPath))
+        {
+            return objPath;
+        }
+
+        std::string fbxPathStr = std::string(MODEL_HEAD) + modelName + std::string(MODELFBX_TAIL);
+        std::filesystem::path fbxPath = GetBasePath(fbxPathStr);
+
+        if (std::filesystem::exists(fbxPath))
+        {
+            return fbxPath;
+        }
+
+        throw std::runtime_error("Model file not found for: " + modelName + " (Checked .obj and .fbx)");
     }
 
     static constexpr std::string_view TEXTURE_HEAD = "assets/textures/";

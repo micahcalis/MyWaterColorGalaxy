@@ -33,7 +33,7 @@ namespace Beer::Core
         const vk::DescriptorSetLayout& GetGlobalSetLayout() const { return globalSetLayout; }
         const vk::Format GetDepthFormat() const { return depthFormat; }
 
-        std::shared_ptr<Rendering::Shader> Load(const std::string& name, const std::filesystem::path& path) override;
+        std::shared_ptr<Rendering::Shader> Load(const std::filesystem::path& path) override;
 
     private:
         void Initialize();

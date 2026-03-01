@@ -7,13 +7,12 @@
 
 namespace Beer::Core
 {
-    ImageAsset ImageLoader::LoadImage(const std::string& name, int desiredChannels)
+    ImageAsset ImageLoader::LoadImage(const std::filesystem::path& path, int desiredChannels)
     {
         ImageAsset imageAsset;
-        std::filesystem::path texturePath = AssetUtilities::GetTexturePath(name);
         int texWidth, texHeight, fileChannels;
 
-        imageAsset.Pixels = stbi_load(texturePath.string().c_str(),
+        imageAsset.Pixels = stbi_load(path.string().c_str(),
             &texWidth,
             &texHeight,
             &fileChannels,
@@ -21,7 +20,7 @@ namespace Beer::Core
 
         if (!imageAsset.Pixels)
         {
-            throw std::runtime_error("failed to load texture image: " + name);
+            throw std::runtime_error("failed to load texture image");
         }
 
         imageAsset.Width = static_cast<uint32_t>(texWidth);

@@ -7,11 +7,18 @@
 #include "Core/Application/Utilities/macros.hpp"
 #include "vulkan/vulkan.hpp"
 
+namespace Beer::Core
+{
+    class ImageAssetManager;
+}
+
 namespace Beer::Rendering
 {
     class Image
     {
     private:
+        inline static Core::ImageAssetManager* imageAssetManager = nullptr;
+
         std::shared_ptr<BufferAllocator> allocator;
         ImageAllocation allocation;
         VkImageView defaultView;
@@ -28,6 +35,13 @@ namespace Beer::Rendering
             VkImageUsageFlags usage,
             vk::ImageAspectFlagBits aspectFlags,
             const Core::Device& device);
+
+        static void SetImageAssetManager(Core::ImageAssetManager* imageAssetManager)
+        {
+            Image::imageAssetManager = imageAssetManager;
+        }
+
+        static std::shared_ptr<Image> GetAsset(const std::string& name);
 
         [[nodiscard]] VkImage GetHandle() const { return allocation.Image; }
         VkImageView GetDefaultView() const { return defaultView; }

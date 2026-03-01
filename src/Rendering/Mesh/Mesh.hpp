@@ -1,13 +1,20 @@
 #pragma once
 
 #include "Rendering/Mesh/MeshBuffers.hpp"
+
+namespace Beer::Core
+{
+    class MeshManager;
+}
+
 namespace Beer::Rendering
 {
     class Mesh
     {
     private:
-        MeshBuffers buffers;
+        inline static Core::MeshManager* meshManager = nullptr;
 
+        MeshBuffers buffers;
         uint32_t vertexCount;
         uint32_t indexCount;
 
@@ -16,6 +23,13 @@ namespace Beer::Rendering
             : buffers(std::move(buffers)), vertexCount(vertexCount), indexCount(indexCount)
         {
         }
+
+        static void SetMeshManager(Core::MeshManager* meshManager)
+        {
+            Mesh::meshManager = meshManager;
+        }
+
+        static std::shared_ptr<Mesh> Get(const std::string& name);
 
         const MeshBuffers& GetBuffers() const { return buffers; }
         uint32_t GetVertexCount() const { return vertexCount; }
