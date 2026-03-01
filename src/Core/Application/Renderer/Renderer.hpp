@@ -16,6 +16,7 @@
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Mesh./Mesh.hpp"
+#include "Core/Application/Managers/ShaderManager.hpp"
 
 namespace Beer::Core
 {
@@ -36,6 +37,7 @@ namespace Beer::Core
 
         std::shared_ptr<Rendering::Image> depthImage = nullptr;
 
+        std::unique_ptr<ShaderManager> shaderManager = nullptr;
         std::unique_ptr<PipelineCache> pipelineCache = nullptr;
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
 
@@ -82,6 +84,7 @@ namespace Beer::Core
         void CreateSurface(SDL_Window* window);
         void CreateDepthResources(vk::Format& depthFormat);
         void CreateSemaphores();
+        void InitializeAssetManagers(vk::Format depthFormat);
         void CreateDesciptorSetLayout();
         void LoadShader();
         void LoadModel();

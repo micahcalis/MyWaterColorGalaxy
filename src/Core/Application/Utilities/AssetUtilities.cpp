@@ -68,6 +68,13 @@ namespace Beer::Core
         return GetBasePath(subPath);
     }
 
+    std::filesystem::path AssetUtilities::GetShaderJsonPath(const std::filesystem::path& spvPath)
+    {
+        std::filesystem::path jsonPath = spvPath;
+        jsonPath.replace_extension(JSON_TAIL);
+        return jsonPath;
+    }
+
     static constexpr std::string_view MODEL_HEAD = "assets/models/";
     static constexpr std::string_view MODELOBJ_TAIL = ".obj";
     static constexpr std::string_view MODELFBX_TAIL = ".fbx";

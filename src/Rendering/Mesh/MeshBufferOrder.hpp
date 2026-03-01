@@ -22,17 +22,22 @@ namespace Beer::Rendering
             order.clear();
         }
 
-        const std::vector<MeshBufferType> GetOrder() const
-        {
-            return order;
-        }
-
         void Print()
         {
             for (auto& element : order)
             {
                 std::println("Vertex Input Buffer: {}", magic_enum::enum_name(element));
             }
+        }
+
+        const MeshBufferType GetElement(const int i) const
+        {
+            return order[i];
+        }
+
+        const int GetSize() const
+        {
+            return order.size();
         }
     };
 } // namespace Beer::Rendering

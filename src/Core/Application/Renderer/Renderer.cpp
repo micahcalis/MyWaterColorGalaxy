@@ -9,8 +9,6 @@
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/RendererUtilities.hpp"
-#include "Core/Application/Renderer/PipelineKey.hpp"
-#include "Core/Application/Renderer/PipelineData.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "Core/Assets/ImageAsset.hpp"
 #include "Core/Assets/ImageLoader.hpp"
@@ -21,6 +19,7 @@
 #include "Rendering/Mesh/MeshBuffers.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include "Rendering/Sampler/SamplerKey.hpp"
+#include "Rendering/Shader/ShaderPassType.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <filesystem>
@@ -60,9 +59,11 @@ namespace Beer::Core
         uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
         samplerCache = std::make_unique<Rendering::SamplerCache>(device);
         vk::Format depthFormat;
+
         CreateDepthResources(depthFormat);
         CreateSemaphores();
         CreateDesciptorSetLayout();
+        InitializeAssetManagers(depthFormat);
 
         pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(),
             swapchain,
@@ -76,11 +77,7 @@ namespace Beer::Core
         }
 
         CreateTextureImage();
-
-        Rendering::Shader::SetGlobalsLayout(descriptorSetLayout);
-        Rendering::Shader::SetDepthFormat(depthFormat);
-        // LoadShader();
-
+        LoadShader();
         LoadModel();
         CreateUniformBuffers();
         CreateDescriptorPool();
@@ -187,6 +184,17 @@ namespace Beer::Core
         surface = vk::raii::SurfaceKHR(instance, rawSurface);
     }
 
+    void Renderer::InitializeAssetManagers(vk::Format depthFormat)
+    {
+        shaderManager = std::make_unique<ShaderManager>(
+            &device,
+            &swapchain,
+            descriptorSetLayout,
+            depthFormat);
+
+        Rendering::Shader::SetShaderManager(shaderManager.get());
+    }
+
     void Renderer::CreateDepthResources(vk::Format& depthFormat)
     {
         depthFormat = ImageUtilities::FindDepthFormat(device);
@@ -216,14 +224,7 @@ namespace Beer::Core
 
     void Renderer::LoadShader()
     {
-        std::filesystem::path shaderPath = AssetUtilities::GetShaderPath("HelloTriangle");
-        std::filesystem::path jsonPath = AssetUtilities::GetShaderJsonPath("HelloTriangle");
-        shader = std::make_shared<Rendering::Shader>(
-            shaderPath,
-            jsonPath,
-            device,
-            swapchain);
-
+        shader = Rendering::Shader::Get("HelloTriangle");
         shader->PrintConfig();
     }
 
@@ -424,15 +425,7 @@ namespace Beer::Core
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIndex], nullptr);
 
-        // HARDCODED DRAW BLOCK : EXTENSION NECESSARY!!!
-        PipelineData pipelineData{};
-        pipelineData.ShaderName = HELLO_TRIANGLE;
-        pipelineData.ShaderPath = AssetUtilities::GetShaderPath(std::string(HELLO_TRIANGLE)).string();
-        const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
-            pipelineData);
-
-        // CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer->GetHandle(), indexBuffer->GetHandle(), indices.size());
-        CommandBufferUtilities::DrawMesh(commandBuffer, pipeline, mesh.get());
+        CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), shader.get(), Rendering::ShaderPassType::Opaque);
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)

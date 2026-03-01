@@ -1,7 +1,6 @@
 #include "Rendering/Shader/Shader.hpp"
 #include <filesystem>
 #include <print>
-#include <stdexcept>
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Rendering/Shader/ShaderReflection.hpp"
@@ -10,17 +9,15 @@
 #include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 #include "Vendor/magic_enum/magic_enum.hpp"
+#include "Core/Application/Managers/ShaderManager.hpp"
 
 namespace Beer::Rendering
 {
-    Shader::Shader(const std::filesystem::path shaderPath,
-        const std::filesystem::path jsonPath,
+    Shader::Shader(const std::filesystem::path& shaderPath,
+        const std::filesystem::path& jsonPath,
         const Core::Device& device,
         const Core::Swapchain& swapchain)
     {
-        if (!GlobalInitialized())
-            throw std::runtime_error("Shader Globals not initialized, can't create Shader");
-
         auto spvCode = Core::AssetUtilities::LoadSpvFile(shaderPath);
         materialProperties = Rendering::ShaderReflection::ReflectProperties(spvCode);
         CreateMaterialSetLayout(device);
@@ -40,6 +37,11 @@ namespace Beer::Rendering
                 settings,
                 passInput.BufferOrder);
         }
+    }
+
+    std::shared_ptr<Shader> Shader::Get(const std::string& name)
+    {
+        return shaderManager->Get(name);
     }
 
     void Shader::CreateMaterialSetLayout(const Core::Device& device)
@@ -76,7 +78,7 @@ namespace Beer::Rendering
     {
         std::vector<vk::DescriptorSetLayout> setLayouts;
 
-        setLayouts.push_back(globalSetLayout);
+        setLayouts.push_back(Shader::shaderManager->GetGlobalSetLayout());
         setLayouts.push_back(materialSetLayout);
 
         vk::PipelineLayoutCreateInfo layoutCreateInfo{};
@@ -162,7 +164,7 @@ namespace Beer::Rendering
         vk::Format colorFormat = swapchain.GetImageFormat();
         renderingCreateInfo.colorAttachmentCount = 1;
         renderingCreateInfo.pColorAttachmentFormats = &colorFormat;
-        renderingCreateInfo.depthAttachmentFormat = depthFormat;
+        renderingCreateInfo.depthAttachmentFormat = Shader::shaderManager->GetDepthFormat();
 
         vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
         graphicsPipelineCreateInfo.pNext = &renderingCreateInfo;

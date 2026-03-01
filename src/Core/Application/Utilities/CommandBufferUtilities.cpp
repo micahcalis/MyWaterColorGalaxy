@@ -1,8 +1,11 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Mesh/MeshBufferOrder.hpp"
 #include "Rendering/Mesh/MeshBufferType.hpp"
+#include "Vendor/magic_enum/magic_enum.hpp"
 #include "vulkan/vulkan.hpp"
+#include <stdexcept>
 
 namespace Beer::Core
 {
@@ -105,19 +108,19 @@ namespace Beer::Core
 
     void CommandBufferUtilities::BindMesh(vk::CommandBuffer commandBuffer,
         const Rendering::Mesh* mesh,
+        const Rendering::MeshBufferOrder& bufferOrder,
         bool& canIndex)
     {
         std::vector<vk::Buffer> activeBuffers;
         const Rendering::MeshBuffers& buffers = mesh->GetBuffers();
 
-        if (buffers.HasBuffer(Rendering::MeshBufferType::Position))
-            activeBuffers.push_back(buffers.GetBuffer(Rendering::MeshBufferType::Position)->GetHandle());
+        for (int i = 0; i < bufferOrder.GetSize(); i++)
+        {
+            const Rendering::MeshBufferType type = bufferOrder.GetElement(i);
 
-        if (buffers.HasBuffer(Rendering::MeshBufferType::Uv))
-            activeBuffers.push_back(buffers.GetBuffer(Rendering::MeshBufferType::Uv)->GetHandle());
-
-        if (buffers.HasBuffer(Rendering::MeshBufferType::Color))
-            activeBuffers.push_back(buffers.GetBuffer(Rendering::MeshBufferType::Color)->GetHandle());
+            if (buffers.HasBuffer(type))
+                activeBuffers.push_back(buffers.GetBuffer(type)->GetHandle());
+        }
 
         std::vector<vk::DeviceSize> offsets(activeBuffers.size(), 0);
 
@@ -129,6 +132,12 @@ namespace Beer::Core
             return;
 
         commandBuffer.bindIndexBuffer(buffers.IndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
+    }
+
+    void CommandBufferUtilities::BindShaderPass(vk::CommandBuffer commandBuffer,
+        const Rendering::ShaderPass* shaderPass)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPass->Pipeline);
     }
 
     void CommandBufferUtilities::DrawCall(vk::CommandBuffer commandBuffer,
@@ -153,13 +162,21 @@ namespace Beer::Core
     }
 
     void CommandBufferUtilities::DrawMesh(vk::CommandBuffer commandBuffer,
-        const vk::raii::Pipeline& pipeline,
-        const Rendering::Mesh* mesh)
+        const Rendering::Mesh* mesh,
+        const Rendering::Shader* shader,
+        const Rendering::ShaderPassType pass)
     {
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+        const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
+
+        if (shaderPass == nullptr)
+        {
+            throw std::runtime_error("can't find shader pass: " + std::string(magic_enum::enum_name(pass)));
+        }
+
+        BindShaderPass(commandBuffer, shaderPass);
 
         bool canIndex;
-        BindMesh(commandBuffer, mesh, canIndex);
+        BindMesh(commandBuffer, mesh, shaderPass->BufferOrder, canIndex);
 
         if (canIndex)
         {

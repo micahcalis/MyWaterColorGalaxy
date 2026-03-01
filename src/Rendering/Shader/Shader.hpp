@@ -10,13 +10,17 @@
 #include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 
+namespace Beer::Core
+{
+    class ShaderManager;
+}
+
 namespace Beer::Rendering
 {
     class Shader
     {
     private:
-        inline static vk::DescriptorSetLayout globalSetLayout = nullptr;
-        inline static vk::Format depthFormat = vk::Format::eUndefined;
+        inline static Core::ShaderManager* shaderManager = nullptr;
 
         std::unordered_map<ShaderPassType, ShaderPass> passes;
         std::unordered_map<std::string, ShaderProperty> materialProperties;
@@ -25,23 +29,15 @@ namespace Beer::Rendering
         vk::raii::DescriptorSetLayout materialSetLayout = nullptr;
 
     public:
-        static void SetGlobalsLayout(vk::DescriptorSetLayout globalsLayout)
+        static void SetShaderManager(Core::ShaderManager* shaderManager)
         {
-            Shader::globalSetLayout = globalsLayout;
+            Shader::shaderManager = shaderManager;
         }
 
-        static void SetDepthFormat(vk::Format format)
-        {
-            Shader::depthFormat = format;
-        }
+        static std::shared_ptr<Shader> Get(const std::string& name);
 
-        static bool GlobalInitialized()
-        {
-            return globalSetLayout != VK_NULL_HANDLE && depthFormat != vk::Format::eUndefined;
-        }
-
-        Shader(const std::filesystem::path shaderPath,
-            const std::filesystem::path jsonPath,
+        Shader(const std::filesystem::path& shaderPath,
+            const std::filesystem::path& jsonPath,
             const Core::Device& device,
             const Core::Swapchain& swapchain);
 
@@ -72,7 +68,7 @@ namespace Beer::Rendering
             return materialSetLayout;
         }
         vk::PipelineLayout GetPipelineLayout() const { return *pipelineLayout; }
-
+        void BindShader(vk::CommandBuffer commandBuffer);
         void PrintConfig();
 
     private:
