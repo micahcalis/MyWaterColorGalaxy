@@ -1,5 +1,6 @@
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include <math.h>
+#include <memory>
 
 namespace Beer::Rendering
 {
@@ -8,7 +9,7 @@ namespace Beer::Rendering
     {
     }
 
-    const vk::raii::Sampler& SamplerCache::GetSampler(const SamplerKey& key)
+    std::shared_ptr<Sampler> SamplerCache::GetSampler(const SamplerKey& key)
     {
         auto lookUp = cache.find(key);
 
@@ -17,7 +18,14 @@ namespace Beer::Rendering
             return lookUp->second;
         }
 
-        auto result = cache.emplace(key, CreateSampler(key));
+        std::shared_ptr<Sampler> sampler = std::make_shared<Sampler>(
+            CreateSampler(key),
+            key.Filter,
+            key.Tiling,
+            key.MaxAnisotropy);
+
+        auto result = cache.emplace(key, sampler);
+
         return result.first->second;
     }
 

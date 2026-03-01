@@ -1,22 +1,16 @@
 #include "Core/Application/Renderer/Renderer.hpp"
-#include "Core/Application/Jobs/ImageUploadJob.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
-#include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/RendererUtilities.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
-#include "Core/Assets/ImageAsset.hpp"
-#include "Core/Assets/ImageLoader.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
-#include "Rendering/Sampler/SamplerCache.hpp"
-#include "Rendering/Sampler/SamplerKey.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
@@ -42,7 +36,6 @@ namespace Beer::Core
 #endif
 
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-    constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
@@ -54,7 +47,6 @@ namespace Beer::Core
         swapchain.InitializeSwapchain(window, surface, device);
         bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
         uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
-        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
         vk::Format depthFormat;
 
         CreateDepthResources(depthFormat);
@@ -64,7 +56,6 @@ namespace Beer::Core
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            // When using emplace_back, you are supposed to pass the arguments to the constructor, not construct a temporary.
             frameResources.emplace_back(&device);
         }
 
@@ -198,6 +189,9 @@ namespace Beer::Core
             uploadManager.get());
 
         Rendering::Image::SetImageAssetManager(imageAssetManager.get());
+
+        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
+        Rendering::Sampler::SetSamplerCache(samplerCache.get());
     }
 
     void Renderer::CreateDepthResources(vk::Format& depthFormat)
@@ -318,7 +312,7 @@ namespace Beer::Core
 
             vk::DescriptorImageInfo imageInfo{};
 
-            imageInfo.sampler = texture->GetSampler();
+            imageInfo.sampler = texture->GetSampler()->GetVk();
 
             imageInfo.imageView = texture->GetImageView();
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
@@ -345,13 +339,7 @@ namespace Beer::Core
 
     void Renderer::CreateTextureImage()
     {
-        std::shared_ptr<Rendering::Image> textureImage = Rendering::Image::GetAsset("Tex_VikingRoom");
-
-        const vk::raii::Sampler& sampler = samplerCache->GetSampler(Rendering::SamplerKey(vk::Filter::eLinear,
-            vk::SamplerAddressMode::eRepeat,
-            10.0f));
-
-        texture = std::make_shared<Rendering::Texture2D>(textureImage, *sampler);
+        texture = std::make_shared<Rendering::Texture2D>(std::string("Tex_VikingRoom"));
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
