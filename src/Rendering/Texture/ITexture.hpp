@@ -21,7 +21,7 @@ namespace Beer::Rendering
 
         virtual ~ITexture() = default;
 
-        virtual Sampler* GetSampler()
+        virtual const Sampler* GetSampler() const
         {
             return sampler.get();
         }
@@ -34,12 +34,12 @@ namespace Beer::Rendering
                 vk::ImageLayout::eShaderReadOnlyOptimal);
         }
 
-        virtual VkImageView GetImageView()
+        virtual VkImageView const GetImageView() const
         {
             return image->GetDefaultView();
         }
 
-        virtual vk::Extent3D GetExtent()
+        virtual const vk::Extent3D GetExtent() const
         {
             return image->GetExtent();
         }

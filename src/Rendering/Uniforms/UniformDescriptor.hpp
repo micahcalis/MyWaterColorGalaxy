@@ -3,6 +3,7 @@
 #include <vulkan/vulkan_raii.hpp>
 #include "DescriptorAllocator.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Texture/ITexture.hpp"
 
 namespace Beer::Rendering
 {
@@ -20,11 +21,10 @@ namespace Beer::Rendering
             UniformDescriptor::descriptorAllocator = descriptorAllocator;
         }
 
+        UniformDescriptor(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
         vk::DescriptorSet GetSet(uint32_t frameIndex) const { return *descriptorSets[frameIndex]; }
         vk::DescriptorSetLayout GetLayout() const { return *layout; }
-
-        UniformDescriptor(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
-
         void UpdateBufferInfo(uint32_t frameIndex, uint32_t binding, const Rendering::Buffer& buffer, size_t size);
+        void UpdateImageInfo(uint32_t frameIndex, uint32_t binding, const Rendering::ITexture* texture);
     };
 } // namespace Beer::Rendering

@@ -56,20 +56,19 @@ namespace Beer::Core
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
         CreateSemaphores();
-        CreateDesciptorSetLayout();
-        InitializeAssetManagers(depthFormat);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             frameResources.emplace_back(&device);
-        }
+        };
 
-        CreateTextureImage();
+        CreateUniformBuffers();
+        CreateUniformDescriptor();
+        InitializeAssetManagers(depthFormat);
+
         LoadShader();
         LoadModel();
-        CreateUniformBuffers();
-        CreateDescriptorPool();
-        CreateDescriptorSets();
+        CreateTextureImage();
     }
 
     void Renderer::PreDraw()
@@ -191,7 +190,7 @@ namespace Beer::Core
         shaderManager = std::make_unique<ShaderManager>(
             &device,
             &swapchain,
-            descriptorSetLayout,
+            uniformDescriptor->GetLayout(),
             depthFormat,
             MAX_FRAMES_IN_FLIGHT);
 
@@ -249,34 +248,6 @@ namespace Beer::Core
         mesh = Rendering::Mesh::Get("MDL_VikingRoom");
     }
 
-    void Renderer::CreateDesciptorSetLayout()
-    {
-        std::array bindings = {
-            vk::DescriptorSetLayoutBinding(0,
-                vk::DescriptorType::eUniformBuffer,
-                1,
-                vk::ShaderStageFlagBits::eVertex,
-                nullptr),
-            vk::DescriptorSetLayoutBinding(1,
-                vk::DescriptorType::eCombinedImageSampler,
-                1,
-                vk::ShaderStageFlagBits::eFragment,
-                nullptr)};
-
-        vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.bindingCount = bindings.size();
-        layoutInfo.pBindings = bindings.data();
-
-        descriptorSetLayout = vk::raii::DescriptorSetLayout(device.GetLogicalDevice(), layoutInfo);
-
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &*descriptorSetLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-        pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
-    }
-
     void Renderer::CreateUniformBuffers()
     {
         uniformBuffers.clear();
@@ -292,71 +263,48 @@ namespace Beer::Core
         }
     }
 
-    void Renderer::CreateDescriptorPool()
+    void Renderer::CreateUniformDescriptor()
     {
-        std::array poolSize{
-            vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
-            vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT),
-        };
+        std::vector<vk::DescriptorSetLayoutBinding> bindings = {
+            vk::DescriptorSetLayoutBinding(0,
+                vk::DescriptorType::eUniformBuffer,
+                1,
+                vk::ShaderStageFlagBits::eVertex,
+                nullptr),
+            vk::DescriptorSetLayoutBinding(1,
+                vk::DescriptorType::eCombinedImageSampler,
+                1,
+                vk::ShaderStageFlagBits::eFragment,
+                nullptr)};
 
-        vk::DescriptorPoolCreateInfo poolInfo{};
-        poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-        poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
-        poolInfo.poolSizeCount = poolSize.size();
-        poolInfo.pPoolSizes = poolSize.data();
+        uniformDescriptor = std::make_unique<Rendering::UniformDescriptor>(bindings);
 
-        descriptorPool = vk::raii::DescriptorPool(device.GetLogicalDevice(), poolInfo);
-    }
-
-    void Renderer::CreateDescriptorSets()
-    {
-        std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *descriptorSetLayout);
-
-        vk::DescriptorSetAllocateInfo allocateInfo{};
-        allocateInfo.descriptorPool = descriptorPool;
-        allocateInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
-        allocateInfo.pSetLayouts = layouts.data();
-
-        descriptorSets.clear();
-        descriptorSets = device.GetLogicalDevice().allocateDescriptorSets(allocateInfo);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            vk::DescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = vk::Buffer(uniformBuffers[i].GetHandle());
-            bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(Rendering::UniformBufferObject);
-
-            vk::DescriptorImageInfo imageInfo{};
-
-            imageInfo.sampler = texture->GetSampler()->GetVk();
-
-            imageInfo.imageView = texture->GetImageView();
-            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-            std::array<vk::WriteDescriptorSet, 2> descriptorWrites;
-            descriptorWrites[0].dstSet = descriptorSets[i];
-            descriptorWrites[0].dstBinding = 0;
-            descriptorWrites[0].dstArrayElement = 0;
-            descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-            descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-            descriptorWrites[1].dstSet = descriptorSets[i];
-            descriptorWrites[1].dstBinding = 1;
-            descriptorWrites[1].dstArrayElement = 0;
-            descriptorWrites[1].descriptorCount = 1;
-            descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-            descriptorWrites[1].pImageInfo = &imageInfo;
-
-            device.GetLogicalDevice().updateDescriptorSets(descriptorWrites, {});
+            uniformDescriptor->UpdateBufferInfo(i,
+                0,
+                uniformBuffers[i],
+                sizeof(Rendering::UniformBufferObject));
         }
+
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.setLayoutCount = 1;
+
+        vk::DescriptorSetLayout rawLayout = uniformDescriptor->GetLayout();
+        pipelineLayoutInfo.pSetLayouts = &rawLayout;
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+        pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
     }
 
     void Renderer::CreateTextureImage()
     {
         texture = std::make_shared<Rendering::Texture2D>(std::string("Tex_VikingRoom"));
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            uniformDescriptor->UpdateImageInfo(i, 1, texture.get());
+        }
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -407,7 +355,7 @@ namespace Beer::Core
         commandBuffer.setScissor(0,
             vk::Rect2D(vk::Offset2D(0, 0), swapchainExtent));
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIndex], nullptr);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, uniformDescriptor->GetSet(frameIndex), nullptr);
 
         CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), shader.get(), Rendering::ShaderPassType::Opaque);
     }

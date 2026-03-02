@@ -1,5 +1,6 @@
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "DescriptorAllocator.hpp"
+#include "Rendering/Texture/ITexture.hpp"
 
 namespace Beer::Rendering
 {
@@ -32,6 +33,24 @@ namespace Beer::Rendering
         descriptorWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
         descriptorWrite.descriptorCount = 1;
         descriptorWrite.pBufferInfo = &bufferInfo;
+
+        descriptorAllocator->Device->GetLogicalDevice().updateDescriptorSets(descriptorWrite, nullptr);
+    }
+
+    void UniformDescriptor::UpdateImageInfo(uint32_t frameIndex, uint32_t binding, const Rendering::ITexture* texture)
+    {
+        vk::DescriptorImageInfo imageInfo{};
+        imageInfo.sampler = texture->GetSampler()->GetVk();
+        imageInfo.imageView = texture->GetImageView();
+        imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+
+        vk::WriteDescriptorSet descriptorWrite{};
+        descriptorWrite.dstSet = *descriptorSets[frameIndex];
+        descriptorWrite.dstBinding = binding;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pImageInfo = &imageInfo;
 
         descriptorAllocator->Device->GetLogicalDevice().updateDescriptorSets(descriptorWrite, nullptr);
     }

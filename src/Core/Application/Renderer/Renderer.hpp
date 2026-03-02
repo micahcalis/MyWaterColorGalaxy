@@ -19,6 +19,7 @@
 #include "Rendering/Mesh./Mesh.hpp"
 #include "Core/Application/Managers/ShaderManager.hpp"
 #include "Rendering/Uniforms/DescriptorAllocator.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 
 namespace Beer::Core
 {
@@ -60,10 +61,8 @@ namespace Beer::Core
         int frameIndex = 0;
         bool frameBufferResized = false;
 
-        vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
+        std::unique_ptr<Rendering::UniformDescriptor> uniformDescriptor = nullptr;
         vk::raii::PipelineLayout pipelineLayout = nullptr;
-        vk::raii::DescriptorPool descriptorPool = nullptr;
-        std::vector<vk::raii::DescriptorSet> descriptorSets;
 
     public:
         ~Renderer();
@@ -90,12 +89,10 @@ namespace Beer::Core
         void CreateSemaphores();
         void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);
-        void CreateDesciptorSetLayout();
         void LoadShader();
         void LoadModel();
         void CreateUniformBuffers();
-        void CreateDescriptorPool();
-        void CreateDescriptorSets();
+        void CreateUniformDescriptor();
         void CreateTextureImage();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
