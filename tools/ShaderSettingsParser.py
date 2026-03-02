@@ -14,7 +14,7 @@ def CookShader(slangPath, jsonPath):
         for line in file:
             line = line.strip()
 
-            if line.startswith("import") or line.startswith("[shader"):
+            if line.startswith("[shader"):
                 break
 
             if line.startswith("//$"):

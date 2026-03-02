@@ -1,6 +1,7 @@
 #include "BeerMacros.slang"
 
-//import BeerCore;
+import BeerCore;
+import ColorSpace;
 
 struct MeshData
 {
@@ -16,15 +17,6 @@ struct VertexData
     float4 color;
 };
 
-struct UniformData
-{
-    float4x4 objToWorldMat;
-    float4x4 worldToViewMat;
-    float4x4 viewToClipMat;
-};
-
-ConstantBuffer<UniformData> _UniformBuffer;
-
 //$ Pass Opaque
 //$ Vertex HelloTriangleVert
 //$ Fragment HelloTriangleFrag
@@ -36,19 +28,20 @@ ConstantBuffer<UniformData> _UniformBuffer;
 VertexData HelloTriangleVert(MeshData input)
 {
     VertexData output;
-    float4 positionWS = mul(_UniformBuffer.objToWorldMat, float4(input.positionOS, 1.0));
-    float4 positionVS = mul(_UniformBuffer.worldToViewMat, positionWS);
-    output.positionCS = mul(_UniformBuffer.viewToClipMat, positionVS);
+    float4 positionWS = float4(input.positionOS, 1);
+    output.positionCS = mul(_ViewProjMat, positionWS);
     output.color = input.color;
     output.texCoord = input.texCoord;
     return output;
 }
 
-Sampler2D texture;
-
 [shader("fragment")]
 float4 HelloTriangleFrag(VertexData input) : SV_Target
 {
-    float4 sample = texture.Sample(input.texCoord);
-    return sample;
+    Color.ColorTraveler traveler = Color.ColorTraveler(float3(1, 0, 0));
+    traveler.ToggleSpace();
+    traveler.Color.x = frac(traveler.Color.x + _Time * 2);
+    traveler.ToggleSpace();
+    
+    return float4(traveler.Color, 1);
 }

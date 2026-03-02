@@ -13,17 +13,15 @@ namespace Beer::Core
     private:
         const Device* device;
         const Swapchain* swapchain;
-        vk::DescriptorSetLayout globalSetLayout = nullptr;
         vk::Format depthFormat = vk::Format::eUndefined;
         std::unique_ptr<Rendering::ShaderGlobalsHandler> globalsHandler;
 
     public:
         ShaderManager(const Device* device,
             const Swapchain* swapchain,
-            vk::DescriptorSetLayout globalSetLayout,
             vk::Format depthFormat,
             uint32_t framesInFlight)
-            : device(device), swapchain(swapchain), globalSetLayout(globalSetLayout), depthFormat(depthFormat), globalsHandler(std::make_unique<Rendering::ShaderGlobalsHandler>())
+            : device(device), swapchain(swapchain), depthFormat(depthFormat), globalsHandler(std::make_unique<Rendering::ShaderGlobalsHandler>(device))
         {
             Initialize();
         }
@@ -33,7 +31,6 @@ namespace Beer::Core
             Clear();
         }
 
-        const vk::DescriptorSetLayout& GetGlobalSetLayout() const { return globalSetLayout; }
         const vk::Format GetDepthFormat() const { return depthFormat; }
         Rendering::ShaderGlobalsHandler* GetGlobalsHandler() const { return globalsHandler.get(); }
 

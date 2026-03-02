@@ -40,6 +40,8 @@ namespace Beer::Core
 
     Renderer::~Renderer()
     {
+        device.GetLogicalDevice().waitIdle();
+
         Rendering::Buffer::SetAllocator(nullptr);
         Rendering::Image::SetAllocator(nullptr);
     }
@@ -62,8 +64,6 @@ namespace Beer::Core
             frameResources.emplace_back(&device);
         };
 
-        CreateUniformBuffers();
-        CreateUniformDescriptor();
         InitializeAssetManagers(depthFormat);
 
         LoadShader();
@@ -191,7 +191,6 @@ namespace Beer::Core
         shaderManager = std::make_unique<ShaderManager>(
             &device,
             &swapchain,
-            uniformDescriptor->GetLayout(),
             depthFormat,
             MAX_FRAMES_IN_FLIGHT);
 
@@ -249,63 +248,9 @@ namespace Beer::Core
         mesh = Rendering::Mesh::Get("MDL_VikingRoom");
     }
 
-    void Renderer::CreateUniformBuffers()
-    {
-        uniformBuffers.clear();
-        vk::DeviceSize bufferSize = sizeof(Rendering::UniformBufferObject);
-
-        uniformBuffers.reserve(MAX_FRAMES_IN_FLIGHT);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            auto buffer = Rendering::Buffer::CreateUniform(bufferSize);
-
-            uniformBuffers.emplace_back(std::move(buffer));
-        }
-    }
-
-    void Renderer::CreateUniformDescriptor()
-    {
-        std::vector<vk::DescriptorSetLayoutBinding> bindings = {
-            vk::DescriptorSetLayoutBinding(0,
-                vk::DescriptorType::eUniformBuffer,
-                1,
-                vk::ShaderStageFlagBits::eVertex,
-                nullptr),
-            vk::DescriptorSetLayoutBinding(1,
-                vk::DescriptorType::eCombinedImageSampler,
-                1,
-                vk::ShaderStageFlagBits::eFragment,
-                nullptr)};
-
-        uniformDescriptor = std::make_unique<Rendering::UniformDescriptor>(bindings);
-
-        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            uniformDescriptor->UpdateBufferInfo(i,
-                0,
-                uniformBuffers[i],
-                sizeof(Rendering::UniformBufferObject));
-        }
-
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.setLayoutCount = 1;
-
-        vk::DescriptorSetLayout rawLayout = uniformDescriptor->GetLayout();
-        pipelineLayoutInfo.pSetLayouts = &rawLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-        pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
-    }
-
     void Renderer::CreateTextureImage()
     {
         texture = std::make_shared<Rendering::Texture2D>(std::string("Tex_VikingRoom"));
-
-        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            uniformDescriptor->UpdateImageInfo(i, 1, texture.get());
-        }
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -356,7 +301,8 @@ namespace Beer::Core
         commandBuffer.setScissor(0,
             vk::Rect2D(vk::Offset2D(0, 0), swapchainExtent));
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, uniformDescriptor->GetSet(frameIndex), nullptr);
+        UpdateGlobals();
+        Rendering::Shader::Globals()->Bind(commandBuffer);
 
         CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), shader.get(), Rendering::ShaderPassType::Opaque);
     }
@@ -379,8 +325,6 @@ namespace Beer::Core
             vk::ImageAspectFlagBits::eColor);
 
         commandBuffer.end();
-
-        UpdateUniformBuffer(frameIndex);
 
         auto waitMask = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
         vk::SubmitInfo submitInfo = RendererUtilities::CreateSubmitInfo(frameResource, commandBuffer, &waitMask);
@@ -410,22 +354,22 @@ namespace Beer::Core
 
     void Renderer::SetFrameBufferResized(const bool val) { frameBufferResized = val; }
 
-    void Renderer::UpdateUniformBuffer(uint32_t frameIndex)
+    void Renderer::UpdateGlobals()
     {
         static auto startTime = std::chrono::high_resolution_clock::now();
-
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         const vk::Extent2D extent = swapchain.GetExtent();
         const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
+        glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
+        glm::mat4 projMat = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
+        projMat[1][1] *= -1;
 
-        Rendering::UniformBufferObject ubo{}; /// Don't forget to add the f, 2.0 is a double instead of a float.
-        ubo.objToWorld = rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-        ubo.worldToView = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
-        ubo.viewToClip = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
-        ubo.viewToClip[1][1] *= -1;
+        Rendering::Shader::Globals()->SetTime(time, 0);
+        Rendering::Shader::Globals()->SetCamera(viewMat, projMat, glm::vec3(2.0, 2.0, 2.0));
+        Rendering::Shader::Globals()->SetScreen(static_cast<float>(extent.width), static_cast<float>(extent.height));
 
-        uniformBuffers[frameIndex].Upload(&ubo, sizeof(ubo));
+        Rendering::Shader::Globals()->Update();
     }
 } // namespace Beer::Core

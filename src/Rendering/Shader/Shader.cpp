@@ -83,7 +83,7 @@ namespace Beer::Rendering
     {
         std::vector<vk::DescriptorSetLayout> setLayouts;
 
-        setLayouts.push_back(Shader::shaderManager->GetGlobalSetLayout());
+        setLayouts.append_range(Shader::Globals()->GetLayouts());
         setLayouts.push_back(materialSetLayout);
 
         vk::PipelineLayoutCreateInfo layoutCreateInfo{};

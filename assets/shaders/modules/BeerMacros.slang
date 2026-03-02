@@ -9,7 +9,7 @@
 #define M_COLOR float4 color
 
 // Buffer Slots
-#define SLOT_ENGINE_GLOBALS register(b0, space0)
-#define SLOT_MATERIAL_DATA  register(b0, space1)
+#define BIND_ENGINE_GLOBALS [[vk::binding(0, 0)]]
+#define BIND_MATERIAL_DATA  [[vk::binding(0, 1)]]
 
 #endif

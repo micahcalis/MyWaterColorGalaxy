@@ -2,7 +2,8 @@
 
 module BeerCore;
 
-public cbuffer EngineGlobals : SLOT_ENGINE_GLOBALS
+BIND_ENGINE_GLOBALS
+public cbuffer EngineGlobals
 {
     public float _Time;
     public float _DeltaTime;
