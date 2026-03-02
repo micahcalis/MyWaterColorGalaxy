@@ -16,8 +16,7 @@ namespace Beer::Core
     std::shared_ptr<Rendering::Mesh> MeshManager::Load(const std::filesystem::path& path)
     {
         MeshAsset meshAsset = MeshLoader::LoadMesh(path);
-        Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset,
-            bufferAllocator);
+        Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset);
 
         std::shared_ptr<Rendering::Mesh> mesh = std::make_shared<Rendering::Mesh>(
             std::move(meshBuffers),

@@ -17,6 +17,8 @@ namespace Beer::Rendering
     class Image
     {
     private:
+        // this allocator stuff is pretty cursed, but C objects have weird behaviour so this is fine for now
+        inline static std::shared_ptr<BufferAllocator> sharedAllocator = nullptr;
         inline static Core::ImageAssetManager* imageAssetManager = nullptr;
 
         std::shared_ptr<BufferAllocator> allocator;
@@ -28,8 +30,12 @@ namespace Beer::Rendering
     public:
         ~Image();
 
-        static Image CreateImage2D(std::shared_ptr<BufferAllocator> allocator,
-            uint32_t width,
+        static void SetAllocator(std::shared_ptr<BufferAllocator> allocator)
+        {
+            Image::sharedAllocator = allocator;
+        }
+
+        static Image CreateImage2D(uint32_t width,
             uint32_t height,
             VkFormat format,
             VkImageUsageFlags usage,
@@ -57,8 +63,7 @@ namespace Beer::Rendering
         DEFAULT_MOVE(Image);
 
     private:
-        Image(std::shared_ptr<BufferAllocator> allocator,
-            ImageAllocation allocation,
+        Image(ImageAllocation allocation,
             VkImageView defaultView,
             vk::Extent3D extent,
             VkFormat format);

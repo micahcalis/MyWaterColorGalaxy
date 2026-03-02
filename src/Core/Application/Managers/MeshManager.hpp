@@ -2,7 +2,6 @@
 
 #include "Core/Application/Managers/IAssetManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
-#include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
 #include <memory>
 
@@ -11,13 +10,11 @@ namespace Beer::Core
     class MeshManager : public IAssetManager<Rendering::Mesh>
     {
     private:
-        const std::shared_ptr<Rendering::BufferAllocator> bufferAllocator;
         UploadManager* uploadManager;
 
     public:
-        MeshManager(const std::shared_ptr<Rendering::BufferAllocator> bufferAllocator,
-            UploadManager* uploadManager)
-            : bufferAllocator(bufferAllocator), uploadManager(uploadManager)
+        MeshManager(UploadManager* uploadManager)
+            : uploadManager(uploadManager)
         {
             Initialize();
         }

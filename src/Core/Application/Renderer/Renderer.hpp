@@ -28,11 +28,10 @@ namespace Beer::Core
 
         vk::raii::Instance instance = nullptr;
 
-        Device device{};
-
         vk::raii::Context context;
         vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
         vk::raii::SurfaceKHR surface = nullptr;
+        Device device{};
 
         Swapchain swapchain{};
 
@@ -65,6 +64,7 @@ namespace Beer::Core
         std::vector<vk::raii::DescriptorSet> descriptorSets;
 
     public:
+        ~Renderer();
         void InitializeVulkanInstances(SDL_Window* window);
         void PreDraw();
         void Draw();

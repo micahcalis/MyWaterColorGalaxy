@@ -14,15 +14,14 @@ namespace Beer::Rendering
         }
     }
 
-    Image Image::CreateImage2D(std::shared_ptr<BufferAllocator> allocator,
-        uint32_t width,
+    Image Image::CreateImage2D(uint32_t width,
         uint32_t height,
         VkFormat format,
         VkImageUsageFlags usage,
         vk::ImageAspectFlagBits aspectFlags,
         const Core::Device& device)
     {
-        auto allocation = allocator->CreateImage(width,
+        auto allocation = sharedAllocator->CreateImage(width,
             height,
             format,
             VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
@@ -34,19 +33,17 @@ namespace Beer::Rendering
             aspectFlags,
             device);
 
-        return {std::move(allocator),
-            allocation,
+        return {allocation,
             defaultView,
             vk::Extent3D(width, height, 1),
             format};
     }
 
-    Image::Image(std::shared_ptr<BufferAllocator> allocator,
-        ImageAllocation allocation,
+    Image::Image(ImageAllocation allocation,
         VkImageView defaultView,
         vk::Extent3D extent,
         VkFormat format)
-        : allocator(allocator), allocation(allocation), defaultView(defaultView), extent(extent), format(format)
+        : allocator(sharedAllocator), allocation(allocation), defaultView(defaultView), extent(extent), format(format)
     {
     }
 

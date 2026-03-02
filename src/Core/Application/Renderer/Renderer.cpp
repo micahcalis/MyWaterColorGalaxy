@@ -37,6 +37,12 @@ namespace Beer::Core
 
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
+    Renderer::~Renderer()
+    {
+        Rendering::Buffer::SetAllocator(nullptr);
+        Rendering::Image::SetAllocator(nullptr);
+    }
+
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
         this->window = window;
@@ -45,7 +51,9 @@ namespace Beer::Core
         CreateSurface(window);
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
-        bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
+        bufferAllocator = std::make_shared<Rendering::BufferAllocator>(device, instance);
+        Rendering::Buffer::SetAllocator(bufferAllocator);
+        Rendering::Image::SetAllocator(bufferAllocator);
         uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
         vk::Format depthFormat;
 
@@ -173,13 +181,12 @@ namespace Beer::Core
             &device,
             &swapchain,
             descriptorSetLayout,
-            depthFormat);
+            depthFormat,
+            MAX_FRAMES_IN_FLIGHT);
 
         Rendering::Shader::SetShaderManager(shaderManager.get());
 
-        meshManager = std::make_unique<MeshManager>(
-            bufferAllocator,
-            uploadManager.get());
+        meshManager = std::make_unique<MeshManager>(uploadManager.get());
 
         Rendering::Mesh::SetMeshManager(meshManager.get());
 
@@ -200,8 +207,7 @@ namespace Beer::Core
         vk::Extent2D extent = swapchain.GetExtent();
 
         depthImage = std::make_shared<Rendering::Image>(
-            Rendering::Image::CreateImage2D(bufferAllocator,
-                extent.width,
+            Rendering::Image::CreateImage2D(extent.width,
                 extent.height,
                 VkFormat(depthFormat),
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -229,7 +235,7 @@ namespace Beer::Core
 
     void Renderer::LoadModel()
     {
-        mesh = Rendering::Mesh::Get("MDL_IcoSphere");
+        mesh = Rendering::Mesh::Get("MDL_VikingRoom");
     }
 
     void Renderer::CreateDesciptorSetLayout()
@@ -269,7 +275,7 @@ namespace Beer::Core
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            auto buffer = Rendering::Buffer::CreateUniform(bufferAllocator, bufferSize);
+            auto buffer = Rendering::Buffer::CreateUniform(bufferSize);
 
             uniformBuffers.emplace_back(std::move(buffer));
         }

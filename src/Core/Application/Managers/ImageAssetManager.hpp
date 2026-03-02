@@ -12,14 +12,13 @@ namespace Beer::Core
     class ImageAssetManager : public IAssetManager<Rendering::Image>
     {
         const Device* device;
-        const std::shared_ptr<Rendering::BufferAllocator> bufferAllocator;
         UploadManager* uploadManager;
 
     public:
         ImageAssetManager(const Device* device,
             const std::shared_ptr<Rendering::BufferAllocator> bufferAllocator,
             UploadManager* uploadManager)
-            : device(device), bufferAllocator(bufferAllocator), uploadManager(uploadManager)
+            : device(device), uploadManager(uploadManager)
         {
         }
 

@@ -21,7 +21,8 @@ namespace Beer::Core
 
     void ShaderManager::UpdateGlobals()
     {
-        // update globals
+        // globalsHandler.Upload(0);
+        // globalsHandler.Upload(0);
     }
 
     const std::filesystem::path ShaderManager::GetPath(const std::string& name)

@@ -17,8 +17,7 @@ namespace Beer::Rendering
         std::unordered_map<Rendering::MeshBufferType, std::shared_ptr<Buffer>> vertexBuffers;
 
     public:
-        MeshBuffers(const Core::MeshAsset& meshAsset,
-            const std::shared_ptr<BufferAllocator>& bufferAllocator);
+        MeshBuffers(const Core::MeshAsset& meshAsset);
 
         const std::shared_ptr<Buffer> GetBuffer(MeshBufferType type) const { return vertexBuffers.at(type); }
 

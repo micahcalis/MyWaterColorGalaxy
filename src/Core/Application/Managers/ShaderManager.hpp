@@ -2,6 +2,7 @@
 
 #include "Core/Application/Managers/IAssetManager.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
+#include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "vulkan/vulkan.hpp"
 
@@ -14,13 +15,15 @@ namespace Beer::Core
         const Swapchain* swapchain;
         vk::DescriptorSetLayout globalSetLayout = nullptr;
         vk::Format depthFormat = vk::Format::eUndefined;
+        Rendering::ShaderGlobalsHandler globalsHandler;
 
     public:
         ShaderManager(const Device* device,
             const Swapchain* swapchain,
             vk::DescriptorSetLayout globalSetLayout,
-            vk::Format depthFormat)
-            : device(device), swapchain(swapchain), globalSetLayout(globalSetLayout), depthFormat(depthFormat)
+            vk::Format depthFormat,
+            uint32_t framesInFlight)
+            : device(device), swapchain(swapchain), globalSetLayout(globalSetLayout), depthFormat(depthFormat), globalsHandler(device, framesInFlight)
         {
             Initialize();
         }
