@@ -1,4 +1,4 @@
-#include "Rendering/Material/IDescriptorHandler.hpp"
+#include "Rendering/Uniforms/IDescriptorHandler.hpp"
 
 namespace Beer::Rendering
 {

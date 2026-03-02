@@ -12,6 +12,7 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
@@ -51,12 +52,8 @@ namespace Beer::Core
         CreateSurface(window);
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
-        bufferAllocator = std::make_shared<Rendering::BufferAllocator>(device, instance);
-        Rendering::Buffer::SetAllocator(bufferAllocator);
-        Rendering::Image::SetAllocator(bufferAllocator);
-        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
+        InitializeBuffers();
         vk::Format depthFormat;
-
         CreateDepthResources(depthFormat);
         CreateSemaphores();
         CreateDesciptorSetLayout();
@@ -173,6 +170,20 @@ namespace Beer::Core
         }
 
         surface = vk::raii::SurfaceKHR(instance, rawSurface);
+    }
+
+    void Renderer::InitializeBuffers()
+    {
+        bufferAllocator = std::make_shared<Rendering::BufferAllocator>(device, instance);
+        Rendering::Buffer::SetAllocator(bufferAllocator);
+        Rendering::Image::SetAllocator(bufferAllocator);
+
+        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
+
+        descriptorAllocator = std::make_unique<Rendering::DescriptorAllocator>(MAX_FRAMES_IN_FLIGHT,
+            &device);
+
+        Rendering::UniformDescriptor::SetDescriptorAllocator(descriptorAllocator.get());
     }
 
     void Renderer::InitializeAssetManagers(vk::Format depthFormat)

@@ -18,6 +18,7 @@
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Mesh./Mesh.hpp"
 #include "Core/Application/Managers/ShaderManager.hpp"
+#include "Rendering/Uniforms/DescriptorAllocator.hpp"
 
 namespace Beer::Core
 {
@@ -47,6 +48,7 @@ namespace Beer::Core
 
         std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
         std::shared_ptr<UploadManager> uploadManager = nullptr;
+        std::unique_ptr<Rendering::DescriptorAllocator> descriptorAllocator = nullptr;
 
         std::shared_ptr<Rendering::Shader> shader = nullptr;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;
@@ -86,6 +88,7 @@ namespace Beer::Core
         void CreateSurface(SDL_Window* window);
         void CreateDepthResources(vk::Format& depthFormat);
         void CreateSemaphores();
+        void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);
         void CreateDesciptorSetLayout();
         void LoadShader();

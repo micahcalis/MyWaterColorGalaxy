@@ -2,7 +2,7 @@
 
 #include "ShaderGlobalsContainer.hpp"
 #include <memory>
-#include "Rendering/Material/IDescriptorHandler.hpp"
+#include "Rendering/Uniforms/IDescriptorHandler.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 
 namespace Beer::Rendering
