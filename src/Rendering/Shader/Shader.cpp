@@ -44,6 +44,11 @@ namespace Beer::Rendering
         return shaderManager->Get(name);
     }
 
+    ShaderGlobalsHandler* Shader::Globals()
+    {
+        return shaderManager->GetGlobalsHandler();
+    }
+
     void Shader::CreateMaterialSetLayout(const Core::Device& device)
     {
         std::vector<vk::DescriptorSetLayoutBinding> bindings;

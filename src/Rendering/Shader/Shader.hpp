@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
 #include "ShaderPass.hpp"
 #include <filesystem>
 #include <unordered_map>
@@ -35,6 +36,7 @@ namespace Beer::Rendering
         }
 
         static std::shared_ptr<Shader> Get(const std::string& name);
+        static ShaderGlobalsHandler* Globals();
 
         Shader(const std::filesystem::path& shaderPath,
             const std::filesystem::path& jsonPath,

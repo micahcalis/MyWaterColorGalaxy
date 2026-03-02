@@ -183,6 +183,7 @@ namespace Beer::Core
             &device);
 
         Rendering::UniformDescriptor::SetDescriptorAllocator(descriptorAllocator.get());
+        Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
     }
 
     void Renderer::InitializeAssetManagers(vk::Format depthFormat)
@@ -404,6 +405,7 @@ namespace Beer::Core
         }
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+        Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
     }
 
     void Renderer::SetFrameBufferResized(const bool val) { frameBufferResized = val; }
