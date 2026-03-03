@@ -17,7 +17,7 @@ namespace Beer::Rendering
         ShaderGlobalsHandler(const Core::Device* device);
         void Update();
 
-        void Bind(vk::CommandBuffer cmd) const;
+        void Bind(vk::CommandBuffer commandBuffer) const;
 
         void SetTime(float time, float deltaTime);
         void SetCamera(const glm::mat4 viewMat, const glm::mat4 projMat, glm::vec3 cameraPos);

@@ -12,12 +12,12 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "Rendering/UniformBufferObject.hpp"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -42,6 +42,7 @@ namespace Beer::Core
     {
         device.GetLogicalDevice().waitIdle();
 
+        Rendering::Texture2D::ResetFallbackTexture();
         Rendering::Buffer::SetAllocator(nullptr);
         Rendering::Image::SetAllocator(nullptr);
     }
@@ -65,14 +66,12 @@ namespace Beer::Core
         };
 
         InitializeAssetManagers(depthFormat);
-
-        LoadShader();
-        LoadModel();
-        CreateTextureImage();
+        LoadObject();
     }
 
     void Renderer::PreDraw()
     {
+        material->Update();
         uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
@@ -200,15 +199,15 @@ namespace Beer::Core
 
         Rendering::Mesh::SetMeshManager(meshManager.get());
 
+        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
+        Rendering::Sampler::SetSamplerCache(samplerCache.get());
+
         imageAssetManager = std::make_unique<ImageAssetManager>(
             &device,
             bufferAllocator,
             uploadManager.get());
 
         Rendering::Image::SetImageAssetManager(imageAssetManager.get());
-
-        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
-        Rendering::Sampler::SetSamplerCache(samplerCache.get());
     }
 
     void Renderer::CreateDepthResources(vk::Format& depthFormat)
@@ -237,20 +236,19 @@ namespace Beer::Core
         }
     }
 
-    void Renderer::LoadShader()
+    void Renderer::LoadObject()
     {
         shader = Rendering::Shader::Get("HelloTriangle");
         shader->PrintConfig();
-    }
 
-    void Renderer::LoadModel()
-    {
         mesh = Rendering::Mesh::Get("MDL_VikingRoom");
-    }
 
-    void Renderer::CreateTextureImage()
-    {
-        texture = std::make_shared<Rendering::Texture2D>(std::string("Tex_VikingRoom"));
+        texture = std::make_shared<Rendering::Texture2D>("Tex_VikingRoom");
+
+        material = std::make_shared<Rendering::Material>(shader);
+
+        material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
+        material->SetTexture("_MainTex", texture);
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -304,7 +302,7 @@ namespace Beer::Core
         UpdateGlobals();
         Rendering::Shader::Globals()->Bind(commandBuffer);
 
-        CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), shader.get(), Rendering::ShaderPassType::Opaque);
+        CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), material.get(), Rendering::ShaderPassType::Opaque);
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -362,7 +360,7 @@ namespace Beer::Core
 
         const vk::Extent2D extent = swapchain.GetExtent();
         const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
-        glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
+        glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
         glm::mat4 projMat = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
         projMat[1][1] *= -1;
 

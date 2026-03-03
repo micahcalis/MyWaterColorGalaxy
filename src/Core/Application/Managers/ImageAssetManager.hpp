@@ -20,6 +20,7 @@ namespace Beer::Core
             UploadManager* uploadManager)
             : device(device), uploadManager(uploadManager)
         {
+            InitializeTextureFallback();
         }
 
         ~ImageAssetManager()
@@ -30,6 +31,7 @@ namespace Beer::Core
         std::shared_ptr<Rendering::Image> Load(const std::filesystem::path& path) override;
 
     private:
+        void InitializeTextureFallback();
         const std::filesystem::path GetPath(const std::string& name) override;
     };
 } // namespace Beer::Core

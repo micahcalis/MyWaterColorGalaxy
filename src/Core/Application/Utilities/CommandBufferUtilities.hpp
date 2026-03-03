@@ -7,7 +7,7 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 #include "Rendering/Buffer/Buffer.hpp"
-#include "Rendering/Shader/Shader.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 
 namespace Beer::Core
@@ -53,7 +53,7 @@ namespace Beer::Core
 
         static void DrawMesh(vk::CommandBuffer commandBuffer,
             const Rendering::Mesh* mesh,
-            const Rendering::Shader* shader,
+            const Rendering::Material* material,
             const Rendering::ShaderPassType pass);
 
         static vk::raii::CommandBuffer BeginSingleTimeCommands(const FrameResource& frameResource,

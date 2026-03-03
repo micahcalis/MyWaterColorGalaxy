@@ -163,10 +163,10 @@ namespace Beer::Core
 
     void CommandBufferUtilities::DrawMesh(vk::CommandBuffer commandBuffer,
         const Rendering::Mesh* mesh,
-        const Rendering::Shader* shader,
+        const Rendering::Material* material,
         const Rendering::ShaderPassType pass)
     {
-        const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
+        const Rendering::ShaderPass* shaderPass = material->GetShader()->GetPass(pass);
 
         if (shaderPass == nullptr)
         {
@@ -174,6 +174,7 @@ namespace Beer::Core
         }
 
         BindShaderPass(commandBuffer, shaderPass);
+        material->BindBuffer(commandBuffer);
 
         bool canIndex;
         BindMesh(commandBuffer, mesh, shaderPass->BufferOrder, canIndex);

@@ -66,14 +66,14 @@ namespace Beer::Core
                     uniqueVertices[index] = newVertexIndex;
 
                     meshAsset.Positions.push_back({attributes.vertices[3 * index.vertex_index + 0],
-                        attributes.vertices[3 * index.vertex_index + 1],
-                        attributes.vertices[3 * index.vertex_index + 2]});
+                        attributes.vertices[3 * index.vertex_index + 2],
+                        -attributes.vertices[3 * index.vertex_index + 1]});
 
                     if (index.normal_index >= 0)
                     {
                         meshAsset.Normals.push_back({attributes.normals[3 * index.normal_index + 0],
-                            attributes.normals[3 * index.normal_index + 1],
-                            attributes.normals[3 * index.normal_index + 2]});
+                            attributes.normals[3 * index.normal_index + 2],
+                            -attributes.normals[3 * index.normal_index + 1]});
                     } else
                     {
                         meshAsset.Normals.push_back({0.0f, 0.0f, 0.0f});

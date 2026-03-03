@@ -14,9 +14,10 @@ namespace Beer::Rendering
     class ShaderReflection
     {
     public:
-        static std::unordered_map<std::string, ShaderProperty> ReflectProperties(const std::vector<uint32_t> spvCode);
+        static std::unordered_map<std::string, ShaderProperty> ReflectProperties(const std::vector<uint32_t> spvCode, uint32_t& propertyBufferSize);
         static std::vector<PassSettings> ReflectSettingsJson(const std::filesystem::path& jsonPath);
         static VertexInput ReflectVertexInput(const std::vector<uint32_t>& spvCode, const std::string& vertexEntryPoint);
+        static std::vector<vk::DescriptorSetLayoutBinding> ReflectMaterialBindings(const std::vector<uint32_t>& spvCode);
 
     private:
         static PropertyType GetMemberType(SpvReflectBlockVariable* member);
@@ -27,5 +28,6 @@ namespace Beer::Rendering
         static SpvReflectShaderModule InitializeReflect(const std::vector<uint32_t>& spvCode);
         static vk::Format GetVkFormat(SpvReflectFormat format);
         static uint32_t GetFormatByteSize(vk::Format format);
+        static vk::DescriptorType GetVkDescriptorType(SpvReflectDescriptorType type);
     };
 } // namespace Beer::Rendering

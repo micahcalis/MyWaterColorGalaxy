@@ -25,9 +25,9 @@ namespace Beer::Rendering
         engineGlobals->Update(engineGlobalsData);
     }
 
-    void ShaderGlobalsHandler::Bind(vk::CommandBuffer cmd) const
+    void ShaderGlobalsHandler::Bind(vk::CommandBuffer commandBuffer) const
     {
-        cmd.bindDescriptorSets(
+        commandBuffer.bindDescriptorSets(
             vk::PipelineBindPoint::eGraphics,
             *globalLayout,
             SET_INDEX,

@@ -10,11 +10,12 @@
 
 namespace Beer::Rendering
 {
-    std::unordered_map<std::string, ShaderProperty> ShaderReflection::ReflectProperties(const std::vector<uint32_t> spvCode)
+    std::unordered_map<std::string, ShaderProperty> ShaderReflection::ReflectProperties(const std::vector<uint32_t> spvCode, uint32_t& propertyBufferSize)
     {
         std::unordered_map<std::string, ShaderProperty> properties;
         SpvReflectShaderModule reflectModule = InitializeReflect(spvCode);
         uint32_t setCount = 0;
+        propertyBufferSize = 0;
 
         spvReflectEnumerateDescriptorSets(&reflectModule, &setCount, nullptr);
         std::vector<SpvReflectDescriptorSet*> sets(setCount);
@@ -44,6 +45,7 @@ namespace Beer::Rendering
                             member->size,
                             binding->binding};
                     }
+                    propertyBufferSize = binding->block.padded_size;
                 } else if (IsTextureBinding(binding))
                 {
                     properties[binding->name] = {
@@ -263,4 +265,54 @@ namespace Beer::Rendering
         }
     }
 
+    std::vector<vk::DescriptorSetLayoutBinding> ShaderReflection::ReflectMaterialBindings(const std::vector<uint32_t>& spvCode)
+    {
+        std::vector<vk::DescriptorSetLayoutBinding> bindings;
+        SpvReflectShaderModule reflectModule = InitializeReflect(spvCode);
+        uint32_t setCount = 0;
+
+        spvReflectEnumerateDescriptorSets(&reflectModule, &setCount, nullptr);
+        std::vector<SpvReflectDescriptorSet*> sets(setCount);
+        spvReflectEnumerateDescriptorSets(&reflectModule, &setCount, sets.data());
+
+        for (uint32_t s = 0; s < setCount; s++)
+        {
+            SpvReflectDescriptorSet* set = sets[s];
+
+            if (!IsMaterialSet(set))
+                continue;
+
+            for (uint32_t b = 0; b < set->binding_count; b++)
+            {
+                SpvReflectDescriptorBinding* spvBinding = set->bindings[b];
+
+                vk::DescriptorSetLayoutBinding vkBinding{};
+                vkBinding.binding = spvBinding->binding;
+                vkBinding.descriptorCount = spvBinding->count;
+
+                vkBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+                vkBinding.descriptorType = GetVkDescriptorType(spvBinding->descriptor_type);
+
+                bindings.push_back(vkBinding);
+            }
+        }
+
+        spvReflectDestroyShaderModule(&reflectModule);
+        return bindings;
+    }
+
+    vk::DescriptorType ShaderReflection::GetVkDescriptorType(SpvReflectDescriptorType type)
+    {
+        switch (type)
+        {
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            return vk::DescriptorType::eUniformBuffer;
+        case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+            return vk::DescriptorType::eCombinedImageSampler;
+        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            return vk::DescriptorType::eSampledImage;
+        default:
+            throw std::runtime_error("Unsupported descriptor type in Material reflection!");
+        }
+    }
 } // namespace Beer::Rendering

@@ -19,7 +19,15 @@ namespace Beer::Rendering
         const Core::Swapchain& swapchain)
     {
         auto spvCode = Core::AssetUtilities::LoadSpvFile(shaderPath);
-        materialProperties = Rendering::ShaderReflection::ReflectProperties(spvCode);
+
+        uint32_t propertyBufferSize;
+        auto propertyMap = Rendering::ShaderReflection::ReflectProperties(spvCode, propertyBufferSize);
+        auto bindings = ShaderReflection::ReflectMaterialBindings(spvCode);
+        materialProperties = std::make_unique<MaterialProperties>(
+            std::move(propertyMap),
+            propertyBufferSize,
+            std::move(bindings));
+
         CreateMaterialSetLayout(device);
         InitializeLayout(device);
 
@@ -51,30 +59,9 @@ namespace Beer::Rendering
 
     void Shader::CreateMaterialSetLayout(const Core::Device& device)
     {
-        std::vector<vk::DescriptorSetLayoutBinding> bindings;
-
-        for (const auto& [name, prop] : materialProperties)
-        {
-            vk::DescriptorSetLayoutBinding binding{};
-            binding.binding = prop.Binding;
-            binding.descriptorCount = 1;
-
-            binding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
-
-            if (prop.Type == PropertyType::Texture2D)
-            {
-                binding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-            } else
-            {
-                binding.descriptorType = vk::DescriptorType::eUniformBuffer;
-            }
-
-            bindings.push_back(binding);
-        }
-
         vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
+        layoutInfo.bindingCount = static_cast<uint32_t>(materialProperties->GetBindings().size());
+        layoutInfo.pBindings = materialProperties->GetBindings().data();
 
         materialSetLayout = vk::raii::DescriptorSetLayout(device.GetLogicalDevice(), layoutInfo);
     }
@@ -200,11 +187,6 @@ namespace Beer::Rendering
             pass.second.BufferOrder.Print();
         }
 
-        for (const auto& property : materialProperties)
-        {
-            std::println("Material Property: {} - {}",
-                property.first,
-                magic_enum::enum_name(property.second.Type));
-        }
+        materialProperties->Print();
     }
 } // namespace Beer::Rendering

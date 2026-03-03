@@ -10,7 +10,22 @@ namespace Beer::Rendering
 {
     class Texture2D : public ITexture
     {
+    private:
+        inline static std::shared_ptr<Texture2D> defaultBlack;
+
     public:
+        static void SetFallbackTexture(std::shared_ptr<Image> defaultBlack)
+        {
+            Texture2D::defaultBlack = std::make_shared<Texture2D>(defaultBlack);
+        }
+
+        static void ResetFallbackTexture()
+        {
+            defaultBlack.reset();
+        }
+
+        static std::shared_ptr<Texture2D> GetFallbackTexture() { return defaultBlack; }
+
         Texture2D(std::shared_ptr<Image> image,
             std::shared_ptr<Sampler> sampler = Sampler::Get())
             : ITexture(image, sampler)

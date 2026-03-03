@@ -12,6 +12,7 @@
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
@@ -52,6 +53,7 @@ namespace Beer::Core
         std::shared_ptr<Rendering::Shader> shader = nullptr;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;
         std::shared_ptr<Rendering::Texture2D> texture = nullptr;
+        std::shared_ptr<Rendering::Material> material = nullptr;
 
         int frameIndex = 0;
         bool frameBufferResized = false;
@@ -81,9 +83,7 @@ namespace Beer::Core
         void CreateSemaphores();
         void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);
-        void LoadShader();
-        void LoadModel();
-        void CreateTextureImage();
+        void LoadObject();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateGlobals();

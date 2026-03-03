@@ -3,13 +3,14 @@
 #include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
 #include "ShaderPass.hpp"
 #include <filesystem>
+#include <memory>
 #include <unordered_map>
-#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
+#include "Rendering/Material/MaterialProperties.hpp"
 
 namespace Beer::Core
 {
@@ -24,8 +25,7 @@ namespace Beer::Rendering
         inline static Core::ShaderManager* shaderManager = nullptr;
 
         std::unordered_map<ShaderPassType, ShaderPass> passes;
-        std::unordered_map<std::string, ShaderProperty> materialProperties;
-
+        std::unique_ptr<MaterialProperties> materialProperties;
         vk::raii::PipelineLayout pipelineLayout = nullptr;
         vk::raii::DescriptorSetLayout materialSetLayout = nullptr;
 
@@ -54,22 +54,13 @@ namespace Beer::Rendering
             return &it->second;
         }
 
-        const ShaderProperty* GetShaderProperty(const std::string& propertyName) const
-        {
-            auto it = materialProperties.find(propertyName);
-            if (it == materialProperties.end())
-            {
-                return nullptr;
-            }
-
-            return &it->second;
-        }
-
         vk::DescriptorSetLayout GetMaterialSetLayout() const
         {
             return materialSetLayout;
         }
+
         vk::PipelineLayout GetPipelineLayout() const { return *pipelineLayout; }
+        MaterialProperties* GetProperties() const { return materialProperties.get(); }
         void BindShader(vk::CommandBuffer commandBuffer);
         void PrintConfig();
 
