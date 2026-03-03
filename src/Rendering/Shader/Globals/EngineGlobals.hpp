@@ -11,7 +11,6 @@ namespace Beer::Rendering
         const static int BINDING = 0;
         const static int DESC_COUNT = 1;
 
-    public:
         float Time;
         float DeltaTime;
         PAD_8(0);

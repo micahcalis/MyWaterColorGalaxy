@@ -16,12 +16,29 @@ namespace Beer::Core
         {
             Rendering::MeshBufferType type = static_cast<Rendering::MeshBufferType>(i);
 
-            if (buffers.HasBuffer(type))
+            if (meshAsset.GetBufferSize(type) > 0)
             {
                 size_t size = meshAsset.GetBufferSize(type);
                 stagingBuffer->Upload(meshAsset.GetBufferData(type), size, currentOffset);
                 stagingBuffer->QueueCopyTo(*buffers.GetBuffer(type), commandBuffer, size, currentOffset);
                 currentOffset += size;
+            } else
+            {
+                const vk::DeviceSize imaginarySize = Core::MeshAsset::GetImaginarySize(type, meshAsset.GetVertexCount());
+
+                if (imaginarySize > 0)
+                {
+                    std::vector<uint8_t> dummyData(imaginarySize, 0);
+
+                    if (type == Rendering::MeshBufferType::Color)
+                    {
+                        std::memset(dummyData.data(), 0xFF, imaginarySize);
+                    }
+
+                    stagingBuffer->Upload(dummyData.data(), imaginarySize, currentOffset);
+                    stagingBuffer->QueueCopyTo(*buffers.GetBuffer(type), commandBuffer, imaginarySize, currentOffset);
+                    currentOffset += imaginarySize;
+                }
             }
         }
 

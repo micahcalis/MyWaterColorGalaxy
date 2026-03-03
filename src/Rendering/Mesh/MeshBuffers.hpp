@@ -17,11 +17,15 @@ namespace Beer::Rendering
         std::unordered_map<Rendering::MeshBufferType, std::shared_ptr<Buffer>> vertexBuffers;
 
     public:
+        static MeshBuffers GetEmpty() { return MeshBuffers(); }
         MeshBuffers(const Core::MeshAsset& meshAsset);
 
         const std::shared_ptr<Buffer> GetBuffer(MeshBufferType type) const { return vertexBuffers.at(type); }
 
         const bool HasBuffer(MeshBufferType type) const { return vertexBuffers.at(type) != nullptr; }
         const bool HasIndex() const { return IndexBuffer != nullptr; }
+
+    private:
+        MeshBuffers();
     };
 } // namespace Beer::Rendering

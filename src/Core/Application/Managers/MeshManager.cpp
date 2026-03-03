@@ -8,11 +8,6 @@
 
 namespace Beer::Core
 {
-    void MeshManager::Initialize()
-    {
-        // initialize empty buffers
-    }
-
     std::shared_ptr<Rendering::Mesh> MeshManager::Load(const std::filesystem::path& path)
     {
         MeshAsset meshAsset = MeshLoader::LoadMesh(path);

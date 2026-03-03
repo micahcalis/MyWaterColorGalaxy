@@ -2,7 +2,6 @@
 #include "Core/Assets/MeshAsset.hpp"
 #include "MeshBufferType.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
-#include "Rendering/Buffer/BufferAllocator.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -21,6 +20,12 @@ namespace Beer::Rendering
                 vertexBuffers[type] = std::make_shared<Rendering::Buffer>(
                     Rendering::Buffer::CreateDeviceLocal(
                         meshAsset.GetBufferSize(type),
+                        VERTEX_ATTRIB_FLAGS));
+            } else
+            {
+                vertexBuffers[type] = std::make_shared<Rendering::Buffer>(
+                    Rendering::Buffer::CreateDeviceLocal(
+                        Core::MeshAsset::GetImaginarySize(type, meshAsset.GetVertexCount()),
                         VERTEX_ATTRIB_FLAGS));
             }
         }

@@ -20,6 +20,21 @@ namespace Beer::Core
         std::vector<uint32_t> Indices;
 
     public:
+        const static vk::DeviceSize GetImaginarySize(Rendering::MeshBufferType type, uint32_t vertexCount)
+        {
+            size_t elementSize = Rendering::MESH_BUFFER_SIZES[static_cast<size_t>(type)];
+
+            switch (type)
+            {
+            case Rendering::MeshBufferType::Position: return elementSize * vertexCount;
+            case Rendering::MeshBufferType::Normal: return elementSize * vertexCount;
+            case Rendering::MeshBufferType::Tangent: return elementSize * vertexCount;
+            case Rendering::MeshBufferType::Uv: return elementSize * vertexCount;
+            case Rendering::MeshBufferType::Color: return elementSize * vertexCount;
+            default: return 0;
+            }
+        }
+
         const vk::DeviceSize GetBufferSize(Rendering::MeshBufferType type) const
         {
             size_t elementSize = Rendering::MESH_BUFFER_SIZES[static_cast<size_t>(type)];
@@ -53,10 +68,20 @@ namespace Beer::Core
         const vk::DeviceSize GetTotalSize() const
         {
             vk::DeviceSize totalSize = GetIndicesSize();
+            uint32_t vertexCount = GetVertexCount();
 
             for (int i = 0; i < static_cast<int>(Rendering::MeshBufferType::Count); i++)
             {
-                totalSize += GetBufferSize(static_cast<Rendering::MeshBufferType>(i));
+                Rendering::MeshBufferType type = static_cast<Rendering::MeshBufferType>(i);
+                vk::DeviceSize realSize = GetBufferSize(type);
+
+                if (realSize > 0)
+                {
+                    totalSize += realSize;
+                } else
+                {
+                    totalSize += GetImaginarySize(type, vertexCount);
+                }
             }
 
             return totalSize;

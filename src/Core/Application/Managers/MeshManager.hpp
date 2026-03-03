@@ -16,7 +16,6 @@ namespace Beer::Core
         MeshManager(UploadManager* uploadManager)
             : uploadManager(uploadManager)
         {
-            Initialize();
         }
 
         ~MeshManager()
@@ -28,7 +27,6 @@ namespace Beer::Core
         std::shared_ptr<Rendering::Mesh> Load(const std::filesystem::path& path) override;
 
     private:
-        void Initialize();
         const std::filesystem::path GetPath(const std::string& name) override;
     };
 } // namespace Beer::Core

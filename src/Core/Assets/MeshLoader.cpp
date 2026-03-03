@@ -74,23 +74,13 @@ namespace Beer::Core
                         meshAsset.Normals.push_back({attributes.normals[3 * index.normal_index + 0],
                             attributes.normals[3 * index.normal_index + 2],
                             -attributes.normals[3 * index.normal_index + 1]});
-                    } else
-                    {
-                        meshAsset.Normals.push_back({0.0f, 0.0f, 0.0f});
                     }
-
-                    meshAsset.Tangents.push_back({0.0f, 0.0f, 0.0f});
 
                     if (index.texcoord_index >= 0)
                     {
                         meshAsset.UVs.push_back({attributes.texcoords[2 * index.texcoord_index + 0],
                             1.0f - attributes.texcoords[2 * index.texcoord_index + 1]});
-                    } else
-                    {
-                        meshAsset.UVs.push_back({0.0f, 0.0f});
                     }
-
-                    meshAsset.VertexColors.push_back({1.0f, 1.0f, 1.0f, 1.0f});
                 }
 
                 meshAsset.Indices.push_back(uniqueVertices[index]);
@@ -157,18 +147,12 @@ namespace Beer::Core
                 {
                     ufbx_vec2 uv = ufbx_get_vertex_vec2(&mesh->vertex_uv, index);
                     meshAsset.UVs.push_back({uv.x, 1.0f - uv.y});
-                } else
-                {
-                    meshAsset.UVs.push_back({0.0f, 0.0f});
                 }
 
                 if (mesh->vertex_color.exists)
                 {
                     ufbx_vec4 color = ufbx_get_vertex_vec4(&mesh->vertex_color, index);
                     meshAsset.VertexColors.push_back({color.x, color.y, color.z, 1.0f});
-                } else
-                {
-                    meshAsset.VertexColors.push_back({1.0f, 1.0f, 1.0f, 1.0f});
                 }
             }
         }
