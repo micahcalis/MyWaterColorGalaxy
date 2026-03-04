@@ -14,6 +14,7 @@ namespace Beer::Core
     {
         windowManager.InitializeWindow();
         InitializeVulkan();
+        InitializeGame();
         MainLoop();
         Cleanup();
     }
@@ -23,17 +24,19 @@ namespace Beer::Core
         renderer.InitializeVulkanInstances(windowManager.GetWindow());
     }
 
+    void Application::InitializeGame()
+    {
+        gameManager.InitializeGame();
+    }
+
     void Application::MainLoop()
     {
         bool isRunning = true;
         bool isResized = false;
         SDL_Event event;
 
-        // 1. The "Game Loop" - Runs every frame
         while (isRunning)
         {
-            // 2. The "Event Loop" - Processes all input for this frame
-            //    (We loop until PollEvent returns 0, meaning "queue empty")
             while (SDL_PollEvent(&event))
             {
                 if (event.type == SDL_EVENT_QUIT)
@@ -47,16 +50,15 @@ namespace Beer::Core
                 }
             }
 
-            // 3. Handle Resize (Bridge from SDL to Renderer)
             if (isResized)
             {
                 renderer.SetFrameBufferResized(true);
                 isResized = false;
             }
 
-            // 4. Draw - Happens even if the user isn't touching the keyboard/mouse
             if (isRunning)
             {
+                gameManager.Update();
                 renderer.PreDraw();
                 renderer.Draw();
             }
