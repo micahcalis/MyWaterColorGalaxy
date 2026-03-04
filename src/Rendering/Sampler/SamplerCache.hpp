@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "Rendering/Sampler/SamplerKey.hpp"
 #include "Core/Application/Renderer/Device.hpp"
+#include "Sampler.hpp"
 
 namespace Beer::Rendering
 {
@@ -11,11 +12,11 @@ namespace Beer::Rendering
     {
     private:
         const Core::Device& device;
-        std::unordered_map<SamplerKey, vk::raii::Sampler> cache;
+        std::unordered_map<SamplerKey, std::shared_ptr<Sampler>> cache;
 
     public:
         SamplerCache(const Core::Device& device);
-        const vk::raii::Sampler& GetSampler(const SamplerKey& key);
+        std::shared_ptr<Sampler> GetSampler(const SamplerKey& key);
 
     private:
         vk::raii::Sampler CreateSampler(const SamplerKey& key);

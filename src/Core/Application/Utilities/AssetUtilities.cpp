@@ -33,6 +33,24 @@ namespace Beer::Core
         return std::filesystem::current_path() / subPath;
     }
 
+    std::vector<uint32_t> AssetUtilities::LoadSpvFile(const std::filesystem::path& filepath)
+    {
+        std::ifstream file(filepath, std::ios::ate | std::ios::binary);
+
+        if (!file.is_open())
+        {
+            throw std::runtime_error("Failed to open SPIR-V file: " + filepath.string());
+        }
+
+        size_t fileSize = static_cast<size_t>(file.tellg());
+        std::vector<uint32_t> buffer(fileSize / sizeof(uint32_t));
+        file.seekg(0);
+        file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+        file.close();
+
+        return buffer;
+    }
+
     static constexpr std::string_view SHADER_HEAD = "assets/shaders/";
     static constexpr std::string_view SHADER_TAIL = ".spv";
 
@@ -42,14 +60,44 @@ namespace Beer::Core
         return GetBasePath(subPath);
     }
 
+    static constexpr std::string_view JSON_TAIL = ".json";
+
+    std::filesystem::path AssetUtilities::GetShaderJsonPath(const std::string& shaderName)
+    {
+        std::string subPath = std::string(SHADER_HEAD) + shaderName + std::string(JSON_TAIL);
+        return GetBasePath(subPath);
+    }
+
+    std::filesystem::path AssetUtilities::GetShaderJsonPath(const std::filesystem::path& spvPath)
+    {
+        std::filesystem::path jsonPath = spvPath;
+        jsonPath.replace_extension(JSON_TAIL);
+        return jsonPath;
+    }
+
     static constexpr std::string_view MODEL_HEAD = "assets/models/";
     static constexpr std::string_view MODELOBJ_TAIL = ".obj";
     static constexpr std::string_view MODELFBX_TAIL = ".fbx";
 
-    std::filesystem::path AssetUtilities::GetModelPath(const std::string& modelName, bool isObj)
+    std::filesystem::path AssetUtilities::GetModelPath(const std::string& modelName)
     {
-        std::string subPath = std::string(MODEL_HEAD) + modelName + std::string(isObj ? MODELOBJ_TAIL : MODELFBX_TAIL);
-        return GetBasePath(subPath);
+        std::string objPathStr = std::string(MODEL_HEAD) + modelName + std::string(MODELOBJ_TAIL);
+        std::filesystem::path objPath = GetBasePath(objPathStr);
+
+        if (std::filesystem::exists(objPath))
+        {
+            return objPath;
+        }
+
+        std::string fbxPathStr = std::string(MODEL_HEAD) + modelName + std::string(MODELFBX_TAIL);
+        std::filesystem::path fbxPath = GetBasePath(fbxPathStr);
+
+        if (std::filesystem::exists(fbxPath))
+        {
+            return fbxPath;
+        }
+
+        throw std::runtime_error("Model file not found for: " + modelName + " (Checked .obj and .fbx)");
     }
 
     static constexpr std::string_view TEXTURE_HEAD = "assets/textures/";

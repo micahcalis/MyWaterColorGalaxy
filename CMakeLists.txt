@@ -124,9 +124,14 @@ add_custom_target(SyncAssets ALL
 )
 
 # --- YOU WERE MISSING THESE TWO LINES ---
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 find_program(SLANGC_EXECUTABLE slangc REQUIRED)
 add_custom_target(Shaders) 
 # ----------------------------------------
+
+# 1. DEFINE YOUR MODULE DIRECTORY AND GRAB THE FILES
+set(SLANG_MODULES_DIR "${CMAKE_SOURCE_DIR}/assets/shaders/modules")
+file(GLOB_RECURSE SLANG_MODULE_FILES "${SLANG_MODULES_DIR}/*.slang")
 
 function(add_slang_shader_target TARGET)
     cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
@@ -135,27 +140,43 @@ function(add_slang_shader_target TARGET)
 
     set(SHADERS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders")
     set(OUTPUT_SPV "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.spv")
+    
+    set(OUTPUT_JSON "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.json") 
+    set(COOKER_SCRIPT "${CMAKE_SOURCE_DIR}/tools/ShaderSettingsParser.py")
 
     add_custom_command(
-        OUTPUT  ${OUTPUT_SPV}
+        OUTPUT  ${OUTPUT_SPV} ${OUTPUT_JSON} 
         COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_OUTPUT_DIR}
+        
+        # RUN PYTHON FIRST: Generate the JSON
+        COMMAND Python3::Interpreter ${COOKER_SCRIPT} ${MAIN_SOURCE} ${OUTPUT_JSON}
+        
+        # RUN SLANGC SECOND: Generate the Bytecode
+        # 2. ADD THE -I FLAG TO TELL SLANGC WHERE THE MODULES ARE
         COMMAND ${SLANGC_EXECUTABLE} ${MAIN_SOURCE}
-                -target spirv -profile spirv_1_4 -emit-spirv-directly -o ${OUTPUT_SPV}
+                -target spirv -profile spirv_1_4 -emit-spirv-directly 
+                -I ${SLANG_MODULES_DIR} 
+                -o ${OUTPUT_SPV}
+                
         WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
-        DEPENDS ${SHADER_SOURCES}
-        COMMENT "Compiling Slang Shader: ${SHADER_BASE_NAME}.slang"
+        
+        # 3. ADD SLANG_MODULE_FILES TO DEPENDS SO CMAKE REBUILDS IF CORE.SLANG CHANGES
+        DEPENDS ${SHADER_SOURCES} ${COOKER_SCRIPT} ${SLANG_MODULE_FILES}
+        COMMENT "Cooking & Compiling Shader: ${SHADER_BASE_NAME}.slang"
         VERBATIM
     )
-    add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV})
+    
+    add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV} ${OUTPUT_JSON})
 endfunction()
 
+# 4. GLOB ONLY MAIN SHADERS (This ignores the 'modules' subfolder!)
 file(GLOB ALL_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.slang")
+
 foreach(SHADER_FILE ${ALL_SHADERS})
     get_filename_component(SHADER_NAME ${SHADER_FILE} NAME_WE)
     set(TARGET_NAME "Shader_${SHADER_NAME}")
     add_slang_shader_target(${TARGET_NAME} SOURCES ${SHADER_FILE})
     
-    # This line now works because add_custom_target(Shaders) exists above!
     add_dependencies(Shaders ${TARGET_NAME})
 endforeach()
 

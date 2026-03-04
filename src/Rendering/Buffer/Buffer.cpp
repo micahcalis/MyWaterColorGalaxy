@@ -4,15 +4,14 @@
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "vulkan/vulkan.hpp"
 #include <iostream>
-#include <utility>
 
 namespace Beer::Rendering
 {
 
-    Buffer Buffer::CreateDeviceLocal(std::shared_ptr<BufferAllocator> allocator, VkDeviceSize size, VkBufferUsageFlags usage)
+    Buffer Buffer::CreateDeviceLocal(VkDeviceSize size, VkBufferUsageFlags usage)
     {
-        auto allocation = allocator->CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO, 0);
-        return {std::move(allocator), allocation, size};
+        auto allocation = sharedAllocator->CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO, 0);
+        return {allocation, size};
     }
 
     Buffer::~Buffer()
@@ -23,23 +22,23 @@ namespace Beer::Rendering
         }
     }
 
-    Buffer Buffer::CreateStaging(std::shared_ptr<BufferAllocator> allocator, VkDeviceSize size)
+    Buffer Buffer::CreateStaging(VkDeviceSize size)
     {
-        auto allocation = allocator->CreateStagingBuffer(size);
-        return {std::move(allocator), allocation, size};
+        auto allocation = sharedAllocator->CreateStagingBuffer(size);
+        return {allocation, size};
     }
 
-    Buffer Buffer::CreateUniform(std::shared_ptr<BufferAllocator> allocator, VkDeviceSize size)
+    Buffer Buffer::CreateUniform(VkDeviceSize size)
     {
         constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
         constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-        auto allocation = allocator->CreateBuffer(size,
+        auto allocation = sharedAllocator->CreateBuffer(size,
             usage,
             VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
             flags);
 
-        return {std::move(allocator), allocation, size};
+        return {allocation, size};
     }
 
     void Buffer::Upload(const void* data, size_t size, size_t offset) const
@@ -123,10 +122,8 @@ namespace Beer::Rendering
             {region});
     }
 
-    Buffer::Buffer(std::shared_ptr<BufferAllocator> allocator, BufferAllocation allocation, VkDeviceSize size)
-        : allocator(std::move(allocator))
-        , allocation(allocation)
-        , size(size)
+    Buffer::Buffer(BufferAllocation allocation, VkDeviceSize size)
+        : allocator(sharedAllocator), allocation(allocation), size(size)
     {
     }
 } // namespace Beer::Rendering

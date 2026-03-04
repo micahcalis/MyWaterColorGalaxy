@@ -2,20 +2,23 @@
 
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL_video.h>
+#include "Core/Application/Managers/ImageAssetManager.hpp"
+#include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
-#include "Core/Application/Renderer/PipelineCache.hpp"
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
-#include "Core/Assets/MeshAsset.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
-#include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
+#include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Mesh./Mesh.hpp"
+#include "Core/Application/Managers/ShaderManager.hpp"
+#include "Rendering/Uniforms/DescriptorAllocator.hpp"
 
 namespace Beer::Core
 {
@@ -26,40 +29,37 @@ namespace Beer::Core
 
         vk::raii::Instance instance = nullptr;
 
-        Device device{};
-
         vk::raii::Context context;
         vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
         vk::raii::SurfaceKHR surface = nullptr;
+        Device device{};
 
         Swapchain swapchain{};
 
         std::shared_ptr<Rendering::Image> depthImage = nullptr;
-
-        std::unique_ptr<PipelineCache> pipelineCache = nullptr;
-        std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
 
         std::vector<FrameResource> frameResources;
         std::vector<vk::raii::Semaphore> swapchainSemaphores;
 
         std::shared_ptr<Rendering::BufferAllocator> bufferAllocator = nullptr;
         std::shared_ptr<UploadManager> uploadManager = nullptr;
+        std::unique_ptr<Rendering::DescriptorAllocator> descriptorAllocator = nullptr;
 
+        std::unique_ptr<ShaderManager> shaderManager = nullptr;
+        std::unique_ptr<MeshManager> meshManager = nullptr;
+        std::unique_ptr<ImageAssetManager> imageAssetManager = nullptr;
+        std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
+
+        std::shared_ptr<Rendering::Shader> shader = nullptr;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;
-
-        std::vector<Rendering::Buffer> uniformBuffers;
-
         std::shared_ptr<Rendering::Texture2D> texture = nullptr;
+        std::shared_ptr<Rendering::Material> material = nullptr;
 
         int frameIndex = 0;
         bool frameBufferResized = false;
 
-        vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
-        vk::raii::PipelineLayout pipelineLayout = nullptr;
-        vk::raii::DescriptorPool descriptorPool = nullptr;
-        std::vector<vk::raii::DescriptorSet> descriptorSets;
-
     public:
+        ~Renderer();
         void InitializeVulkanInstances(SDL_Window* window);
         void PreDraw();
         void Draw();
@@ -81,14 +81,11 @@ namespace Beer::Core
         void CreateSurface(SDL_Window* window);
         void CreateDepthResources(vk::Format& depthFormat);
         void CreateSemaphores();
-        void CreateDesciptorSetLayout();
-        void LoadModel();
-        void CreateUniformBuffers();
-        void CreateDescriptorPool();
-        void CreateDescriptorSets();
-        void CreateTextureImage();
+        void InitializeBuffers();
+        void InitializeAssetManagers(vk::Format depthFormat);
+        void LoadObject();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
-        void UpdateUniformBuffer(uint32_t frameIndex);
+        void UpdateGlobals();
     };
 } // namespace Beer::Core

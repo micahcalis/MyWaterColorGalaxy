@@ -21,6 +21,12 @@ namespace Beer::Core
         {
         }
 
+        ImageUploadJob(std::shared_ptr<Rendering::Image> image, void* data, vk::DeviceSize size)
+            : image(image), IUploadJob(data, size)
+        {
+            imageAsset.Pixels = nullptr;
+        }
+
         ~ImageUploadJob() override;
 
         void Execute(std::shared_ptr<Rendering::Buffer> stagingBuffer,

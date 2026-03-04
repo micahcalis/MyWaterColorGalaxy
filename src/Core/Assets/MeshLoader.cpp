@@ -1,5 +1,4 @@
 #include "Core/Assets/MeshLoader.hpp"
-#include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "MeshAsset.hpp"
 #include <tiny_obj_loader.h>
 #include "Vendor/ufbx/ufbx.h"
@@ -31,11 +30,9 @@ namespace std
 
 namespace Beer::Core
 {
-    MeshAsset MeshLoader::LoadMesh(const std::string& name, bool isObj)
+    MeshAsset MeshLoader::LoadMesh(const std::filesystem::path& path)
     {
-        std::filesystem::path path = AssetUtilities::GetModelPath(name, isObj);
-
-        if (isObj)
+        if (IsObj(path))
         {
             return LoadObj(path);
         } else
@@ -69,19 +66,21 @@ namespace Beer::Core
                     uniqueVertices[index] = newVertexIndex;
 
                     meshAsset.Positions.push_back({attributes.vertices[3 * index.vertex_index + 0],
-                        attributes.vertices[3 * index.vertex_index + 1],
-                        attributes.vertices[3 * index.vertex_index + 2]});
+                        attributes.vertices[3 * index.vertex_index + 2],
+                        -attributes.vertices[3 * index.vertex_index + 1]});
+
+                    if (index.normal_index >= 0)
+                    {
+                        meshAsset.Normals.push_back({attributes.normals[3 * index.normal_index + 0],
+                            attributes.normals[3 * index.normal_index + 2],
+                            -attributes.normals[3 * index.normal_index + 1]});
+                    }
 
                     if (index.texcoord_index >= 0)
                     {
                         meshAsset.UVs.push_back({attributes.texcoords[2 * index.texcoord_index + 0],
                             1.0f - attributes.texcoords[2 * index.texcoord_index + 1]});
-                    } else
-                    {
-                        meshAsset.UVs.push_back({0.0f, 0.0f});
                     }
-
-                    meshAsset.VertexColors.push_back({1.0f, 1.0f, 1.0f, 1.0f});
                 }
 
                 meshAsset.Indices.push_back(uniqueVertices[index]);
@@ -128,22 +127,32 @@ namespace Beer::Core
                 ufbx_vec3 pos = ufbx_get_vertex_vec3(&mesh->vertex_position, index);
                 meshAsset.Positions.push_back({pos.x, pos.y, pos.z});
 
+                if (mesh->vertex_normal.exists)
+                {
+                    ufbx_vec3 normal = ufbx_get_vertex_vec3(&mesh->vertex_normal, index);
+                    meshAsset.Normals.push_back({normal.x, normal.y, normal.z});
+                }
+
+                if (mesh->vertex_tangent.exists)
+                {
+                    ufbx_vec3 tangent = ufbx_get_vertex_vec3(&mesh->vertex_tangent, index);
+                    meshAsset.Tangents.push_back({
+                        tangent.x,
+                        tangent.y,
+                        tangent.z,
+                    });
+                }
+
                 if (mesh->vertex_uv.exists)
                 {
                     ufbx_vec2 uv = ufbx_get_vertex_vec2(&mesh->vertex_uv, index);
                     meshAsset.UVs.push_back({uv.x, 1.0f - uv.y});
-                } else
-                {
-                    meshAsset.UVs.push_back({0.0f, 0.0f});
                 }
 
                 if (mesh->vertex_color.exists)
                 {
                     ufbx_vec4 color = ufbx_get_vertex_vec4(&mesh->vertex_color, index);
                     meshAsset.VertexColors.push_back({color.x, color.y, color.z, 1.0f});
-                } else
-                {
-                    meshAsset.VertexColors.push_back({1.0f, 1.0f, 1.0f, 1.0f});
                 }
             }
         }
@@ -182,5 +191,20 @@ namespace Beer::Core
         ufbx_free_scene(scene);
 
         return meshAsset;
+    }
+
+    bool MeshLoader::IsObj(const std::filesystem::path& path)
+    {
+        std::string ext = path.extension().string();
+
+        if (ext == ".obj")
+        {
+            return true;
+        } else if (ext == ".fbx")
+        {
+            return false;
+        }
+
+        throw std::runtime_error("Unsupported model format: " + ext + " for path: " + path.string());
     }
 } // namespace Beer::Core

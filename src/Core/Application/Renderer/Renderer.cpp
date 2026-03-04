@@ -1,38 +1,30 @@
 #include "Core/Application/Renderer/Renderer.hpp"
-#include "Core/Application/Jobs/ImageUploadJob.hpp"
-#include "Core/Application/Jobs/MeshUploadJob.hpp"
+#include "Core/Application/Managers/ImageAssetManager.hpp"
+#include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
-#include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/RendererUtilities.hpp"
-#include "Core/Application/Renderer/PipelineKey.hpp"
-#include "Core/Application/Renderer/PipelineData.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
-#include "Core/Assets/ImageAsset.hpp"
-#include "Core/Assets/ImageLoader.hpp"
-#include "Core/Assets/MeshAsset.hpp"
-#include "Core/Assets/MeshLoader.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
-#include "Rendering/Mesh/MeshBuffers.hpp"
-#include "Rendering/Sampler/SamplerCache.hpp"
-#include "Rendering/Sampler/SamplerKey.hpp"
+#include "Rendering/Shader/ShaderPassType.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <vector>
-#include "Rendering/UniformBufferObject.hpp"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include <stdexcept>
 #include <tiny_obj_loader.h>
+#include "Rendering/Shader/Shader.hpp"
 
 namespace Beer::Core
 {
@@ -45,7 +37,15 @@ namespace Beer::Core
 #endif
 
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-    constexpr std::string_view HELLO_TRIANGLE = "HelloTriangle";
+
+    Renderer::~Renderer()
+    {
+        device.GetLogicalDevice().waitIdle();
+
+        Rendering::Texture2D::ResetFallbackTexture();
+        Rendering::Buffer::SetAllocator(nullptr);
+        Rendering::Image::SetAllocator(nullptr);
+    }
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
     {
@@ -55,34 +55,23 @@ namespace Beer::Core
         CreateSurface(window);
         device.Initialize(instance, surface);
         swapchain.InitializeSwapchain(window, surface, device);
-        bufferAllocator = std::make_unique<Rendering::BufferAllocator>(device, instance);
-        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
-        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
+        InitializeBuffers();
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
         CreateSemaphores();
-        CreateDesciptorSetLayout();
-
-        pipelineCache = std::make_unique<PipelineCache>(device.GetLogicalDevice(),
-            swapchain,
-            descriptorSetLayout,
-            depthFormat);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            // When using emplace_back, you are supposed to pass the arguments to the constructor, not construct a temporary.
             frameResources.emplace_back(&device);
-        }
+        };
 
-        CreateTextureImage();
-        LoadModel();
-        CreateUniformBuffers();
-        CreateDescriptorPool();
-        CreateDescriptorSets();
+        InitializeAssetManagers(depthFormat);
+        LoadObject();
     }
 
     void Renderer::PreDraw()
     {
+        material->Update();
         uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
@@ -181,14 +170,53 @@ namespace Beer::Core
         surface = vk::raii::SurfaceKHR(instance, rawSurface);
     }
 
+    void Renderer::InitializeBuffers()
+    {
+        bufferAllocator = std::make_shared<Rendering::BufferAllocator>(device, instance);
+        Rendering::Buffer::SetAllocator(bufferAllocator);
+        Rendering::Image::SetAllocator(bufferAllocator);
+
+        uploadManager = std::make_unique<UploadManager>(bufferAllocator, device);
+
+        descriptorAllocator = std::make_unique<Rendering::DescriptorAllocator>(MAX_FRAMES_IN_FLIGHT,
+            &device);
+
+        Rendering::UniformDescriptor::SetDescriptorAllocator(descriptorAllocator.get());
+        Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
+    }
+
+    void Renderer::InitializeAssetManagers(vk::Format depthFormat)
+    {
+        shaderManager = std::make_unique<ShaderManager>(
+            &device,
+            &swapchain,
+            depthFormat,
+            MAX_FRAMES_IN_FLIGHT);
+
+        Rendering::Shader::SetShaderManager(shaderManager.get());
+
+        meshManager = std::make_unique<MeshManager>(uploadManager.get());
+
+        Rendering::Mesh::SetMeshManager(meshManager.get());
+
+        samplerCache = std::make_unique<Rendering::SamplerCache>(device);
+        Rendering::Sampler::SetSamplerCache(samplerCache.get());
+
+        imageAssetManager = std::make_unique<ImageAssetManager>(
+            &device,
+            bufferAllocator,
+            uploadManager.get());
+
+        Rendering::Image::SetImageAssetManager(imageAssetManager.get());
+    }
+
     void Renderer::CreateDepthResources(vk::Format& depthFormat)
     {
         depthFormat = ImageUtilities::FindDepthFormat(device);
         vk::Extent2D extent = swapchain.GetExtent();
 
         depthImage = std::make_shared<Rendering::Image>(
-            Rendering::Image::CreateImage2D(bufferAllocator,
-                extent.width,
+            Rendering::Image::CreateImage2D(extent.width,
                 extent.height,
                 VkFormat(depthFormat),
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -208,151 +236,19 @@ namespace Beer::Core
         }
     }
 
-    void Renderer::LoadModel()
+    void Renderer::LoadObject()
     {
-        MeshAsset meshAsset = MeshLoader::LoadMesh("MDL_VikingRoom", true);
-        Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset,
-            bufferAllocator);
+        shader = Rendering::Shader::Get("HelloTriangle");
+        shader->PrintConfig();
 
-        mesh = std::make_shared<Rendering::Mesh>(
-            std::move(meshBuffers),
-            meshAsset.GetVertexCount(),
-            meshAsset.GetIndexCount());
+        mesh = Rendering::Mesh::Get("MDL_VikingRoom");
 
-        std::unique_ptr<MeshUploadJob> uploadJob = std::make_unique<MeshUploadJob>(
-            mesh, meshAsset);
+        texture = std::make_shared<Rendering::Texture2D>("Tex_VikingRoom");
 
-        uploadManager->AddJob(std::move(uploadJob));
-    }
+        material = std::make_shared<Rendering::Material>(shader);
 
-    void Renderer::CreateDesciptorSetLayout()
-    {
-        std::array bindings = {
-            vk::DescriptorSetLayoutBinding(0,
-                vk::DescriptorType::eUniformBuffer,
-                1,
-                vk::ShaderStageFlagBits::eVertex,
-                nullptr),
-            vk::DescriptorSetLayoutBinding(1,
-                vk::DescriptorType::eCombinedImageSampler,
-                1,
-                vk::ShaderStageFlagBits::eFragment,
-                nullptr)};
-
-        vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.bindingCount = bindings.size();
-        layoutInfo.pBindings = bindings.data();
-
-        descriptorSetLayout = vk::raii::DescriptorSetLayout(device.GetLogicalDevice(), layoutInfo);
-
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &*descriptorSetLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-        pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), pipelineLayoutInfo);
-    }
-
-    void Renderer::CreateUniformBuffers()
-    {
-        uniformBuffers.clear();
-        vk::DeviceSize bufferSize = sizeof(Rendering::UniformBufferObject);
-
-        uniformBuffers.reserve(MAX_FRAMES_IN_FLIGHT);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            auto buffer = Rendering::Buffer::CreateUniform(bufferAllocator, bufferSize);
-
-            uniformBuffers.emplace_back(std::move(buffer));
-        }
-    }
-
-    void Renderer::CreateDescriptorPool()
-    {
-        std::array poolSize{
-            vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
-            vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT),
-        };
-
-        vk::DescriptorPoolCreateInfo poolInfo{};
-        poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-        poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
-        poolInfo.poolSizeCount = poolSize.size();
-        poolInfo.pPoolSizes = poolSize.data();
-
-        descriptorPool = vk::raii::DescriptorPool(device.GetLogicalDevice(), poolInfo);
-    }
-
-    void Renderer::CreateDescriptorSets()
-    {
-        std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *descriptorSetLayout);
-
-        vk::DescriptorSetAllocateInfo allocateInfo{};
-        allocateInfo.descriptorPool = descriptorPool;
-        allocateInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
-        allocateInfo.pSetLayouts = layouts.data();
-
-        descriptorSets.clear();
-        descriptorSets = device.GetLogicalDevice().allocateDescriptorSets(allocateInfo);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            vk::DescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = vk::Buffer(uniformBuffers[i].GetHandle());
-            bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(Rendering::UniformBufferObject);
-
-            vk::DescriptorImageInfo imageInfo{};
-
-            imageInfo.sampler = texture->GetSampler();
-
-            imageInfo.imageView = texture->GetImageView();
-            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-            std::array<vk::WriteDescriptorSet, 2> descriptorWrites;
-            descriptorWrites[0].dstSet = descriptorSets[i];
-            descriptorWrites[0].dstBinding = 0;
-            descriptorWrites[0].dstArrayElement = 0;
-            descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-            descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-            descriptorWrites[1].dstSet = descriptorSets[i];
-            descriptorWrites[1].dstBinding = 1;
-            descriptorWrites[1].dstArrayElement = 0;
-            descriptorWrites[1].descriptorCount = 1;
-            descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-            descriptorWrites[1].pImageInfo = &imageInfo;
-
-            device.GetLogicalDevice().updateDescriptorSets(descriptorWrites, {});
-        }
-    }
-
-    void Renderer::CreateTextureImage()
-    {
-        ImageAsset imageAsset = ImageLoader::LoadImage("Tex_VikingRoom", 4);
-
-        std::shared_ptr<Rendering::Image> textureImage = std::make_shared<Rendering::Image>(
-            Rendering::Image::CreateImage2D(bufferAllocator,
-                imageAsset.Width,
-                imageAsset.Height,
-                VK_FORMAT_R8G8B8A8_SRGB,
-                VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
-                vk::ImageAspectFlagBits::eColor,
-                device));
-
-        const vk::raii::Sampler& sampler = samplerCache->GetSampler(Rendering::SamplerKey(vk::Filter::eLinear,
-            vk::SamplerAddressMode::eRepeat,
-            10.0f));
-
-        texture = std::make_shared<Rendering::Texture2D>(textureImage, *sampler);
-
-        std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(
-            textureImage, imageAsset);
-
-        uploadManager->AddJob(std::move(uploadJob));
+        material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
+        material->SetTexture("_MainTex", texture);
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -403,17 +299,10 @@ namespace Beer::Core
         commandBuffer.setScissor(0,
             vk::Rect2D(vk::Offset2D(0, 0), swapchainExtent));
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIndex], nullptr);
+        UpdateGlobals();
+        Rendering::Shader::Globals()->Bind(commandBuffer);
 
-        // HARDCODED DRAW BLOCK : EXTENSION NECESSARY!!!
-        PipelineData pipelineData{};
-        pipelineData.ShaderName = HELLO_TRIANGLE;
-        pipelineData.ShaderPath = AssetUtilities::GetShaderPath(std::string(HELLO_TRIANGLE)).string();
-        const vk::raii::Pipeline& pipeline = pipelineCache->GetPipeline(PipelineKey(std::string(HELLO_TRIANGLE)),
-            pipelineData);
-
-        // CommandBufferUtilities::DrawIndexedCall(commandBuffer, pipeline, vertexBuffer->GetHandle(), indexBuffer->GetHandle(), indices.size());
-        CommandBufferUtilities::DrawMesh(commandBuffer, pipeline, mesh.get());
+        CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), material.get(), Rendering::ShaderPassType::Opaque);
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -434,8 +323,6 @@ namespace Beer::Core
             vk::ImageAspectFlagBits::eColor);
 
         commandBuffer.end();
-
-        UpdateUniformBuffer(frameIndex);
 
         auto waitMask = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
         vk::SubmitInfo submitInfo = RendererUtilities::CreateSubmitInfo(frameResource, commandBuffer, &waitMask);
@@ -460,27 +347,27 @@ namespace Beer::Core
         }
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+        Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
     }
 
     void Renderer::SetFrameBufferResized(const bool val) { frameBufferResized = val; }
 
-    void Renderer::UpdateUniformBuffer(uint32_t frameIndex)
+    void Renderer::UpdateGlobals()
     {
         static auto startTime = std::chrono::high_resolution_clock::now();
-
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         const vk::Extent2D extent = swapchain.GetExtent();
         const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
+        glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+        glm::mat4 projMat = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
+        projMat[1][1] *= -1;
 
-        Rendering::UniformBufferObject ubo{}; /// Don't forget to add the f, 2.0 is a double instead of a float.
-        ubo.objToWorld = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-        ubo.worldToView = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
-        ubo.viewToClip = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
-        ubo.viewToClip[1][1] *= -1;
+        Rendering::Shader::Globals()->SetTime(time, 0);
+        Rendering::Shader::Globals()->SetCamera(viewMat, projMat, glm::vec3(2.0, 2.0, 2.0));
+        Rendering::Shader::Globals()->SetScreen(static_cast<float>(extent.width), static_cast<float>(extent.height));
 
-        // memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
-        uniformBuffers[frameIndex].Upload(&ubo, sizeof(ubo));
+        Rendering::Shader::Globals()->Update();
     }
 } // namespace Beer::Core

@@ -13,6 +13,8 @@ namespace Beer::Rendering
     class Buffer
     {
     private:
+        // this allocator stuff is pretty cursed, but C objects have weird behaviour so this is fine for now
+        inline static std::shared_ptr<BufferAllocator> sharedAllocator = nullptr;
         std::shared_ptr<BufferAllocator> allocator;
         BufferAllocation allocation;
         VkDeviceSize size;
@@ -20,15 +22,17 @@ namespace Beer::Rendering
     public:
         ~Buffer();
 
-        static Buffer CreateDeviceLocal(std::shared_ptr<BufferAllocator> allocator,
-            VkDeviceSize size,
+        static void SetAllocator(std::shared_ptr<BufferAllocator> allocator)
+        {
+            Buffer::sharedAllocator = allocator;
+        }
+
+        static Buffer CreateDeviceLocal(VkDeviceSize size,
             VkBufferUsageFlags usage);
 
-        static Buffer CreateStaging(std::shared_ptr<BufferAllocator> allocator,
-            VkDeviceSize size);
+        static Buffer CreateStaging(VkDeviceSize size);
 
-        static Buffer CreateUniform(std::shared_ptr<BufferAllocator> allocator,
-            VkDeviceSize size);
+        static Buffer CreateUniform(VkDeviceSize size);
 
         void Upload(const void* data, size_t size, size_t offset = 0) const;
 
@@ -62,8 +66,7 @@ namespace Beer::Rendering
         NO_COPY(Buffer);
         DEFAULT_MOVE(Buffer);
 
-        Buffer(std::shared_ptr<Rendering::BufferAllocator> allocator,
-            BufferAllocation allocation,
+        Buffer(BufferAllocation allocation,
             VkDeviceSize size);
     };
 } // namespace Beer::Rendering

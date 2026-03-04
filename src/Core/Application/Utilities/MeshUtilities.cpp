@@ -16,33 +16,33 @@ namespace Beer::Core
     {
         std::vector<std::unique_ptr<IUploadJob>> uploadJobs;
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.Positions.data(),
-            meshAsset.GetPositionsSize(),
-            buffers.PositionBuffer,
-            bufferAllocator,
-            true);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.Positions.data(),
+        //     meshAsset.GetPositionsSize(),
+        //     buffers.PositionBuffer,
+        //     bufferAllocator,
+        //     true);
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.UVs.data(),
-            meshAsset.GetUvsSize(),
-            buffers.UvBuffer,
-            bufferAllocator,
-            true);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.UVs.data(),
+        //     meshAsset.GetUvsSize(),
+        //     buffers.UvBuffer,
+        //     bufferAllocator,
+        //     true);
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.VertexColors.data(),
-            meshAsset.GetColorsSize(),
-            buffers.ColorBuffer,
-            bufferAllocator,
-            true);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.VertexColors.data(),
+        //     meshAsset.GetColorsSize(),
+        //     buffers.ColorBuffer,
+        //     bufferAllocator,
+        //     true);
 
-        TryEmplaceData(uploadJobs,
-            meshAsset.Indices.data(),
-            meshAsset.GetIndicesSize(),
-            buffers.IndexBuffer,
-            bufferAllocator,
-            false);
+        // TryEmplaceData(uploadJobs,
+        //     meshAsset.Indices.data(),
+        //     meshAsset.GetIndicesSize(),
+        //     buffers.IndexBuffer,
+        //     bufferAllocator,
+        //     false);
 
         return uploadJobs;
     }
@@ -54,15 +54,15 @@ namespace Beer::Core
         const std::shared_ptr<Rendering::BufferAllocator>& bufferAllocator,
         bool isVertAttrib)
     {
-        if (bufferSize == 0)
-            return;
+        // if (bufferSize == 0)
+        //     return;
 
-        VkBufferUsageFlags flags = isVertAttrib ? VERTEX_ATTRIB_FLAGS : INDEX_FLAGS;
+        // VkBufferUsageFlags flags = isVertAttrib ? VERTEX_ATTRIB_FLAGS : INDEX_FLAGS;
 
-        buffer = std::make_shared<Rendering::Buffer>(
-            Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, flags));
+        // buffer = std::make_shared<Rendering::Buffer>(
+        //     Rendering::Buffer::CreateDeviceLocal(bufferAllocator, bufferSize, flags));
 
-        uploadJobs.emplace_back(std::make_unique<BufferUploadJob>(
-            buffer, data, bufferSize));
+        // uploadJobs.emplace_back(std::make_unique<BufferUploadJob>(
+        //     buffer, data, bufferSize));
     }
 } // namespace Beer::Core

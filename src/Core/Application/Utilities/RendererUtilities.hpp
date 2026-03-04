@@ -4,7 +4,6 @@
 #include <vulkan/vulkan_raii.hpp>
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
-#include "Rendering/Vertex.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
@@ -47,11 +46,6 @@ namespace Beer::Core
         static uint32_t FindMemoryType(uint32_t typeFilter,
             vk::MemoryPropertyFlags properties,
             const vk::raii::PhysicalDevice& physicalDevice);
-
-        static void MapVertices(vk::raii::Buffer& vertexBuffer,
-            vk::raii::DeviceMemory& vertexBufferMemory,
-            const std::vector<Rendering::Vertex>& vertices,
-            size_t size);
 
         static void CopyBuffer(vk::raii::Buffer& srcBuffer,
             vk::raii::Buffer& dstBuffer,

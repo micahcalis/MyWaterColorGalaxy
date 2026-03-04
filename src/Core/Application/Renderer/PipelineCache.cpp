@@ -5,7 +5,6 @@
 #include "PipelineCache.hpp"
 #include <cstdint>
 #include <vulkan/vulkan.h>
-#include "Rendering/Vertex.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
@@ -54,13 +53,13 @@ namespace Beer::Core
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-        auto bindingDescriptions = Rendering::Vertex::GetBindingDescriptions();
-        auto attributeDescriptions = Rendering::Vertex::GetAttributeDescriptions();
+        // auto bindingDescriptions = 0;   // Rendering::Vertex::GetBindingDescriptions();
+        // auto attributeDescriptions = 0; // Rendering::Vertex::GetAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
-        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
-        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+        // vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+        // vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+        // vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        // vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
         std::vector dynamicStates = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         vk::PipelineDynamicStateCreateInfo dynamicCreateInfo{};

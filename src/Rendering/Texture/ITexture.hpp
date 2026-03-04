@@ -2,6 +2,7 @@
 
 #include "Rendering/Buffer/Image.hpp"
 #include "vulkan/vulkan.hpp"
+#include "Rendering/Sampler/Sampler.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -10,35 +11,35 @@ namespace Beer::Rendering
     {
     protected:
         std::shared_ptr<Image> image;
-        vk::Sampler sampler;
+        std::shared_ptr<Sampler> sampler;
 
     public:
-        ITexture(std::shared_ptr<Image> image, vk::Sampler sampler)
-            : image(std::move(image)), sampler(sampler)
+        ITexture(std::shared_ptr<Image> image, std::shared_ptr<Sampler> sampler)
+            : image(std::move(image)), sampler(std::move(sampler))
         {
         }
 
         virtual ~ITexture() = default;
 
-        virtual vk::Sampler GetSampler()
+        virtual const Sampler* GetSampler() const
         {
-            return sampler;
+            return sampler.get();
         }
 
         virtual vk::DescriptorImageInfo GetDescriptorInfo()
         {
             return vk::DescriptorImageInfo(
-                sampler,
+                sampler->GetVk(),
                 image->GetDefaultView(),
                 vk::ImageLayout::eShaderReadOnlyOptimal);
         }
 
-        virtual VkImageView GetImageView()
+        virtual VkImageView const GetImageView() const
         {
             return image->GetDefaultView();
         }
 
-        virtual vk::Extent3D GetExtent()
+        virtual const vk::Extent3D GetExtent() const
         {
             return image->GetExtent();
         }

@@ -29,4 +29,4 @@ tasks:
   clean:
     desc: Remove the build directory
     cmds:
-      - rm -rf {{.GAME_DIR}}
+      - Remove-Item -Force -Recurse {{.BUILD_DIR}}

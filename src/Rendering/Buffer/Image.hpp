@@ -7,11 +7,20 @@
 #include "Core/Application/Utilities/macros.hpp"
 #include "vulkan/vulkan.hpp"
 
+namespace Beer::Core
+{
+    class ImageAssetManager;
+}
+
 namespace Beer::Rendering
 {
     class Image
     {
     private:
+        // this allocator stuff is pretty cursed, but C objects have weird behaviour so this is fine for now
+        inline static std::shared_ptr<BufferAllocator> sharedAllocator = nullptr;
+        inline static Core::ImageAssetManager* imageAssetManager = nullptr;
+
         std::shared_ptr<BufferAllocator> allocator;
         ImageAllocation allocation;
         VkImageView defaultView;
@@ -21,13 +30,24 @@ namespace Beer::Rendering
     public:
         ~Image();
 
-        static Image CreateImage2D(std::shared_ptr<BufferAllocator> allocator,
-            uint32_t width,
+        static void SetAllocator(std::shared_ptr<BufferAllocator> allocator)
+        {
+            Image::sharedAllocator = allocator;
+        }
+
+        static Image CreateImage2D(uint32_t width,
             uint32_t height,
             VkFormat format,
             VkImageUsageFlags usage,
             vk::ImageAspectFlagBits aspectFlags,
             const Core::Device& device);
+
+        static void SetImageAssetManager(Core::ImageAssetManager* imageAssetManager)
+        {
+            Image::imageAssetManager = imageAssetManager;
+        }
+
+        static std::shared_ptr<Image> GetAsset(const std::string& name);
 
         [[nodiscard]] VkImage GetHandle() const { return allocation.Image; }
         VkImageView GetDefaultView() const { return defaultView; }
@@ -43,8 +63,7 @@ namespace Beer::Rendering
         DEFAULT_MOVE(Image);
 
     private:
-        Image(std::shared_ptr<BufferAllocator> allocator,
-            ImageAllocation allocation,
+        Image(ImageAllocation allocation,
             VkImageView defaultView,
             vk::Extent3D extent,
             VkFormat format);

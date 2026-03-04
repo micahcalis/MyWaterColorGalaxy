@@ -7,6 +7,8 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Material/Material.hpp"
+#include "Rendering/Shader/ShaderPassType.hpp"
 
 namespace Beer::Core
 {
@@ -33,7 +35,11 @@ namespace Beer::Core
 
         static void BindMesh(vk::CommandBuffer commandBuffer,
             const Rendering::Mesh* mesh,
+            const Rendering::MeshBufferOrder& bufferOrder,
             bool& canIndex);
+
+        static void BindShaderPass(vk::CommandBuffer commandBuffer,
+            const Rendering::ShaderPass* shaderPass);
 
         static void DrawCall(vk::CommandBuffer commandBuffer,
             const vk::raii::Pipeline& pipeline,
@@ -45,9 +51,10 @@ namespace Beer::Core
             const VkBuffer& indexBuffer,
             const uint32_t indexCount);
 
-        static void DrawMesh(vk::CommandBuffer,
-            const vk::raii::Pipeline& pipeline,
-            const Rendering::Mesh* mesh);
+        static void DrawMesh(vk::CommandBuffer commandBuffer,
+            const Rendering::Mesh* mesh,
+            const Rendering::Material* material,
+            const Rendering::ShaderPassType pass);
 
         static vk::raii::CommandBuffer BeginSingleTimeCommands(const FrameResource& frameResource,
             const Device& device);

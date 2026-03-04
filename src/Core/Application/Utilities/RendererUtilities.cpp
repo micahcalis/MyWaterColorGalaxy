@@ -3,11 +3,9 @@
 #include "Core/Application/Utilities/RendererUtilities.hpp"
 #include "RendererUtilities.hpp"
 #include "vulkan/vulkan.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <print>
-#include <cstring>
 #include <stdexcept>
 
 namespace Beer::Core
@@ -159,16 +157,6 @@ namespace Beer::Core
         }
 
         throw std::runtime_error("failed to find suitable memory type!");
-    }
-
-    void RendererUtilities::MapVertices(vk::raii::Buffer& vertexBuffer,
-        vk::raii::DeviceMemory& vertexBufferMemory,
-        const std::vector<Rendering::Vertex>& vertices,
-        const size_t size)
-    {
-        void* data = vertexBufferMemory.mapMemory(0, size);
-        memcpy(data, vertices.data(), size);
-        vertexBufferMemory.unmapMemory();
     }
 
     void RendererUtilities::CopyBuffer(vk::raii::Buffer& srcBuffer,

@@ -1,16 +1,40 @@
 #pragma once
 
+#include "Rendering/Sampler/Sampler.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include <cstdint>
+#include <memory>
 #include <vulkan/vulkan.h>
 
 namespace Beer::Rendering
 {
     class Texture2D : public ITexture
     {
+    private:
+        inline static std::shared_ptr<Texture2D> defaultBlack;
+
     public:
-        Texture2D(std::shared_ptr<Image> image, vk::Sampler sampler)
+        static void SetFallbackTexture(std::shared_ptr<Image> defaultBlack)
+        {
+            Texture2D::defaultBlack = std::make_shared<Texture2D>(defaultBlack);
+        }
+
+        static void ResetFallbackTexture()
+        {
+            defaultBlack.reset();
+        }
+
+        static std::shared_ptr<Texture2D> GetFallbackTexture() { return defaultBlack; }
+
+        Texture2D(std::shared_ptr<Image> image,
+            std::shared_ptr<Sampler> sampler = Sampler::Get())
             : ITexture(image, sampler)
+        {
+        }
+
+        Texture2D(const std::string& imageName,
+            std::shared_ptr<Sampler> sampler = Sampler::Get())
+            : ITexture(Rendering::Image::GetAsset(imageName), sampler)
         {
         }
 
