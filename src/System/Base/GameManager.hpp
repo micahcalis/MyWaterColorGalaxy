@@ -1,6 +1,10 @@
 #pragma once
 
 #include "System/Base/Clock/ClockManager.hpp"
+#include "System/Base/Input/InputManager.hpp"
+#include "System/Context/ContextHandler.hpp"
+#include "System/Context/WorldContainer.hpp"
+#include "System/Galaxy/Player/PlayerManager.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -9,13 +13,20 @@ namespace Beer::System
     {
     private:
         std::unique_ptr<ClockManager> clockManager = nullptr;
+        std::unique_ptr<WorldContainer> worldContainer = nullptr;
+        std::unique_ptr<ContextHandler> contextHandler = nullptr;
+        std::unique_ptr<PlayerManager> playerManager = nullptr;
+        std::unique_ptr<InputManager> inputManager = nullptr;
 
     public:
-        void InitializeGame();
+        void Initialize();
         void Update();
 
     private:
         void InitializeBase();
+        void InitializeContext();
+        void InitializeGalaxy();
         void UpdateBase();
+        PlayerInput GetPlayerInput();
     };
 } // namespace Beer::System

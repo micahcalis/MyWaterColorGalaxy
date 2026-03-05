@@ -24,7 +24,8 @@ namespace Beer::System
 
         Clock(double startTime);
         double GetTime() const { return time; }
-        double GetDeltaTime() const { return deltaTime; }
+        float GetTimeF() const { return time; }
+        float GetDeltaTime() const { return deltaTime; }
         void SetTime(double currentTime);
     };
 } // namespace Beer::System

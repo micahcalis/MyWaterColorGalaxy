@@ -65,7 +65,13 @@ FetchContent_Declare(
     GIT_TAG        release
 )
 
-FetchContent_MakeAvailable(glm VMA tinyobjloader)
+FetchContent_Declare(
+    entt
+    GIT_REPOSITORY https://github.com/skypjack/entt.git
+    GIT_TAG        v3.16.0
+)
+
+FetchContent_MakeAvailable(glm VMA tinyobjloader entt)
 
 include_directories(external)
 
@@ -106,6 +112,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     tinyobjloader
     GPUOpen::VulkanMemoryAllocator
+    EnTT::EnTT
 )
 
 set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")

@@ -26,7 +26,7 @@ namespace Beer::Core
 
     void Application::InitializeGame()
     {
-        gameManager.InitializeGame();
+        gameManager.Initialize();
     }
 
     void Application::MainLoop()
