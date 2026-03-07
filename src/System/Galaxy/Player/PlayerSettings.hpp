@@ -11,5 +11,5 @@ namespace Beer::System
 
     static const PlayerSettings PLAYER_SETTINGS = {
         5.0f,
-        0.1f};
+        0.3f};
 } // namespace Beer::System

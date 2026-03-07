@@ -1,15 +1,13 @@
 #include "System/Galaxy/Player/PlayerCamera.hpp"
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Camera/CameraSettings.hpp"
+#include "System/Galaxy/Player/PlayerSettings.hpp"
 #include "System/Context/ContextType.hpp"
-#include "glm/ext/quaternion_common.hpp"
-#include "glm/geometric.hpp"
-#include <cmath>
 #include <print>
 
 namespace Beer::System
 {
-    const float PLAYER_CAM_FOLLOW_SPEED = 5.0f;
+    const float PLAYER_CAM_FOLLOW_SPEED = 1.0f;
 
     PlayerCamera::PlayerCamera(PlayerHandle player)
         : player(player)
@@ -18,24 +16,42 @@ namespace Beer::System
             ContextType::Galaxy);
     }
 
-    void PlayerCamera::Update()
+    void PlayerCamera::Update(PlayerInput input)
     {
         FollowPlayer();
+        RotateCamera(input.MouseVec);
     }
 
     void PlayerCamera::FollowPlayer()
     {
         float delta = PLAYER_CAM_FOLLOW_SPEED * Clock::DeltaTime();
         const Transform* transform = camera->GetTransform();
-        glm::vec3 oldPos = transform->Position;
 
-        camera->SetPosition(glm::mix(
-            transform->Position,
+        camera->SetPosition(glm::mix(transform->Position,
             player.Transform->Position,
             delta));
+    }
 
-        camera->SetOrientation(player.Transform->Rotation);
+    void PlayerCamera::RotateCamera(glm::vec2 mouseVec)
+    {
+        yaw += mouseVec.x * PLAYER_SETTINGS.Sensitivity;
+        pitch += mouseVec.y * PLAYER_SETTINGS.Sensitivity;
 
-        std::println("Velocity Length: {}", glm::distance(oldPos, transform->Position));
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        glm::vec3 forward;
+        forward.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        forward.y = sin(glm::radians(pitch));
+        forward.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+        forward = glm::normalize(forward);
+
+        glm::vec3 right = glm::normalize(glm::cross(forward, WORLD_UP));
+        glm::vec3 up = glm::normalize(glm::cross(right, forward));
+
+        camera->SetOrientation(up, forward);
     }
 } // namespace Beer::System

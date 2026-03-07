@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <tiny_obj_loader.h>
 #include "Rendering/Shader/Shader.hpp"
+#include "System/Camera/Camera.hpp"
 
 namespace Beer::Core
 {
@@ -93,9 +94,10 @@ namespace Beer::Core
         bool resize = RendererUtilities::AcquireNextImage(swapchain.get(), frameResource, imageIndex);
 
         if (!resize)
-        {
             return;
-        }
+
+        if (System::Camera::Main() == nullptr)
+            return;
 
         frameResource.Reset();
 
@@ -361,13 +363,15 @@ namespace Beer::Core
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         const vk::Extent2D extent = swapchain->GetExtent();
-        const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
-        glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        glm::mat4 projMat = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
-        projMat[1][1] *= -1;
+        // const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
+        // glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+        // glm::mat4 projMat = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
+        // projMat[1][1] *= -1;
+
+        System::Camera* mainCam = System::Camera::Main();
 
         Rendering::Shader::Globals()->SetTime(time, 0);
-        Rendering::Shader::Globals()->SetCamera(viewMat, projMat, glm::vec3(2.0, 2.0, 2.0));
+        Rendering::Shader::Globals()->SetCamera(mainCam->GetViewMatrix(), mainCam->GetProjectionMatrix(), mainCam->GetTransform()->Position);
         Rendering::Shader::Globals()->SetScreen(static_cast<float>(extent.width), static_cast<float>(extent.height));
 
         Rendering::Shader::Globals()->Update();

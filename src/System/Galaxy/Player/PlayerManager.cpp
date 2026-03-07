@@ -26,7 +26,7 @@ namespace Beer::System
             playerController->Update(input);
         }
 
-        playerCamera->Update();
+        playerCamera->Update(input);
     }
 
     void PlayerManager::SetMovementEnabled(const bool enabled)

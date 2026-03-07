@@ -5,6 +5,7 @@
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_scancode.h"
 #include "glm/glm.hpp"
+#include <print>
 
 namespace Beer::System
 {
@@ -28,10 +29,10 @@ namespace Beer::System
         if (keyStates[SDL_SCANCODE_D] && keyStates[SDL_SCANCODE_A])
         {
             moveVec.y = 0;
-        } else if (keyStates[SDL_SCANCODE_D])
+        } else if (keyStates[SDL_SCANCODE_A])
         {
             moveVec.y = 1;
-        } else if (keyStates[SDL_SCANCODE_A])
+        } else if (keyStates[SDL_SCANCODE_D])
         {
             moveVec.y = -1;
         }
@@ -45,6 +46,7 @@ namespace Beer::System
         float deltaY = 0.0f;
 
         SDL_GetRelativeMouseState(&deltaX, &deltaY);
+
         return glm::vec2(deltaX, deltaY);
     }
 
