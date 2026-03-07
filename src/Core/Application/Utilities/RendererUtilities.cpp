@@ -10,11 +10,11 @@
 
 namespace Beer::Core
 {
-    bool RendererUtilities::AcquireNextImage(Swapchain& swapchain,
+    bool RendererUtilities::AcquireNextImage(Swapchain* swapchain,
         const FrameResource& frameResource,
         uint32_t& imageIndex)
     {
-        auto [result, index] = swapchain.AcquireNextImage(*frameResource.GetImageAvailableSemaphore());
+        auto [result, index] = swapchain->AcquireNextImage(*frameResource.GetImageAvailableSemaphore());
         imageIndex = index;
         if (result == vk::Result::eSuccess)
         {
@@ -84,11 +84,11 @@ namespace Beer::Core
     }
 
     vk::PresentInfoKHR RendererUtilities::CreatePresentInfo(const FrameResource& frameResource,
-        const Swapchain& swapchain,
+        const Swapchain* swapchain,
         const uint32_t& imageIndex)
 
     {
-        const auto& raiiSwapchain = swapchain.GetRaiiSwapchain();
+        const auto& raiiSwapchain = swapchain->GetRaiiSwapchain();
 
         vk::PresentInfoKHR presentInfoKHR{};
         presentInfoKHR.waitSemaphoreCount = 1;

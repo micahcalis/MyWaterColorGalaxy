@@ -23,10 +23,6 @@ namespace Beer::System
         transform->Position += translation
             * PLAYER_SETTINGS.MovementSpeed
             * glm::vec3(Clock::DeltaTime());
-
-        std::println("Player Position X: {}", player.Transform->Position.x);
-        std::println("Player Position Y: {}", player.Transform->Position.y);
-        std::println("Player Position Z: {}", player.Transform->Position.z);
     }
 
     void PlayerController::Rotate(glm::vec2 mouseVec)

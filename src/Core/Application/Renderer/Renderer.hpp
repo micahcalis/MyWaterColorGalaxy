@@ -34,7 +34,7 @@ namespace Beer::Core
         vk::raii::SurfaceKHR surface = nullptr;
         Device device{};
 
-        Swapchain swapchain{};
+        std::unique_ptr<Swapchain> swapchain = nullptr;
 
         std::shared_ptr<Rendering::Image> depthImage = nullptr;
 
@@ -72,7 +72,7 @@ namespace Beer::Core
         [[nodiscard]] const vk::raii::SurfaceKHR& GetSurface() const;
         [[nodiscard]] const Device& GetDevice() const;
 
-        Swapchain& GetSwapchain();
+        Swapchain* GetSwapchain();
         bool& GetFrameBufferResized();
 
     private:
@@ -87,5 +87,17 @@ namespace Beer::Core
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateGlobals();
+
+    private:
+        inline static Swapchain* mainSwapchain;
+
+    public:
+        static void SetMainSwapchain(Swapchain* swapchain)
+        {
+            mainSwapchain = swapchain;
+        }
+
+        static vk::Extent2D GetScreenExtent();
     };
+
 } // namespace Beer::Core

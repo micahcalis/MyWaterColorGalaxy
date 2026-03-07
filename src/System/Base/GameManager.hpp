@@ -5,6 +5,7 @@
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/WorldContainer.hpp"
 #include "System/Galaxy/Player/PlayerManager.hpp"
+#include "System/Camera/CameraManager.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -17,6 +18,7 @@ namespace Beer::System
         std::unique_ptr<ContextHandler> contextHandler = nullptr;
         std::unique_ptr<PlayerManager> playerManager = nullptr;
         std::unique_ptr<InputManager> inputManager = nullptr;
+        std::unique_ptr<CameraManager> cameraManager = nullptr;
 
     public:
         void Initialize();

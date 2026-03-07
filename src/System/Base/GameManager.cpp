@@ -25,6 +25,8 @@ namespace Beer::System
     {
         clockManager = std::make_unique<ClockManager>();
         inputManager = std::make_unique<InputManager>();
+        cameraManager = std::make_unique<CameraManager>();
+        Camera::SetCameraManager(cameraManager.get());
     }
 
     void GameManager::InitializeContext()

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PlayerInput.hpp"
-#include "System/Galaxy/Player/Player.hpp"
+#include "System/Galaxy/Player/PlayerHandle.hpp"
 
 namespace Beer::System
 {
@@ -10,12 +10,12 @@ namespace Beer::System
     class PlayerController
     {
     private:
-        const Player player;
+        const PlayerHandle player;
         float yaw = -90.0f;
         float pitch = 0.0f;
 
     public:
-        PlayerController(const Player player)
+        PlayerController(const PlayerHandle player)
             : player(player)
         {
         }

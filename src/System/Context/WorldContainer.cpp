@@ -1,7 +1,6 @@
 #include "System/Context/WorldContainer.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
-#include "System/Galaxy/GalaxyContext.hpp"
 #include <memory>
 #include <stdexcept>
 

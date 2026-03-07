@@ -11,7 +11,7 @@ namespace Beer::Core
     class RendererUtilities
     {
     public:
-        static bool AcquireNextImage(Swapchain& swapchain,
+        static bool AcquireNextImage(Swapchain* swapchain,
             const FrameResource& frameResource,
             uint32_t& imageIndex);
 
@@ -30,7 +30,7 @@ namespace Beer::Core
             vk::PipelineStageFlags* waitMask);
 
         static vk::PresentInfoKHR CreatePresentInfo(const FrameResource& frameResource,
-            const Swapchain& swapchain,
+            const Swapchain* swapchain,
             const uint32_t& imageIndex);
 
         static vk::Result Queue_PresentKHR_NoExcept(const vk::raii::Queue& queue,

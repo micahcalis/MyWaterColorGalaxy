@@ -12,9 +12,10 @@ namespace Beer::System
         Registry& registry = IContext::GetRegistry(playerContext);
         Entity playerEntity = registry.Create();
         Transform playerTransform = registry.AddComponent<Transform>(playerEntity);
-        player = Player(registry.GetHandle(playerEntity), &playerTransform);
+        player = PlayerHandle(registry.GetHandle(playerEntity), &playerTransform);
 
         playerController = std::make_unique<PlayerController>(player);
+        playerCamera = std::make_unique<PlayerCamera>(player);
         movementEnabled = true;
     }
 
@@ -24,6 +25,8 @@ namespace Beer::System
         {
             playerController->Update(input);
         }
+
+        playerCamera->Update();
     }
 
     void PlayerManager::SetMovementEnabled(const bool enabled)

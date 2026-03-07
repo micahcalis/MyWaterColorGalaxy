@@ -70,6 +70,6 @@ namespace Beer::Core
     {
         std::cout << "cleanup" << '\n';
         windowManager.Cleanup();
-        renderer.GetSwapchain().CleanupSwapchain();
+        renderer.GetSwapchain()->CleanupSwapchain();
     }
 } // namespace Beer::Core
