@@ -4,7 +4,6 @@
 #include "System/Base/Input/InputManager.hpp"
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/WorldContainer.hpp"
-#include "System/Galaxy/Player/PlayerManager.hpp"
 #include "System/Camera/CameraManager.hpp"
 #include <memory>
 
@@ -16,7 +15,6 @@ namespace Beer::System
         std::unique_ptr<ClockManager> clockManager = nullptr;
         std::unique_ptr<WorldContainer> worldContainer = nullptr;
         std::unique_ptr<ContextHandler> contextHandler = nullptr;
-        std::unique_ptr<PlayerManager> playerManager = nullptr;
         std::unique_ptr<InputManager> inputManager = nullptr;
         std::unique_ptr<CameraManager> cameraManager = nullptr;
 
@@ -26,9 +24,9 @@ namespace Beer::System
 
     private:
         void InitializeBase();
+        void InitializeContextFactory();
         void InitializeContext();
         void InitializeGalaxy();
         void UpdateBase();
-        PlayerInput GetPlayerInput();
     };
 } // namespace Beer::System

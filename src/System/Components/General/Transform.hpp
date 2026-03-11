@@ -1,5 +1,7 @@
 #pragma once
 
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
@@ -8,9 +10,9 @@ namespace Beer::System
     struct Transform
     {
     public:
-        glm::vec3 Position;
-        glm::quat Rotation;
-        glm::vec3 Scale;
+        glm::vec3 Position = glm::vec3(0);
+        glm::quat Rotation = glm::identity<glm::quat>();
+        glm::vec3 Scale = glm::vec3(1);
 
     public:
         glm::vec3 GetForward() const

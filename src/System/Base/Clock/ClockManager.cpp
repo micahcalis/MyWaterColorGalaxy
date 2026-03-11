@@ -12,6 +12,7 @@ namespace Beer::System
     void ClockManager::Update()
     {
         clock.SetTime(TimeToSeconds(std::chrono::high_resolution_clock::now()));
+        clock.BindToShaders();
     }
 
     double ClockManager::TimeToSeconds(std::chrono::time_point<std::chrono::high_resolution_clock> timePoint)

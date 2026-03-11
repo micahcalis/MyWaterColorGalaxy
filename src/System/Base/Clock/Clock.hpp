@@ -27,5 +27,6 @@ namespace Beer::System
         float GetTimeF() const { return time; }
         float GetDeltaTime() const { return deltaTime; }
         void SetTime(double currentTime);
+        void BindToShaders();
     };
 } // namespace Beer::System

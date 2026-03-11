@@ -1,5 +1,7 @@
 #include "System/Base/Clock/Clock.hpp"
+#include "Rendering/Shader/Shader.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
+#include <print>
 
 namespace Beer::System
 {
@@ -35,5 +37,10 @@ namespace Beer::System
         double newTime = currentTime - startTime;
         deltaTime = newTime - time;
         time = newTime;
+    }
+
+    void Clock::BindToShaders()
+    {
+        Rendering::Shader::Globals()->SetTime(time, deltaTime);
     }
 } // namespace Beer::System

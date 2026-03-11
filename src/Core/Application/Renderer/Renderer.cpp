@@ -358,21 +358,9 @@ namespace Beer::Core
 
     void Renderer::UpdateGlobals()
     {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
         const vk::Extent2D extent = swapchain->GetExtent();
-        // const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
-        // glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        // glm::mat4 projMat = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
-        // projMat[1][1] *= -1;
-
-        System::Camera* mainCam = System::Camera::Main();
-
-        Rendering::Shader::Globals()->SetTime(time, 0);
-        Rendering::Shader::Globals()->SetCamera(mainCam->GetViewMatrix(), mainCam->GetProjectionMatrix(), mainCam->GetTransform()->Position);
         Rendering::Shader::Globals()->SetScreen(static_cast<float>(extent.width), static_cast<float>(extent.height));
+        System::Camera::Main()->BindToShaders();
 
         Rendering::Shader::Globals()->Update();
     }

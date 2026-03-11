@@ -1,9 +1,7 @@
 #include "System/Camera/Camera.hpp"
-#include "CameraHandle.hpp"
 #include "Core/Application/Renderer/Renderer.hpp"
+#include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
-#include "System/ECS/Components/Transform.hpp"
-#include "System/ECS/ECS.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "vulkan/vulkan.hpp"
 #include "System/Camera/CameraManager.hpp"
@@ -19,8 +17,6 @@ namespace Beer::System
 
     glm::mat4 Camera::GetViewMatrix() const
     {
-        Transform* transform = handle.Transform;
-
         return glm::lookAt(transform->Position,
             transform->Position + transform->GetForward(),
             transform->GetUp());
@@ -37,35 +33,40 @@ namespace Beer::System
         return projMat;
     }
 
+    const Transform* Camera::GetTransform()
+    {
+        return transform;
+    }
+
     void Camera::SetPosition(glm::vec3 position)
     {
-        handle.Transform->Position = position;
+        transform->Position = position;
     }
 
     void Camera::SetOrientation(glm::quat rotation)
     {
-        handle.Transform->Rotation = rotation;
+        transform->Rotation = rotation;
     }
 
     void Camera::SetOrientation(glm::vec3 up, glm::vec3 forward)
     {
-        handle.Transform->Rotation = glm::quatLookAt(forward, up);
+        transform->Rotation = glm::quatLookAt(forward, up);
+    }
+
+    void Camera::BindToShaders()
+    {
+        Rendering::Shader::Globals()->SetCamera(GetViewMatrix(), GetProjectionMatrix(), GetTransform()->Position);
     }
 
     std::unique_ptr<Camera> Camera::CreateCamera(const CameraSettings settings,
-        const ContextType context)
+        Transform* transform)
     {
         if (cameraManager == nullptr)
         {
             throw std::runtime_error("Can't create Camera: manager nullptr");
         }
 
-        Registry& registry = IContext::GetRegistry(context);
-        Entity cameraEntity = registry.Create();
-        Transform& transform = registry.AddComponent<Transform>(cameraEntity);
-        CameraHandle handle = CameraHandle(registry.GetHandle(cameraEntity), &transform);
-
-        std::unique_ptr<Camera> camera = std::make_unique<Camera>(Camera(handle,
+        std::unique_ptr<Camera> camera = std::make_unique<Camera>(Camera(transform,
             settings.type,
             settings.fieldOfView,
             settings.nearMin,

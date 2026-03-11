@@ -3,7 +3,7 @@
 
 namespace Beer::System
 {
-    Registry& IContext::GetRegistry(ContextType type)
+    Registry* IContext::GetRegistry(ContextType type)
     {
         return worldContainer->GetContext(type)->GetRegistry();
     }

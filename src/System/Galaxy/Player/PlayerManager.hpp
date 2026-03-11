@@ -1,26 +1,29 @@
 #pragma once
 
 #include "PlayerCamera.hpp"
-#include "System/Context/ContextType.hpp"
-#include "System/ECS/ECS.hpp"
-#include "System/ECS/Registry.hpp"
-#include "System/Galaxy/Player/PlayerHandle.hpp"
+#include "PlayerEntity.hpp"
+#include "System/Components/Registry/IEntityManager.hpp"
+#include "System/Components/Registry/GameSubEntity.hpp"
+#include "System/Delegates/Delegate.hpp"
+#include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Galaxy/Player/PlayerController.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
 
 namespace Beer::System
 {
-    class PlayerManager
+    class PlayerManager : public IEntityManager
     {
     private:
-        PlayerHandle player;
+        PlayerEntity* player;
         std::unique_ptr<PlayerController> playerController = nullptr;
+        std::unique_ptr<GameSubEntity> cameraEntity = nullptr;
         std::unique_ptr<PlayerCamera> playerCamera = nullptr;
         bool movementEnabled;
+        Function<PlayerInput> getPlayerInput;
 
     public:
-        PlayerManager(const ContextType playerContext);
-        void Update(PlayerInput input);
+        PlayerManager(PlayerEntity* player, Function<PlayerInput> getPlayerInput);
+        void Update() override;
         void SetMovementEnabled(const bool enabled);
     };
 } // namespace Beer::System

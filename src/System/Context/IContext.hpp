@@ -1,7 +1,7 @@
 #pragma once
 
 #include "System/Context/ContextType.hpp"
-#include <System/ECS/Registry.hpp>
+#include <System/Components/Registry/Registry.hpp>
 
 namespace Beer::System
 {
@@ -13,12 +13,12 @@ namespace Beer::System
     class IContext
     {
     protected:
-        Registry registry;
+        Registry registry{};
         bool enabled = true;
 
     public:
         virtual ~IContext() = default;
-        Registry& GetRegistry() { return registry; }
+        Registry* GetRegistry() { return &registry; }
         virtual void Load() = 0;
 
         virtual void Update()
@@ -37,6 +37,6 @@ namespace Beer::System
 
     public:
         static void SetWorldContainer(WorldContainer* worldContainer) { IContext::worldContainer = worldContainer; }
-        static Registry& GetRegistry(ContextType type);
+        static Registry* GetRegistry(ContextType type);
     };
 } // namespace Beer::System

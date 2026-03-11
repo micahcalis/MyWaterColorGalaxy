@@ -1,19 +1,18 @@
 #pragma once
 
+#include "PlayerEntity.hpp"
 #include "PlayerInput.hpp"
-#include "System/Galaxy/Player/PlayerHandle.hpp"
+#include "System/Galaxy/Player/PlayerEntity.hpp"
 
 namespace Beer::System
 {
     class PlayerController
     {
     private:
-        PlayerHandle player;
-        float yaw = -90.0f;
-        float pitch = 0.0f;
+        PlayerEntity* player;
 
     public:
-        PlayerController(PlayerHandle player)
+        PlayerController(PlayerEntity* player)
             : player(player)
         {
         }

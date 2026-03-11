@@ -16,12 +16,17 @@ namespace Beer::System
         contextMap[type] = context;
     }
 
-    std::shared_ptr<IContext> WorldContainer::GetContext(const ContextType type) const
+    IContext* WorldContainer::GetContext(const ContextType type) const
     {
         if (!ContextExists(type))
             return nullptr;
 
-        return contextMap.at(type);
+        return contextMap.at(type).get();
+    }
+
+    void WorldContainer::DestroyContext(const ContextType type)
+    {
+        contextMap.erase(type);
     }
 
     void WorldContainer::UpdateContexts()

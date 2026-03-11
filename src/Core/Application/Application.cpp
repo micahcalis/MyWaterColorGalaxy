@@ -13,6 +13,7 @@ namespace Beer::Core
     void Application::Run()
     {
         windowManager.InitializeWindow();
+        SDL_SetWindowRelativeMouseMode(windowManager.GetWindow(), true);
         InitializeVulkan();
         InitializeGame();
         MainLoop();
@@ -66,6 +67,7 @@ namespace Beer::Core
 
         renderer.GetDevice().GetLogicalDevice().waitIdle();
     }
+
     void Application::Cleanup()
     {
         std::cout << "cleanup" << '\n';

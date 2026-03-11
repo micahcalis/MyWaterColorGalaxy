@@ -4,7 +4,6 @@
 
 namespace Beer::System
 {
-
     void ContextHandler::LoadContext(const ContextType type)
     {
         std::shared_ptr<IContext> context = GetContextFromType(type);
@@ -14,7 +13,7 @@ namespace Beer::System
 
     void ContextHandler::DestroyContext(const ContextType type)
     {
-        worldContainer->GetContext(type).reset();
+        worldContainer->DestroyContext(type);
     }
 
     void ContextHandler::SetContextActive(const ContextType type, const bool active)
@@ -23,20 +22,11 @@ namespace Beer::System
 
     std::shared_ptr<IContext> ContextHandler::GetContextFromType(const ContextType type)
     {
-        std::shared_ptr<IContext> context = nullptr;
+        auto factory = contextFactories.find(type);
 
-        switch (type)
-        {
-        case ContextType::Galaxy:
-            context = std::make_shared<GalaxyContext>();
-            break;
-        }
+        if (factory == contextFactories.end())
+            throw std::runtime_error("Context Type not defined in creation factory");
 
-        if (context == nullptr)
-        {
-            throw std::runtime_error("Context Type not defined in creation pipeline");
-        }
-
-        return context;
+        return factory->second();
     }
 } // namespace Beer::System

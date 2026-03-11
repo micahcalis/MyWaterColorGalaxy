@@ -4,7 +4,6 @@
 #include "System/Camera/Camera.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
-#include <print>
 
 namespace Beer::System
 {
@@ -15,7 +14,7 @@ namespace Beer::System
 
     void PlayerController::Move(glm::vec2 movementVec)
     {
-        Transform* transform = player.Transform;
+        Transform* transform = player->GetTransform();
 
         if (Camera::Main() == nullptr)
             return;
@@ -26,8 +25,9 @@ namespace Beer::System
         glm::vec3 translation = cameraTransform->GetForward() * movementVec.x;
         translation += cameraTransform->GetRight() * movementVec.y;
 
-        transform->Position += translation
-            * PLAYER_SETTINGS.MovementSpeed
-            * glm::vec3(Clock::DeltaTime());
+        transform->Position = transform->Position
+            + translation
+                * PLAYER_SETTINGS.MovementSpeed
+                * glm::vec3(Clock::DeltaTime());
     }
 } // namespace Beer::System

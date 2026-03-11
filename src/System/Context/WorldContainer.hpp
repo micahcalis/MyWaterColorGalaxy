@@ -14,12 +14,12 @@ namespace Beer::System
 
     public:
         void AddContext(const ContextType type, std::shared_ptr<IContext>);
-        std::shared_ptr<IContext> GetContext(const ContextType type) const;
+        IContext* GetContext(const ContextType type) const;
         void UpdateContexts();
+        void DestroyContext(const ContextType type);
 
     private:
         void CleanupDirty();
         bool ContextExists(const ContextType type) const { return contextMap.contains(type); }
-        std::shared_ptr<IContext> GetContextFromType(const ContextType type);
     };
 } // namespace Beer::System

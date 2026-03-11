@@ -4,6 +4,8 @@
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Context/WorldContainer.hpp"
+#include "System/Delegates/Delegate.hpp"
+#include "System/Galaxy/GalaxyContext.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -12,13 +14,15 @@ namespace Beer::System
     {
         InitializeBase();
         InitializeContext();
+        InitializeContextFactory();
+        // temporary, we dont start gaming immediately
+        InitializeGalaxy();
     }
 
     void GameManager::Update()
     {
         UpdateBase();
         worldContainer->UpdateContexts();
-        playerManager->Update(GetPlayerInput());
     }
 
     void GameManager::InitializeBase()
@@ -29,31 +33,31 @@ namespace Beer::System
         Camera::SetCameraManager(cameraManager.get());
     }
 
+    void GameManager::InitializeContextFactory()
+    {
+        InputManager* inputManagerP = inputManager.get();
+        auto getPlayerInput =
+            [inputManagerP]() -> PlayerInput { return PlayerInput(inputManagerP->GetMovementVector(), inputManagerP->GetMouseVector()); };
+
+        contextHandler->RegisterContextFactory(ContextType::Galaxy, [getPlayerInput]() -> std::shared_ptr<IContext> {
+            return std::make_shared<GalaxyContext>(getPlayerInput);
+        });
+    }
+
     void GameManager::InitializeContext()
     {
         worldContainer = std::make_unique<WorldContainer>();
         contextHandler = std::make_unique<ContextHandler>(worldContainer.get());
         IContext::SetWorldContainer(worldContainer.get());
-
-        // this is temporary, we don't start gaming immediately
-        InitializeGalaxy();
     }
 
     void GameManager::InitializeGalaxy()
     {
         contextHandler->LoadContext(ContextType::Galaxy);
-        playerManager = std::make_unique<PlayerManager>(ContextType::Galaxy);
     }
 
     void GameManager::UpdateBase()
     {
         clockManager->Update();
-    }
-
-    PlayerInput GameManager::GetPlayerInput()
-    {
-        return {
-            inputManager->GetMovementVector(),
-            inputManager->GetMouseVector()};
     }
 } // namespace Beer::System
