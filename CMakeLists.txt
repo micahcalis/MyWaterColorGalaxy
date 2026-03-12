@@ -161,6 +161,7 @@ function(add_slang_shader_target TARGET)
         # 2. ADD THE -I FLAG TO TELL SLANGC WHERE THE MODULES ARE
         COMMAND ${SLANGC_EXECUTABLE} ${MAIN_SOURCE}
                 -target spirv -profile spirv_1_4 -emit-spirv-directly 
+                -matrix-layout-column-major
                 -I ${SLANG_MODULES_DIR} 
                 -o ${OUTPUT_SPV}
                 

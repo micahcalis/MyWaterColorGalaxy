@@ -41,7 +41,7 @@ struct VertexData
 VertexData HelloTriangleVert(MeshData input)
 {
     VertexData output;
-    float4 positionWS = float4(input.positionOS, 1);
+    float4 positionWS = mul(_ObjToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
     output.color = input.color;
     output.texCoord = input.texCoord;

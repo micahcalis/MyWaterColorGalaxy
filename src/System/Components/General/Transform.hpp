@@ -1,9 +1,12 @@
 #pragma once
 
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/fwd.hpp"
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
+#include "Rendering/Shader/ModelPush.hpp"
+#include "Rendering/Shader/Shader.hpp"
+#include "vulkan/vulkan.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 namespace Beer::System
 {
@@ -28,6 +31,25 @@ namespace Beer::System
         glm::vec3 GetUp() const
         {
             return Rotation * glm::vec3(0, 1, 0);
+        }
+
+        [[nodiscard]] Rendering::ModelPush GetShaderTransform() const
+        {
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), Position);
+            model *= glm::toMat4(Rotation);
+            model = glm::scale(model, Scale);
+            return {model, glm::inverse(model)};
+        }
+
+    public:
+        static void Bind(vk::CommandBuffer commandBuffer, Rendering::ModelPush modelPush, const Rendering::Shader* shader)
+        {
+            commandBuffer.pushConstants(
+                shader->GetPipelineLayout(),
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                0,
+                sizeof(Rendering::ModelPush),
+                &modelPush);
         }
     };
 } // namespace Beer::System

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "System/Components/General/SingleMeshRender.hpp"
+#include "Rendering/Shader/ModelPush.hpp"
 #include "System/Drawing/BindHistory.hpp"
 #include "System/Drawing/BindMask.hpp"
 #include "System/Drawing/BindType.hpp"
@@ -10,6 +11,12 @@ namespace Beer::System
     BindHistory SingleMeshRender::Bind(BindMask mask, vk::CommandBuffer commandBuffer, const Rendering::ShaderPassType pass)
     {
         const Rendering::Shader* shader = material->GetShader();
+
+        if (transform != nullptr)
+        {
+            Rendering::ModelPush modelPush = transform->GetShaderTransform();
+            Transform::Bind(commandBuffer, modelPush, shader);
+        }
 
         if (mask.Has(BindType::Shader))
         {
