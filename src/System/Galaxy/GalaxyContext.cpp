@@ -33,12 +33,13 @@ namespace Beer::System
         Transform playerTransform{};
         playerTransform.Position = PLAYER_SETTINGS.StartPos;
 
-        std::shared_ptr<Rendering::Shader> shader = Rendering::Shader::Get("HelloTriangle");
-        std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_IcoSphere2");
+        std::shared_ptr<Rendering::Shader> shader = Rendering::Shader::Get("SphereRaymarch");
+        std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_Cube");
         ;
         std::shared_ptr<Rendering::Material> material = std::make_shared<Rendering::Material>(shader);
 
-        material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
+        material->SetColor("_BaseColor", glm::vec4(0, 0.0f, 1, 1));
+        material->SetFloat("_SphereRadius", 0.5f);
 
         std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
             ContextType::Galaxy, material, mesh, nullptr, nullptr);
@@ -52,7 +53,7 @@ namespace Beer::System
         for (int i = 0; i < 10; i++)
         {
             Transform staticTransform{};
-            pos += glm::vec3(1, 0, 0);
+            pos += glm::vec3(2, 0, 0);
             staticTransform.Position = pos;
 
             std::unique_ptr<SingleMeshRender> staticRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
