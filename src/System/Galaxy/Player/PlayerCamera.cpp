@@ -3,7 +3,6 @@
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Camera/CameraSettings.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
-#include "System/Context/ContextType.hpp"
 #include "glm/ext/vector_float3.hpp"
 
 namespace Beer::System

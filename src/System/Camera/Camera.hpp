@@ -2,7 +2,6 @@
 
 #include "CameraSettings.hpp"
 #include "System/Camera/CameraType.hpp"
-#include "System/Context/ContextType.hpp"
 #include "System/Components/General/Transform.hpp"
 #include <cstdint>
 #include <memory>

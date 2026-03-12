@@ -1,5 +1,6 @@
 #pragma once
 
+#include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Components/Registry/GameEntity.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
 #include "System/Delegates/Delegate.hpp"
@@ -13,10 +14,12 @@ namespace Beer::System
 
     public:
         PlayerEntity(Transform transform,
-            RenderComponent renderComponent,
+            std::unique_ptr<SingleMeshRender> singleMeshRender,
             Function<PlayerInput> getPlayerInput)
-            : getPlayerInput(getPlayerInput), GameEntity(transform, renderComponent)
+            : getPlayerInput(getPlayerInput), GameEntity(transform, nullptr)
         {
+            singleMeshRender->SetTransform(&this->transform);
+            this->renderComponent = (std::move(singleMeshRender));
         }
 
         void Update() override;

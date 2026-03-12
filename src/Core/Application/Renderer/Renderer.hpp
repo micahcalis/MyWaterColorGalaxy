@@ -19,6 +19,7 @@
 #include "Rendering/Mesh./Mesh.hpp"
 #include "Core/Application/Managers/ShaderManager.hpp"
 #include "Rendering/Uniforms/DescriptorAllocator.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 
 namespace Beer::Core
 {
@@ -49,6 +50,7 @@ namespace Beer::Core
         std::unique_ptr<MeshManager> meshManager = nullptr;
         std::unique_ptr<ImageAssetManager> imageAssetManager = nullptr;
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
+        std::unique_ptr<System::RenderRegister> renderRegister = nullptr;
 
         std::shared_ptr<Rendering::Shader> shader = nullptr;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;

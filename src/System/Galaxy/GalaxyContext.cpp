@@ -1,12 +1,17 @@
 #pragma once
 
 #include "System/Galaxy/GalaxyContext.hpp"
-#include "System/Components/General/RenderComponent.hpp"
+#include "Rendering/Material/Material.hpp"
+#include "Rendering/Shader/Shader.hpp"
+#include "System/Components/General/SingleMeshRender.hpp"
+#include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Components/Registry/Registry.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include <memory>
 #include <print>
 
 namespace Beer::System
@@ -26,10 +31,19 @@ namespace Beer::System
     {
         Transform transform{};
         transform.Position = PLAYER_SETTINGS.StartPos;
-        playerEntity = registry.CreateEntity<PlayerEntity>(std::move(transform),
-            RenderComponent(nullptr, nullptr),
-            getPlayerInput);
 
-        std::println("Created Player Entity");
+        std::shared_ptr<Rendering::Shader> shader = Rendering::Shader::Get("HelloTriangle");
+        std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_VikingRoom");
+        ;
+        std::shared_ptr<Rendering::Material> material = std::make_shared<Rendering::Material>(shader);
+
+        material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
+
+        std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
+            ContextType::Galaxy, std::move(material), std::move(mesh), nullptr);
+
+        playerEntity = registry.CreateEntity<PlayerEntity>(std::move(transform),
+            std::move(renderComponent),
+            getPlayerInput);
     }
 } // namespace Beer::System

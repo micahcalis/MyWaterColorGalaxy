@@ -14,6 +14,7 @@
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
@@ -21,7 +22,6 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <chrono>
 #include <stdexcept>
 #include <tiny_obj_loader.h>
 #include "Rendering/Shader/Shader.hpp"
@@ -212,6 +212,9 @@ namespace Beer::Core
             uploadManager.get());
 
         Rendering::Image::SetImageAssetManager(imageAssetManager.get());
+
+        renderRegister = std::make_unique<System::RenderRegister>();
+        System::RenderRegister::SetRenderRegister(renderRegister.get());
     }
 
     void Renderer::CreateDepthResources(vk::Format& depthFormat)

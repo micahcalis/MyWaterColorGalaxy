@@ -1,6 +1,5 @@
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/IContext.hpp"
-#include "System/Galaxy/GalaxyContext.hpp"
 
 namespace Beer::System
 {

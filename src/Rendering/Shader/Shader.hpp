@@ -11,6 +11,7 @@
 #include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 #include "Rendering/Material/MaterialProperties.hpp"
+#include "System/Drawing/ShaderPassMask.hpp"
 
 namespace Beer::Core
 {
@@ -48,7 +49,8 @@ namespace Beer::Rendering
             auto it = passes.find(passType);
             if (it == passes.end())
             {
-                return nullptr;
+                throw std::runtime_error(
+                    std::format("Shader doesn't have pass: {}", magic_enum::enum_name(passType)));
             }
 
             return &it->second;
@@ -61,7 +63,21 @@ namespace Beer::Rendering
 
         vk::PipelineLayout GetPipelineLayout() const { return *pipelineLayout; }
         MaterialProperties* GetProperties() const { return materialProperties.get(); }
-        void BindShader(vk::CommandBuffer commandBuffer);
+        void BindPass(vk::CommandBuffer commandBuffer, const ShaderPassType passType) const;
+
+        bool HasPass(System::ShaderPassMask mask) const
+        {
+            for (const auto& [passType, passData] : passes)
+            {
+                if (mask.Has(passType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         void PrintConfig();
 
     private:

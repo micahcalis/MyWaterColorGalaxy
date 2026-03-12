@@ -1,6 +1,7 @@
 #include "Rendering/Shader/Shader.hpp"
 #include <filesystem>
 #include <print>
+#include <stdexcept>
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Rendering/Shader/ShaderReflection.hpp"
@@ -45,6 +46,17 @@ namespace Beer::Rendering
                 settings,
                 passInput.BufferOrder);
         }
+    }
+
+    void Shader::BindPass(vk::CommandBuffer commandBuffer, const ShaderPassType passType) const
+    {
+        const ShaderPass* shaderPass = GetPass(passType);
+
+        if (shaderPass == nullptr)
+            throw std::runtime_error(
+                std::format("Shader doesn't have pass: {}", magic_enum::enum_name(passType)));
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPass->Pipeline);
     }
 
     std::shared_ptr<Shader> Shader::Get(const std::string& name)

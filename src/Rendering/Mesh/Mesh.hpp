@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Rendering/Mesh/MeshBufferOrder.hpp"
 #include "Rendering/Mesh/MeshBuffers.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
@@ -31,6 +33,7 @@ namespace Beer::Rendering
 
         static std::shared_ptr<Mesh> Get(const std::string& name);
 
+        void Bind(vk::CommandBuffer commandBuffer, const MeshBufferOrder bufferOrder, bool& canIndex) const;
         const MeshBuffers& GetBuffers() const { return buffers; }
         uint32_t GetVertexCount() const { return vertexCount; }
         uint32_t GetIndexCount() const { return indexCount; }

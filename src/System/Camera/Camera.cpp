@@ -1,7 +1,5 @@
 #include "System/Camera/Camera.hpp"
 #include "Core/Application/Renderer/Renderer.hpp"
-#include "System/Context/ContextType.hpp"
-#include "System/Context/IContext.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "vulkan/vulkan.hpp"
 #include "System/Camera/CameraManager.hpp"

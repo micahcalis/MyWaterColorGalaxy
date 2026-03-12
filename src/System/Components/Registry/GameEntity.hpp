@@ -2,7 +2,9 @@
 
 #include "IEntityManager.hpp"
 #include "System/Components/General/Transform.hpp"
-#include "System/Components/General/RenderComponent.hpp"
+#include "System/Components/General/IRenderComponent.hpp"
+#include "System/Drawing/Layer.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -18,21 +20,22 @@ namespace Beer::System
     protected:
         uint32_t id = 0;
         Transform transform;
-        RenderComponent renderComponent;
+        std::unique_ptr<IRenderComponent> renderComponent;
         std::unique_ptr<IEntityManager> manager = nullptr;
+        Layer layer = Layer::Default;
 
     public:
         virtual ~GameEntity() = default;
         virtual void Update() = 0;
 
         [[nodiscard]] Transform* GetTransform() { return &transform; }
-        [[nodiscard]] RenderComponent* GetRenderComponent() { return &renderComponent; }
+        [[nodiscard]] IRenderComponent* GetRenderComponent() { return renderComponent.get(); }
         void SetId(Registry* assigner, uint32_t id);
         bool IsAssigned() const;
 
     protected:
-        GameEntity(Transform transform, RenderComponent renderComponent)
-            : transform(transform), renderComponent(renderComponent)
+        GameEntity(Transform transform, std::unique_ptr<IRenderComponent> renderComponent)
+            : transform(transform), renderComponent(std::move(renderComponent))
         {
         }
 
