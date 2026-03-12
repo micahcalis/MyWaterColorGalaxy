@@ -59,7 +59,7 @@ float4 HelloTriangleFrag(VertexData input) : SV_Target
     traveler.ToggleSpace();
 
     float4 sample = _MainTex.Sample(input.texCoord);
-    BeerLambert lambert = BeerLambert(traveler.Color, input.positionWS, input.normalOS, float3(0, 100, 10));
+    BeerLambert lambert = BeerLambert(_BaseColor.rgb, input.positionWS, input.normalOS, float3(0, 100, 10));
     
     return float4(lambert.GetLambert(), 1);
 }

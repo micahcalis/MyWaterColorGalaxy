@@ -6,6 +6,7 @@
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
+#include "System/Default/SingleStaticEntity.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Components/Registry/Registry.hpp"
@@ -29,8 +30,8 @@ namespace Beer::System
 
     void GalaxyContext::Load()
     {
-        Transform transform{};
-        transform.Position = PLAYER_SETTINGS.StartPos;
+        Transform playerTransform{};
+        playerTransform.Position = PLAYER_SETTINGS.StartPos;
 
         std::shared_ptr<Rendering::Shader> shader = Rendering::Shader::Get("HelloTriangle");
         std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_IcoSphere2");
@@ -40,10 +41,25 @@ namespace Beer::System
         material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
 
         std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
-            ContextType::Galaxy, std::move(material), std::move(mesh), nullptr, nullptr);
+            ContextType::Galaxy, material, mesh, nullptr, nullptr);
 
-        playerEntity = registry.CreateEntity<PlayerEntity>(std::move(transform),
+        playerEntity = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
             std::move(renderComponent),
             getPlayerInput);
+
+        glm::vec3 pos = glm::vec3(0);
+
+        for (int i = 0; i < 10; i++)
+        {
+            Transform staticTransform{};
+            pos += glm::vec3(1, 0, 0);
+            staticTransform.Position = pos;
+
+            std::unique_ptr<SingleMeshRender> staticRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
+                ContextType::Galaxy, material, mesh, nullptr, nullptr);
+
+            staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(staticTransform),
+                std::move(staticRenderComp)));
+        }
     }
 } // namespace Beer::System

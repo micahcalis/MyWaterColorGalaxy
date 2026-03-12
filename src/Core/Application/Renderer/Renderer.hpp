@@ -52,11 +52,6 @@ namespace Beer::Core
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
         std::unique_ptr<System::RenderRegister> renderRegister = nullptr;
 
-        std::shared_ptr<Rendering::Shader> shader = nullptr;
-        std::shared_ptr<Rendering::Mesh> mesh = nullptr;
-        std::shared_ptr<Rendering::Texture2D> texture = nullptr;
-        std::shared_ptr<Rendering::Material> material = nullptr;
-
         int frameIndex = 0;
         bool frameBufferResized = false;
 
@@ -85,7 +80,6 @@ namespace Beer::Core
         void CreateSemaphores();
         void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);
-        void LoadObject();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateGlobals();

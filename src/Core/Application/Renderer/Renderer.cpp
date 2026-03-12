@@ -12,6 +12,7 @@
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
@@ -75,12 +76,11 @@ namespace Beer::Core
         };
 
         InitializeAssetManagers(depthFormat);
-        LoadObject();
     }
 
     void Renderer::PreDraw()
     {
-        material->Update();
+        Rendering::Material::UpdateDirtyMaterials();
         uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
@@ -247,21 +247,6 @@ namespace Beer::Core
         {
             swapchainSemaphores.emplace_back(device.GetLogicalDevice(), semaphoreInfo);
         }
-    }
-
-    void Renderer::LoadObject()
-    {
-        shader = Rendering::Shader::Get("HelloTriangle");
-        shader->PrintConfig();
-
-        mesh = Rendering::Mesh::Get("MDL_VikingRoom");
-
-        texture = std::make_shared<Rendering::Texture2D>("Tex_VikingRoom");
-
-        material = std::make_shared<Rendering::Material>(shader);
-
-        material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
-        material->SetTexture("_MainTex", texture);
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)

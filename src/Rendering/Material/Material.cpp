@@ -8,6 +8,11 @@
 
 namespace Beer::Rendering
 {
+    Material::~Material()
+    {
+        dirtyMaterialsQueue.erase(this);
+    }
+
     Material::Material(std::shared_ptr<Shader> shader)
         : shader(shader)
     {
@@ -126,5 +131,23 @@ namespace Beer::Rendering
     void Material::MarkDirty()
     {
         dirtyFramesCount = UniformDescriptor::GetFramesInFlight();
+        dirtyMaterialsQueue.insert(this);
+    }
+
+    void Material::UpdateDirtyMaterials()
+    {
+        for (auto it = dirtyMaterialsQueue.begin(); it != dirtyMaterialsQueue.end();)
+        {
+            Material* material = *it;
+            material->Update();
+
+            if (material->dirtyFramesCount <= 0)
+            {
+                it = dirtyMaterialsQueue.erase(it);
+            } else
+            {
+                ++it;
+            }
+        }
     }
 } // namespace Beer::Rendering
