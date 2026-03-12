@@ -15,10 +15,12 @@ namespace Beer::System
     public:
         PlayerEntity(Transform transform,
             std::unique_ptr<SingleMeshRender> singleMeshRender,
-            Function<PlayerInput> getPlayerInput)
-            : getPlayerInput(getPlayerInput), GameEntity(transform, nullptr)
+            Function<PlayerInput> getPlayerInput,
+            Layer layer = Layer::Default)
+            : getPlayerInput(getPlayerInput), GameEntity(transform, nullptr, layer)
         {
             singleMeshRender->SetTransform(&this->transform);
+            singleMeshRender->SetLayer(&this->layer);
             this->renderComponent = (std::move(singleMeshRender));
         }
 

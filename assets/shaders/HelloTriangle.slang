@@ -41,9 +41,7 @@ struct VertexData
 VertexData HelloTriangleVert(MeshData input)
 {
     VertexData output;
-    float offsetX = sin(_Time * 2.0) * 0.3;
-    float offsetZ = cos(_Time * 2.0) * 0.3;
-    float4 positionWS = float4(input.positionOS, 1);// + float3(offsetX, 0, offsetZ), 1);
+    float4 positionWS = float4(input.positionOS, 1);
     output.positionCS = mul(_ViewProjMat, positionWS);
     output.color = input.color;
     output.texCoord = input.texCoord;
@@ -55,8 +53,13 @@ VertexData HelloTriangleVert(MeshData input)
 [shader("fragment")]
 float4 HelloTriangleFrag(VertexData input) : SV_Target
 {
+    Color.ColorTraveler traveler = Color.ColorTraveler(float3(0.8, 0.2, 0));
+    traveler.ToggleSpace();
+    traveler.Color.r = frac(traveler.Color.r + _Time * 0.2);
+    traveler.ToggleSpace();
+
     float4 sample = _MainTex.Sample(input.texCoord);
-    BeerLambert lambert = BeerLambert(sample.rgb, input.positionWS, input.normalOS, float3(0, 100, 10));
+    BeerLambert lambert = BeerLambert(traveler.Color, input.positionWS, input.normalOS, float3(0, 100, 10));
     
     return float4(lambert.GetLambert(), 1);
 }

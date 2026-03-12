@@ -20,7 +20,10 @@ namespace Beer::System
         RenderRegister();
         void AddComponent(IRenderComponent* component, const ContextType context);
         void Cleanup();
-        Core::DrawCallPool GetDrawCallPool(const DrawRequest request);
+        Core::DrawCallPool GetDrawCallPool(const DrawRequest& request);
+
+    private:
+        bool IsRenderComponentValid(const DrawRequest& request, IRenderComponent* component);
 
     private:
         inline static RenderRegister* renderRegister = nullptr;

@@ -11,7 +11,6 @@
 #include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 #include "Rendering/Material/MaterialProperties.hpp"
-#include "System/Drawing/ShaderPassMask.hpp"
 
 namespace Beer::Core
 {
@@ -65,17 +64,9 @@ namespace Beer::Rendering
         MaterialProperties* GetProperties() const { return materialProperties.get(); }
         void BindPass(vk::CommandBuffer commandBuffer, const ShaderPassType passType) const;
 
-        bool HasPass(System::ShaderPassMask mask) const
+        bool HasPass(ShaderPassType pass) const
         {
-            for (const auto& [passType, passData] : passes)
-            {
-                if (mask.Has(passType))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return passes.contains(pass);
         }
 
         void PrintConfig();

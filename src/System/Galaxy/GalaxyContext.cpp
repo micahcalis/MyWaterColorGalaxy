@@ -33,14 +33,14 @@ namespace Beer::System
         transform.Position = PLAYER_SETTINGS.StartPos;
 
         std::shared_ptr<Rendering::Shader> shader = Rendering::Shader::Get("HelloTriangle");
-        std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_VikingRoom");
+        std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_IcoSphere2");
         ;
         std::shared_ptr<Rendering::Material> material = std::make_shared<Rendering::Material>(shader);
 
         material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
 
         std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
-            ContextType::Galaxy, std::move(material), std::move(mesh), nullptr);
+            ContextType::Galaxy, std::move(material), std::move(mesh), nullptr, nullptr);
 
         playerEntity = registry.CreateEntity<PlayerEntity>(std::move(transform),
             std::move(renderComponent),

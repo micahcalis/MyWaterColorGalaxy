@@ -41,7 +41,7 @@ namespace Beer::System
         return BindHistory(shader, material.get(), mesh.get());
     }
 
-    BindMask SingleMeshRender::GetBindMask(BindHistory history)
+    BindMask SingleMeshRender::GetBindMask(const BindHistory& history) const
     {
         uint32_t bindMaskBits = 0;
 

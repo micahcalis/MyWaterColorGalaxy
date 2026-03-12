@@ -2,6 +2,7 @@
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
+#include "Core/Application/Renderer/DrawCallPool.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
@@ -14,6 +15,11 @@
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "System/Context/ContextType.hpp"
+#include "System/Drawing/ContextMask.hpp"
+#include "System/Drawing/DrawRequest.hpp"
+#include "System/Drawing/Layer.hpp"
+#include "System/Drawing/LayerMask.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
@@ -309,7 +315,13 @@ namespace Beer::Core
         UpdateGlobals();
         Rendering::Shader::Globals()->Bind(commandBuffer);
 
-        CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), material.get(), Rendering::ShaderPassType::Opaque);
+        System::DrawRequest drawRequest = System::DrawRequest(commandBuffer,
+            Rendering::ShaderPassType::Opaque,
+            System::ContextMask(System::CTXT_GALAXY_BITS),
+            System::LayerMask(System::LAYER_ALL_BITS));
+
+        DrawCallPool drawPool = renderRegister->GetDrawCallPool(drawRequest);
+        drawPool.BindDrawCalls();
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)

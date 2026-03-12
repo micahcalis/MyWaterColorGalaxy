@@ -34,8 +34,10 @@ namespace Beer::System
         bool IsAssigned() const;
 
     protected:
-        GameEntity(Transform transform, std::unique_ptr<IRenderComponent> renderComponent)
-            : transform(transform), renderComponent(std::move(renderComponent))
+        GameEntity(Transform transform,
+            std::unique_ptr<IRenderComponent> renderComponent,
+            Layer layer = Layer::Default)
+            : transform(transform), renderComponent(std::move(renderComponent)), layer(layer)
         {
         }
 
