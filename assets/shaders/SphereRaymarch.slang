@@ -2,12 +2,15 @@
 
 import BeerCore;
 import SphereTracing;
+import BeerLambert;
+import SDF;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
 {
-    float _SphereRadius;
+    float4 _Random;
     float4 _BaseColor;
+    int _ShapeIndex;
 };
 
 struct MeshData
@@ -44,15 +47,66 @@ VertexData SphereRaymarchVert(MeshData input)
 float4 SphereRaymarchFrag(VertexData input) : SV_Target
 {
     float3 viewDirWS = normalize(input.positionWS - _CameraPos);
-    SphereTracing.Sphere sphere = SphereTracing.Sphere(input.transformCenter, _SphereRadius);
     SphereTracing.Ray ray = SphereTracing.Ray(input.positionWS, viewDirWS);
     SphereTracing.AABB boundingbox = SphereTracing.AABB(input.transformCenter, float3(2));
+    SphereTracing.TraceResult trace = SphereTracing.TraceResult(input.positionWS);
 
-    SphereTracing.SphereTracer tracer = SphereTracing.SphereTracer(sphere, ray, boundingbox);
-    bool hit = tracer.Trace();
+    switch (_ShapeIndex)
+    {
+        case 0:
+        {
+            SDF.Sphere shape = SDF.Sphere(input.transformCenter, _Random.x);
+            SphereTracing.SphereTracer<SDF.Sphere> tracer = 
+                SphereTracing.SphereTracer<SDF.Sphere>(shape, ray, boundingbox);
+                
+            trace = tracer.Trace();
+            break;
+        }
+        case 1:
+        {
+            SDF.Box shape = SDF.Box(input.transformCenter, _Random.xyz);
+            SphereTracing.SphereTracer<SDF.Box> tracer = 
+                SphereTracing.SphereTracer<SDF.Box>(shape, ray, boundingbox);
+                
+            trace = tracer.Trace();
+            break;
+        }
+        case 2:
+        {
+            SDF.Torus shape = SDF.Torus(input.transformCenter, _Random.x, _Random.y);
+            SphereTracing.SphereTracer<SDF.Torus> tracer = 
+                SphereTracing.SphereTracer<SDF.Torus>(shape, ray, boundingbox);
+                
+            trace = tracer.Trace();
+            break;
+        }
+        case 3:
+        {
+            SDF.OctaHedron shape = SDF.OctaHedron(input.transformCenter, _Random.x);
+            SphereTracing.SphereTracer<SDF.OctaHedron> tracer = 
+                SphereTracing.SphereTracer<SDF.OctaHedron>(shape, ray, boundingbox);
+                
+            trace = tracer.Trace();
+            break;
+        }
+        default:
+        {
+            SDF.Sphere shape = SDF.Sphere(input.transformCenter, _Random.x);
+            SphereTracing.SphereTracer<SDF.Sphere> tracer = 
+                SphereTracing.SphereTracer<SDF.Sphere>(shape, ray, boundingbox);
+                
+            trace = tracer.Trace();
+            break;
+        }
+    }
 
-    if (!hit)
+    if (!trace.Hit)
         discard;
+
+    BeerLambert lambert = BeerLambert(_BaseColor.rgb,
+        trace.Position,
+        trace.Normal,
+        float3(0, 100, 10));
     
-    return _BaseColor;
+    return float4(lambert.GetLambert(), 1);
 }

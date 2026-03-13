@@ -1,31 +1,11 @@
 module SphereTracing;
 
+import SDF;
+
 namespace SphereTracing
 {
     static int MAX_STEPS = 50;
-    static float DST_EPS = 0.05f;
-
-    public struct Sphere
-    {
-        private float3 center;
-        private float radius;
-
-        public __init(float3 _center, float _radius)
-        {
-            center = _center;
-            radius = _radius;
-        }
-
-        public float Evaluate(float3 position)
-        {
-            return SdfSphere(position - center, radius);
-        }
-
-        private float SdfSphere(float3 pos, float radius)
-        {
-            return length(pos) - radius;
-        }
-    };
+    static float DST_EPS = 0.01f;
 
     public struct Ray
     {
@@ -67,43 +47,63 @@ namespace SphereTracing
         }
     };
 
-    public struct SphereTracer
+    public struct TraceResult
     {
-        private Sphere sphere;
+        public bool Hit;
+        public float TotalDistance;
+        public int TotalSteps;
+        public float3 Position;
+        public float3 Normal;
+
+        public __init(float3 startPos)
+        {
+            Hit = false;
+            TotalDistance = 0;
+            TotalSteps = 0;
+            Position = startPos;
+            Normal = 0;
+        }
+    };
+
+        public struct SphereTracer<T : SDF.SDF>
+    {
+        private T sdf;
         private Ray ray;
         private AABB boundingBox;
 
-        public __init(Sphere _sphere, Ray _ray, AABB _boundingBox)
+        public __init(T _sdf, Ray _ray, AABB _boundingBox)
         {
-            sphere = _sphere;
+            sdf = _sdf;
             ray = _ray;
             boundingBox = _boundingBox;
         }
 
-        public bool Trace()
+        public TraceResult Trace()
         {
-            float3 startPos = ray.GetOrigin();
-            bool hit = false;
+            TraceResult result = TraceResult(ray.GetOrigin());
             
             for (int i = 0; i < MAX_STEPS; i++)
             {
-                float dist = sphere.Evaluate(startPos);
+                float dist = sdf.Evaluate(result.Position);
 
                 if (dist < DST_EPS)
                 {
-                    hit = true;
+                    result.Hit = true;
+                    result.TotalSteps = i;
+                    result.Normal = sdf.GetNormal(result.Position, result.TotalDistance);
                     break;
                 }
 
-                startPos += dist * ray.GetDirection();
+                result.Position += dist * ray.GetDirection();
+                result.TotalDistance += dist;
 
-                if (!boundingBox.IsInside(startPos))
+                if (!boundingBox.IsInside(result.Position))
                 {
                     break;
                 }
             }
 
-            return hit;
+            return result;
         }
     };
 }

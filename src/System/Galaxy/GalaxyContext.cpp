@@ -50,17 +50,43 @@ namespace Beer::System
 
         glm::vec3 pos = glm::vec3(0);
 
-        for (int i = 0; i < 10; i++)
+        int res = 10;
+
+        for (int z = 0; z < res; z++)
         {
-            Transform staticTransform{};
-            pos += glm::vec3(2, 0, 0);
-            staticTransform.Position = pos;
+            for (int y = 0; y < res; y++)
+            {
+                for (int x = 0; x < res; x++)
+                {
+                    Transform staticTransform{};
+                    pos = glm::vec3(x, y, z) * 2.0f;
+                    staticTransform.Position = pos;
 
-            std::unique_ptr<SingleMeshRender> staticRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
-                ContextType::Galaxy, material, mesh, nullptr, nullptr);
+                    std::shared_ptr<Rendering::Material> staticMaterial = std::make_shared<Rendering::Material>(shader);
 
-            staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(staticTransform),
-                std::move(staticRenderComp)));
+                    float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+                    float r1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+                    float r2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+                    float r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+                    float r4 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+
+                    int shapeIndex = glm::floor(static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.0f);
+
+                    staticMaterial->SetColor("_BaseColor", glm::vec4(r, g, b, 1));
+                    staticMaterial->SetVector("_Random", glm::vec4(r1, r2, r3, r4));
+                    staticMaterial->SetInt("_ShapeIndex", shapeIndex);
+
+                    std::unique_ptr<SingleMeshRender>
+                        staticRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
+                            ContextType::Galaxy, staticMaterial, mesh, nullptr, nullptr);
+
+                    staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(staticTransform),
+                        std::move(staticRenderComp)));
+                }
+            }
         }
     }
 } // namespace Beer::System
