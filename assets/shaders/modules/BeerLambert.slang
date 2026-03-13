@@ -21,7 +21,7 @@ public struct BeerLambert
     public float3 GetLambert()
     {
         float3 lightDir = normalize(lightPos - worldPos);
-        float NdotL = dot(lightDir, worldNormal);
+        float NdotL = dot(lightDir, worldNormal) * 0.5 + 0.5;
         return albedo * saturate(NdotL);
     }
 };

@@ -5,6 +5,7 @@
 #include "Rendering/Texture/ITexture.hpp"
 #include <memory>
 #include "vulkan/vulkan.hpp"
+#include <unordered_set>
 
 namespace Beer::Rendering
 {
@@ -18,9 +19,11 @@ namespace Beer::Rendering
         uint32_t dirtyFramesCount;
 
     public:
+        ~Material();
         Material(std::shared_ptr<Shader> shader);
         Material(const std::string& shaderName);
         const Shader* GetShader() const { return shader.get(); }
+
         void Update();
         void BindBuffer(vk::CommandBuffer commandBuffer) const;
         void SetInt(const std::string& name, uint32_t val);
@@ -33,5 +36,11 @@ namespace Beer::Rendering
     private:
         void InitializeMaterial();
         void MarkDirty();
+
+    private:
+        static inline std::unordered_set<Material*> dirtyMaterialsQueue;
+
+    public:
+        static void UpdateDirtyMaterials();
     };
 } // namespace Beer::Rendering

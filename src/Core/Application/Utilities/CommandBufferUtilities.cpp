@@ -173,11 +173,13 @@ namespace Beer::Core
             throw std::runtime_error("can't find shader pass: " + std::string(magic_enum::enum_name(pass)));
         }
 
-        BindShaderPass(commandBuffer, shaderPass);
+        // BindShaderPass(commandBuffer, shaderPass);
+        material->GetShader()->BindPass(commandBuffer, pass);
         material->BindBuffer(commandBuffer);
 
         bool canIndex;
-        BindMesh(commandBuffer, mesh, shaderPass->BufferOrder, canIndex);
+        //   BindMesh(commandBuffer, mesh, shaderPass->BufferOrder, canIndex);
+        mesh->Bind(commandBuffer, shaderPass->BufferOrder, canIndex);
 
         if (canIndex)
         {

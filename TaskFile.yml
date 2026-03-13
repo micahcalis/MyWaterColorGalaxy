@@ -5,6 +5,8 @@ vars:
   BUILD_DIR: "build"
   GAME_DIR: "bin"
   BUILD_TYPE: '{{.BUILD_TYPE | default "Debug"}}'
+  # 1. Added a JOBS variable to limit Clang threads and save your RAM!
+  JOBS: '{{.JOBS | default "4"}}' 
 
 tasks:
   configure:
@@ -18,7 +20,8 @@ tasks:
     desc: Build the project
     deps: [configure]
     cmds:
-      - cmake --build {{.BUILD_DIR}} --config {{.BUILD_TYPE}}
+      # 2. Passed the JOBS variable into the build command
+      - cmake --build {{.BUILD_DIR}} --config {{.BUILD_TYPE}} -j {{.JOBS}}
 
   run:
     desc: Run the compiled executable
@@ -29,4 +32,5 @@ tasks:
   clean:
     desc: Remove the build directory
     cmds:
-      - Remove-Item -Force -Recurse {{.BUILD_DIR}}
+      # 3. Made the clean task 100% cross-platform
+      - cmake -E rm -rf {{.BUILD_DIR}}

@@ -1,8 +1,10 @@
 #include "Rendering/Shader/Shader.hpp"
 #include <filesystem>
 #include <print>
+#include <stdexcept>
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
+#include "ModelPush.hpp"
 #include "Rendering/Shader/ShaderReflection.hpp"
 #include "ShaderPass.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
@@ -47,6 +49,17 @@ namespace Beer::Rendering
         }
     }
 
+    void Shader::BindPass(vk::CommandBuffer commandBuffer, const ShaderPassType passType) const
+    {
+        const ShaderPass* shaderPass = GetPass(passType);
+
+        if (shaderPass == nullptr)
+            throw std::runtime_error(
+                std::format("Shader doesn't have pass: {}", magic_enum::enum_name(passType)));
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPass->Pipeline);
+    }
+
     std::shared_ptr<Shader> Shader::Get(const std::string& name)
     {
         return shaderManager->Get(name);
@@ -73,9 +86,16 @@ namespace Beer::Rendering
         setLayouts.append_range(Shader::Globals()->GetLayouts());
         setLayouts.push_back(materialSetLayout);
 
+        vk::PushConstantRange pushConstantRange{};
+        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(Rendering::ModelPush);
+
         vk::PipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
         layoutCreateInfo.pSetLayouts = setLayouts.data();
+        layoutCreateInfo.pushConstantRangeCount = 1;
+        layoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
         pipelineLayout = vk::raii::PipelineLayout(device.GetLogicalDevice(), layoutCreateInfo);
     }

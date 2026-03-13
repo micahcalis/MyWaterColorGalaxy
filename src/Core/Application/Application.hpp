@@ -7,6 +7,7 @@
 #include <SDL3/SDL_vulkan.h>
 #include "Core/Application/Managers/WindowManager.hpp"
 #include "Core/Application/Renderer/Renderer.hpp"
+#include "System/Base/GameManager.hpp"
 
 namespace Beer::Core
 {
@@ -15,12 +16,14 @@ namespace Beer::Core
     private:
         WindowManager windowManager = {};
         Renderer renderer = {};
+        System::GameManager gameManager = {};
 
     public:
         void Run();
 
     private:
         void InitializeVulkan();
+        void InitializeGame();
         void MainLoop();
         void Cleanup();
     };

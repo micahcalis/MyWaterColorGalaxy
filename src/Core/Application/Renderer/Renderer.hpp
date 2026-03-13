@@ -19,6 +19,7 @@
 #include "Rendering/Mesh./Mesh.hpp"
 #include "Core/Application/Managers/ShaderManager.hpp"
 #include "Rendering/Uniforms/DescriptorAllocator.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 
 namespace Beer::Core
 {
@@ -34,7 +35,7 @@ namespace Beer::Core
         vk::raii::SurfaceKHR surface = nullptr;
         Device device{};
 
-        Swapchain swapchain{};
+        std::unique_ptr<Swapchain> swapchain = nullptr;
 
         std::shared_ptr<Rendering::Image> depthImage = nullptr;
 
@@ -49,11 +50,7 @@ namespace Beer::Core
         std::unique_ptr<MeshManager> meshManager = nullptr;
         std::unique_ptr<ImageAssetManager> imageAssetManager = nullptr;
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
-
-        std::shared_ptr<Rendering::Shader> shader = nullptr;
-        std::shared_ptr<Rendering::Mesh> mesh = nullptr;
-        std::shared_ptr<Rendering::Texture2D> texture = nullptr;
-        std::shared_ptr<Rendering::Material> material = nullptr;
+        std::unique_ptr<System::RenderRegister> renderRegister = nullptr;
 
         int frameIndex = 0;
         bool frameBufferResized = false;
@@ -72,7 +69,7 @@ namespace Beer::Core
         [[nodiscard]] const vk::raii::SurfaceKHR& GetSurface() const;
         [[nodiscard]] const Device& GetDevice() const;
 
-        Swapchain& GetSwapchain();
+        Swapchain* GetSwapchain();
         bool& GetFrameBufferResized();
 
     private:
@@ -83,9 +80,20 @@ namespace Beer::Core
         void CreateSemaphores();
         void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);
-        void LoadObject();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateGlobals();
+
+    private:
+        inline static Swapchain* mainSwapchain;
+
+    public:
+        static void SetMainSwapchain(Swapchain* swapchain)
+        {
+            mainSwapchain = swapchain;
+        }
+
+        static vk::Extent2D GetScreenExtent();
     };
+
 } // namespace Beer::Core

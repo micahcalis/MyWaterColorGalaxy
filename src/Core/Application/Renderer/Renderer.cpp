@@ -2,6 +2,7 @@
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
+#include "Core/Application/Renderer/DrawCallPool.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
@@ -11,9 +12,16 @@
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "System/Context/ContextType.hpp"
+#include "System/Drawing/ContextMask.hpp"
+#include "System/Drawing/DrawRequest.hpp"
+#include "System/Drawing/Layer.hpp"
+#include "System/Drawing/LayerMask.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
@@ -21,10 +29,10 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <chrono>
 #include <stdexcept>
 #include <tiny_obj_loader.h>
 #include "Rendering/Shader/Shader.hpp"
+#include "System/Camera/Camera.hpp"
 
 namespace Beer::Core
 {
@@ -54,7 +62,9 @@ namespace Beer::Core
         SetupDebugMessenger();
         CreateSurface(window);
         device.Initialize(instance, surface);
-        swapchain.InitializeSwapchain(window, surface, device);
+        swapchain = std::make_unique<Swapchain>();
+        swapchain->InitializeSwapchain(window, surface, device);
+        SetMainSwapchain(swapchain.get());
         InitializeBuffers();
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
@@ -66,12 +76,11 @@ namespace Beer::Core
         };
 
         InitializeAssetManagers(depthFormat);
-        LoadObject();
     }
 
     void Renderer::PreDraw()
     {
-        material->Update();
+        Rendering::Material::UpdateDirtyMaterials();
         uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
@@ -88,12 +97,13 @@ namespace Beer::Core
         }
 
         uint32_t imageIndex = 0;
-        bool resize = RendererUtilities::AcquireNextImage(swapchain, frameResource, imageIndex);
+        bool resize = RendererUtilities::AcquireNextImage(swapchain.get(), frameResource, imageIndex);
 
         if (!resize)
-        {
             return;
-        }
+
+        if (System::Camera::Main() == nullptr)
+            return;
 
         frameResource.Reset();
 
@@ -104,7 +114,7 @@ namespace Beer::Core
     void Renderer::HandleWindowResize()
     {
         device.GetLogicalDevice().waitIdle();
-        swapchain.RecreateSwapchain(window, surface, device);
+        swapchain->RecreateSwapchain(window, surface, device);
         CreateSemaphores();
         vk::Format emptyFormat;
         CreateDepthResources(emptyFormat);
@@ -115,7 +125,7 @@ namespace Beer::Core
     const vk::raii::DebugUtilsMessengerEXT& Renderer::GetDebugMessenger() const { return debugMessenger; }
     const vk::raii::SurfaceKHR& Renderer::GetSurface() const { return surface; }
     const Device& Renderer::GetDevice() const { return device; }
-    Swapchain& Renderer::GetSwapchain() { return swapchain; }
+    Swapchain* Renderer::GetSwapchain() { return swapchain.get(); }
     bool& Renderer::GetFrameBufferResized() { return frameBufferResized; }
 
     void Renderer::CreateInstance()
@@ -189,7 +199,7 @@ namespace Beer::Core
     {
         shaderManager = std::make_unique<ShaderManager>(
             &device,
-            &swapchain,
+            swapchain.get(),
             depthFormat,
             MAX_FRAMES_IN_FLIGHT);
 
@@ -208,12 +218,15 @@ namespace Beer::Core
             uploadManager.get());
 
         Rendering::Image::SetImageAssetManager(imageAssetManager.get());
+
+        renderRegister = std::make_unique<System::RenderRegister>();
+        System::RenderRegister::SetRenderRegister(renderRegister.get());
     }
 
     void Renderer::CreateDepthResources(vk::Format& depthFormat)
     {
         depthFormat = ImageUtilities::FindDepthFormat(device);
-        vk::Extent2D extent = swapchain.GetExtent();
+        vk::Extent2D extent = swapchain->GetExtent();
 
         depthImage = std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(extent.width,
@@ -227,28 +240,13 @@ namespace Beer::Core
     void Renderer::CreateSemaphores()
     {
         swapchainSemaphores.clear();
-        size_t imageCount = swapchain.GetSwapchainCount();
+        size_t imageCount = swapchain->GetSwapchainCount();
 
         vk::SemaphoreCreateInfo semaphoreInfo{};
         for (size_t i = 0; i < imageCount; i++)
         {
             swapchainSemaphores.emplace_back(device.GetLogicalDevice(), semaphoreInfo);
         }
-    }
-
-    void Renderer::LoadObject()
-    {
-        shader = Rendering::Shader::Get("HelloTriangle");
-        shader->PrintConfig();
-
-        mesh = Rendering::Mesh::Get("MDL_VikingRoom");
-
-        texture = std::make_shared<Rendering::Texture2D>("Tex_VikingRoom");
-
-        material = std::make_shared<Rendering::Material>(shader);
-
-        material->SetColor("_BaseColor", glm::vec4(1, 0.0f, 1, 1));
-        material->SetTexture("_MainTex", texture);
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -259,7 +257,7 @@ namespace Beer::Core
         commandBuffer.begin(beginInfo);
 
         CommandBufferUtilities::TransitionImageLayout(commandBuffer,
-            swapchain.GetImage(imageIndex),
+            swapchain->GetImage(imageIndex),
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eColorAttachmentOptimal,
             {},
@@ -279,13 +277,13 @@ namespace Beer::Core
             vk::ImageAspectFlagBits::eDepth);
 
         vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 0.0f);
-        vk::RenderingAttachmentInfo colorAttachmentInfo = RendererUtilities::CreateColorAttachmentInfo(swapchain.GetImageView(imageIndex),
+        vk::RenderingAttachmentInfo colorAttachmentInfo = RendererUtilities::CreateColorAttachmentInfo(swapchain->GetImageView(imageIndex),
             clearColor);
 
         vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
         vk::RenderingAttachmentInfo depthAttachmentInfo = RendererUtilities::CreateDepthAttachmentInfo(depthImage->GetDefaultView(), clearDepth);
 
-        const vk::Extent2D& swapchainExtent = swapchain.GetExtent();
+        const vk::Extent2D& swapchainExtent = swapchain->GetExtent();
 
         vk::RenderingInfo renderingInfo = RendererUtilities::CreateRenderingInfo(swapchainExtent,
             colorAttachmentInfo,
@@ -302,7 +300,13 @@ namespace Beer::Core
         UpdateGlobals();
         Rendering::Shader::Globals()->Bind(commandBuffer);
 
-        CommandBufferUtilities::DrawMesh(commandBuffer, mesh.get(), material.get(), Rendering::ShaderPassType::Opaque);
+        System::DrawRequest drawRequest = System::DrawRequest(commandBuffer,
+            Rendering::ShaderPassType::Opaque,
+            System::ContextMask(System::CTXT_GALAXY_BITS),
+            System::LayerMask(System::LAYER_ALL_BITS));
+
+        DrawCallPool drawPool = renderRegister->GetDrawCallPool(drawRequest);
+        drawPool.BindDrawCalls();
     }
 
     void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)
@@ -313,7 +317,7 @@ namespace Beer::Core
         commandBuffer.endRendering();
 
         CommandBufferUtilities::TransitionImageLayout(commandBuffer,
-            swapchain.GetImage(imageIndex),
+            swapchain->GetImage(imageIndex),
             vk::ImageLayout::eColorAttachmentOptimal,
             vk::ImageLayout::ePresentSrcKHR,
             vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -328,7 +332,7 @@ namespace Beer::Core
         vk::SubmitInfo submitInfo = RendererUtilities::CreateSubmitInfo(frameResource, commandBuffer, &waitMask);
         submitInfo.setSignalSemaphores(signalSemaphore);
         device.GetGraphicsQueue().submit(submitInfo, *frameResource.GetInFlightFence());
-        vk::PresentInfoKHR presentInfo = RendererUtilities::CreatePresentInfo(frameResource, swapchain, imageIndex);
+        vk::PresentInfoKHR presentInfo = RendererUtilities::CreatePresentInfo(frameResource, swapchain.get(), imageIndex);
         presentInfo.setWaitSemaphores(signalSemaphore);
 
         vk::Result result = RendererUtilities::Queue_PresentKHR_NoExcept(device.GetPresentQueue(), presentInfo);
@@ -354,20 +358,18 @@ namespace Beer::Core
 
     void Renderer::UpdateGlobals()
     {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-        const vk::Extent2D extent = swapchain.GetExtent();
-        const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
-        glm::mat4 viewMat = glm::lookAt(glm::vec3(2.0, 2.0, 2.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        glm::mat4 projMat = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
-        projMat[1][1] *= -1;
-
-        Rendering::Shader::Globals()->SetTime(time, 0);
-        Rendering::Shader::Globals()->SetCamera(viewMat, projMat, glm::vec3(2.0, 2.0, 2.0));
+        const vk::Extent2D extent = swapchain->GetExtent();
         Rendering::Shader::Globals()->SetScreen(static_cast<float>(extent.width), static_cast<float>(extent.height));
+        System::Camera::Main()->BindToShaders();
 
         Rendering::Shader::Globals()->Update();
+    }
+
+    vk::Extent2D Renderer::GetScreenExtent()
+    {
+        if (mainSwapchain == nullptr)
+            return vk::Extent2D(0);
+
+        return mainSwapchain->GetExtent();
     }
 } // namespace Beer::Core

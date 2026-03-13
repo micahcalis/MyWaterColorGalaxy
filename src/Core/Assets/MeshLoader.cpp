@@ -112,8 +112,14 @@ namespace Beer::Core
 
         size_t maxVertices = mesh->num_triangles * 3;
         meshAsset.Positions.reserve(maxVertices);
-        meshAsset.UVs.reserve(maxVertices);
-        meshAsset.VertexColors.reserve(maxVertices);
+        if (mesh->vertex_normal.exists)
+            meshAsset.Normals.reserve(maxVertices);
+        if (mesh->vertex_tangent.exists)
+            meshAsset.Tangents.reserve(maxVertices);
+        if (mesh->vertex_uv.exists)
+            meshAsset.UVs.reserve(maxVertices);
+        if (mesh->vertex_color.exists)
+            meshAsset.VertexColors.reserve(maxVertices);
 
         for (size_t i = 0; i < mesh->num_faces; i++)
         {
@@ -136,11 +142,7 @@ namespace Beer::Core
                 if (mesh->vertex_tangent.exists)
                 {
                     ufbx_vec3 tangent = ufbx_get_vertex_vec3(&mesh->vertex_tangent, index);
-                    meshAsset.Tangents.push_back({
-                        tangent.x,
-                        tangent.y,
-                        tangent.z,
-                    });
+                    meshAsset.Tangents.push_back({tangent.x, tangent.y, tangent.z});
                 }
 
                 if (mesh->vertex_uv.exists)
@@ -159,34 +161,68 @@ namespace Beer::Core
 
         meshAsset.Indices.resize(meshAsset.Positions.size());
 
-        ufbx_vertex_stream streams[3] = {};
+        std::vector<ufbx_vertex_stream> streams;
 
-        streams[0].data = meshAsset.Positions.data();
-        streams[0].vertex_size = sizeof(glm::vec3);
-        streams[0].vertex_count = meshAsset.Positions.size();
+        ufbx_vertex_stream posStream = {};
+        posStream.data = meshAsset.Positions.data();
+        posStream.vertex_size = sizeof(glm::vec3);
+        posStream.vertex_count = meshAsset.Positions.size();
+        streams.push_back(posStream);
 
-        streams[1].data = meshAsset.UVs.data();
-        streams[1].vertex_size = sizeof(glm::vec2);
-        streams[1].vertex_count = meshAsset.UVs.size();
+        if (mesh->vertex_normal.exists)
+        {
+            ufbx_vertex_stream normStream = {};
+            normStream.data = meshAsset.Normals.data();
+            normStream.vertex_size = sizeof(glm::vec3);
+            normStream.vertex_count = meshAsset.Normals.size();
+            streams.push_back(normStream);
+        }
 
-        streams[2].data = meshAsset.VertexColors.data();
-        streams[2].vertex_size = sizeof(glm::vec4);
-        streams[2].vertex_count = meshAsset.VertexColors.size();
+        if (mesh->vertex_tangent.exists)
+        {
+            ufbx_vertex_stream tanStream = {};
+            tanStream.data = meshAsset.Tangents.data();
+            tanStream.vertex_size = sizeof(glm::vec3);
+            tanStream.vertex_count = meshAsset.Tangents.size();
+            streams.push_back(tanStream);
+        }
+
+        if (mesh->vertex_uv.exists)
+        {
+            ufbx_vertex_stream uvStream = {};
+            uvStream.data = meshAsset.UVs.data();
+            uvStream.vertex_size = sizeof(glm::vec2);
+            uvStream.vertex_count = meshAsset.UVs.size();
+            streams.push_back(uvStream);
+        }
+
+        if (mesh->vertex_color.exists)
+        {
+            ufbx_vertex_stream colStream = {};
+            colStream.data = meshAsset.VertexColors.data();
+            colStream.vertex_size = sizeof(glm::vec4);
+            colStream.vertex_count = meshAsset.VertexColors.size();
+            streams.push_back(colStream);
+        }
 
         ufbx_error ufbxErr;
-
         size_t uniqueVertexCount = ufbx_generate_indices(
-            streams, 3, meshAsset.Indices.data(), meshAsset.Indices.size(), nullptr, &ufbxErr);
+            streams.data(), streams.size(), meshAsset.Indices.data(), meshAsset.Indices.size(), nullptr, &ufbxErr);
 
         if (uniqueVertexCount == 0)
         {
-            fprintf(stderr, "UFBX Index Generation Failed: %s\n", ufbxErr.description.data);
-            exit(1);
+            throw std::runtime_error("UFBX Index Generation Failed: " + std::string(ufbxErr.description.data));
         }
 
         meshAsset.Positions.resize(uniqueVertexCount);
-        meshAsset.UVs.resize(uniqueVertexCount);
-        meshAsset.VertexColors.resize(uniqueVertexCount);
+        if (mesh->vertex_normal.exists)
+            meshAsset.Normals.resize(uniqueVertexCount);
+        if (mesh->vertex_tangent.exists)
+            meshAsset.Tangents.resize(uniqueVertexCount);
+        if (mesh->vertex_uv.exists)
+            meshAsset.UVs.resize(uniqueVertexCount);
+        if (mesh->vertex_color.exists)
+            meshAsset.VertexColors.resize(uniqueVertexCount);
 
         ufbx_free_scene(scene);
 

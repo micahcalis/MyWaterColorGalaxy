@@ -1,5 +1,6 @@
 #include "Rendering/Uniforms/DescriptorAllocator.hpp"
 #include "DescriptorAllocator.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
 {

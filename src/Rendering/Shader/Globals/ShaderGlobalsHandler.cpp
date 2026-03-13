@@ -2,6 +2,7 @@
 #include "EngineGlobalBuffer.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "glm/matrix.hpp"
+#include "Rendering/Shader/ModelPush.hpp"
 
 namespace Beer::Rendering
 {
@@ -13,10 +14,17 @@ namespace Beer::Rendering
 
         std::vector<vk::DescriptorSetLayout> setLayouts = GetLayouts();
 
+        vk::PushConstantRange pushConstantRange{};
+        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(Rendering::ModelPush);
+
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
         pipelineLayoutInfo.pSetLayouts = setLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
         globalLayout = vk::raii::PipelineLayout(device->GetLogicalDevice(), pipelineLayoutInfo);
     }
 
