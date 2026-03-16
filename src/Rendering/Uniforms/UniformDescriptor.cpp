@@ -19,11 +19,12 @@ namespace Beer::Rendering
     void UniformDescriptor::UpdateBufferInfo(uint32_t frameIndex,
         uint32_t binding,
         const Rendering::Buffer& buffer,
-        size_t size)
+        size_t size,
+        size_t offset)
     {
         vk::DescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = buffer.GetHandle();
-        bufferInfo.offset = 0;
+        bufferInfo.offset = offset;
         bufferInfo.range = size;
 
         vk::WriteDescriptorSet descriptorWrite{};

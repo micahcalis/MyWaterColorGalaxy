@@ -10,6 +10,7 @@
 
 // Buffer Slots
 #define BIND_ENGINE_GLOBALS    [[vk::binding(0, 0)]]
+#define BIND_LIGHTING_GLOBALS  [[vk::binding(1, 0)]]
 #define BIND_MATERIAL_DATA     [[vk::binding(0, 1)]]
 #define BIND_MATERIAL_TEX(idx) [[vk::binding(idx, 1)]]
 #define BIND_MODEL_PUSH        [[vk::push_constant]]

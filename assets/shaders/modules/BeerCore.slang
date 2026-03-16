@@ -13,6 +13,15 @@ public cbuffer EngineGlobals
     public float4 _ScreenParams;
 };
 
+BIND_LIGHTING_GLOBALS
+public cbuffer LightingGlobals
+{
+    public float4 _MainLightColor;
+    public float4 _ShadowColor;
+    public float4 _SkyColor;
+    public float3 _MainLightPos;
+}
+
 BIND_MODEL_PUSH
 public cbuffer ModelParams
 {

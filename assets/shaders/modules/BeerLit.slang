@@ -1,0 +1,6 @@
+module BeerLit;
+
+namespace Lit
+{
+    
+}

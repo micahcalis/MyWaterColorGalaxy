@@ -65,7 +65,7 @@ namespace SphereTracing
         }
     };
 
-        public struct SphereTracer<T : SDF.SDF>
+    public struct SphereTracer<T : SDF.SDF>
     {
         private T sdf;
         private Ray ray;

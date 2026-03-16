@@ -1,8 +1,11 @@
 #include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
-#include "EngineGlobalBuffer.hpp"
+#include "GlobalBuffer.hpp"
+#include "Rendering/Shader/Globals/EngineGlobals.hpp"
+#include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "glm/matrix.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
+#include <memory>
 
 namespace Beer::Rendering
 {
@@ -10,7 +13,17 @@ namespace Beer::Rendering
 
     ShaderGlobalsHandler::ShaderGlobalsHandler(const Core::Device* device)
     {
-        engineGlobals = std::make_unique<EngineGlobalBuffer>();
+        std::vector<BufferBinding> bufferBindings;
+
+        bufferBindings.emplace_back(BufferBinding(sizeof(EngineGlobals),
+            EngineGlobals::BINDING,
+            EngineGlobals::DESC_COUNT));
+
+        bufferBindings.emplace_back(BufferBinding(sizeof(LightingGlobals),
+            LightingGlobals::BINDING,
+            LightingGlobals::DESC_COUNT));
+
+        globalsBuffer = std::make_unique<GlobalBuffer>(std::move(bufferBindings));
 
         std::vector<vk::DescriptorSetLayout> setLayouts = GetLayouts();
 
@@ -30,7 +43,8 @@ namespace Beer::Rendering
 
     void ShaderGlobalsHandler::Update()
     {
-        engineGlobals->Update(engineGlobalsData);
+        globalsBuffer->Update(EngineGlobals::BINDING, &engineGlobalsData);
+        globalsBuffer->Update(LightingGlobals::BINDING, &lightingGlobalsData);
     }
 
     void ShaderGlobalsHandler::Bind(vk::CommandBuffer commandBuffer) const
@@ -63,6 +77,18 @@ namespace Beer::Rendering
         engineGlobalsData.ScreenParams = glm::vec4(width, height, 1.0f / width, 1.0f / height);
     }
 
+    void ShaderGlobalsHandler::SetMainLight(glm::vec3 position, glm::vec4 color)
+    {
+        lightingGlobalsData.MainLightPos = position;
+        lightingGlobalsData.MainLightColor = color;
+    }
+
+    void ShaderGlobalsHandler::SetAmbientLight(glm::vec4 shadowColor, glm::vec4 skyColor)
+    {
+        lightingGlobalsData.ShadowColor = shadowColor;
+        lightingGlobalsData.SkyColor = skyColor;
+    }
+
     std::vector<vk::DescriptorSetLayout> ShaderGlobalsHandler::GetLayouts() const
     {
         std::vector<vk::DescriptorSetLayout> layouts;
@@ -78,7 +104,7 @@ namespace Beer::Rendering
 
     std::vector<IShaderResource*> ShaderGlobalsHandler::GetGlobalResources() const
     {
-        return {engineGlobals.get()};
+        return {globalsBuffer.get()};
     }
 
     std::vector<vk::DescriptorSet> ShaderGlobalsHandler::GetGlobalSets() const
