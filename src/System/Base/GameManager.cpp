@@ -6,6 +6,8 @@
 #include "System/Context/WorldContainer.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "System/Light/ILight.hpp"
+#include "System/Light/LightManager.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -29,8 +31,12 @@ namespace Beer::System
     {
         clockManager = std::make_unique<ClockManager>();
         inputManager = std::make_unique<InputManager>();
+
         cameraManager = std::make_unique<CameraManager>();
         Camera::SetCameraManager(cameraManager.get());
+
+        lightManager = std::make_unique<LightManager>();
+        ILight::SetLightManager(lightManager.get());
     }
 
     void GameManager::InitializeContextFactory()
@@ -59,5 +65,7 @@ namespace Beer::System
     void GameManager::UpdateBase()
     {
         clockManager->Update();
+        cameraManager->Update();
+        lightManager->Update();
     }
 } // namespace Beer::System

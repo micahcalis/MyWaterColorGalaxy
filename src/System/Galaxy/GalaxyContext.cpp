@@ -11,6 +11,7 @@
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Components/Registry/Registry.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
+#include "System/Light/LightEntity.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include <memory>
 #include <print>
@@ -30,6 +31,15 @@ namespace Beer::System
 
     void GalaxyContext::Load()
     {
+        Transform lightTransform{};
+        lightTransform.Position = glm::vec3(0, 100, 10);
+
+        mainLightEntity = registry.CreateEntity<LightEntity>(std::move(lightTransform),
+            10,
+            glm::vec4(1, 1, 0.8, 1),
+            glm::vec4(0.2, 0.23, 0.35, 1),
+            glm::vec4(0.86, 0.98, 1, 1));
+
         Transform playerTransform{};
         playerTransform.Position = PLAYER_SETTINGS.StartPos;
 

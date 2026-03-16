@@ -19,7 +19,7 @@ namespace Beer::System
         cameras.push_back(camera);
     }
 
-    Camera* CameraManager::GetMainCamera()
+    Camera* CameraManager::GetMainCamera() const
     {
         if (cameras.size() == 0)
             return nullptr;

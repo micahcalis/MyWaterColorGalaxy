@@ -22,6 +22,7 @@
 #include "System/Drawing/Layer.hpp"
 #include "System/Drawing/LayerMask.hpp"
 #include "System/Drawing/RenderRegister.hpp"
+#include "System/Light/ILight.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
@@ -361,6 +362,9 @@ namespace Beer::Core
         const vk::Extent2D extent = swapchain->GetExtent();
         Rendering::Shader::Globals()->SetScreen(static_cast<float>(extent.width), static_cast<float>(extent.height));
         System::Camera::Main()->BindToShaders();
+        System::ILight* light = System::ILight::Main();
+        Rendering::Shader::Globals()->SetMainLight(light->GetPosition(), light->GetDirectColor());
+        Rendering::Shader::Globals()->SetAmbientLight(light->GetShadowColor(), light->GetAmbientColor());
 
         Rendering::Shader::Globals()->Update();
     }

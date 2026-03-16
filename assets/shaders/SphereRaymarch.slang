@@ -106,7 +106,7 @@ float4 SphereRaymarchFrag(VertexData input) : SV_Target
     BeerLambert lambert = BeerLambert(_BaseColor.rgb,
         trace.Position,
         trace.Normal,
-        float3(0, 100, 10));
+        _MainLightPos);
     
     return float4(lambert.GetLambert(), 1);
 }

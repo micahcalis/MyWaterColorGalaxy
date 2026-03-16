@@ -3,6 +3,7 @@
 #include "System/Context/IContext.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
+#include "System/Light/LightEntity.hpp"
 #include <vector>
 
 namespace Beer::System
@@ -11,6 +12,7 @@ namespace Beer::System
     {
     private:
         PlayerEntity* playerEntity;
+        LightEntity* mainLightEntity;
         std::vector<SingleStaticEntity*> staticEntities;
         Function<PlayerInput> getPlayerInput;
 
