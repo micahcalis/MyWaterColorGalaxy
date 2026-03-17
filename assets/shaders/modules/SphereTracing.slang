@@ -45,6 +45,30 @@ namespace SphereTracing
             float3 dist = abs(position - center);
             return all(dist <= extents);
         }
+
+        public Ray AlignWithBox(Ray ray)
+        {
+            if (IsInside(ray.GetOrigin()))
+            {
+                return ray;
+            }
+
+            float3 directionRcp = rcp(ray.GetDirection());
+            float3 minPoint = center - extents;
+            float3 maxPoint = center + extents; 
+
+            float3 t0 = (minPoint - ray.GetOrigin()) * directionRcp;
+            float3 t1 = (maxPoint - ray.GetOrigin()) * directionRcp;
+
+            float3 tMin = min(t0, t1);
+            float3 tMax = max(t0, t1);
+
+            float tNear = max(max(tMin.x, tMin.y), tMin.z);
+            tNear = max(0.0f, tNear);
+
+            float3 intersect = ray.GetOrigin() + ray.GetDirection() * tNear;
+            return Ray(intersect, ray.GetDirection());
+        }
     };
 
     public struct TraceResult

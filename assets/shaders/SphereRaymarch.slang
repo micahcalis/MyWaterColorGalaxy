@@ -2,7 +2,7 @@
 
 import BeerCore;
 import SphereTracing;
-import BeerLambert;
+import BeerLit;
 import SDF;
 
 BIND_MATERIAL_DATA
@@ -11,6 +11,8 @@ cbuffer MaterialData
     float4 _Random;
     float4 _BaseColor;
     int _ShapeIndex;
+    float _Smoothness;
+    float _Metallic;
 };
 
 struct MeshData
@@ -28,7 +30,7 @@ struct VertexData
 //$ Pass Opaque
 //$ Vertex SphereRaymarchVert
 //$ Fragment SphereRaymarchFrag
-//$ Cull Back
+//$ Cull Front
 //$ Blend On
 //$ Zwrite On
 
@@ -47,8 +49,10 @@ VertexData SphereRaymarchVert(MeshData input)
 float4 SphereRaymarchFrag(VertexData input) : SV_Target
 {
     float3 viewDirWS = normalize(input.positionWS - _CameraPos);
-    SphereTracing.Ray ray = SphereTracing.Ray(input.positionWS, viewDirWS);
     SphereTracing.AABB boundingbox = SphereTracing.AABB(input.transformCenter, float3(2));
+    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS);
+    ray = boundingbox.AlignWithBox(ray);
+
     SphereTracing.TraceResult trace = SphereTracing.TraceResult(input.positionWS);
 
     switch (_ShapeIndex)
@@ -103,10 +107,12 @@ float4 SphereRaymarchFrag(VertexData input) : SV_Target
     if (!trace.Hit)
         discard;
 
-    BeerLambert lambert = BeerLambert(_BaseColor.rgb,
-        trace.Position,
+    Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
+        GetViewDirectionWS(trace.Position),
         trace.Normal,
-        _MainLightPos);
+        _BaseColor.rgb,
+        _Smoothness,
+        _Metallic);
     
-    return float4(lambert.GetLambert(), 1);
+    return float4(brdf.Shade(), 1);
 }

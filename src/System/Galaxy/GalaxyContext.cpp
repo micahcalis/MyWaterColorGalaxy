@@ -14,7 +14,6 @@
 #include "System/Light/LightEntity.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include <memory>
-#include <print>
 
 namespace Beer::System
 {
@@ -51,11 +50,11 @@ namespace Beer::System
         material->SetColor("_BaseColor", glm::vec4(0, 0.0f, 1, 1));
         material->SetFloat("_SphereRadius", 0.5f);
 
-        std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
-            ContextType::Galaxy, material, mesh, nullptr, nullptr);
+        // std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
+        //     ContextType::Galaxy, material, mesh, nullptr, nullptr);
 
         playerEntity = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
-            std::move(renderComponent),
+            nullptr,
             getPlayerInput);
 
         glm::vec3 pos = glm::vec3(0);
@@ -83,11 +82,16 @@ namespace Beer::System
                     float r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
                     float r4 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
 
+                    float metallic = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float smoothness = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
                     int shapeIndex = glm::floor(static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.0f);
 
                     staticMaterial->SetColor("_BaseColor", glm::vec4(r, g, b, 1));
                     staticMaterial->SetVector("_Random", glm::vec4(r1, r2, r3, r4));
                     staticMaterial->SetInt("_ShapeIndex", shapeIndex);
+                    staticMaterial->SetFloat("_Metallic", metallic);
+                    staticMaterial->SetFloat("_Smoothness", smoothness);
 
                     std::unique_ptr<SingleMeshRender>
                         staticRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(

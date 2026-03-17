@@ -19,6 +19,9 @@ namespace Beer::System
             Layer layer = Layer::Default)
             : getPlayerInput(getPlayerInput), GameEntity(transform, nullptr, layer)
         {
+            if (singleMeshRender == nullptr)
+                return;
+
             singleMeshRender->SetTransform(&this->transform);
             singleMeshRender->SetLayer(&this->layer);
             this->renderComponent = (std::move(singleMeshRender));

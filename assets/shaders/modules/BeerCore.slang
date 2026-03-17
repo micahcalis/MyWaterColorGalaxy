@@ -2,6 +2,8 @@
 
 module BeerCore;
 
+import Lights;
+
 BIND_ENGINE_GLOBALS
 public cbuffer EngineGlobals
 {
@@ -28,3 +30,17 @@ public cbuffer ModelParams
     public float4x4 _ObjToWorldMat;
     public float4x4 _InvObjToWorldMat;
 };
+
+public float3 GetViewDirectionWS(float3 positionWS)
+{
+    return normalize(_CameraPos - positionWS);
+}
+
+public Light GetMainLight(float3 positionWS)
+{
+    return Light(_MainLightPos, 
+        positionWS, 
+        _MainLightColor.rgb, 
+        _ShadowColor.rgb, 
+        _SkyColor.rgb);
+}
