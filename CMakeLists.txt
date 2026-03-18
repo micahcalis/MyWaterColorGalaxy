@@ -112,6 +112,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     tinyobjloader
     GPUOpen::VulkanMemoryAllocator
+    stdc++exp
 )
 
 set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
