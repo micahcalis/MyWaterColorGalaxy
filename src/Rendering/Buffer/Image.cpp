@@ -110,4 +110,34 @@ namespace Beer::Rendering
             nullptr,
             barrier);
     }
+
+    void Image::QueueImageClear(vk::raii::CommandBuffer& commandBuffer,
+        vk::ClearColorValue clearColor)
+    {
+        ImageData data = GetData();
+
+        QueueTransitionLayout(GetHandle(),
+            data,
+            commandBuffer,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eTransferDstOptimal);
+
+        vk::ImageSubresourceRange range{};
+        range.aspectMask = data.AspectMask;
+        range.baseMipLevel = data.BaseMipLevel;
+        range.levelCount = data.MipLevels;
+        range.baseArrayLayer = data.BaseArrayLayer;
+        range.layerCount = data.ArrayLayers;
+
+        commandBuffer.clearColorImage(GetHandle(),
+            vk::ImageLayout::eTransferDstOptimal,
+            clearColor,
+            {range});
+
+        QueueTransitionLayout(GetHandle(),
+            data,
+            commandBuffer,
+            vk::ImageLayout::eTransferDstOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
 } // namespace Beer::Rendering

@@ -1,0 +1,28 @@
+#pragma once
+
+#include "Core/Application/Managers/UploadManager.hpp"
+#include "Core/Application/Renderer/Device.hpp"
+#include "Frame/FrameBlackbox.hpp"
+#include "Rendering/Pipeline/Frame/FrameGraph.hpp"
+#include "Rendering/Pipeline/Frame/FrameBuilder.hpp"
+#include "Rendering/Pipeline/IRenderPass.hpp"
+
+namespace Beer::Rendering
+{
+    class RenderPipeline
+    {
+    private:
+        std::unique_ptr<FrameBlackbox> frameBlackbox = nullptr;
+        FrameBuilder frameBuilder{};
+        FrameGraph frameGraph{};
+
+    public:
+        RenderPipeline(const Core::Device* device, Core::UploadManager* uploadManager);
+        void InitializeFrame();
+        void ExecuteFrame(CommandBuffer* commandBuffer);
+
+    private:
+        std::vector<IRenderPass*> GetRenderPasses();
+        RenderContext GetRenderContext();
+    };
+} // namespace Beer::Rendering

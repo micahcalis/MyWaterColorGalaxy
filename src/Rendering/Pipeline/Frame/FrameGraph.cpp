@@ -10,4 +10,17 @@ namespace Beer::Rendering
             renderNodes.push_back(RenderCommandNode(pass));
         }
     }
+
+    void FrameGraph::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
+    {
+        for (auto& node : renderNodes)
+        {
+            for (auto& resourceCommand : node.Commands)
+            {
+                resourceCommand.Execute(commandBuffer);
+            }
+
+            node.RenderPass->Execute(commandBuffer, context);
+        }
+    }
 } // namespace Beer::Rendering

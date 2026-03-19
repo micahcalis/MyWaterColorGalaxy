@@ -7,9 +7,8 @@ namespace Beer::Rendering
     enum class ResourceAction : uint32_t
     {
         None = 0,
-        Create = 1 << 0,
-        Read = 1 << 1,
-        Write = 1 << 2,
+        Read = 1 << 0,
+        Write = 1 << 1,
         All = ~0u
     };
 
@@ -24,7 +23,6 @@ namespace Beer::Rendering
     }
 
     constexpr uint32_t RACTION_NONE_BITS = static_cast<uint32_t>(ResourceAction::None);
-    constexpr uint32_t RACTION_CREATE_BITS = static_cast<uint32_t>(ResourceAction::Create);
     constexpr uint32_t RACTION_READ_BITS = static_cast<uint32_t>(ResourceAction::Read);
     constexpr uint32_t RACTION_WRITE_BITS = static_cast<uint32_t>(ResourceAction::Write);
     constexpr uint32_t RACTION_ALL_BITS = static_cast<uint32_t>(ResourceAction::All);

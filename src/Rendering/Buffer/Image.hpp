@@ -61,6 +61,9 @@ namespace Beer::Rendering
             vk::ImageLayout oldLayout,
             vk::ImageLayout newLayout);
 
+        void QueueImageClear(vk::raii::CommandBuffer& commandBuffer,
+            vk::ClearColorValue clearColor);
+
         NO_COPY(Image);
         DEFAULT_MOVE(Image);
 

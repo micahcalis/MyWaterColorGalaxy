@@ -41,6 +41,7 @@ namespace Beer::Rendering
             sortedPasses = TopologicalSort();
         }
 
+        FrameBuilder() {}
         FrameGraph BuildGraph();
 
     private:
