@@ -1,5 +1,6 @@
 #include "Rendering/Buffer/Image.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
+#include "ImageData.hpp"
 #include "vulkan/vulkan.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 
@@ -33,17 +34,18 @@ namespace Beer::Rendering
             aspectFlags,
             device);
 
-        return {allocation,
-            defaultView,
-            vk::Extent3D(width, height, 1),
-            format};
+        ImageData data{};
+        data.Extent = vk::Extent3D(width, height, 1);
+        data.Format = format;
+        data.AspectMask = aspectFlags;
+
+        return {allocation, defaultView, data};
     }
 
     Image::Image(ImageAllocation allocation,
         VkImageView defaultView,
-        vk::Extent3D extent,
-        VkFormat format)
-        : allocator(sharedAllocator), allocation(allocation), defaultView(defaultView), extent(extent), format(format)
+        ImageData data)
+        : allocator(sharedAllocator), allocation(allocation), defaultView(defaultView), data(data)
     {
     }
 
@@ -53,6 +55,7 @@ namespace Beer::Rendering
     }
 
     void Image::QueueTransitionLayout(const vk::Image image,
+        const ImageData& imageData,
         const vk::raii::CommandBuffer& commandBuffer,
         vk::ImageLayout oldLayout,
         vk::ImageLayout newLayout)
@@ -61,7 +64,15 @@ namespace Beer::Rendering
         barrier.oldLayout = oldLayout;
         barrier.newLayout = newLayout;
         barrier.image = image;
-        barrier.subresourceRange = vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
+
+        barrier.subresourceRange.aspectMask = imageData.AspectMask;
+        barrier.subresourceRange.baseMipLevel = imageData.BaseMipLevel;
+        barrier.subresourceRange.levelCount = imageData.MipLevels;
+        barrier.subresourceRange.baseArrayLayer = imageData.BaseArrayLayer;
+        barrier.subresourceRange.layerCount = imageData.ArrayLayers;
+
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
         vk::PipelineStageFlags sourceStage;
         vk::PipelineStageFlags destinationStage;
@@ -80,6 +91,13 @@ namespace Beer::Rendering
 
             sourceStage = vk::PipelineStageFlagBits::eTransfer;
             destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+        } else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+        {
+            barrier.srcAccessMask = {};
+            barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+            sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+            destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
         } else
         {
             throw std::invalid_argument("unsupported layout transition!");
@@ -88,7 +106,7 @@ namespace Beer::Rendering
         commandBuffer.pipelineBarrier(sourceStage,
             destinationStage,
             {},
-            {},
+            nullptr,
             nullptr,
             barrier);
     }

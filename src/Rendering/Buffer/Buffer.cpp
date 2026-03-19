@@ -7,11 +7,13 @@
 
 namespace Beer::Rendering
 {
-
     Buffer Buffer::CreateDeviceLocal(VkDeviceSize size, VkBufferUsageFlags usage)
     {
         auto allocation = sharedAllocator->CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO, 0);
-        return {allocation, size};
+        BufferData data{};
+        data.Size = size;
+
+        return {allocation, data};
     }
 
     Buffer::~Buffer()
@@ -25,7 +27,10 @@ namespace Beer::Rendering
     Buffer Buffer::CreateStaging(VkDeviceSize size)
     {
         auto allocation = sharedAllocator->CreateStagingBuffer(size);
-        return {allocation, size};
+        BufferData data{};
+        data.Size = size;
+
+        return {allocation, data};
     }
 
     Buffer Buffer::CreateUniform(VkDeviceSize size)
@@ -38,12 +43,15 @@ namespace Beer::Rendering
             VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
             flags);
 
-        return {allocation, size};
+        BufferData data{};
+        data.Size = size;
+
+        return {allocation, data};
     }
 
     void Buffer::Upload(const void* data, size_t size, size_t offset) const
     {
-        if (size + offset > this->size)
+        if (size + offset > this->data.Size)
         {
             std::cerr << "Buffer Overflow, can't allocate" << '\n';
             return;
@@ -68,7 +76,7 @@ namespace Beer::Rendering
 
         copyCommandBuffer.copyBuffer(vk::Buffer(allocation.Buffer),
             vk::Buffer(dstBuffer.allocation.Buffer),
-            vk::BufferCopy(0, 0, size));
+            vk::BufferCopy(0, 0, data.Size));
 
         Core::CommandBufferUtilities::EndSingleTimeCommands(copyCommandBuffer, device);
     }
@@ -89,6 +97,7 @@ namespace Beer::Rendering
         const size_t offset) const
     {
         image.QueueTransitionLayout(image.GetHandle(),
+            image.GetData(),
             commandBuffer,
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eTransferDstOptimal);
@@ -97,6 +106,7 @@ namespace Beer::Rendering
         QueueCopyToImage(image, commandBuffer, extent.width, extent.height, offset);
 
         image.QueueTransitionLayout(image.GetHandle(),
+            image.GetData(),
             commandBuffer,
             vk::ImageLayout::eTransferDstOptimal,
             vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -112,9 +122,10 @@ namespace Beer::Rendering
         region.bufferOffset = offset;
         region.bufferRowLength = 0;
         region.bufferImageHeight = 0;
-        region.imageSubresource = vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1);
+        region.imageSubresource = image.GetData().AspectMask;
         region.imageOffset = vk::Offset3D(0, 0, 0);
         region.imageExtent = vk::Extent3D(width, height, 1);
+        region.imageSubresource.layerCount = 1;
 
         commandBuffer.copyBufferToImage(GetHandle(),
             image.GetHandle(),
@@ -122,8 +133,8 @@ namespace Beer::Rendering
             {region});
     }
 
-    Buffer::Buffer(BufferAllocation allocation, VkDeviceSize size)
-        : allocator(sharedAllocator), allocation(allocation), size(size)
+    Buffer::Buffer(BufferAllocation allocation, BufferData data)
+        : allocator(sharedAllocator), allocation(allocation), data(data)
     {
     }
 } // namespace Beer::Rendering

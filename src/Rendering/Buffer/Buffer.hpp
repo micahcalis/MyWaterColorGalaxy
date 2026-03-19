@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Buffer/BufferData.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Buffer/BufferAllocation.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
@@ -17,7 +18,7 @@ namespace Beer::Rendering
         inline static std::shared_ptr<BufferAllocator> sharedAllocator = nullptr;
         std::shared_ptr<BufferAllocator> allocator;
         BufferAllocation allocation;
-        VkDeviceSize size;
+        BufferData data;
 
     public:
         ~Buffer();
@@ -57,16 +58,14 @@ namespace Beer::Rendering
             uint32_t height,
             size_t offset = 0) const;
 
-        [[nodiscard]] VkBuffer
-        GetHandle() const
-        {
-            return allocation.Buffer;
-        }
+        [[nodiscard]] VkBuffer GetHandle() const { return allocation.Buffer; }
+        BufferData GetData() const { return data; }
 
         NO_COPY(Buffer);
         DEFAULT_MOVE(Buffer);
 
+    private:
         Buffer(BufferAllocation allocation,
-            VkDeviceSize size);
+            BufferData data);
     };
 } // namespace Beer::Rendering

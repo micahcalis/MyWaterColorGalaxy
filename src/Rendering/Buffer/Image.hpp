@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ImageData.hpp"
 #include "Rendering/Buffer/ImageAllocation.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/ImageAllocation.hpp"
@@ -24,8 +25,7 @@ namespace Beer::Rendering
         std::shared_ptr<BufferAllocator> allocator;
         ImageAllocation allocation;
         VkImageView defaultView;
-        vk::Extent3D extent;
-        VkFormat format;
+        ImageData data;
 
     public:
         ~Image();
@@ -51,10 +51,12 @@ namespace Beer::Rendering
 
         [[nodiscard]] VkImage GetHandle() const { return allocation.Image; }
         VkImageView GetDefaultView() const { return defaultView; }
-        vk::Extent3D GetExtent() const { return extent; }
-        VkFormat GetFormat() const { return format; }
+        vk::Extent3D GetExtent() const { return data.Extent; }
+        VkFormat GetFormat() const { return data.Format; }
+        ImageData GetData() const { return data; }
 
         void QueueTransitionLayout(const vk::Image image,
+            const ImageData& imageData,
             const vk::raii::CommandBuffer& commandBuffer,
             vk::ImageLayout oldLayout,
             vk::ImageLayout newLayout);
@@ -65,7 +67,6 @@ namespace Beer::Rendering
     private:
         Image(ImageAllocation allocation,
             VkImageView defaultView,
-            vk::Extent3D extent,
-            VkFormat format);
+            ImageData data);
     };
 } // namespace Beer::Rendering
