@@ -6,6 +6,7 @@
 #include "Rendering/Pipeline/Frame/FrameGraph.hpp"
 #include "Rendering/Pipeline/Frame/FrameBuilder.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 
 namespace Beer::Rendering
 {
@@ -15,6 +16,9 @@ namespace Beer::Rendering
         std::unique_ptr<FrameBlackbox> frameBlackbox = nullptr;
         FrameBuilder frameBuilder{};
         FrameGraph frameGraph{};
+
+        // hardcoded for now, render passes should be selected from contexts
+        std::unique_ptr<DrawOpaquePass> drawOpaquePass = nullptr;
 
     public:
         RenderPipeline(const Core::Device* device, Core::UploadManager* uploadManager);

@@ -31,6 +31,7 @@ namespace Beer::Core
         std::vector<vk::SurfaceFormatKHR> availableFormats = device.GetAvailableFormats(surface);
 
         swapchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
+        Swapchain::SetFormat(static_cast<VkFormat>(swapchainSurfaceFormat.format));
         swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, window);
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
         minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount) ? surfaceCapabilities.maxImageCount : minImageCount;

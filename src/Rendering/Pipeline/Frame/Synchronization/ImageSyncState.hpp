@@ -10,5 +10,10 @@ namespace Beer::Rendering
     public:
         Image* Image;
         vk::ImageLayout CurrentLayout = vk::ImageLayout::eUndefined;
+
+        ImageSyncState(class Image* image)
+        {
+            Image = image;
+        }
     };
 } // namespace Beer::Rendering

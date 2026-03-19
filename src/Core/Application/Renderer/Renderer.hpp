@@ -77,6 +77,7 @@ namespace Beer::Core
         void SetupDebugMessenger();
         void CreateSurface(SDL_Window* window);
         void CreateDepthResources(vk::Format& depthFormat);
+        void SetScreenGlobal(vk::Format& depthFormat);
         void CreateSemaphores();
         void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);

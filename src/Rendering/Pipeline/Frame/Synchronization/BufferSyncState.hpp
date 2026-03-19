@@ -9,5 +9,11 @@ namespace Beer::Rendering
     {
     public:
         Buffer* BufferHandle;
+
+    public:
+        BufferSyncState(Buffer* bufferHandle)
+            : BufferHandle(bufferHandle)
+        {
+        }
     };
 } // namespace Beer::Rendering

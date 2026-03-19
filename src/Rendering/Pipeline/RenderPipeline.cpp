@@ -16,6 +16,9 @@ namespace Beer::Rendering
     {
         frameBuilder = FrameBuilder(GetRenderPasses());
         frameGraph = frameBuilder.BuildGraph();
+
+        RenderContext context = GetRenderContext();
+        frameGraph.OnRenderSetup(context);
     }
 
     void RenderPipeline::ExecuteFrame(CommandBuffer* commandBuffer)
@@ -26,6 +29,7 @@ namespace Beer::Rendering
 
     std::vector<IRenderPass*> RenderPipeline::GetRenderPasses()
     {
+        return {drawOpaquePass.get()};
     }
 
     RenderContext RenderPipeline::GetRenderContext()

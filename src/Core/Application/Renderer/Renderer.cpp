@@ -16,6 +16,7 @@
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "Screen.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Drawing/ContextMask.hpp"
 #include "System/Drawing/DrawRequest.hpp"
@@ -69,6 +70,7 @@ namespace Beer::Core
         InitializeBuffers();
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
+        SetScreenGlobal(depthFormat);
         CreateSemaphores();
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -81,12 +83,6 @@ namespace Beer::Core
 
     void Renderer::PreDraw()
     {
-        Rendering::Material::UpdateDirtyMaterials();
-        uploadManager->FlushQueue(frameResources[frameIndex]);
-    }
-
-    void Renderer::Draw()
-    {
         auto& frameResource = frameResources[frameIndex];
         auto fenceResult = device.GetLogicalDevice().waitForFences(*frameResource.GetInFlightFence(),
             vk::True,
@@ -96,6 +92,14 @@ namespace Beer::Core
         {
             throw std::runtime_error("failed to wait for fence");
         }
+
+        Rendering::Material::UpdateDirtyMaterials();
+        uploadManager->FlushQueue(frameResources[frameIndex]);
+    }
+
+    void Renderer::Draw()
+    {
+        auto& frameResource = frameResources[frameIndex];
 
         uint32_t imageIndex = 0;
         bool resize = RendererUtilities::AcquireNextImage(swapchain.get(), frameResource, imageIndex);
@@ -117,8 +121,9 @@ namespace Beer::Core
         device.GetLogicalDevice().waitIdle();
         swapchain->RecreateSwapchain(window, surface, device);
         CreateSemaphores();
-        vk::Format emptyFormat;
-        CreateDepthResources(emptyFormat);
+        vk::Format depthFormat;
+        CreateDepthResources(depthFormat);
+        SetScreenGlobal(depthFormat);
     }
 
     const vk::raii::Context& Renderer::GetContext() const { return context; }
@@ -236,6 +241,14 @@ namespace Beer::Core
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                 vk::ImageAspectFlagBits::eDepth,
                 device));
+    }
+
+    void Renderer::SetScreenGlobal(vk::Format& depthFormat)
+    {
+        const vk::Extent2D extent = swapchain->GetExtent();
+        VkFormat colorFormat = swapchain->GetFormat();
+        Screen::SetScreen(Screen(
+            extent.width, extent.height, colorFormat, static_cast<VkFormat>(depthFormat)));
     }
 
     void Renderer::CreateSemaphores()
@@ -359,8 +372,7 @@ namespace Beer::Core
 
     void Renderer::UpdateGlobals()
     {
-        const vk::Extent2D extent = swapchain->GetExtent();
-        Rendering::Shader::Globals()->SetScreen(static_cast<float>(extent.width), static_cast<float>(extent.height));
+        Rendering::Shader::Globals()->SetScreen(static_cast<float>(Screen::Width()), static_cast<float>(Screen::Height()));
         System::Camera::Main()->BindToShaders();
         System::ILight* light = System::ILight::Main();
         Rendering::Shader::Globals()->SetMainLight(light->GetPosition(), light->GetDirectColor());

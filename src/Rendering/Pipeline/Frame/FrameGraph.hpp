@@ -16,7 +16,7 @@ namespace Beer::Rendering
 
     public:
         RenderCommandNode(IRenderPass* renderPass)
-            : RenderPass(renderPass), Commands(renderPass->GetCommands())
+            : RenderPass(renderPass)
         {
         }
     };
@@ -29,6 +29,8 @@ namespace Beer::Rendering
     public:
         FrameGraph(std::vector<IRenderPass*> renderPasses);
         FrameGraph() {}
+        void OnRenderSetup(const RenderContext& context);
+        void PrepareBarriers(const RenderContext& context);
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context);
     };
 

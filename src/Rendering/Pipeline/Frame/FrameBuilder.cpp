@@ -2,7 +2,7 @@
 #include <memory>
 #include "Dependency/ResourceAction.hpp"
 #include "FrameGraph.hpp"
-#include "Rendering/Pipeline/Frame/Dependency/ResourceActionMask.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include <queue>
 
 namespace Beer::Rendering
@@ -29,10 +29,10 @@ namespace Beer::Rendering
             for (const PassDependency& dep : node->Dependencies.GetDependencies())
             {
                 const std::string& resourceName = dep.GetResourceName();
-                ResourceActionMask action = dep.GetActionMask();
+                ResourceAction action = dep.GetAction();
 
-                bool isRead = action.Has(ResourceAction::Read);
-                bool isWrite = action.Has(ResourceAction::Write);
+                bool isRead = action == ResourceAction::Read;
+                bool isWrite = action == ResourceAction::Write;
 
                 RenderPassNode* previousWriter = nullptr;
                 auto it = latestWriters.find(resourceName);

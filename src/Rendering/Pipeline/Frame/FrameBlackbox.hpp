@@ -60,5 +60,19 @@ namespace Beer::Rendering
                 blackbox.erase(it);
             }
         }
+
+        RenderTexture* ReallocateIfNeeded(const std::string& name,
+            uint32_t width,
+            uint32_t height,
+            VkFormat format,
+            vk::Filter filter = vk::Filter::eLinear,
+            vk::SamplerAddressMode tiling = vk::SamplerAddressMode::eRepeat,
+            glm::vec4 clearColor = glm::vec4(0));
+
+    private:
+        std::shared_ptr<Image> CreateRenderTextureImage(uint32_t width,
+            uint32_t height,
+            VkFormat format,
+            glm::vec4 clearColor = glm::vec4(0));
     };
 } // namespace Beer::Rendering

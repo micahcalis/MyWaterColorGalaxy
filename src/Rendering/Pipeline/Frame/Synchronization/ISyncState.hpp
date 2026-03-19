@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
-#include "Rendering/Pipeline/Frame/IRenderResource.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering

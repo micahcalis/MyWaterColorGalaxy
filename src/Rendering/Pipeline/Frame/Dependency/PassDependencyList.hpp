@@ -12,7 +12,7 @@ namespace Beer::Rendering
         std::vector<PassDependency> dependencies;
 
     public:
-        PassDependencyList(std::string& passName)
+        PassDependencyList(const std::string& passName)
             : passName(passName)
         {
         }
