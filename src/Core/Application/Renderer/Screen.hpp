@@ -16,6 +16,8 @@ namespace Beer::Core
         VkFormat depthFormat{};
 
     public:
+        Screen() = default;
+
         Screen(uint32_t width, uint32_t height, VkFormat colorFormat, VkFormat depthFormat)
             : width(width), height(height), colorFormat(colorFormat), depthFormat(depthFormat)
         {
@@ -35,4 +37,6 @@ namespace Beer::Core
         static VkFormat ColorFormat() { return instance.colorFormat; }
         static VkFormat DepthFormat() { return instance.depthFormat; }
     };
+
+    inline Screen Screen::instance;
 } // namespace Beer::Core

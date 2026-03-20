@@ -8,7 +8,8 @@ namespace Beer::Rendering
     {
         None = 0,
         Read = 1 << 0,
-        Write = 1 << 1,
+        ColorWrite = 1 << 1,
+        DepthWrite = 1 << 2,
         All = ~0u
     };
 
@@ -24,6 +25,7 @@ namespace Beer::Rendering
 
     constexpr uint32_t RACTION_NONE_BITS = static_cast<uint32_t>(ResourceAction::None);
     constexpr uint32_t RACTION_READ_BITS = static_cast<uint32_t>(ResourceAction::Read);
-    constexpr uint32_t RACTION_WRITE_BITS = static_cast<uint32_t>(ResourceAction::Write);
+    constexpr uint32_t RACTION_CWRITE_BITS = static_cast<uint32_t>(ResourceAction::ColorWrite);
+    constexpr uint32_t RACTION_ZWRITE_BITS = static_cast<uint32_t>(ResourceAction::DepthWrite);
     constexpr uint32_t RACTION_ALL_BITS = static_cast<uint32_t>(ResourceAction::All);
 } // namespace Beer::Rendering

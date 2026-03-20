@@ -13,6 +13,8 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Pipeline/RenderPipeline.hpp"
+#include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
@@ -79,6 +81,7 @@ namespace Beer::Core
         };
 
         InitializeAssetManagers(depthFormat);
+        InitializeRenderPipeline();
     }
 
     void Renderer::PreDraw()
@@ -261,6 +264,11 @@ namespace Beer::Core
         {
             swapchainSemaphores.emplace_back(device.GetLogicalDevice(), semaphoreInfo);
         }
+    }
+
+    void Renderer::InitializeRenderPipeline()
+    {
+        renderPipeline = std::make_unique<Rendering::RenderPipeline>(&device, uploadManager.get());
     }
 
     void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)

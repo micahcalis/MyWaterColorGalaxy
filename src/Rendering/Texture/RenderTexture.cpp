@@ -1,16 +1,20 @@
 #include "Rendering/Texture/RenderTexture.hpp"
+#include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "ReallocationFlags.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/ImageSyncBarrier.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/ImageSyncState.hpp"
 #include "Rendering/Texture/ITexture.hpp"
+#include "vulkan/vulkan.hpp"
 #include <memory>
 
 namespace Beer::Rendering
 {
-    RenderTexture::RenderTexture(std::shared_ptr<Image> image,
+    RenderTexture::RenderTexture(const std::string& name,
+        std::shared_ptr<Image> image,
         vk::Filter filter,
         vk::SamplerAddressMode tiling)
-        : ITexture(image, Sampler::Get(filter, tiling))
+        : name(name), ITexture(image, Sampler::Get(filter, tiling))
     {
         type = RenderResourceType::Image;
         syncState = std::make_unique<ImageSyncState>(image.get());
@@ -62,5 +66,24 @@ namespace Beer::Rendering
 
         barrier->GenerateBarrier(action);
         return barrier;
+    }
+
+    vk::RenderingAttachmentInfo RenderTexture::GetAttachmentInfo(const ResetOperator& resetOperator,
+        bool& isDepth)
+    {
+        isDepth = Core::ImageUtilities::IsDepthFormat(static_cast<vk::Format>(image->GetData().Format));
+
+        vk::RenderingAttachmentInfo attachmentInfo{};
+        attachmentInfo.imageView = image->GetDefaultView();
+
+        attachmentInfo.imageLayout = isDepth
+            ? vk::ImageLayout::eDepthStencilAttachmentOptimal
+            : vk::ImageLayout::eColorAttachmentOptimal;
+
+        attachmentInfo.loadOp = resetOperator.LoadOp;
+        attachmentInfo.storeOp = resetOperator.StoreOp;
+        attachmentInfo.clearValue = resetOperator.ClearValue;
+
+        return attachmentInfo;
     }
 } // namespace Beer::Rendering

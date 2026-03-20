@@ -8,5 +8,6 @@
 namespace Beer::Rendering
 {
     constexpr std::string_view MAIN_COLOR = "MainColor";
+    constexpr std::string_view MAIN_DEPTH = "MainDepth";
 
 } // namespace Beer::Rendering

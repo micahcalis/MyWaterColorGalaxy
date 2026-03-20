@@ -13,8 +13,10 @@
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Pipeline/RenderPipeline.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "Rendering/Texture/RenderTexture.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Mesh./Mesh.hpp"
 #include "Core/Application/Managers/ShaderManager.hpp"
@@ -52,6 +54,8 @@ namespace Beer::Core
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
         std::unique_ptr<System::RenderRegister> renderRegister = nullptr;
 
+        std::unique_ptr<Rendering::RenderPipeline> renderPipeline = nullptr;
+
         int frameIndex = 0;
         bool frameBufferResized = false;
 
@@ -81,6 +85,7 @@ namespace Beer::Core
         void CreateSemaphores();
         void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);
+        void InitializeRenderPipeline();
         void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateGlobals();

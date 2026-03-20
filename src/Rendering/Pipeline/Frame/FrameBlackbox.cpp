@@ -1,5 +1,6 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
 #include "Core/Application/Jobs/ImageClearJob.hpp"
+#include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "FrameBlackbox.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
@@ -8,10 +9,15 @@
 
 namespace Beer::Rendering
 {
-    constexpr VkImageUsageFlags RENDER_TEX_FLAGS = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+    constexpr VkImageUsageFlags COLOR_TEX_FLAGS = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
         | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT
         | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT
         | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+    constexpr VkImageUsageFlags DEPTH_TEX_FLAGS = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+        | VK_IMAGE_USAGE_SAMPLED_BIT
+        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+        | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     RenderTexture* FrameBlackbox::CreateRenderTexture2D(const std::string& name,
         uint32_t width,
@@ -31,7 +37,8 @@ namespace Beer::Rendering
             format,
             clearColor);
 
-        blackbox[name] = std::make_unique<RenderTexture>(std::move(image),
+        blackbox[name] = std::make_unique<RenderTexture>(name,
+            std::move(image),
             filter,
             tiling);
 
@@ -79,19 +86,16 @@ namespace Beer::Rendering
         VkFormat format,
         glm::vec4 clearColor)
     {
-        std::shared_ptr<Rendering::Image> image = std::make_shared<Rendering::Image>(
+        bool isDepth = Core::ImageUtilities::IsDepthFormat(static_cast<vk::Format>(format));
+        VkImageUsageFlags usageFlags = isDepth ? DEPTH_TEX_FLAGS : COLOR_TEX_FLAGS;
+        vk::ImageAspectFlagBits aspectFlags = isDepth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
+
+        return std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(width,
                 height,
                 format,
-                RENDER_TEX_FLAGS,
-                vk::ImageAspectFlagBits::eColor,
+                usageFlags,
+                aspectFlags,
                 *device));
-
-        std::unique_ptr<Core::ImageClearJob> clearJob = std::make_unique<Core::ImageClearJob>(
-            image, clearColor);
-
-        uploadManager->AddJob(std::move(clearJob));
-
-        return image;
     }
 } // namespace Beer::Rendering

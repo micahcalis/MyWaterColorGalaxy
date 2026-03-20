@@ -1,4 +1,5 @@
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
 {
@@ -14,14 +15,45 @@ namespace Beer::Rendering
         commandBuffer.begin(beginInfo);
     }
 
-    void CommandBuffer::Reset()
+    void CommandBuffer::BeginRendering(const RenderingBeginData& beginData)
     {
-        commandBuffer.reset();
+        vk::RenderingInfo renderingInfo{};
+        renderingInfo.renderArea = vk::Rect2D({0, 0}, vk::Extent2D(beginData.Width, beginData.Height));
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = beginData.ColorWriteTargets.size();
+        renderingInfo.pColorAttachments = beginData.ColorWriteTargets.data();
+
+        if (beginData.WritesToDepth)
+        {
+            renderingInfo.pDepthAttachment = &beginData.DepthWriteTarget;
+        }
+
+        commandBuffer.beginRendering(renderingInfo);
+
+        commandBuffer.setViewport(0,
+            vk::Viewport(0.0f,
+                0.0f,
+                static_cast<float>(beginData.Width),
+                static_cast<float>(beginData.Height),
+                0.0f,
+                1.0f));
+
+        commandBuffer.setScissor(0, renderingInfo.renderArea);
+    }
+
+    void CommandBuffer::EndRendering()
+    {
+        commandBuffer.endRendering();
     }
 
     void CommandBuffer::End()
     {
         commandBuffer.end();
+    }
+
+    void CommandBuffer::Reset()
+    {
+        commandBuffer.reset();
     }
 
     void CommandBuffer::DrawSingle(Mesh* mesh, Material* material, System::Transform* transform)

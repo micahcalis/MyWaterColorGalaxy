@@ -32,7 +32,7 @@ namespace Beer::Rendering
                 ResourceAction action = dep.GetAction();
 
                 bool isRead = action == ResourceAction::Read;
-                bool isWrite = action == ResourceAction::Write;
+                bool isWrite = action == ResourceAction::ColorWrite || action == ResourceAction::DepthWrite;
 
                 RenderPassNode* previousWriter = nullptr;
                 auto it = latestWriters.find(resourceName);

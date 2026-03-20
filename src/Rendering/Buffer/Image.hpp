@@ -64,6 +64,9 @@ namespace Beer::Rendering
         void QueueImageClear(vk::raii::CommandBuffer& commandBuffer,
             vk::ClearColorValue clearColor);
 
+        void QueueDepthClear(vk::raii::CommandBuffer& commandBuffer,
+            vk::ClearDepthStencilValue clearValue);
+
         NO_COPY(Image);
         DEFAULT_MOVE(Image);
 

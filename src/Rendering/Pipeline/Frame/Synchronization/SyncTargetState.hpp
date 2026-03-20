@@ -18,16 +18,19 @@ namespace Beer::Rendering
             switch (action)
             {
             case ResourceAction::Read:
-                return {
-                    vk::ImageLayout::eShaderReadOnlyOptimal,
+                return {vk::ImageLayout::eShaderReadOnlyOptimal,
                     vk::AccessFlagBits::eShaderRead,
                     vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader};
 
-            case ResourceAction::Write: {
+            case ResourceAction::ColorWrite:
                 return {vk::ImageLayout::eColorAttachmentOptimal,
                     vk::AccessFlagBits::eColorAttachmentWrite,
                     vk::PipelineStageFlagBits::eColorAttachmentOutput};
-            }
+
+            case ResourceAction::DepthWrite:
+                return {vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                    vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentRead,
+                    vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests};
 
             default:
                 return {

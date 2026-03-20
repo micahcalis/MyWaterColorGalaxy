@@ -24,7 +24,7 @@ namespace Beer::Rendering
     {
         PassDependencyList dependencies = PassDependencyList(name);
         dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
-            ResourceAction::Write));
+            ResourceAction::ColorWrite));
 
         return dependencies;
     }

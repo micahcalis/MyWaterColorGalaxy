@@ -140,4 +140,34 @@ namespace Beer::Rendering
             vk::ImageLayout::eTransferDstOptimal,
             vk::ImageLayout::eShaderReadOnlyOptimal);
     }
+
+    void Image::QueueDepthClear(vk::raii::CommandBuffer& commandBuffer,
+        vk::ClearDepthStencilValue clearValue)
+    {
+        ImageData data = GetData();
+
+        QueueTransitionLayout(GetHandle(),
+            data,
+            commandBuffer,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eTransferDstOptimal);
+
+        vk::ImageSubresourceRange range{};
+        range.aspectMask = data.AspectMask;
+        range.baseMipLevel = data.BaseMipLevel;
+        range.levelCount = data.MipLevels;
+        range.baseArrayLayer = data.BaseArrayLayer;
+        range.layerCount = data.ArrayLayers;
+
+        commandBuffer.clearDepthStencilImage(GetHandle(),
+            vk::ImageLayout::eTransferDstOptimal,
+            clearValue,
+            {range});
+
+        QueueTransitionLayout(GetHandle(),
+            data,
+            commandBuffer,
+            vk::ImageLayout::eTransferDstOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
 } // namespace Beer::Rendering

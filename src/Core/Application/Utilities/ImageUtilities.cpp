@@ -99,4 +99,11 @@ namespace Beer::Core
     {
         return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
     }
+
+    bool ImageUtilities::IsDepthFormat(vk::Format format)
+    {
+        return format == vk::Format::eD32Sfloat
+            || format == vk::Format::eD32SfloatS8Uint
+            || format == vk::Format::eD24UnormS8Uint;
+    }
 } // namespace Beer::Core

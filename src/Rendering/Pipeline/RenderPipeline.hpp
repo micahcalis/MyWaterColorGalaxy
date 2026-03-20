@@ -17,6 +17,9 @@ namespace Beer::Rendering
         FrameBuilder frameBuilder{};
         FrameGraph frameGraph{};
 
+        Rendering::RenderTexture* colorTarget = nullptr;
+        Rendering::RenderTexture* depthTarget = nullptr;
+
         // hardcoded for now, render passes should be selected from contexts
         std::unique_ptr<DrawOpaquePass> drawOpaquePass = nullptr;
 
@@ -24,6 +27,8 @@ namespace Beer::Rendering
         RenderPipeline(const Core::Device* device, Core::UploadManager* uploadManager);
         void InitializeFrame();
         void ExecuteFrame(CommandBuffer* commandBuffer);
+        void Present();
+        [[nodiscard]] FrameBlackbox* GetBlackbox() const { return frameBlackbox.get(); }
 
     private:
         std::vector<IRenderPass*> GetRenderPasses();

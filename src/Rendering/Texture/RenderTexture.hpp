@@ -4,6 +4,7 @@
 #include "Rendering/Texture/ReallocationFlags.hpp"
 #include "Rendering/Pipeline/Frame//Resource/IRenderResource.hpp"
 #include "Rendering/Texture/ITexture.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
@@ -12,11 +13,20 @@ namespace Beer::Rendering
         , public IRenderResource
     {
         friend class FrameBlackbox;
+        friend class FrameGraph;
+
+    private:
+        std::string name;
 
     public:
-        RenderTexture(std::shared_ptr<Image> image,
+        RenderTexture(const std::string& name,
+            std::shared_ptr<Image> image,
             vk::Filter filter,
             vk::SamplerAddressMode tiling);
+
+        uint32_t Width() const { return image->GetData().Extent.width; }
+        uint32_t Height() const { return image->GetData().Extent.height; }
+        std::string Name() const { return name; }
 
     private:
         void SetImage(std::shared_ptr<Image> image);
@@ -34,5 +44,8 @@ namespace Beer::Rendering
         {
             return static_cast<ImageSyncState*>(syncState.get());
         }
+
+        vk::RenderingAttachmentInfo GetAttachmentInfo(const ResetOperator& resetOperator,
+            bool& isDepth);
     };
 } // namespace Beer::Rendering
