@@ -51,7 +51,7 @@ namespace Beer::Core
         swapchainCreateInfo.imageColorSpace = swapchainSurfaceFormat.colorSpace;
         swapchainCreateInfo.imageExtent = swapchainExtent;
         swapchainCreateInfo.imageArrayLayers = 1;
-        swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+        swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
         swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
         swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
         swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;

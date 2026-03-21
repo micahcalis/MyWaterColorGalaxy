@@ -14,8 +14,6 @@ namespace Beer::Rendering
         }
 
     private:
-        RenderTexture* colorTarget = nullptr;
-
         void OnRenderSetup(const RenderContext& context) override;
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context) override;
         PassDependencyList GetDependencies() const override;

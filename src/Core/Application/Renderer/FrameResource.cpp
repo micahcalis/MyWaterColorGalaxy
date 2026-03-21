@@ -1,5 +1,6 @@
 #include "vulkan/vulkan.hpp"
 #include <Core/Application/Renderer/FrameResource.hpp>
+#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 
 namespace Beer::Core
 {
@@ -21,7 +22,7 @@ namespace Beer::Core
     const vk::raii::Fence& FrameResource::GetInFlightFence() const { return inFlightFence; }
     const vk::raii::Semaphore& FrameResource::GetImageAvailableSemaphore() const { return imageAvailableSemaphore; }
     const vk::raii::Semaphore& FrameResource::GetRenderFinishedSemaphore() const { return renderFinishedSemaphore; }
-    vk::CommandBuffer FrameResource::GetCommandBuffer() { return commandBuffer; }
+    vk::CommandBuffer FrameResource::GetVkCommandBuffer() { return commandBuffer->GetVk(); }
 
     void FrameResource::CreateCommandPool()
     {
@@ -40,7 +41,7 @@ namespace Beer::Core
         commandBufferAllocateInfo.commandBufferCount = 1;
 
         vk::raii::CommandBuffers buffers(device->GetLogicalDevice(), commandBufferAllocateInfo);
-        commandBuffer = std::move(buffers[0]);
+        commandBuffer = std::make_unique<Rendering::CommandBuffer>(std::move(buffers[0]));
     }
 
     void FrameResource::CreateSyncObjects()

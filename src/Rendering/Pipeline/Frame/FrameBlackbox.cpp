@@ -1,5 +1,4 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
-#include "Core/Application/Jobs/ImageClearJob.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "FrameBlackbox.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"

@@ -23,7 +23,7 @@ namespace Beer::Rendering
     void RenderTexture::SetImage(std::shared_ptr<Image> image)
     {
         this->image = std::move(image);
-        syncState = std::make_unique<ImageSyncState>(image.get());
+        syncState = std::make_unique<ImageSyncState>(this->image.get());
     }
 
     void RenderTexture::SetSampler(vk::Filter filter, vk::SamplerAddressMode tiling)

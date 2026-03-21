@@ -12,12 +12,9 @@
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Image.hpp"
-#include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include "Rendering/Shader/Shader.hpp"
-#include "Rendering/Texture/RenderTexture.hpp"
-#include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Mesh./Mesh.hpp"
 #include "Core/Application/Managers/ShaderManager.hpp"
 #include "Rendering/Uniforms/DescriptorAllocator.hpp"
@@ -66,6 +63,7 @@ namespace Beer::Core
         void Draw();
         void HandleWindowResize();
         void SetFrameBufferResized(bool val);
+        void Present(uint32_t imageIndex);
 
         [[nodiscard]] const vk::raii::Context& GetContext() const;
         [[nodiscard]] const vk::raii::Instance& GetInstance() const;
@@ -86,8 +84,6 @@ namespace Beer::Core
         void InitializeBuffers();
         void InitializeAssetManagers(vk::Format depthFormat);
         void InitializeRenderPipeline();
-        void BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex);
-        void EndFrame(FrameResource& frameResource, const uint32_t& imageIndex);
         void UpdateGlobals();
 
     private:

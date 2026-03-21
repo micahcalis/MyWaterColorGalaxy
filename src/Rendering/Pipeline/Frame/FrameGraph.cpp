@@ -3,6 +3,7 @@
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
 #include "Rendering/Pipeline/Frame/Resource/IRenderResource.hpp"
+#include <print>
 
 namespace Beer::Rendering
 {
@@ -36,6 +37,7 @@ namespace Beer::Rendering
                     continue;
 
                 std::unique_ptr<ISyncBarrier> barrier = resource->GetBarrier(dep.GetAction());
+
                 node.Commands.emplace_back(ResourceActionCommand(std::move(barrier)));
             }
         }
@@ -44,6 +46,8 @@ namespace Beer::Rendering
     void FrameGraph::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
     {
         commandBuffer->Begin();
+
+        Rendering::Shader::Globals()->Bind(commandBuffer->GetVk());
 
         for (auto& node : renderNodes)
         {
@@ -58,8 +62,6 @@ namespace Beer::Rendering
             node.RenderPass->Execute(commandBuffer, context);
             commandBuffer->EndRendering();
         }
-
-        commandBuffer->End();
     }
 
     RenderingBeginData FrameGraph::GetNodeBeginData(RenderCommandNode& node, const RenderContext& context)
@@ -102,5 +104,38 @@ namespace Beer::Rendering
         }
 
         return beginData;
+    }
+
+    static std::string ActionToString(ResourceAction action)
+    {
+        switch (action)
+        {
+        case ResourceAction::Read: return "Read";
+        case ResourceAction::ColorWrite: return "ColorWrite";
+        case ResourceAction::DepthWrite: return "DepthWrite";
+        default: return "Unknown";
+        }
+    }
+
+    void FrameGraph::PrintGraph() const
+    {
+        std::println("--- Frame Graph Execution ---");
+
+        for (size_t i = 0; i < renderNodes.size(); ++i)
+        {
+            const RenderCommandNode& node = renderNodes[i];
+            PassDependencyList deps = node.RenderPass->GetDependencies();
+
+            std::println("[{}] Pass: {}", i, deps.GetPassName());
+            std::println("    Barriers: {}", node.Commands.size());
+
+            for (const PassDependency& dep : deps.GetDependencies())
+            {
+                std::println("    -> Resource: '{}' | Action: {}",
+                    dep.GetResourceName(),
+                    ActionToString(dep.GetAction()));
+            }
+        }
+        std::println("-----------------------------");
     }
 } // namespace Beer::Rendering

@@ -3,6 +3,7 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "System/Camera/Camera.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 #include "System/Light/ILight.hpp"
 
 namespace Beer::Rendering
@@ -15,5 +16,6 @@ namespace Beer::Rendering
         FrameBlackbox* BlackBox = nullptr;
         RenderTexture* MainColorTarget = nullptr;
         RenderTexture* MainDepthTarget = nullptr;
+        System::RenderRegister* Register = nullptr;
     };
 } // namespace Beer::Rendering

@@ -16,6 +16,7 @@ namespace Beer::Rendering
 
     public:
         CommandBuffer(vk::raii::CommandBuffer commandBuffer);
+        vk::CommandBuffer GetVk() const { return *commandBuffer; }
         void Begin();
         void BeginRendering(const RenderingBeginData& beginData);
         void EndRendering();

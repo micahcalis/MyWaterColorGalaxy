@@ -2,10 +2,8 @@
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
-#include "Core/Application/Renderer/DrawCallPool.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
-#include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/RendererUtilities.hpp"
@@ -14,16 +12,9 @@
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
-#include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
-#include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "Screen.hpp"
-#include "System/Context/ContextType.hpp"
-#include "System/Drawing/ContextMask.hpp"
-#include "System/Drawing/DrawRequest.hpp"
-#include "System/Drawing/Layer.hpp"
-#include "System/Drawing/LayerMask.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Light/ILight.hpp"
 #include "vulkan/vulkan.hpp"
@@ -98,6 +89,7 @@ namespace Beer::Core
 
         Rendering::Material::UpdateDirtyMaterials();
         uploadManager->FlushQueue(frameResources[frameIndex]);
+        renderPipeline->InitializeFrame();
     }
 
     void Renderer::Draw()
@@ -115,8 +107,10 @@ namespace Beer::Core
 
         frameResource.Reset();
 
-        BeginFrame(frameResource, imageIndex);
-        EndFrame(frameResource, imageIndex);
+        UpdateGlobals();
+        renderPipeline->ExecuteFrame(frameResource.GetCommandBuffer());
+        renderPipeline->FinalBlit(frameResource.GetCommandBuffer(), swapchain->GetImage(imageIndex), swapchain->GetExtent());
+        Present(imageIndex);
     }
 
     void Renderer::HandleWindowResize()
@@ -127,6 +121,38 @@ namespace Beer::Core
         vk::Format depthFormat;
         CreateDepthResources(depthFormat);
         SetScreenGlobal(depthFormat);
+    }
+
+    void Renderer::Present(uint32_t imageIndex)
+    {
+        auto& frameResource = frameResources[frameIndex];
+        vk::CommandBuffer commandBuffer = frameResource.GetVkCommandBuffer();
+        vk::Semaphore signalSemaphore = *swapchainSemaphores[imageIndex];
+
+        auto waitMask = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eTransfer);
+        vk::SubmitInfo submitInfo = RendererUtilities::CreateSubmitInfo(frameResource, commandBuffer, &waitMask);
+        submitInfo.setSignalSemaphores(signalSemaphore);
+        device.GetGraphicsQueue().submit(submitInfo, *frameResource.GetInFlightFence());
+        vk::PresentInfoKHR presentInfo = RendererUtilities::CreatePresentInfo(frameResource, swapchain.get(), imageIndex);
+        presentInfo.setWaitSemaphores(signalSemaphore);
+
+        vk::Result result = RendererUtilities::Queue_PresentKHR_NoExcept(device.GetPresentQueue(), presentInfo);
+        if (result == vk::Result::eErrorOutOfDateKHR)
+        {
+            HandleWindowResize();
+        }
+
+        if ((result == vk::Result::eSuboptimalKHR) || (result == vk::Result::eErrorOutOfDateKHR) || frameBufferResized)
+        {
+            frameBufferResized = false;
+            HandleWindowResize();
+        } else
+        {
+            assert(result == vk::Result::eSuccess);
+        }
+
+        frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+        Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
     }
 
     const vk::raii::Context& Renderer::GetContext() const { return context; }
@@ -268,112 +294,7 @@ namespace Beer::Core
 
     void Renderer::InitializeRenderPipeline()
     {
-        renderPipeline = std::make_unique<Rendering::RenderPipeline>(&device, uploadManager.get());
-    }
-
-    void Renderer::BeginFrame(FrameResource& frameResource, const uint32_t& imageIndex)
-    {
-        vk::CommandBuffer commandBuffer = frameResource.GetCommandBuffer();
-        vk::CommandBufferBeginInfo beginInfo{};
-        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-        commandBuffer.begin(beginInfo);
-
-        CommandBufferUtilities::TransitionImageLayout(commandBuffer,
-            swapchain->GetImage(imageIndex),
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eColorAttachmentOptimal,
-            {},
-            vk::AccessFlagBits2::eColorAttachmentWrite,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::ImageAspectFlagBits::eColor);
-
-        CommandBufferUtilities::TransitionImageLayout(commandBuffer,
-            depthImage->GetHandle(),
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eDepthAttachmentOptimal,
-            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-            vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-            vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-            vk::ImageAspectFlagBits::eDepth);
-
-        vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 0.0f);
-        vk::RenderingAttachmentInfo colorAttachmentInfo = RendererUtilities::CreateColorAttachmentInfo(swapchain->GetImageView(imageIndex),
-            clearColor);
-
-        vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
-        vk::RenderingAttachmentInfo depthAttachmentInfo = RendererUtilities::CreateDepthAttachmentInfo(depthImage->GetDefaultView(), clearDepth);
-
-        const vk::Extent2D& swapchainExtent = swapchain->GetExtent();
-
-        vk::RenderingInfo renderingInfo = RendererUtilities::CreateRenderingInfo(swapchainExtent,
-            colorAttachmentInfo,
-            depthAttachmentInfo);
-
-        commandBuffer.beginRendering(renderingInfo);
-
-        commandBuffer.setViewport(0,
-            vk::Viewport(0.0f, 0.0f, static_cast<float>(swapchainExtent.width), static_cast<float>(swapchainExtent.height), 0.0f, 1.0f));
-
-        commandBuffer.setScissor(0,
-            vk::Rect2D(vk::Offset2D(0, 0), swapchainExtent));
-
-        UpdateGlobals();
-        Rendering::Shader::Globals()->Bind(commandBuffer);
-
-        System::DrawRequest drawRequest = System::DrawRequest(commandBuffer,
-            Rendering::ShaderPassType::Opaque,
-            System::ContextMask(System::CTXT_GALAXY_BITS),
-            System::LayerMask(System::LAYER_ALL_BITS));
-
-        DrawCallPool drawPool = renderRegister->GetDrawCallPool(drawRequest);
-        drawPool.BindDrawCalls();
-    }
-
-    void Renderer::EndFrame(FrameResource& frameResource, const uint32_t& imageIndex)
-    {
-        vk::CommandBuffer commandBuffer = frameResource.GetCommandBuffer();
-        vk::Semaphore signalSemaphore = *swapchainSemaphores[imageIndex];
-
-        commandBuffer.endRendering();
-
-        CommandBufferUtilities::TransitionImageLayout(commandBuffer,
-            swapchain->GetImage(imageIndex),
-            vk::ImageLayout::eColorAttachmentOptimal,
-            vk::ImageLayout::ePresentSrcKHR,
-            vk::AccessFlagBits2::eColorAttachmentWrite,
-            {},
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::PipelineStageFlagBits2::eBottomOfPipe,
-            vk::ImageAspectFlagBits::eColor);
-
-        commandBuffer.end();
-
-        auto waitMask = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-        vk::SubmitInfo submitInfo = RendererUtilities::CreateSubmitInfo(frameResource, commandBuffer, &waitMask);
-        submitInfo.setSignalSemaphores(signalSemaphore);
-        device.GetGraphicsQueue().submit(submitInfo, *frameResource.GetInFlightFence());
-        vk::PresentInfoKHR presentInfo = RendererUtilities::CreatePresentInfo(frameResource, swapchain.get(), imageIndex);
-        presentInfo.setWaitSemaphores(signalSemaphore);
-
-        vk::Result result = RendererUtilities::Queue_PresentKHR_NoExcept(device.GetPresentQueue(), presentInfo);
-        if (result == vk::Result::eErrorOutOfDateKHR)
-        {
-            HandleWindowResize();
-        }
-
-        if ((result == vk::Result::eSuboptimalKHR) || (result == vk::Result::eErrorOutOfDateKHR) || frameBufferResized)
-        {
-            frameBufferResized = false;
-            HandleWindowResize();
-        } else
-        {
-            assert(result == vk::Result::eSuccess);
-        }
-
-        frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-        Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
+        renderPipeline = std::make_unique<Rendering::RenderPipeline>(&device, uploadManager.get(), renderRegister.get());
     }
 
     void Renderer::SetFrameBufferResized(const bool val) { frameBufferResized = val; }

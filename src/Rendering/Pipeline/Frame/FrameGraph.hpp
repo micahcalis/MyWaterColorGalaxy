@@ -32,6 +32,7 @@ namespace Beer::Rendering
         void OnRenderSetup(const RenderContext& context);
         void PrepareBarriers(const RenderContext& context);
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context);
+        void PrintGraph() const;
 
     private:
         RenderingBeginData GetNodeBeginData(RenderCommandNode& node, const RenderContext& context);

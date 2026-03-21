@@ -7,6 +7,7 @@
 #include "Rendering/Pipeline/Frame/FrameBuilder.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 
 namespace Beer::Rendering
 {
@@ -19,15 +20,19 @@ namespace Beer::Rendering
 
         Rendering::RenderTexture* colorTarget = nullptr;
         Rendering::RenderTexture* depthTarget = nullptr;
+        System::RenderRegister* renderRegister = nullptr;
 
         // hardcoded for now, render passes should be selected from contexts
         std::unique_ptr<DrawOpaquePass> drawOpaquePass = nullptr;
 
     public:
-        RenderPipeline(const Core::Device* device, Core::UploadManager* uploadManager);
+        RenderPipeline(const Core::Device* device,
+            Core::UploadManager* uploadManager,
+            System::RenderRegister* renderRegister);
+
         void InitializeFrame();
         void ExecuteFrame(CommandBuffer* commandBuffer);
-        void Present();
+        void FinalBlit(CommandBuffer* commandBuffer, vk::Image swapchainImage, vk::Extent2D swapchainExtent);
         [[nodiscard]] FrameBlackbox* GetBlackbox() const { return frameBlackbox.get(); }
 
     private:

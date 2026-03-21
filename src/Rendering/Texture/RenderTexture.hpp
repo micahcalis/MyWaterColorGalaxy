@@ -27,6 +27,7 @@ namespace Beer::Rendering
         uint32_t Width() const { return image->GetData().Extent.width; }
         uint32_t Height() const { return image->GetData().Extent.height; }
         std::string Name() const { return name; }
+        [[nodiscard]] Image* GetImage() const { return image.get(); }
 
     private:
         void SetImage(std::shared_ptr<Image> image);
