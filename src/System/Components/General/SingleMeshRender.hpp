@@ -2,6 +2,7 @@
 
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
+#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "System/Components/General/Transform.hpp"
@@ -31,7 +32,7 @@ namespace Beer::System
         void SetTransform(Transform* transform) { this->transform = transform; }
         void SetLayer(Layer* layer) { this->layer = layer; }
 
-        BindHistory Bind(BindMask mask, vk::CommandBuffer commandBuffer, const Rendering::ShaderPassType pass) override;
+        BindHistory Bind(BindMask mask, Rendering::CommandBuffer* commandBuffer, const Rendering::ShaderPassType pass) override;
 
         virtual bool HasPass(Rendering::ShaderPassType pass) const override { return material->GetShader()->HasPass(pass); }
         virtual Layer GetLayer() const override { return *layer; }

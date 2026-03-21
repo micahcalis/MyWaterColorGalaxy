@@ -1,5 +1,6 @@
 #include "Rendering/Mesh//Mesh.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
+#include "MeshDrawInfo.hpp"
 
 namespace Beer::Rendering
 {
@@ -8,28 +9,10 @@ namespace Beer::Rendering
         return meshManager->Get(name);
     }
 
-    void Mesh::Bind(vk::CommandBuffer commandBuffer, const MeshBufferOrder bufferOrder, bool& canIndex) const
+    MeshDrawInfo Mesh::GetDrawInfo() const
     {
-        std::vector<vk::Buffer> activeBuffers;
-        const Rendering::MeshBuffers& buffers = GetBuffers();
-
-        for (int i = 0; i < bufferOrder.GetSize(); i++)
-        {
-            const Rendering::MeshBufferType type = bufferOrder.GetElement(i);
-
-            if (buffers.HasBuffer(type))
-                activeBuffers.push_back(buffers.GetBuffer(type)->GetHandle());
-        }
-
-        std::vector<vk::DeviceSize> offsets(activeBuffers.size(), 0);
-
-        commandBuffer.bindVertexBuffers(0, activeBuffers, offsets);
-
-        canIndex = buffers.HasIndex();
-
-        if (!canIndex)
-            return;
-
-        commandBuffer.bindIndexBuffer(buffers.IndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
+        return MeshDrawInfo(buffers.HasIndex(),
+            vertexCount,
+            indexCount);
     }
 } // namespace Beer::Rendering

@@ -8,6 +8,11 @@
 
 namespace Beer::Rendering
 {
+    class CommandBuffer;
+}
+
+namespace Beer::Rendering
+{
     class ShaderGlobalsHandler
     {
     private:
@@ -20,7 +25,7 @@ namespace Beer::Rendering
         ShaderGlobalsHandler(const Core::Device* device);
         void Update();
 
-        void Bind(vk::CommandBuffer commandBuffer) const;
+        void Bind(CommandBuffer* commandBuffer) const;
 
         void SetTime(float time, float deltaTime);
         void SetCamera(const glm::mat4 viewMat, const glm::mat4 projMat, glm::vec3 cameraPos);

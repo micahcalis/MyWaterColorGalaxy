@@ -47,7 +47,7 @@ namespace Beer::Rendering
     {
         commandBuffer->Begin();
 
-        Rendering::Shader::Globals()->Bind(commandBuffer->GetVk());
+        Rendering::Shader::Globals()->Bind(commandBuffer);
 
         for (auto& node : renderNodes)
         {

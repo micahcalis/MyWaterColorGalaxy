@@ -41,16 +41,6 @@ namespace Beer::Rendering
         dirtyFramesCount--;
     }
 
-    void Material::BindBuffer(vk::CommandBuffer commandBuffer) const
-    {
-        commandBuffer.bindDescriptorSets(
-            vk::PipelineBindPoint::eGraphics,
-            shader->GetPipelineLayout(),
-            MaterialData::SET,
-            buffer->GetDescriptor()->GetSet(UniformDescriptor::GetFrameIndex()),
-            nullptr);
-    }
-
     void Material::SetInt(const std::string& name, uint32_t val)
     {
         PropertyType typeFetch = materialData->GetTypeByName(name);

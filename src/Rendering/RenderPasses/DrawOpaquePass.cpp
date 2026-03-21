@@ -25,7 +25,7 @@ namespace Beer::Rendering
 
     void DrawOpaquePass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
     {
-        System::DrawRequest drawRequest = System::DrawRequest(commandBuffer->GetVk(),
+        System::DrawRequest drawRequest = System::DrawRequest(commandBuffer,
             Rendering::ShaderPassType::Opaque,
             System::ContextMask(System::CTXT_GALAXY_BITS),
             System::LayerMask(System::LAYER_ALL_BITS));

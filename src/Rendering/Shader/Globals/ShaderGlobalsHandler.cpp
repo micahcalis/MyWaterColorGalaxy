@@ -1,5 +1,6 @@
 #include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
 #include "GlobalBuffer.hpp"
+#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
@@ -47,14 +48,12 @@ namespace Beer::Rendering
         globalsBuffer->Update(LightingGlobals::BINDING, &lightingGlobalsData);
     }
 
-    void ShaderGlobalsHandler::Bind(vk::CommandBuffer commandBuffer) const
+    void ShaderGlobalsHandler::Bind(CommandBuffer* commandBuffer) const
     {
-        commandBuffer.bindDescriptorSets(
-            vk::PipelineBindPoint::eGraphics,
+        commandBuffer->BindDescriptorSets(vk::PipelineBindPoint::eGraphics,
             *globalLayout,
             SET_INDEX,
-            GetGlobalSets(),
-            nullptr);
+            GetGlobalSets());
     }
 
     void ShaderGlobalsHandler::SetTime(float time, float deltaTime)
