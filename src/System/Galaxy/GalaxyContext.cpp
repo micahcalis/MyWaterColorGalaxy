@@ -31,7 +31,7 @@ namespace Beer::System
     void GalaxyContext::Load()
     {
         Transform lightTransform{};
-        lightTransform.Position = glm::vec3(0, 100, 10);
+        lightTransform.Position = glm::vec3(0, 1000, 100);
 
         mainLightEntity = registry.CreateEntity<LightEntity>(std::move(lightTransform),
             10,

@@ -15,4 +15,8 @@
 #define BIND_MATERIAL_TEX(idx) [[vk::binding(idx, 1)]]
 #define BIND_MODEL_PUSH        [[vk::push_constant]]
 
+// Function Shortcuts
+#define VERT                   [shader("vertex")]
+#define FRAG                   [shader("fragment")]
+
 #endif

@@ -19,6 +19,6 @@ namespace Beer::System
         CameraType::Perspective,
         60.0f,
         0.1f,
-        1000.0f,
+        1500.0f,
         0};
 } // namespace Beer::System

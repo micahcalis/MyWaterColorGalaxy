@@ -1,4 +1,5 @@
 #include "Rendering/Pipeline/Frame/FrameGraph.hpp"
+#include "Dependency/ResetOperator.hpp"
 #include "FrameGraph.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
@@ -49,6 +50,8 @@ namespace Beer::Rendering
 
         Rendering::Shader::Globals()->Bind(commandBuffer);
 
+        std::unordered_set<std::string> clearedResources;
+
         for (auto& node : renderNodes)
         {
             for (auto& resourceCommand : node.Commands)
@@ -56,7 +59,7 @@ namespace Beer::Rendering
                 resourceCommand.Execute(commandBuffer);
             }
 
-            RenderingBeginData beginData = GetNodeBeginData(node, context);
+            RenderingBeginData beginData = GetNodeBeginData(node, context, clearedResources);
             commandBuffer->BeginRendering(beginData);
 
             node.RenderPass->Execute(commandBuffer, context);
@@ -64,7 +67,9 @@ namespace Beer::Rendering
         }
     }
 
-    RenderingBeginData FrameGraph::GetNodeBeginData(RenderCommandNode& node, const RenderContext& context)
+    RenderingBeginData FrameGraph::GetNodeBeginData(RenderCommandNode& node,
+        const RenderContext& context,
+        std::unordered_set<std::string>& clearedResources)
     {
         RenderingBeginData beginData{};
         beginData.WritesToDepth = false;
@@ -90,7 +95,17 @@ namespace Beer::Rendering
                 }
 
                 bool isDepth = false;
-                vk::RenderingAttachmentInfo info = texture->GetAttachmentInfo(dep.GetResetOperator(), isDepth);
+                ResetOperator resetOperator = dep.GetResetOperator();
+
+                if (clearedResources.find(dep.GetResourceName()) == clearedResources.end())
+                {
+                    clearedResources.insert(dep.GetResourceName());
+                } else
+                {
+                    resetOperator.LoadOp = vk::AttachmentLoadOp::eLoad;
+                }
+
+                vk::RenderingAttachmentInfo info = texture->GetAttachmentInfo(resetOperator, isDepth);
 
                 if (dep.GetAction() == ResourceAction::ColorWrite)
                 {

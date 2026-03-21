@@ -34,8 +34,7 @@ struct VertexData
 //$ Blend On
 //$ Zwrite On
 
-[shader("vertex")]
-VertexData SphereRaymarchVert(MeshData input)
+VERT VertexData SphereRaymarchVert(MeshData input)
 {
     VertexData output;
     float4 positionWS = mul(_ObjToWorldMat, float4(input.positionOS, 1));
@@ -45,8 +44,7 @@ VertexData SphereRaymarchVert(MeshData input)
     return output;
 }
 
-[shader("fragment")]
-float4 SphereRaymarchFrag(VertexData input) : SV_Target
+FRAG float4 SphereRaymarchFrag(VertexData input) : SV_Target
 {
     float3 viewDirWS = normalize(input.positionWS - _CameraPos);
     SphereTracing.AABB boundingbox = SphereTracing.AABB(input.transformCenter, float3(2));

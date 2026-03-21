@@ -7,6 +7,7 @@
 #include "Rendering/Pipeline/Frame/FrameBuilder.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
+#include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 
 namespace Beer::Rendering
@@ -24,6 +25,7 @@ namespace Beer::Rendering
 
         // hardcoded for now, render passes should be selected from contexts
         std::unique_ptr<DrawOpaquePass> drawOpaquePass = nullptr;
+        std::unique_ptr<DrawSkyboxPass> drawSkyboxPass = nullptr;
 
     public:
         RenderPipeline(const Core::Device* device,

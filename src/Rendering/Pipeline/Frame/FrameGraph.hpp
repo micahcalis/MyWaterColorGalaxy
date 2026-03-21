@@ -35,7 +35,9 @@ namespace Beer::Rendering
         void PrintGraph() const;
 
     private:
-        RenderingBeginData GetNodeBeginData(RenderCommandNode& node, const RenderContext& context);
+        RenderingBeginData GetNodeBeginData(RenderCommandNode& node,
+            const RenderContext& context,
+            std::unordered_set<std::string>& clearedResources);
     };
 
 } // namespace Beer::Rendering

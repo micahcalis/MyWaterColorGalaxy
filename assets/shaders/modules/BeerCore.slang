@@ -33,7 +33,7 @@ public cbuffer ModelParams
 
 public float3 GetViewDirectionWS(float3 positionWS)
 {
-    return normalize(_CameraPos - positionWS);
+    return normalize(positionWS - _CameraPos);
 }
 
 public Light GetMainLight(float3 positionWS)

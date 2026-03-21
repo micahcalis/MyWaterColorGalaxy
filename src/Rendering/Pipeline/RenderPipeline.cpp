@@ -3,6 +3,7 @@
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
+#include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Camera/Camera.hpp"
 #include "System/Drawing/RenderRegister.hpp"
@@ -19,6 +20,7 @@ namespace Beer::Rendering
         frameBlackbox = std::make_unique<FrameBlackbox>(device, uploadManager);
 
         drawOpaquePass = std::make_unique<DrawOpaquePass>();
+        drawSkyboxPass = std::make_unique<DrawSkyboxPass>();
 
         colorTarget = frameBlackbox->CreateRenderTexture2D(std::string(Rendering::MAIN_COLOR),
             Core::Screen::Width(),
@@ -129,7 +131,8 @@ namespace Beer::Rendering
 
     std::vector<IRenderPass*> RenderPipeline::GetRenderPasses()
     {
-        return {drawOpaquePass.get()};
+        return {drawSkyboxPass.get(),
+            drawOpaquePass.get()};
     }
 
     RenderContext RenderPipeline::GetRenderContext()
