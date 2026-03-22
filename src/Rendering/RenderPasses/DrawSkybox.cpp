@@ -1,3 +1,4 @@
+#include "RenderPassEvent.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
@@ -8,7 +9,7 @@
 namespace Beer::Rendering
 {
     DrawSkyboxPass::DrawSkyboxPass()
-        : IRenderPass("Skybox")
+        : IRenderPass("Skybox", RenderPassEvent::SKYBOX)
     {
         auto skyboxShader = Shader::Get("DefaultSkybox");
         skyboxMaterial = std::make_shared<Rendering::Material>(skyboxShader);
@@ -26,11 +27,6 @@ namespace Beer::Rendering
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::ColorFormat());
-
-        context.BlackBox->ReallocateIfNeeded(context.MainDepthTarget->Name(),
-            Core::Screen::Width(),
-            Core::Screen::Height(),
-            Core::Screen::DepthFormat());
     }
 
     void DrawSkyboxPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)

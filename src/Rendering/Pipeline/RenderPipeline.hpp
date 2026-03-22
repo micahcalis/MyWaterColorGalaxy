@@ -23,10 +23,6 @@ namespace Beer::Rendering
         Rendering::RenderTexture* depthTarget = nullptr;
         System::RenderRegister* renderRegister = nullptr;
 
-        // hardcoded for now, render passes should be selected from contexts
-        std::unique_ptr<DrawOpaquePass> drawOpaquePass = nullptr;
-        std::unique_ptr<DrawSkyboxPass> drawSkyboxPass = nullptr;
-
     public:
         RenderPipeline(const Core::Device* device,
             Core::UploadManager* uploadManager,
@@ -38,7 +34,7 @@ namespace Beer::Rendering
         [[nodiscard]] FrameBlackbox* GetBlackbox() const { return frameBlackbox.get(); }
 
     private:
-        std::vector<IRenderPass*> GetRenderPasses();
+        std::vector<IRenderPass*> GetSortedRenderPasses();
         RenderContext GetRenderContext();
     };
 } // namespace Beer::Rendering

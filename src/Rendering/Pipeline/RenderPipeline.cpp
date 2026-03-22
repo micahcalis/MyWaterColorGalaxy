@@ -2,10 +2,9 @@
 #include "CommandBuffer/RenderContext.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
-#include "Rendering/RenderPasses/DrawOpaquePass.hpp"
-#include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Camera/Camera.hpp"
+#include "System/Context/IContext.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Light/ILight.hpp"
 #include <memory>
@@ -18,9 +17,6 @@ namespace Beer::Rendering
         System::RenderRegister* renderRegister)
     {
         frameBlackbox = std::make_unique<FrameBlackbox>(device, uploadManager);
-
-        drawOpaquePass = std::make_unique<DrawOpaquePass>();
-        drawSkyboxPass = std::make_unique<DrawSkyboxPass>();
 
         colorTarget = frameBlackbox->CreateRenderTexture2D(std::string(Rendering::MAIN_COLOR),
             Core::Screen::Width(),
@@ -37,7 +33,7 @@ namespace Beer::Rendering
 
     void RenderPipeline::InitializeFrame()
     {
-        frameBuilder = FrameBuilder(GetRenderPasses());
+        frameBuilder = FrameBuilder(GetSortedRenderPasses());
         frameGraph = frameBuilder.BuildGraph();
 
         colorTarget = frameBlackbox->ReallocateIfNeeded(std::string(Rendering::MAIN_COLOR),
@@ -129,10 +125,22 @@ namespace Beer::Rendering
         commandBuffer->End();
     }
 
-    std::vector<IRenderPass*> RenderPipeline::GetRenderPasses()
+    std::vector<IRenderPass*> RenderPipeline::GetSortedRenderPasses()
     {
-        return {drawSkyboxPass.get(),
-            drawOpaquePass.get()};
+        std::vector<IRenderPass*> passes = System::IContext::GetActivePasses();
+
+        std::sort(passes.begin(), passes.end(), [](const IRenderPass* a, const IRenderPass* b) {
+            if (a->GetEvent() == b->GetEvent())
+            {
+                return a < b;
+            }
+            return a->GetEvent() < b->GetEvent();
+        });
+
+        auto newEnd = std::unique(passes.begin(), passes.end());
+        passes.erase(newEnd, passes.end());
+
+        return passes;
     }
 
     RenderContext RenderPipeline::GetRenderContext()

@@ -13,6 +13,7 @@
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
+#include "Rendering/RenderPasses/RenderPassPool.hpp"
 #include "Rendering/Sampler/SamplerCache.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Mesh./Mesh.hpp"
@@ -51,6 +52,7 @@ namespace Beer::Core
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;
         std::unique_ptr<System::RenderRegister> renderRegister = nullptr;
 
+        std::unique_ptr<Rendering::RenderPassPool> renderPassPool = nullptr;
         std::unique_ptr<Rendering::RenderPipeline> renderPipeline = nullptr;
 
         int frameIndex = 0;

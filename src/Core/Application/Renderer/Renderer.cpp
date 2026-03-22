@@ -11,6 +11,7 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
@@ -294,6 +295,8 @@ namespace Beer::Core
 
     void Renderer::InitializeRenderPipeline()
     {
+        renderPassPool = std::make_unique<Rendering::RenderPassPool>();
+        Rendering::IRenderPass::SetPool(renderPassPool.get());
         renderPipeline = std::make_unique<Rendering::RenderPipeline>(&device, uploadManager.get(), renderRegister.get());
     }
 

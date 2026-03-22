@@ -2,6 +2,9 @@
 
 #include "System/Galaxy/GalaxyContext.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/DrawOpaquePass.hpp"
+#include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Context/ContextType.hpp"
@@ -14,12 +17,19 @@
 #include "System/Light/LightEntity.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include <memory>
+#include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 
 namespace Beer::System
 {
     GalaxyContext::GalaxyContext(Function<PlayerInput> getPlayerInput)
     {
         this->getPlayerInput = getPlayerInput;
+
+        opaquePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawOpaquePass>(
+            std::string(Rendering::OPAQUE_PASS));
+
+        skyboxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawSkyboxPass>(
+            std::string(Rendering::SKYBOX_PASS));
     }
 
     void GalaxyContext::Update()
@@ -102,5 +112,10 @@ namespace Beer::System
                 }
             }
         }
+    }
+
+    std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
+    {
+        return {opaquePass, skyboxPass};
     }
 } // namespace Beer::System

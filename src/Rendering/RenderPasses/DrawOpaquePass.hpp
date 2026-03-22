@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RenderPassEvent.hpp"
+#include "Rendering/RenderPasses/RenderPassEvent.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 
@@ -9,7 +11,7 @@ namespace Beer::Rendering
     {
     public:
         DrawOpaquePass()
-            : IRenderPass("Opaque")
+            : IRenderPass("Opaque", RenderPassEvent::OPAQUE)
         {
         }
 

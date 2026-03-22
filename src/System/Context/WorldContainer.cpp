@@ -24,6 +24,22 @@ namespace Beer::System
         return contextMap.at(type).get();
     }
 
+    std::vector<IContext*> WorldContainer::GetActiveContexts() const
+    {
+        std::vector<IContext*> activeContexts;
+        activeContexts.reserve(contextMap.size());
+
+        for (const auto& [key, context] : contextMap)
+        {
+            if (context->IsActive())
+            {
+                activeContexts.push_back(context.get());
+            }
+        }
+
+        return activeContexts;
+    }
+
     void WorldContainer::DestroyContext(const ContextType type)
     {
         contextMap.erase(type);

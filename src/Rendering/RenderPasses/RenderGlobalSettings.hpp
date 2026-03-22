@@ -1,13 +1,12 @@
 #pragma once
 
 #include <string>
-#include "Core/Application/Utilities/SwapchainUtilities.hpp"
-#include "vulkan/vulkan.hpp"
-#include "Core/Application/Renderer/Screen.hpp"
 
 namespace Beer::Rendering
 {
     constexpr std::string_view MAIN_COLOR = "MainColor";
     constexpr std::string_view MAIN_DEPTH = "MainDepth";
 
+    constexpr std::string_view OPAQUE_PASS = "Opaque";
+    constexpr std::string_view SKYBOX_PASS = "Skybox";
 } // namespace Beer::Rendering
