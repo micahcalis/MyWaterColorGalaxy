@@ -51,7 +51,7 @@ namespace Beer::Core
         return buffer;
     }
 
-    static constexpr std::string_view SHADER_HEAD = "assets/shaders/";
+    static constexpr std::string_view SHADER_HEAD = "assets/shaders/graphics/";
     static constexpr std::string_view SHADER_TAIL = ".spv";
 
     std::filesystem::path AssetUtilities::GetShaderPath(const std::string& shaderName)

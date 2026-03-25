@@ -112,7 +112,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     tinyobjloader
     GPUOpen::VulkanMemoryAllocator
-    stdc++exp
 )
 
 set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
@@ -143,48 +142,67 @@ file(GLOB_RECURSE SLANG_MODULE_FILES "${SLANG_MODULES_DIR}/*.slang")
 function(add_slang_shader_target TARGET)
     cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
     list(GET SHADER_SOURCES 0 MAIN_SOURCE)
-    get_filename_component(SHADER_BASE_NAME ${MAIN_SOURCE} NAME_WE)
-
-    set(SHADERS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders")
-    set(OUTPUT_SPV "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.spv")
     
+    # --- NEW: Calculate the relative path to preserve your folder structure ---
+    file(RELATIVE_PATH REL_SHADER_PATH "${CMAKE_SOURCE_DIR}/assets/shaders" "${MAIN_SOURCE}")
+    get_filename_component(REL_DIR "${REL_SHADER_PATH}" DIRECTORY)
+    get_filename_component(SHADER_BASE_NAME "${MAIN_SOURCE}" NAME_WE)
+
+    # Output directory now dynamically includes 'graphics', 'compute', etc.
+    set(SHADERS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders/${REL_DIR}")
+    
+    set(OUTPUT_SPV "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.spv")
     set(OUTPUT_JSON "${SHADERS_OUTPUT_DIR}/${SHADER_BASE_NAME}.json") 
     set(COOKER_SCRIPT "${CMAKE_SOURCE_DIR}/tools/ShaderSettingsParser.py")
 
     add_custom_command(
         OUTPUT  ${OUTPUT_SPV} ${OUTPUT_JSON} 
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_OUTPUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${SHADERS_OUTPUT_DIR}"
         
         # RUN PYTHON FIRST: Generate the JSON
-        COMMAND Python3::Interpreter ${COOKER_SCRIPT} ${MAIN_SOURCE} ${OUTPUT_JSON}
+        COMMAND Python3::Interpreter "${COOKER_SCRIPT}" "${MAIN_SOURCE}" "${OUTPUT_JSON}"
         
         # RUN SLANGC SECOND: Generate the Bytecode
-        # 2. ADD THE -I FLAG TO TELL SLANGC WHERE THE MODULES ARE
-        COMMAND ${SLANGC_EXECUTABLE} ${MAIN_SOURCE}
+        COMMAND ${SLANGC_EXECUTABLE} "${MAIN_SOURCE}"
                 -target spirv -profile spirv_1_4 -emit-spirv-directly 
                 -matrix-layout-column-major
-                -I ${SLANG_MODULES_DIR} 
-                -o ${OUTPUT_SPV}
+                -I "${SLANG_MODULES_DIR}" 
+                -o "${OUTPUT_SPV}"
                 -O3
                 
-        WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
+        WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/shaders"
         
-        # 3. ADD SLANG_MODULE_FILES TO DEPENDS SO CMAKE REBUILDS IF CORE.SLANG CHANGES
         DEPENDS ${SHADER_SOURCES} ${COOKER_SCRIPT} ${SLANG_MODULE_FILES}
-        COMMENT "Cooking & Compiling Shader: ${SHADER_BASE_NAME}.slang"
+        COMMENT "Cooking & Compiling Shader: ${REL_SHADER_PATH}"
         VERBATIM
     )
     
     add_custom_target(${TARGET} DEPENDS ${OUTPUT_SPV} ${OUTPUT_JSON})
 endfunction()
 
-# 4. GLOB ONLY MAIN SHADERS (This ignores the 'modules' subfolder!)
-file(GLOB ALL_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.slang")
+# 4. GLOB ALL SHADERS RECURSIVELY
+file(GLOB_RECURSE ALL_RAW_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.slang")
 
+# 5. FILTER OUT THE MODULES FOLDER
+set(ALL_SHADERS "")
+foreach(SHADER_FILE ${ALL_RAW_SHADERS})
+    # If the path DOES NOT contain "/modules/", add it to our build list
+    string(FIND "${SHADER_FILE}" "/modules/" IS_MODULE)
+    if(IS_MODULE EQUAL -1)
+        list(APPEND ALL_SHADERS "${SHADER_FILE}")
+    endif()
+endforeach()
+
+# 6. CREATE TARGETS
 foreach(SHADER_FILE ${ALL_SHADERS})
-    get_filename_component(SHADER_NAME ${SHADER_FILE} NAME_WE)
-    set(TARGET_NAME "Shader_${SHADER_NAME}")
-    add_slang_shader_target(${TARGET_NAME} SOURCES ${SHADER_FILE})
+    # Create a unique target name by replacing slashes with underscores
+    # e.g. "graphics/mesh.slang" becomes "Shader_graphics_mesh"
+    file(RELATIVE_PATH REL_SHADER_PATH "${CMAKE_SOURCE_DIR}/assets/shaders" "${SHADER_FILE}")
+    string(REPLACE "/" "_" SAFE_TARGET_NAME "${REL_SHADER_PATH}")
+    get_filename_component(SAFE_TARGET_NAME "${SAFE_TARGET_NAME}" NAME_WE)
+    
+    set(TARGET_NAME "Shader_${SAFE_TARGET_NAME}")
+    add_slang_shader_target(${TARGET_NAME} SOURCES "${SHADER_FILE}")
     
     add_dependencies(Shaders ${TARGET_NAME})
 endforeach()
