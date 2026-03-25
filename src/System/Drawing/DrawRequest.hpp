@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Drawing/ContextMask.hpp"
 #include "System/Drawing/LayerMask.hpp"
@@ -10,13 +11,13 @@ namespace Beer::System
     struct DrawRequest
     {
     private:
-        vk::CommandBuffer commandBuffer;
+        Rendering::CommandBuffer* commandBuffer;
         Rendering::ShaderPassType pass;
         ContextMask contexts;
         LayerMask layers;
 
     public:
-        DrawRequest(vk::CommandBuffer commandBuffer,
+        DrawRequest(Rendering::CommandBuffer* commandBuffer,
             Rendering::ShaderPassType pass,
             ContextMask contexts,
             LayerMask layers)
@@ -26,7 +27,7 @@ namespace Beer::System
 
         Rendering::ShaderPassType GetPass() const { return pass; }
 
-        [[nodiscard]] vk::CommandBuffer GetCommandBuffer() const { return commandBuffer; }
+        [[nodiscard]] Rendering::CommandBuffer* GetCommandBuffer() const { return commandBuffer; }
 
         [[nodiscard]] bool ValidateContext(ContextType validateContext) const
         {

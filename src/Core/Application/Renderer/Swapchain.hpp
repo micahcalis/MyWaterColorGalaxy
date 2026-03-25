@@ -44,5 +44,12 @@ namespace Beer::Core
             const Device& device);
 
         void CreateImageViews(const Device& device);
+
+    private:
+        static inline VkFormat chainFormat = VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
+        static void SetFormat(VkFormat format) { chainFormat = format; }
+
+    public:
+        static VkFormat GetFormat() { return chainFormat; }
     };
 } // namespace Beer::Core

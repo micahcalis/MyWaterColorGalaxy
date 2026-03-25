@@ -58,6 +58,7 @@ namespace Beer::Rendering
 
         static constexpr std::string_view PASS_OPAQUE = "Opaque";
         static constexpr std::string_view PASS_TRANSPARENT = "Transparent";
+        static constexpr std::string_view PASS_SKYBOX = "Skybox";
 
     public:
         static std::string GetVertexEntryPoint(const nlohmann::basic_json<>& passData);

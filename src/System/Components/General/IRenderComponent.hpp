@@ -2,6 +2,7 @@
 
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
+#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Drawing/BindHistory.hpp"
 #include "System/Drawing/BindMask.hpp"
@@ -15,7 +16,10 @@ namespace Beer::System
     public:
         virtual ~IRenderComponent() = default;
 
-        virtual BindHistory Bind(BindMask mask, vk::CommandBuffer commandBuffer, const Rendering::ShaderPassType pass) = 0;
+        virtual BindHistory Bind(BindMask mask,
+            Rendering::CommandBuffer* commandBuffer,
+            const Rendering::ShaderPassType pass)
+            = 0;
 
         virtual bool HasPass(Rendering::ShaderPassType pass) const = 0;
         virtual Layer GetLayer() const = 0;

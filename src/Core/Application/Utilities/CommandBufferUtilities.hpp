@@ -51,11 +51,6 @@ namespace Beer::Core
             const VkBuffer& indexBuffer,
             const uint32_t indexCount);
 
-        static void DrawMesh(vk::CommandBuffer commandBuffer,
-            const Rendering::Mesh* mesh,
-            const Rendering::Material* material,
-            const Rendering::ShaderPassType pass);
-
         static vk::raii::CommandBuffer BeginSingleTimeCommands(const FrameResource& frameResource,
             const Device& device);
 

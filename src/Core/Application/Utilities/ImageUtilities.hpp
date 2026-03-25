@@ -37,5 +37,7 @@ namespace Beer::Core
         static vk::Format FindDepthFormat(const Device& device);
 
         static bool HasStencilComponent(vk::Format format);
+
+        static bool IsDepthFormat(vk::Format format);
     };
 } // namespace Beer::Core

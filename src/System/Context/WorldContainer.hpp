@@ -15,6 +15,7 @@ namespace Beer::System
     public:
         void AddContext(const ContextType type, std::shared_ptr<IContext>);
         IContext* GetContext(const ContextType type) const;
+        std::vector<IContext*> GetActiveContexts() const;
         void UpdateContexts();
         void DestroyContext(const ContextType type);
 

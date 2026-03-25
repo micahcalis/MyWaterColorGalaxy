@@ -161,35 +161,6 @@ namespace Beer::Core
         commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
     }
 
-    void CommandBufferUtilities::DrawMesh(vk::CommandBuffer commandBuffer,
-        const Rendering::Mesh* mesh,
-        const Rendering::Material* material,
-        const Rendering::ShaderPassType pass)
-    {
-        const Rendering::ShaderPass* shaderPass = material->GetShader()->GetPass(pass);
-
-        if (shaderPass == nullptr)
-        {
-            throw std::runtime_error("can't find shader pass: " + std::string(magic_enum::enum_name(pass)));
-        }
-
-        // BindShaderPass(commandBuffer, shaderPass);
-        material->GetShader()->BindPass(commandBuffer, pass);
-        material->BindBuffer(commandBuffer);
-
-        bool canIndex;
-        //   BindMesh(commandBuffer, mesh, shaderPass->BufferOrder, canIndex);
-        mesh->Bind(commandBuffer, shaderPass->BufferOrder, canIndex);
-
-        if (canIndex)
-        {
-            commandBuffer.drawIndexed(mesh->GetIndexCount(), 1, 0, 0, 0);
-        } else
-        {
-            commandBuffer.draw(mesh->GetVertexCount(), 1, 0, 0);
-        }
-    }
-
     vk::raii::CommandBuffer CommandBufferUtilities::BeginSingleTimeCommands(const FrameResource& frameResource, const Device& device)
     {
         vk::CommandBufferAllocateInfo allocInfo{};

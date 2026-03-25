@@ -1,6 +1,8 @@
 #pragma once
 
 #include "System/Components/General/SingleMeshRender.hpp"
+#include "Rendering/Mesh/MeshDrawInfo.hpp"
+#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "System/Drawing/BindHistory.hpp"
 #include "System/Drawing/BindMask.hpp"
@@ -8,42 +10,35 @@
 
 namespace Beer::System
 {
-    BindHistory SingleMeshRender::Bind(BindMask mask, vk::CommandBuffer commandBuffer, const Rendering::ShaderPassType pass)
+    BindHistory SingleMeshRender::Bind(BindMask mask, Rendering::CommandBuffer* commandBuffer, const Rendering::ShaderPassType pass)
     {
         const Rendering::Shader* shader = material->GetShader();
 
         if (transform != nullptr)
         {
             Rendering::ModelPush modelPush = transform->GetShaderTransform();
-            Transform::Bind(commandBuffer, modelPush, shader);
+            commandBuffer->BindModelPush(modelPush, shader);
         }
+
+        const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
 
         if (mask.Has(BindType::Shader))
         {
-            shader->BindPass(commandBuffer, pass);
+            commandBuffer->BindShaderPass(shaderPass);
         }
 
         if (mask.Has(BindType::Material))
         {
-            material->BindBuffer(commandBuffer);
+            commandBuffer->BindMaterial(material.get());
         }
-
-        bool canIndex;
 
         if (mask.Has(BindType::Mesh))
         {
-            mesh->Bind(commandBuffer, shader->GetPass(pass)->BufferOrder, canIndex);
+            commandBuffer->BindMesh(mesh.get(), &shaderPass->BufferOrder);
         }
 
-        canIndex = mesh->GetBuffers().HasIndex();
-
-        if (canIndex)
-        {
-            commandBuffer.drawIndexed(mesh->GetIndexCount(), 1, 0, 0, 0);
-        } else
-        {
-            commandBuffer.draw(mesh->GetVertexCount(), 1, 0, 0);
-        }
+        Rendering::MeshDrawInfo drawInfo = mesh->GetDrawInfo();
+        commandBuffer->DrawMeshSingle(drawInfo);
 
         return BindHistory(shader, material.get(), mesh.get());
     }

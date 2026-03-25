@@ -112,6 +112,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     tinyobjloader
     GPUOpen::VulkanMemoryAllocator
+    stdc++exp
 )
 
 set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
@@ -164,6 +165,7 @@ function(add_slang_shader_target TARGET)
                 -matrix-layout-column-major
                 -I ${SLANG_MODULES_DIR} 
                 -o ${OUTPUT_SPV}
+                -O3
                 
         WORKING_DIRECTORY ${SHADERS_OUTPUT_DIR}
         

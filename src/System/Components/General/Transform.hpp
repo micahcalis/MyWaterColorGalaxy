@@ -40,16 +40,5 @@ namespace Beer::System
             model = glm::scale(model, Scale);
             return {model, glm::inverse(model)};
         }
-
-    public:
-        static void Bind(vk::CommandBuffer commandBuffer, Rendering::ModelPush modelPush, const Rendering::Shader* shader)
-        {
-            commandBuffer.pushConstants(
-                shader->GetPipelineLayout(),
-                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                0,
-                sizeof(Rendering::ModelPush),
-                &modelPush);
-        }
     };
 } // namespace Beer::System

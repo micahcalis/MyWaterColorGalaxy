@@ -31,6 +31,7 @@ namespace Beer::Core
         std::vector<vk::SurfaceFormatKHR> availableFormats = device.GetAvailableFormats(surface);
 
         swapchainSurfaceFormat = SwapchainUtilities::ChooseSwapSurfaceFormat(availableFormats);
+        Swapchain::SetFormat(static_cast<VkFormat>(swapchainSurfaceFormat.format));
         swapchainExtent = SwapchainUtilities::ChooseSwapExtent(surfaceCapabilities, window);
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
         minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount) ? surfaceCapabilities.maxImageCount : minImageCount;
@@ -50,7 +51,7 @@ namespace Beer::Core
         swapchainCreateInfo.imageColorSpace = swapchainSurfaceFormat.colorSpace;
         swapchainCreateInfo.imageExtent = swapchainExtent;
         swapchainCreateInfo.imageArrayLayers = 1;
-        swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+        swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
         swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
         swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
         swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;

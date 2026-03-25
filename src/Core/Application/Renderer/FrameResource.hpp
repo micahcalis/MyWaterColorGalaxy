@@ -4,6 +4,11 @@
 #include <vulkan/vulkan_raii.hpp>
 #include "Core/Application/Renderer/Device.hpp"
 
+namespace Beer::Rendering
+{
+    class CommandBuffer;
+}
+
 namespace Beer::Core
 {
     class FrameResource
@@ -11,7 +16,7 @@ namespace Beer::Core
     private:
         const Device* device = nullptr;
         vk::raii::CommandPool commandPool = nullptr;
-        vk::raii::CommandBuffer commandBuffer = nullptr;
+        std::unique_ptr<Rendering::CommandBuffer> commandBuffer;
         vk::raii::Semaphore imageAvailableSemaphore = nullptr;
         vk::raii::Semaphore renderFinishedSemaphore = nullptr;
         vk::raii::Fence inFlightFence = nullptr;
@@ -23,7 +28,9 @@ namespace Beer::Core
         [[nodiscard]] const vk::raii::Fence& GetInFlightFence() const;
         [[nodiscard]] const vk::raii::Semaphore& GetImageAvailableSemaphore() const;
         [[nodiscard]] const vk::raii::Semaphore& GetRenderFinishedSemaphore() const;
-        vk::CommandBuffer GetCommandBuffer();
+        [[nodiscard]] Rendering::CommandBuffer* GetCommandBuffer() const { return commandBuffer.get(); }
+
+        vk::CommandBuffer GetVkCommandBuffer();
         void CreateSyncObjects();
 
     private:

@@ -34,6 +34,11 @@ namespace Beer::Core
         return physicalDevice.getSurfacePresentModesKHR(*surface);
     }
 
+    size_t Device::GetMinUniformBufferOffset() const
+    {
+        return physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment;
+    }
+
     void Device::PickPhysicalDevice(const vk::raii::Instance& instance)
     {
         auto devices = instance.enumeratePhysicalDevices();

@@ -1,5 +1,6 @@
 #include "System/Galaxy/Player/PlayerManager.hpp"
 #include "PlayerEntity.hpp"
+#include "Rendering/Shader/Shader.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
 #include "System/Components/General/Transform.hpp"
 #include "System/Galaxy/Player/PlayerController.hpp"

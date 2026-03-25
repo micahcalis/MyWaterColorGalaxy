@@ -1,4 +1,5 @@
 #include "Rendering/Shader/ShaderParseDef.hpp"
+#include "Rendering/Shader/ShaderPassType.hpp"
 
 namespace Beer::Rendering
 {
@@ -98,6 +99,7 @@ namespace Beer::Rendering
         {
         case Hash(PASS_OPAQUE): return ShaderPassType::Opaque;
         case Hash(PASS_TRANSPARENT): return ShaderPassType::Transparent;
+        case Hash(PASS_SKYBOX): return ShaderPassType::Skybox;
         default: return ShaderPassType::Unknown;
         }
     }

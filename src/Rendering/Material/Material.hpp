@@ -4,6 +4,7 @@
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include <memory>
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "vulkan/vulkan.hpp"
 #include <unordered_set>
 
@@ -23,9 +24,9 @@ namespace Beer::Rendering
         Material(std::shared_ptr<Shader> shader);
         Material(const std::string& shaderName);
         const Shader* GetShader() const { return shader.get(); }
+        vk::DescriptorSet GetDescriptorSet() const { return buffer->GetDescriptor()->GetSet(UniformDescriptor::GetFrameIndex()); }
 
         void Update();
-        void BindBuffer(vk::CommandBuffer commandBuffer) const;
         void SetInt(const std::string& name, uint32_t val);
         void SetFloat(const std::string& name, float val);
         void SetVector(const std::string& name, glm::vec4 val);

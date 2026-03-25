@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "vulkan/vulkan.hpp"
@@ -10,12 +11,12 @@ namespace Beer::Core
     class DrawCallPool
     {
     private:
-        vk::CommandBuffer commandBuffer;
+        Rendering::CommandBuffer* commandBuffer;
         Rendering::ShaderPassType shaderPass;
         std::vector<System::IRenderComponent*> renderComponents;
 
     public:
-        DrawCallPool(vk::CommandBuffer commandBuffer,
+        DrawCallPool(Rendering::CommandBuffer* commandBuffer,
             Rendering::ShaderPassType shaderPass,
             std::vector<System::IRenderComponent*> renderComponents)
             : commandBuffer(commandBuffer), shaderPass(shaderPass), renderComponents(std::move(renderComponents))
