@@ -24,6 +24,7 @@ namespace Beer::Rendering
 
     private:
         static PropertyType GetMemberType(SpvReflectBlockVariable* member);
+        static PropertyType GetTextureType(SpvReflectDescriptorBinding* binding);
         static bool IsMaterialSet(SpvReflectDescriptorSet* set);
         static bool IsCBufferBinding(SpvReflectDescriptorBinding* binding);
         static bool IsTextureBinding(SpvReflectDescriptorBinding* binding);

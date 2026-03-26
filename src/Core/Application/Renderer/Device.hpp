@@ -15,7 +15,7 @@ namespace Beer::Core
         vk::PhysicalDeviceFeatures deviceFeatures;
         vk::raii::Queue graphicsQueue = nullptr;
         vk::raii::Queue presentQueue = nullptr;
-        uint32_t graphicsIndex;
+        uint32_t graphicsComputeIndex;
 
     public:
         void Initialize(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface);

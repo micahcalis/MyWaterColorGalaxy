@@ -2,6 +2,7 @@
 #include "Rendering/Compute/ComputeKernel.hpp"
 #include "Rendering/Shader/ShaderParseDef.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
+#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Vendor/spirv_reflect/spirv_reflect.h"
 #include <fstream>
 #include <stdexcept>
@@ -51,7 +52,7 @@ namespace Beer::Rendering
                 } else if (IsTextureBinding(binding))
                 {
                     properties[binding->name] = {
-                        PropertyType::Texture2D,
+                        GetTextureType(binding),
                         0,
                         0,
                         binding->binding};
@@ -132,6 +133,7 @@ namespace Beer::Rendering
 
         return kernelsSettings;
     }
+
     PropertyType ShaderReflection::GetMemberType(SpvReflectBlockVariable* member)
     {
         PropertyType propType = PropertyType::Unknown;
@@ -164,6 +166,23 @@ namespace Beer::Rendering
         return propType;
     }
 
+    PropertyType ShaderReflection::GetTextureType(SpvReflectDescriptorBinding* binding)
+    {
+        PropertyType propType = PropertyType::Unknown;
+        switch (binding->descriptor_type)
+        {
+        case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            return PropertyType::Texture2D;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            return PropertyType::RWTexture2D;
+
+        default:
+            return PropertyType::Unknown;
+        }
+    }
+
     bool ShaderReflection::IsMaterialSet(SpvReflectDescriptorSet* set)
     {
         return set->set == 1;
@@ -176,7 +195,9 @@ namespace Beer::Rendering
 
     bool ShaderReflection::IsTextureBinding(SpvReflectDescriptorBinding* binding)
     {
-        return binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        return binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+            || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
+            || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     }
 
     MeshBufferType ShaderReflection::GetBufferTypeFromName(const char* nameString)

@@ -1,4 +1,5 @@
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
+#include "vulkan/vulkan.hpp"
 #include <iostream>
 
 namespace Beer::Core
@@ -86,7 +87,7 @@ namespace Beer::Core
     }
 
     void VulkanInitUtilities::GetQueueFamilyIndices(const std::vector<vk::QueueFamilyProperties> queueFamilyProperties,
-        uint32_t& graphicsIndex,
+        uint32_t& graphicsComputeIndex,
         uint32_t& presentIndex,
         const vk::raii::PhysicalDevice& physicalDevice,
         const vk::raii::SurfaceKHR& surface)
@@ -95,22 +96,24 @@ namespace Beer::Core
             queueFamilyProperties.end(),
             [](vk::QueueFamilyProperties const& qfp) { return qfp.queueFlags & vk::QueueFlagBits::eGraphics; });
 
-        graphicsIndex = static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
+        graphicsComputeIndex = static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
 
-        bool graphicsSupportSurface = physicalDevice.getSurfaceSupportKHR(graphicsIndex, *surface);
-        presentIndex = graphicsSupportSurface ? graphicsIndex : static_cast<uint32_t>(queueFamilyProperties.size());
+        bool graphicsSupportSurface = physicalDevice.getSurfaceSupportKHR(graphicsComputeIndex, *surface);
+        presentIndex = graphicsSupportSurface ? graphicsComputeIndex : static_cast<uint32_t>(queueFamilyProperties.size());
 
         if (!IndexIsCompatible(presentIndex, queueFamilyProperties.size()))
         {
             for (size_t i = 0; i < queueFamilyProperties.size(); i++)
             {
-                bool supportsGraphics = static_cast<bool>(queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics);
+                bool supportsGraphicsCompute = static_cast<bool>(queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics
+                    && queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eCompute);
+
                 bool supportsPresent = physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface);
 
-                if (supportsGraphics && supportsPresent)
+                if (supportsGraphicsCompute && supportsPresent)
                 {
-                    graphicsIndex = static_cast<uint32_t>(i);
-                    presentIndex = graphicsIndex;
+                    graphicsComputeIndex = static_cast<uint32_t>(i);
+                    presentIndex = graphicsComputeIndex;
                     break;
                 }
             }
