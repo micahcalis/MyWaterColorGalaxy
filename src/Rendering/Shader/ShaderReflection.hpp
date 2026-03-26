@@ -8,6 +8,7 @@
 #include <vector>
 #include "Rendering/Mesh/MeshBufferType.hpp"
 #include "Rendering/Shader/VertexInput.hpp"
+#include "Rendering/Compute/ComputeKernel.hpp"
 
 namespace Beer::Rendering
 {
@@ -16,8 +17,10 @@ namespace Beer::Rendering
     public:
         static std::unordered_map<std::string, ShaderProperty> ReflectProperties(const std::vector<uint32_t> spvCode, uint32_t& propertyBufferSize);
         static std::vector<PassSettings> ReflectSettingsJson(const std::filesystem::path& jsonPath);
+        static std::vector<KernelSettings> ReflectKernelsJson(const std::filesystem::path& jsonPath);
         static VertexInput ReflectVertexInput(const std::vector<uint32_t>& spvCode, const std::string& vertexEntryPoint);
-        static std::vector<vk::DescriptorSetLayoutBinding> ReflectMaterialBindings(const std::vector<uint32_t>& spvCode);
+        static std::vector<vk::DescriptorSetLayoutBinding> ReflectMaterialBindings(const std::vector<uint32_t>& spvCode,
+            bool isComputeShader = false);
 
     private:
         static PropertyType GetMemberType(SpvReflectBlockVariable* member);

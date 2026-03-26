@@ -1,6 +1,7 @@
 #pragma once
 
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "Rendering/Compute/ComputeShader.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
@@ -40,6 +41,9 @@ namespace Beer::System
 
     void GalaxyContext::Load()
     {
+        std::shared_ptr<Rendering::ComputeShader> computeTest = Rendering::ComputeShader::Get("TestCompute");
+        computeTest->PrintConfig();
+
         Transform lightTransform{};
         lightTransform.Position = glm::vec3(0, 1000, 100);
 

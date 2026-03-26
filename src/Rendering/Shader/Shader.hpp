@@ -55,11 +55,7 @@ namespace Beer::Rendering
             return &it->second;
         }
 
-        vk::DescriptorSetLayout GetMaterialSetLayout() const
-        {
-            return materialSetLayout;
-        }
-
+        vk::DescriptorSetLayout GetMaterialSetLayout() const { return materialSetLayout; }
         vk::PipelineLayout GetPipelineLayout() const { return *pipelineLayout; }
         MaterialProperties* GetProperties() const { return materialProperties.get(); }
         void BindPass(vk::CommandBuffer commandBuffer, const ShaderPassType passType) const;

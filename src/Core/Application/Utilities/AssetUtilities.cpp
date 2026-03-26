@@ -60,6 +60,14 @@ namespace Beer::Core
         return GetBasePath(subPath);
     }
 
+    static constexpr std::string_view COMPUTE_HEAD = "assets/shaders/compute/";
+
+    std::filesystem::path AssetUtilities::GetComputeShaderPath(const std::string& computeName)
+    {
+        std::string subPath = std::string(COMPUTE_HEAD) + computeName + std::string(SHADER_TAIL);
+        return GetBasePath(subPath);
+    }
+
     static constexpr std::string_view JSON_TAIL = ".json";
 
     std::filesystem::path AssetUtilities::GetShaderJsonPath(const std::string& shaderName)

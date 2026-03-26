@@ -1,4 +1,5 @@
 #include "Core/Application/Renderer/Renderer.hpp"
+#include "Core/Application/Managers/ComputeManager.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
@@ -10,6 +11,7 @@
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Compute/ComputeShader.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
@@ -240,6 +242,12 @@ namespace Beer::Core
             MAX_FRAMES_IN_FLIGHT);
 
         Rendering::Shader::SetShaderManager(shaderManager.get());
+
+        computeManager = std::make_unique<ComputeManager>(
+            &device,
+            swapchain.get());
+
+        Rendering::ComputeShader::SetComputeManager(computeManager.get());
 
         meshManager = std::make_unique<MeshManager>(uploadManager.get());
 

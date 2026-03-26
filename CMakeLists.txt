@@ -164,7 +164,7 @@ function(add_slang_shader_target TARGET)
         
         # RUN SLANGC SECOND: Generate the Bytecode
         COMMAND ${SLANGC_EXECUTABLE} "${MAIN_SOURCE}"
-                -target spirv -profile spirv_1_4 -emit-spirv-directly 
+                -target spirv -fvk-use-entrypoint-name -profile spirv_1_4 -emit-spirv-directly 
                 -matrix-layout-column-major
                 -I "${SLANG_MODULES_DIR}" 
                 -o "${OUTPUT_SPV}"

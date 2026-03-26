@@ -1,4 +1,5 @@
 #include "Rendering/Shader/ShaderReflection.hpp"
+#include "Rendering/Compute/ComputeKernel.hpp"
 #include "Rendering/Shader/ShaderParseDef.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
 #include "Vendor/spirv_reflect/spirv_reflect.h"
@@ -6,6 +7,7 @@
 #include <stdexcept>
 #include "Vendor./nlohmann/json.hpp"
 #include "Rendering/Shader/VertexInput.hpp"
+#include "vulkan/vulkan.hpp"
 #include <algorithm>
 
 namespace Beer::Rendering
@@ -98,6 +100,38 @@ namespace Beer::Rendering
         return passesSettings;
     }
 
+    std::vector<KernelSettings> ShaderReflection::ReflectKernelsJson(const std::filesystem::path& jsonPath)
+    {
+        std::vector<KernelSettings> kernelsSettings;
+
+        std::ifstream file(jsonPath);
+
+        if (!file.is_open())
+            throw std::runtime_error("Failed to open Shader JSON: " + jsonPath.string());
+
+        nlohmann::json j;
+        file >> j;
+
+        if (j.contains("Kernels"))
+        {
+            kernelsSettings.reserve(j["Kernels"].size());
+
+            for (const auto& [kernelTag, kernelData] : j["Kernels"].items())
+            {
+                KernelSettings kernelSettings{};
+                kernelSettings.Name = ShaderParseDef::GetKernelName(kernelData);
+                kernelSettings.Index = ShaderParseDef::GetKernelIndex(kernelData);
+
+                kernelsSettings.emplace_back(kernelSettings);
+            }
+
+            std::sort(kernelsSettings.begin(), kernelsSettings.end(), [](const KernelSettings& a, const KernelSettings& b) {
+                return a.Index < b.Index;
+            });
+        }
+
+        return kernelsSettings;
+    }
     PropertyType ShaderReflection::GetMemberType(SpvReflectBlockVariable* member)
     {
         PropertyType propType = PropertyType::Unknown;
@@ -265,7 +299,8 @@ namespace Beer::Rendering
         }
     }
 
-    std::vector<vk::DescriptorSetLayoutBinding> ShaderReflection::ReflectMaterialBindings(const std::vector<uint32_t>& spvCode)
+    std::vector<vk::DescriptorSetLayoutBinding> ShaderReflection::ReflectMaterialBindings(const std::vector<uint32_t>& spvCode,
+        bool isComputeShader)
     {
         std::vector<vk::DescriptorSetLayoutBinding> bindings;
         SpvReflectShaderModule reflectModule = InitializeReflect(spvCode);
@@ -274,6 +309,8 @@ namespace Beer::Rendering
         spvReflectEnumerateDescriptorSets(&reflectModule, &setCount, nullptr);
         std::vector<SpvReflectDescriptorSet*> sets(setCount);
         spvReflectEnumerateDescriptorSets(&reflectModule, &setCount, sets.data());
+
+        vk::ShaderStageFlagBits stageFlags = isComputeShader ? vk::ShaderStageFlagBits::eCompute : vk::ShaderStageFlagBits::eAllGraphics;
 
         for (uint32_t s = 0; s < setCount; s++)
         {
@@ -290,7 +327,7 @@ namespace Beer::Rendering
                 vkBinding.binding = spvBinding->binding;
                 vkBinding.descriptorCount = spvBinding->count;
 
-                vkBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+                vkBinding.stageFlags = stageFlags;
                 vkBinding.descriptorType = GetVkDescriptorType(spvBinding->descriptor_type);
 
                 bindings.push_back(vkBinding);
@@ -311,6 +348,8 @@ namespace Beer::Rendering
             return vk::DescriptorType::eCombinedImageSampler;
         case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
             return vk::DescriptorType::eSampledImage;
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            return vk::DescriptorType::eStorageImage;
         default:
             throw std::runtime_error("Unsupported descriptor type in Material reflection!");
         }

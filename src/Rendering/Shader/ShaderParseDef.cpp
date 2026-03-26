@@ -103,4 +103,14 @@ namespace Beer::Rendering
         default: return ShaderPassType::Unknown;
         }
     }
+
+    uint32_t ShaderParseDef::GetKernelIndex(const nlohmann::basic_json<>& kernelData)
+    {
+        return kernelData.value(std::string(KERNEL_INDEX), 0);
+    }
+
+    std::string ShaderParseDef::GetKernelName(const nlohmann::basic_json<>& kernelData)
+    {
+        return kernelData.value(std::string(KERNEL_NAME), "compute");
+    }
 } // namespace Beer::Rendering
