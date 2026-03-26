@@ -42,8 +42,10 @@ namespace Beer::Core
         std::shared_ptr<Rendering::Image> image = std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(1,
                 1,
-                VK_FORMAT_R8G8B8A8_SRGB,
-                VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT
+                    | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT
+                    | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT,
                 vk::ImageAspectFlagBits::eColor,
                 *device));
 

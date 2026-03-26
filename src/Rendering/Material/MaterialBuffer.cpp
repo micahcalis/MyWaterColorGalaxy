@@ -1,6 +1,7 @@
 #include "Rendering/Material/MaterialBuffer.hpp"
 #include "MaterialBuffer.hpp"
 #include "MaterialData.hpp"
+#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 
 namespace Beer::Rendering
@@ -24,14 +25,14 @@ namespace Beer::Rendering
     {
         const ShaderProperty* prop = properties->GetShaderProperty(name);
 
-        if (!prop || prop->Type != PropertyType::Texture2D)
+        if (!prop || !(prop->Type == PropertyType::Texture2D || prop->Type == PropertyType::RWTexture2D))
             return;
 
         textures[name] = texture;
 
         for (uint32_t i = 0; i < UniformDescriptor::GetFramesInFlight(); i++)
         {
-            descriptor->UpdateImageInfo(i, prop->Binding, texture.get());
+            descriptor->UpdateImageInfo(i, prop, texture.get());
         }
     }
 
@@ -64,7 +65,7 @@ namespace Beer::Rendering
     {
         for (const auto& [name, prop] : properties->GetPropertyMap())
         {
-            if (prop.Type == PropertyType::Texture2D)
+            if (prop.Type == PropertyType::Texture2D || prop.Type == PropertyType::RWTexture2D)
             {
                 std::shared_ptr<ITexture> texToBind = Texture2D::GetFallbackTexture();
 
@@ -78,7 +79,7 @@ namespace Beer::Rendering
                 {
                     descriptor->UpdateImageInfo(
                         i,
-                        prop.Binding,
+                        &prop,
                         texToBind.get());
                 }
 

@@ -4,6 +4,7 @@
 #include <vulkan/vulkan_raii.hpp>
 #include "DescriptorAllocator.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 
 namespace Beer::Rendering
@@ -37,7 +38,7 @@ namespace Beer::Rendering
         vk::DescriptorSet GetSet(uint32_t frameIndex) const { return *descriptorSets[frameIndex]; }
         vk::DescriptorSetLayout GetLayout() const { return *layout; }
         void UpdateBufferInfo(uint32_t frameIndex, uint32_t binding, const Rendering::Buffer& buffer, size_t size, size_t offset = 0);
-        void UpdateImageInfo(uint32_t frameIndex, uint32_t binding, const Rendering::ITexture* texture);
+        void UpdateImageInfo(uint32_t frameIndex, const ShaderProperty* property, const Rendering::ITexture* texture);
 
         static uint32_t GetFramesInFlight() { return descriptorAllocator->FramesInFlight; }
         static uint32_t GetFrameIndex() { return frameIndex; }

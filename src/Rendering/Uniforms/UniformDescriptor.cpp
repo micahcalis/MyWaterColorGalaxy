@@ -1,6 +1,8 @@
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "DescriptorAllocator.hpp"
+#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
+#include <stdexcept>
 
 namespace Beer::Rendering
 {
@@ -38,18 +40,30 @@ namespace Beer::Rendering
         descriptorAllocator->Device->GetLogicalDevice().updateDescriptorSets(descriptorWrite, nullptr);
     }
 
-    void UniformDescriptor::UpdateImageInfo(uint32_t frameIndex, uint32_t binding, const Rendering::ITexture* texture)
+    void UniformDescriptor::UpdateImageInfo(uint32_t frameIndex, const ShaderProperty* property, const Rendering::ITexture* texture)
     {
         vk::DescriptorImageInfo imageInfo{};
-        imageInfo.sampler = texture->GetSampler()->GetVk();
         imageInfo.imageView = texture->GetImageView();
-        imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        if (property->Type == PropertyType::RWTexture2D)
+        {
+            imageInfo.imageLayout = vk::ImageLayout::eGeneral;
+            imageInfo.sampler = nullptr;
+        } else if (property->Type == PropertyType::Texture2D)
+        {
+            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            imageInfo.sampler = texture->GetSampler()->GetVk();
+        } else
+        {
+            throw std::runtime_error("Unsupported Texture Type tried binding to Material Properties");
+        }
 
         vk::WriteDescriptorSet descriptorWrite{};
         descriptorWrite.dstSet = *descriptorSets[frameIndex];
-        descriptorWrite.dstBinding = binding;
+        descriptorWrite.dstBinding = property->Binding;
         descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+        descriptorWrite.descriptorType = property->Type == PropertyType::RWTexture2D
+            ? vk::DescriptorType::eStorageImage
+            : vk::DescriptorType::eCombinedImageSampler;
         descriptorWrite.descriptorCount = 1;
         descriptorWrite.pImageInfo = &imageInfo;
 
