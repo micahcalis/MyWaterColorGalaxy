@@ -25,6 +25,19 @@ namespace Beer::Rendering
         {
             Edges.emplace_back(node);
         }
+
+        bool HasEdgeTo(RenderPassNode* node) const
+        {
+            for (const auto edge : Edges)
+            {
+                if (edge == node)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     };
 
     class FrameBuilder
@@ -48,5 +61,7 @@ namespace Beer::Rendering
         void CreateNodeGraph(std::vector<IRenderPass*> passes);
         void BuildGraphEdges();
         std::vector<IRenderPass*> TopologicalSort();
+        bool IsRead(const ResourceAction action) const;
+        bool IsWrite(const ResourceAction action) const;
     };
 } // namespace Beer::Rendering

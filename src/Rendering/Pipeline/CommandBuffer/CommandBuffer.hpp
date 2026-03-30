@@ -9,6 +9,8 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 #include "System/Components/General/Transform.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Compute/Threads.hpp"
 
 namespace Beer::Rendering
 {
@@ -24,7 +26,7 @@ namespace Beer::Rendering
         vk::CommandBuffer GetVk() const { return *commandBuffer; }
         void Begin();
         void BeginRendering(const RenderingBeginData& beginData);
-        void EndRendering();
+        void EndRendering(const bool isDrawPass);
         void End();
         void Reset();
 
@@ -47,7 +49,10 @@ namespace Beer::Rendering
         void BindShaderPass(const ShaderPass* shaderPass);
         void BindMaterial(const Material* material);
         void BindMesh(const Mesh* mesh, const MeshBufferOrder* order);
+        void BindComputeKernel(const ComputeKernel* compute);
+        void BindComputeContext(const ComputeContext* context);
 
         void DrawMeshSingle(const MeshDrawInfo& info);
+        void Dispatch(const Threads threads);
     };
 } // namespace Beer::Rendering

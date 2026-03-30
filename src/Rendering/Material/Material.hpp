@@ -1,12 +1,8 @@
 #pragma once
 
 #include "Rendering/Material/IReflectedContext.hpp"
-#include "MaterialBuffer.hpp"
 #include "Rendering/Shader/Shader.hpp"
-#include "Rendering/Texture/ITexture.hpp"
 #include <memory>
-#include "Rendering/Uniforms/UniformDescriptor.hpp"
-#include "vulkan/vulkan.hpp"
 #include <unordered_set>
 
 namespace Beer::Rendering

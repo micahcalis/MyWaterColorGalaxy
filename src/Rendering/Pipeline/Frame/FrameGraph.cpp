@@ -63,7 +63,7 @@ namespace Beer::Rendering
             commandBuffer->BeginRendering(beginData);
 
             node.RenderPass->Execute(commandBuffer, context);
-            commandBuffer->EndRendering();
+            commandBuffer->EndRendering(beginData.IsDrawPass);
         }
     }
 
@@ -72,7 +72,7 @@ namespace Beer::Rendering
         std::unordered_set<std::string>& clearedResources)
     {
         RenderingBeginData beginData{};
-        beginData.WritesToDepth = false;
+        beginData.IsDrawPass = false;
 
         bool extentSet = false;
 
@@ -110,10 +110,12 @@ namespace Beer::Rendering
                 if (dep.GetAction() == ResourceAction::ColorWrite)
                 {
                     beginData.ColorWriteTargets.push_back(info);
+                    beginData.IsDrawPass = true;
                 } else if (dep.GetAction() == ResourceAction::DepthWrite)
                 {
                     beginData.DepthWriteTarget = info;
                     beginData.WritesToDepth = true;
+                    beginData.IsDrawPass = true;
                 }
             }
         }
@@ -125,9 +127,12 @@ namespace Beer::Rendering
     {
         switch (action)
         {
-        case ResourceAction::Read: return "Read";
+        case ResourceAction::ColorRead: return "ColorRead";
         case ResourceAction::ColorWrite: return "ColorWrite";
         case ResourceAction::DepthWrite: return "DepthWrite";
+        case ResourceAction::ComputeRead: return "ComputeRead";
+        case ResourceAction::ComputeWrite: return "ComputeWrite";
+        case ResourceAction::ComputeReadWrite: return "ComputeReadWrite";
         default: return "Unknown";
         }
     }

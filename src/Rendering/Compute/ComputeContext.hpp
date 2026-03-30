@@ -13,6 +13,8 @@ namespace Beer::Rendering
     public:
         ComputeContext(std::shared_ptr<ComputeShader> compute);
         ComputeContext(const std::string& computeName);
+        const ComputeShader* GetCompute() const { return compute.get(); }
+
         void Update() override;
 
     protected:

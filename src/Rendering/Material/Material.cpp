@@ -1,10 +1,7 @@
 #include "Rendering/Material/Material.hpp"
 #include "IReflectedContext.hpp"
 #include "MaterialBuffer.hpp"
-#include "MaterialProperties.hpp"
-#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
-#include "vulkan/vulkan.hpp"
 #include <memory>
 
 namespace Beer::Rendering

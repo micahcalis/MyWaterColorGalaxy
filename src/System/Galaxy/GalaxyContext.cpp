@@ -1,6 +1,7 @@
 #pragma once
 
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Compute/ComputeShader.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
@@ -43,6 +44,7 @@ namespace Beer::System
     {
         std::shared_ptr<Rendering::ComputeShader> computeTest = Rendering::ComputeShader::Get("TestCompute");
         computeTest->PrintConfig();
+        std::shared_ptr<Rendering::ComputeContext> testContext = std::make_shared<Rendering::ComputeContext>(computeTest);
 
         Transform lightTransform{};
         lightTransform.Position = glm::vec3(0, 1000, 100);
@@ -58,18 +60,20 @@ namespace Beer::System
 
         std::shared_ptr<Rendering::Shader> shader = Rendering::Shader::Get("SphereRaymarch");
         std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_Cube");
-        ;
         std::shared_ptr<Rendering::Material> material = std::make_shared<Rendering::Material>(shader);
 
         material->SetColor("_BaseColor", glm::vec4(0, 0.0f, 1, 1));
         material->SetFloat("_SphereRadius", 0.5f);
 
+        shader->PrintConfig();
+
         // std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
         //     ContextType::Galaxy, material, mesh, nullptr, nullptr);
 
-        playerEntity = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
-            nullptr,
-            getPlayerInput);
+        playerEntity
+            = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
+                nullptr,
+                getPlayerInput);
 
         glm::vec3 pos = glm::vec3(0);
 

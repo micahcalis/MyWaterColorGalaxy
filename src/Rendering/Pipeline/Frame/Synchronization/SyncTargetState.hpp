@@ -17,7 +17,7 @@ namespace Beer::Rendering
         {
             switch (action)
             {
-            case ResourceAction::Read:
+            case ResourceAction::ColorRead:
                 return {vk::ImageLayout::eShaderReadOnlyOptimal,
                     vk::AccessFlagBits::eShaderRead,
                     vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader};
@@ -31,6 +31,21 @@ namespace Beer::Rendering
                 return {vk::ImageLayout::eDepthStencilAttachmentOptimal,
                     vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentRead,
                     vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests};
+
+            case ResourceAction::ComputeRead:
+                return {vk::ImageLayout::eShaderReadOnlyOptimal,
+                    vk::AccessFlagBits::eShaderRead,
+                    vk::PipelineStageFlagBits::eComputeShader};
+
+            case ResourceAction::ComputeWrite:
+                return {vk::ImageLayout::eGeneral,
+                    vk::AccessFlagBits::eShaderWrite,
+                    vk::PipelineStageFlagBits::eComputeShader};
+
+            case ResourceAction::ComputeReadWrite:
+                return {vk::ImageLayout::eGeneral,
+                    vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+                    vk::PipelineStageFlagBits::eComputeShader};
 
             default:
                 return {

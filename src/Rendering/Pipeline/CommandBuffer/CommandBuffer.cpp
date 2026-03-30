@@ -1,8 +1,11 @@
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
+#include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
 #include "vulkan/vulkan.hpp"
+#include <stdexcept>
 
 namespace Beer::Rendering
 {
@@ -20,6 +23,9 @@ namespace Beer::Rendering
 
     void CommandBuffer::BeginRendering(const RenderingBeginData& beginData)
     {
+        if (!beginData.IsDrawPass)
+            return;
+
         vk::RenderingInfo renderingInfo{};
         renderingInfo.renderArea = vk::Rect2D({0, 0}, vk::Extent2D(beginData.Width, beginData.Height));
         renderingInfo.layerCount = 1;
@@ -44,8 +50,11 @@ namespace Beer::Rendering
         commandBuffer.setScissor(0, renderingInfo.renderArea);
     }
 
-    void CommandBuffer::EndRendering()
+    void CommandBuffer::EndRendering(const bool isDrawPass)
     {
+        if (!isDrawPass)
+            return;
+
         commandBuffer.endRendering();
     }
 
@@ -144,6 +153,19 @@ namespace Beer::Rendering
         commandBuffer.bindIndexBuffer(buffers.IndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
     }
 
+    void CommandBuffer::BindComputeKernel(const ComputeKernel* kernel)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, kernel->Pipeline);
+    }
+
+    void CommandBuffer::BindComputeContext(const ComputeContext* context)
+    {
+        BindDescriptorSets(vk::PipelineBindPoint::eCompute,
+            context->GetCompute()->GetPipelineLayout(),
+            MaterialData::SET,
+            {context->GetDescriptorSet()});
+    }
+
     void CommandBuffer::DrawMeshSingle(const MeshDrawInfo& info)
     {
         if (info.CanIndex())
@@ -160,5 +182,13 @@ namespace Beer::Rendering
                 0,
                 0);
         }
+    }
+
+    void CommandBuffer::Dispatch(const Threads threads)
+    {
+        if (threads.X == 0 || threads.Y == 0 || threads.Z == 0)
+            throw std::runtime_error("Can't Dispatch Compute With 0 Thread Groups");
+
+        commandBuffer.dispatch(threads.X, threads.Y, threads.Z);
     }
 } // namespace Beer::Rendering
