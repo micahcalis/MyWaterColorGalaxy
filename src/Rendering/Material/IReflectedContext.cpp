@@ -70,7 +70,7 @@ namespace Beer::Rendering
         materialData->SetProperty(name, val);
     }
 
-    void IReflectedContext::SetTexture(const std::string& name, std::shared_ptr<ITexture> val)
+    void IReflectedContext::SetTexture(const std::string& name, ITexture* val)
     {
         PropertyType typeFetch = materialData->GetTypeByName(name);
 

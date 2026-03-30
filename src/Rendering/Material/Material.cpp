@@ -25,47 +25,79 @@ namespace Beer::Rendering
 
     void Material::Update()
     {
-        if (dirtyFramesCount <= 0)
-            return;
+        if (dirtyFramesCountBuffer > 0)
+        {
+            buffer->Update(*materialData);
+            dirtyFramesCountBuffer--;
+        }
 
-        buffer->Update(*materialData);
-        dirtyFramesCount--;
+        for (auto& [name, framesLeft] : dirtyTextureCounts)
+        {
+            if (framesLeft > 0)
+            {
+                buffer->UpdateTextureDescriptor(name);
+                framesLeft--;
+            }
+        }
     }
 
     void Material::SetInt(const std::string& name, uint32_t val)
     {
         IReflectedContext::SetInt(name, val);
-        MarkDirty();
+        MarkBufferDirty();
     }
 
     void Material::SetFloat(const std::string& name, float val)
     {
         IReflectedContext::SetFloat(name, val);
-        MarkDirty();
+        MarkBufferDirty();
     }
 
     void Material::SetVector(const std::string& name, glm::vec4 val)
     {
         IReflectedContext::SetVector(name, val);
-        MarkDirty();
+        MarkBufferDirty();
     }
 
     void Material::SetColor(const std::string& name, glm::vec4 val)
     {
         IReflectedContext::SetColor(name, val);
-        MarkDirty();
+        MarkBufferDirty();
     }
 
     void Material::SetMatrix(const std::string& name, glm::mat4 val)
     {
         IReflectedContext::SetMatrix(name, val);
-        MarkDirty();
+        MarkBufferDirty();
     }
 
-    void Material::MarkDirty()
+    void Material::SetTexture(const std::string& name, ITexture* val)
     {
-        dirtyFramesCount = UniformDescriptor::GetFramesInFlight();
+        IReflectedContext::SetTexture(name, val);
+        MarkTextureDirty(name);
+    }
+
+    void Material::MarkBufferDirty()
+    {
+        dirtyFramesCountBuffer = UniformDescriptor::GetFramesInFlight();
         dirtyMaterialsQueue.insert(this);
+    }
+
+    void Material::MarkTextureDirty(const std::string& name)
+    {
+        dirtyTextureCounts[name] = UniformDescriptor::GetFramesInFlight();
+        dirtyMaterialsQueue.insert(this);
+    }
+
+    bool Material::HasDirtyTextures() const
+    {
+        for (const auto& dirtySet : dirtyTextureCounts)
+        {
+            if (dirtySet.second > 0)
+                return true;
+        }
+
+        return false;
     }
 
     void Material::UpdateDirtyMaterials()
@@ -75,7 +107,7 @@ namespace Beer::Rendering
             Material* material = *it;
             material->Update();
 
-            if (material->dirtyFramesCount <= 0)
+            if (material->dirtyFramesCountBuffer <= 0 && !material->HasDirtyTextures())
             {
                 it = dirtyMaterialsQueue.erase(it);
             } else

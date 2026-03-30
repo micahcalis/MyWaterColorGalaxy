@@ -5,12 +5,16 @@
 namespace Beer::Rendering
 {
     constexpr uint32_t DESCRIPTOR_COUNT = 1000;
-    constexpr std::array<vk::DescriptorPoolSize, 2> POOL_SIZES = {
+    constexpr std::array<vk::DescriptorPoolSize, 4> POOL_SIZES = {
         vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, DESCRIPTOR_COUNT),
-        vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, DESCRIPTOR_COUNT)};
+        vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, DESCRIPTOR_COUNT),
+
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, DESCRIPTOR_COUNT),
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, DESCRIPTOR_COUNT)};
 
     DescriptorAllocator::DescriptorAllocator(const uint32_t framesInFlight, const Core::Device* device)
-        : FramesInFlight(framesInFlight), Device(device)
+        : FramesInFlight(framesInFlight)
+        , Device(device)
     {
         CreatePool();
     }

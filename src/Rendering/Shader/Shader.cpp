@@ -87,7 +87,7 @@ namespace Beer::Rendering
         setLayouts.push_back(materialSetLayout);
 
         vk::PushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute;
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(Rendering::ModelPush);
 

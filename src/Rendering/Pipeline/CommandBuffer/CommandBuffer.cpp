@@ -111,7 +111,7 @@ namespace Beer::Rendering
     {
         commandBuffer.pushConstants<Rendering::ModelPush>(
             shader->GetPipelineLayout(),
-            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
             0,
             modelPush);
     }

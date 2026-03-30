@@ -1,4 +1,5 @@
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
+#include "ComputePerlinPass.hpp"
 #include "Core/Application/Renderer/DrawCallPool.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
@@ -44,6 +45,9 @@ namespace Beer::Rendering
         dependencies.AddDependency(PassDependency(std::string(MAIN_DEPTH),
             ResourceAction::DepthWrite,
             ResetOperator::ClearDepth()));
+
+        dependencies.AddDependency(PassDependency(PERLIN_TEX_NAME,
+            ResourceAction::ColorRead));
 
         return dependencies;
     }

@@ -72,7 +72,7 @@ namespace Beer::Rendering
                 bufferData.Binding,
                 vk::DescriptorType::eUniformBuffer,
                 bufferData.DescriptorCount,
-                vk::ShaderStageFlagBits::eAllGraphics);
+                vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute);
         }
 
         return bindings;

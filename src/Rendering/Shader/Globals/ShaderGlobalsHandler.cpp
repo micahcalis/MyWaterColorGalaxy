@@ -6,6 +6,7 @@
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "glm/matrix.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
+#include "vulkan/vulkan.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -29,7 +30,7 @@ namespace Beer::Rendering
         std::vector<vk::DescriptorSetLayout> setLayouts = GetLayouts();
 
         vk::PushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute;
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(Rendering::ModelPush);
 
@@ -48,9 +49,9 @@ namespace Beer::Rendering
         globalsBuffer->Update(LightingGlobals::BINDING, &lightingGlobalsData);
     }
 
-    void ShaderGlobalsHandler::Bind(CommandBuffer* commandBuffer) const
+    void ShaderGlobalsHandler::Bind(CommandBuffer* commandBuffer, const vk::PipelineBindPoint bindPoint) const
     {
-        commandBuffer->BindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+        commandBuffer->BindDescriptorSets(bindPoint,
             *globalLayout,
             SET_INDEX,
             GetGlobalSets());

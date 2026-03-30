@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
+#include "Rendering/RenderPasses/ComputePerlinPass.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
@@ -20,6 +22,8 @@ namespace Beer::System
 
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
+        Rendering::ComputePerlinPass* computePerlinPass = nullptr;
+        std::shared_ptr<Rendering::Material> defaultLitMaterial;
 
     public:
         GalaxyContext(Function<PlayerInput> getPlayerInput);

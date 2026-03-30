@@ -1,6 +1,5 @@
 #pragma once
 
-#include "RenderPassEvent.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"

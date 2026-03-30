@@ -76,7 +76,7 @@ namespace Lit
 
         private float3 Fresnel()
         {
-            float NdotV = saturate(dot(viewDirection, normal));
+            float NdotV = saturate(dot(-viewDirection, normal));
             float fresnelPower = lerp(4, 2, smoothness);
             float fresnelIntensity = smoothness * 0.3;
             float fresnel = pow(1 - NdotV, fresnelPower) * fresnelIntensity;

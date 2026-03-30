@@ -46,7 +46,7 @@ VERT VertexData SphereRaymarchVert(MeshData input)
 
 FRAG float4 SphereRaymarchFrag(VertexData input) : SV_Target
 {
-    float3 viewDirWS = normalize(input.positionWS - _CameraPos);
+    float3 viewDirWS = GetViewDirectionWS(input.positionWS);
     SphereTracing.AABB boundingbox = SphereTracing.AABB(input.transformCenter, float3(2));
     SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS);
     ray = boundingbox.AlignWithBox(ray);
@@ -106,7 +106,7 @@ FRAG float4 SphereRaymarchFrag(VertexData input) : SV_Target
         discard;
 
     Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
-        GetViewDirectionWS(trace.Position),
+        viewDirWS,
         trace.Normal,
         _BaseColor.rgb,
         _Smoothness,

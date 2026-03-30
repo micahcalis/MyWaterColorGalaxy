@@ -11,12 +11,14 @@ namespace Beer::Rendering
     constexpr VkImageUsageFlags COLOR_TEX_FLAGS = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
         | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT
         | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-        | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
 
     constexpr VkImageUsageFlags DEPTH_TEX_FLAGS = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
         | VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-        | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
 
     RenderTexture* FrameBlackbox::CreateRenderTexture2D(const std::string& name,
         uint32_t width,

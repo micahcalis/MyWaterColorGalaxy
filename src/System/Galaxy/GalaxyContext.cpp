@@ -7,6 +7,8 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
+#include "Rendering/RenderPasses/RenderPassEvent.hpp"
+#include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Context/ContextType.hpp"
@@ -32,6 +34,12 @@ namespace Beer::System
 
         skyboxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawSkyboxPass>(
             std::string(Rendering::SKYBOX_PASS));
+
+        defaultLitMaterial = std::make_shared<Rendering::Material>("DefaultLit");
+        defaultLitMaterial->SetColor("_BaseColor", glm::vec4(1));
+
+        computePerlinPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ComputePerlinPass>(
+            "Compute Perlin", 90, defaultLitMaterial.get());
     }
 
     void GalaxyContext::Update()
@@ -42,9 +50,9 @@ namespace Beer::System
 
     void GalaxyContext::Load()
     {
-        std::shared_ptr<Rendering::ComputeShader> computeTest = Rendering::ComputeShader::Get("TestCompute");
-        computeTest->PrintConfig();
-        std::shared_ptr<Rendering::ComputeContext> testContext = std::make_shared<Rendering::ComputeContext>(computeTest);
+        // std::shared_ptr<Rendering::ComputeShader> computeTest = Rendering::ComputeShader::Get("TestCompute");
+        // computeTest->PrintConfig();
+        // std::shared_ptr<Rendering::ComputeContext> testContext = std::make_shared<Rendering::ComputeContext>(computeTest);
 
         Transform lightTransform{};
         lightTransform.Position = glm::vec3(0, 1000, 100);
@@ -67,13 +75,18 @@ namespace Beer::System
 
         shader->PrintConfig();
 
-        // std::unique_ptr<SingleMeshRender> renderComponent = RenderRegister::CreateRenderComponent<SingleMeshRender>(
-        //     ContextType::Galaxy, material, mesh, nullptr, nullptr);
+        std::unique_ptr<SingleMeshRender> perlinRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
+            ContextType::Galaxy, defaultLitMaterial, mesh, nullptr, nullptr);
 
-        playerEntity
-            = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
-                nullptr,
-                getPlayerInput);
+        Transform perlinTransform{};
+        perlinTransform.Position = glm::vec3(-2, -2, -2);
+
+        staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(perlinTransform),
+            std::move(perlinRenderComp)));
+
+        playerEntity = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
+            nullptr,
+            getPlayerInput);
 
         glm::vec3 pos = glm::vec3(0);
 
@@ -124,6 +137,6 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, skyboxPass};
+        return {opaquePass, skyboxPass, computePerlinPass};
     }
 } // namespace Beer::System

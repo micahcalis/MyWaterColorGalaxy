@@ -2,6 +2,7 @@
 #include "MaterialBuffer.hpp"
 #include "MaterialData.hpp"
 #include "Rendering/Shader/ShaderProperty.hpp"
+#include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 
 namespace Beer::Rendering
@@ -21,7 +22,7 @@ namespace Beer::Rendering
         }
     }
 
-    void MaterialBuffer::SetTexture(const std::string& name, std::shared_ptr<ITexture> texture)
+    void MaterialBuffer::SetTexture(const std::string& name, ITexture* texture)
     {
         const ShaderProperty* prop = properties->GetShaderProperty(name);
 
@@ -30,9 +31,22 @@ namespace Beer::Rendering
 
         textures[name] = texture;
 
-        for (uint32_t i = 0; i < UniformDescriptor::GetFramesInFlight(); i++)
+        uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
+        descriptor->UpdateImageInfo(currentFrame, prop, texture);
+    }
+
+    void MaterialBuffer::UpdateTextureDescriptor(const std::string& name)
+    {
+        uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
+
+        auto it = textures.find(name);
+        if (it != textures.end())
         {
-            descriptor->UpdateImageInfo(i, prop, texture.get());
+            const ShaderProperty* prop = properties->GetShaderProperty(name);
+            if (prop)
+            {
+                descriptor->UpdateImageInfo(currentFrame, prop, it->second);
+            }
         }
     }
 
@@ -67,7 +81,7 @@ namespace Beer::Rendering
         {
             if (prop.Type == PropertyType::Texture2D || prop.Type == PropertyType::RWTexture2D)
             {
-                std::shared_ptr<ITexture> texToBind = Texture2D::GetFallbackTexture();
+                ITexture* texToBind = Texture2D::GetFallbackTexture().get();
 
                 auto it = textures.find(name);
                 if (it != textures.end())
@@ -80,7 +94,7 @@ namespace Beer::Rendering
                     descriptor->UpdateImageInfo(
                         i,
                         &prop,
-                        texToBind.get());
+                        texToBind);
                 }
 
                 this->textures[name] = texToBind;

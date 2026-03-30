@@ -13,13 +13,14 @@ namespace Beer::Rendering
     class MaterialBuffer : public IShaderResource
     {
     private:
-        std::unordered_map<std::string, std::shared_ptr<ITexture>> textures;
+        std::unordered_map<std::string, ITexture*> textures;
         MaterialProperties* properties = nullptr;
 
     public:
         MaterialBuffer(MaterialProperties* properties);
         void Update(const MaterialData& materialData);
-        void SetTexture(const std::string& name, std::shared_ptr<ITexture> texture);
+        void SetTexture(const std::string& name, ITexture* texture);
+        void UpdateTextureDescriptor(const std::string& name);
 
     protected:
         std::vector<vk::DescriptorSetLayoutBinding> GetBindings() override;

@@ -48,7 +48,8 @@ namespace Beer::Rendering
     {
         commandBuffer->Begin();
 
-        Rendering::Shader::Globals()->Bind(commandBuffer);
+        Rendering::Shader::Globals()->Bind(commandBuffer, vk::PipelineBindPoint::eGraphics);
+        Rendering::Shader::Globals()->Bind(commandBuffer, vk::PipelineBindPoint::eCompute);
 
         std::unordered_set<std::string> clearedResources;
 

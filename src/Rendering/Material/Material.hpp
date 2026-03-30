@@ -11,7 +11,8 @@ namespace Beer::Rendering
     {
     private:
         std::shared_ptr<Shader> shader = nullptr;
-        uint32_t dirtyFramesCount = 0;
+        uint32_t dirtyFramesCountBuffer = 0;
+        std::unordered_map<std::string, uint32_t> dirtyTextureCounts;
 
     public:
         ~Material();
@@ -25,9 +26,12 @@ namespace Beer::Rendering
         void SetVector(const std::string& name, glm::vec4 val) override;
         void SetColor(const std::string& name, glm::vec4 val) override;
         void SetMatrix(const std::string& name, glm::mat4 val) override;
+        void SetTexture(const std::string& name, ITexture* val) override;
 
     private:
-        void MarkDirty();
+        void MarkBufferDirty();
+        void MarkTextureDirty(const std::string& name);
+        bool HasDirtyTextures() const;
 
     protected:
         MaterialProperties* GetProperties() override { return shader->GetProperties(); }
