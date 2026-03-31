@@ -2,6 +2,7 @@
 
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Pipeline/Frame/Resource/IRenderResource.hpp"
 #include <memory>
 #include <string>
@@ -33,6 +34,9 @@ namespace Beer::Rendering
             vk::Filter filter = vk::Filter::eLinear,
             vk::SamplerAddressMode tiling = vk::SamplerAddressMode::eRepeat,
             glm::vec4 clearColor = glm::vec4(0));
+
+        PhaseBuffer* CreatePhaseBuffer(const std::string& name,
+            VkDeviceSize size);
 
         template<typename T>
         T* GetResource(const std::string& name)
@@ -69,10 +73,11 @@ namespace Beer::Rendering
             vk::SamplerAddressMode tiling = vk::SamplerAddressMode::eRepeat,
             glm::vec4 clearColor = glm::vec4(0));
 
+        PhaseBuffer* ReallocateIfNeeded(const std::string& name,
+            VkDeviceSize size);
+
     private:
-        std::shared_ptr<Image> CreateRenderTextureImage(uint32_t width,
-            uint32_t height,
-            VkFormat format,
-            glm::vec4 clearColor = glm::vec4(0));
+        std::shared_ptr<Image> CreateRenderTextureImage(uint32_t width, uint32_t height, VkFormat format, glm::vec4 clearColor = glm::vec4(0));
+        std::shared_ptr<Buffer> CreateSSBOHandle(VkDeviceSize size);
     };
 } // namespace Beer::Rendering

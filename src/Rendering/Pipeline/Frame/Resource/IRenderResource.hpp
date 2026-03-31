@@ -2,8 +2,12 @@
 
 #include "RenderResourceType.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
-#include "Rendering/Pipeline/Frame/Synchronization/ISyncBarrier.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/ISyncState.hpp"
+
+namespace Beer::Rendering
+{
+    class ISyncBarrier;
+}
 
 namespace Beer::Rendering
 {

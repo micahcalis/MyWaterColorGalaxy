@@ -1,6 +1,7 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "FrameBlackbox.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
@@ -46,6 +47,22 @@ namespace Beer::Rendering
         return GetResource<RenderTexture>(name);
     }
 
+    PhaseBuffer* FrameBlackbox::CreatePhaseBuffer(const std::string& name,
+        VkDeviceSize size)
+    {
+        if (blackbox.contains(name))
+        {
+            return static_cast<PhaseBuffer*>(blackbox[name].get());
+        }
+
+        std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size);
+
+        blackbox[name] = std::make_unique<PhaseBuffer>(name,
+            std::move(bufferHandle));
+
+        return GetResource<PhaseBuffer>(name);
+    }
+
     RenderTexture* FrameBlackbox::ReallocateIfNeeded(const std::string& name,
         uint32_t width,
         uint32_t height,
@@ -82,6 +99,26 @@ namespace Beer::Rendering
         return renderTexture;
     }
 
+    PhaseBuffer* FrameBlackbox::ReallocateIfNeeded(const std::string& name,
+        VkDeviceSize size)
+    {
+        PhaseBuffer* phaseBuffer = GetResource<PhaseBuffer>(name);
+
+        if (phaseBuffer == nullptr)
+        {
+            phaseBuffer = CreatePhaseBuffer(name, size);
+            return phaseBuffer;
+        }
+
+        if (size != phaseBuffer->Size())
+        {
+            std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size);
+            phaseBuffer->SetBuffer(std::move(bufferHandle));
+        }
+
+        return phaseBuffer;
+    }
+
     std::shared_ptr<Image> FrameBlackbox::CreateRenderTextureImage(uint32_t width,
         uint32_t height,
         VkFormat format,
@@ -98,5 +135,10 @@ namespace Beer::Rendering
                 usageFlags,
                 aspectFlags,
                 *device));
+    }
+
+    std::shared_ptr<Buffer> FrameBlackbox::CreateSSBOHandle(VkDeviceSize size)
+    {
+        return std::make_shared<Buffer>(Buffer::CreateSSBO(size));
     }
 } // namespace Beer::Rendering

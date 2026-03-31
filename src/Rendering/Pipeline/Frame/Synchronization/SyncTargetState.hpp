@@ -27,6 +27,11 @@ namespace Beer::Rendering
                     vk::AccessFlagBits::eColorAttachmentWrite,
                     vk::PipelineStageFlagBits::eColorAttachmentOutput};
 
+            case ResourceAction::DepthRead:
+                return {vk::ImageLayout::eDepthStencilReadOnlyOptimal,
+                    vk::AccessFlagBits::eDepthStencilAttachmentRead,
+                    vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests};
+
             case ResourceAction::DepthWrite:
                 return {vk::ImageLayout::eDepthStencilAttachmentOptimal,
                     vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentRead,
@@ -44,6 +49,36 @@ namespace Beer::Rendering
 
             case ResourceAction::ComputeReadWrite:
                 return {vk::ImageLayout::eGeneral,
+                    vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+                    vk::PipelineStageFlagBits::eComputeShader};
+
+            case ResourceAction::BufferRead:
+                return {vk::ImageLayout::eUndefined,
+                    vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eUniformRead | vk::AccessFlagBits::eVertexAttributeRead | vk::AccessFlagBits::eIndexRead,
+                    vk::PipelineStageFlagBits::eVertexInput | vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader};
+
+            case ResourceAction::BufferWrite:
+                return {vk::ImageLayout::eUndefined,
+                    vk::AccessFlagBits::eShaderWrite,
+                    vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader};
+
+            case ResourceAction::BufferReadWrite:
+                return {vk::ImageLayout::eUndefined,
+                    vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+                    vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader};
+
+            case ResourceAction::ComputeBufferRead:
+                return {vk::ImageLayout::eUndefined,
+                    vk::AccessFlagBits::eShaderRead,
+                    vk::PipelineStageFlagBits::eComputeShader};
+
+            case ResourceAction::ComputeBufferWrite:
+                return {vk::ImageLayout::eUndefined,
+                    vk::AccessFlagBits::eShaderWrite,
+                    vk::PipelineStageFlagBits::eComputeShader};
+
+            case ResourceAction::ComputeBufferReadWrite:
+                return {vk::ImageLayout::eUndefined,
                     vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
                     vk::PipelineStageFlagBits::eComputeShader};
 

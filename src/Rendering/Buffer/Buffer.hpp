@@ -32,8 +32,8 @@ namespace Beer::Rendering
             VkBufferUsageFlags usage);
 
         static Buffer CreateStaging(VkDeviceSize size);
-
         static Buffer CreateUniform(VkDeviceSize size);
+        static Buffer CreateSSBO(VkDeviceSize size);
 
         void Upload(const void* data, size_t size, size_t offset = 0) const;
 

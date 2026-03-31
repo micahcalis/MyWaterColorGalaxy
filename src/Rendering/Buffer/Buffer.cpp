@@ -49,6 +49,15 @@ namespace Beer::Rendering
         return {allocation, data};
     }
 
+    Buffer Buffer::CreateSSBO(VkDeviceSize size)
+    {
+        constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+            | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+        return CreateDeviceLocal(size, usage);
+    }
+
     void Buffer::Upload(const void* data, size_t size, size_t offset) const
     {
         if (size + offset > this->data.Size)
