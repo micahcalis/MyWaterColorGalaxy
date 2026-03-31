@@ -37,5 +37,7 @@ namespace Beer::Rendering
 
     public:
         static void InitializeFallbackBuffer();
+        static void DestroyFallbackBuffer();
+        static PhaseBuffer* GetFallbackBuffer() { return bufferFallback.get(); }
     };
 } // namespace Beer::Rendering

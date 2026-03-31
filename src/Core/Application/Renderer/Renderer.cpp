@@ -11,6 +11,7 @@
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Compute/ComputeShader.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
@@ -49,6 +50,7 @@ namespace Beer::Core
         device.GetLogicalDevice().waitIdle();
 
         Rendering::Texture2D::ResetFallbackTexture();
+        Rendering::PhaseBuffer::DestroyFallbackBuffer();
         Rendering::Buffer::SetAllocator(nullptr);
         Rendering::Image::SetAllocator(nullptr);
     }
@@ -231,6 +233,7 @@ namespace Beer::Core
 
         Rendering::UniformDescriptor::SetDescriptorAllocator(descriptorAllocator.get());
         Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
+        Rendering::PhaseBuffer::InitializeFallbackBuffer();
     }
 
     void Renderer::InitializeAssetManagers(vk::Format depthFormat)

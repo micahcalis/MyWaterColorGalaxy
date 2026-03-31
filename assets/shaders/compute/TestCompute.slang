@@ -61,5 +61,5 @@ void FunnyBallCompute(uint3 id : SV_DispatchThreadID)
     float decay = decaySpeed * _DeltaTime;
     float newVal = currentVal + ballMask - decay;
 
-    _NoiseTex[id.xy] = saturate(newVal);
+    _NoiseTex[id.xy] = saturate(newVal + _Voxels[0].position.x);
 }

@@ -2,6 +2,7 @@
 #include "DescriptorAllocator.hpp"
 #include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
+#include "vulkan/vulkan.hpp"
 #include <stdexcept>
 
 namespace Beer::Rendering
@@ -81,7 +82,7 @@ namespace Beer::Rendering
         descriptorWrite.dstSet = *descriptorSets[frameIndex];
         descriptorWrite.dstBinding = property->Binding;
         descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
+        descriptorWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
         descriptorWrite.descriptorCount = 1;
         descriptorWrite.pBufferInfo = &bufferInfo;
 

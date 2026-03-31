@@ -14,6 +14,7 @@ namespace Beer::Rendering
     {
         InitializeCBuffer();
         InitializeTextures();
+        InitializeStructuredBuffers();
     }
 
     void MaterialBuffer::Update(const MaterialData& materialData)
@@ -135,6 +136,29 @@ namespace Beer::Rendering
 
     void MaterialBuffer::InitializeStructuredBuffers()
     {
+        for (const auto& [name, prop] : properties->GetPropertyMap())
+        {
+            if (prop.Type == PropertyType::StructuredBuffer || prop.Type == PropertyType::RWStructuredBuffer)
+            {
+                PhaseBuffer* bufferToBind = PhaseBuffer::GetFallbackBuffer();
+
+                auto it = structuredBuffers.find(name);
+                if (it != structuredBuffers.end())
+                {
+                    bufferToBind = it->second;
+                }
+
+                for (uint32_t i = 0; i < UniformDescriptor::GetFramesInFlight(); i++)
+                {
+                    descriptor->UpdateStructuredBufferInfo(
+                        i,
+                        &prop,
+                        bufferToBind);
+                }
+
+                this->structuredBuffers[name] = bufferToBind;
+            }
+        }
     }
 
     bool MaterialBuffer::HasCBuffer(const std::vector<vk::DescriptorSetLayoutBinding>& bindings)
