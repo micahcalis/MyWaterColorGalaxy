@@ -69,4 +69,22 @@ namespace Beer::Rendering
 
         descriptorAllocator->Device->GetLogicalDevice().updateDescriptorSets(descriptorWrite, nullptr);
     }
+
+    void UniformDescriptor::UpdateStructuredBufferInfo(uint32_t frameIndex, const ShaderProperty* property, const PhaseBuffer* buffer)
+    {
+        vk::DescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = buffer->GetHandle()->GetHandle();
+        bufferInfo.offset = 0;
+        bufferInfo.range = buffer->Size();
+
+        vk::WriteDescriptorSet descriptorWrite{};
+        descriptorWrite.dstSet = *descriptorSets[frameIndex];
+        descriptorWrite.dstBinding = property->Binding;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+
+        descriptorAllocator->Device->GetLogicalDevice().updateDescriptorSets(descriptorWrite, nullptr);
+    }
 } // namespace Beer::Rendering

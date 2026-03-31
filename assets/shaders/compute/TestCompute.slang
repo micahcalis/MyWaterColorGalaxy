@@ -14,11 +14,18 @@ cbuffer MaterialData
     int _Resolution;
 };
 
+struct Voxel
+{
+    float3 position;
+    float3 color;
+};
+
 BIND_MATERIAL_TEX(1) RWTexture2D<float4> _NoiseTex;
+BIND_MATERIAL_BUFFER(2) RWStructuredBuffer<Voxel> _Voxels;
 
 //$ Kernel PerlinCompute
 
-[shader("compute")]
+COMP
 [numthreads(8, 8, 1)]
 void PerlinCompute(uint3 id : SV_DispatchThreadID)
 {
@@ -29,7 +36,7 @@ void PerlinCompute(uint3 id : SV_DispatchThreadID)
 
 //$ Kernel FunnyBallCompute
 
-[shader("compute")]
+COMP
 [numthreads(8, 8, 1)]
 void FunnyBallCompute(uint3 id : SV_DispatchThreadID)
 {

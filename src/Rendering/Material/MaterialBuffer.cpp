@@ -1,9 +1,11 @@
 #include "Rendering/Material/MaterialBuffer.hpp"
 #include "MaterialBuffer.hpp"
 #include "MaterialData.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 
 namespace Beer::Rendering
 {
@@ -35,6 +37,19 @@ namespace Beer::Rendering
         descriptor->UpdateImageInfo(currentFrame, prop, texture);
     }
 
+    void MaterialBuffer::SetStructuredBuffer(const std::string& name, PhaseBuffer* buffer)
+    {
+        const ShaderProperty* prop = properties->GetShaderProperty(name);
+
+        if (!prop || !(prop->Type == PropertyType::StructuredBuffer || prop->Type == PropertyType::RWStructuredBuffer))
+            return;
+
+        structuredBuffers[name] = buffer;
+
+        uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
+        descriptor->UpdateStructuredBufferInfo(currentFrame, prop, buffer);
+    }
+
     void MaterialBuffer::UpdateTextureDescriptor(const std::string& name)
     {
         uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
@@ -46,6 +61,21 @@ namespace Beer::Rendering
             if (prop)
             {
                 descriptor->UpdateImageInfo(currentFrame, prop, it->second);
+            }
+        }
+    }
+
+    void MaterialBuffer::UpdateStructuredBufferDescriptor(const std::string& name)
+    {
+        uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
+
+        auto it = structuredBuffers.find(name);
+        if (it != structuredBuffers.end())
+        {
+            const ShaderProperty* prop = properties->GetShaderProperty(name);
+            if (prop)
+            {
+                descriptor->UpdateStructuredBufferInfo(currentFrame, prop, it->second);
             }
         }
     }
@@ -75,6 +105,7 @@ namespace Beer::Rendering
             }
         }
     }
+
     void MaterialBuffer::InitializeTextures()
     {
         for (const auto& [name, prop] : properties->GetPropertyMap())
@@ -100,6 +131,10 @@ namespace Beer::Rendering
                 this->textures[name] = texToBind;
             }
         }
+    }
+
+    void MaterialBuffer::InitializeStructuredBuffers()
+    {
     }
 
     bool MaterialBuffer::HasCBuffer(const std::vector<vk::DescriptorSetLayoutBinding>& bindings)

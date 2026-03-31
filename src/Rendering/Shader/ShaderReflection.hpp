@@ -25,9 +25,11 @@ namespace Beer::Rendering
     private:
         static PropertyType GetMemberType(SpvReflectBlockVariable* member);
         static PropertyType GetTextureType(SpvReflectDescriptorBinding* binding);
+        static PropertyType GetBufferType(SpvReflectDescriptorBinding* binding);
         static bool IsMaterialSet(SpvReflectDescriptorSet* set);
         static bool IsCBufferBinding(SpvReflectDescriptorBinding* binding);
         static bool IsTextureBinding(SpvReflectDescriptorBinding* binding);
+        static bool IsStructuredBufferBinding(SpvReflectDescriptorBinding* binding);
         static MeshBufferType GetBufferTypeFromName(const char* semanticString);
         static SpvReflectShaderModule InitializeReflect(const std::vector<uint32_t>& spvCode);
         static vk::Format GetVkFormat(SpvReflectFormat format);

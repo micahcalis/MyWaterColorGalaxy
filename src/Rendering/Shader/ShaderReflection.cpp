@@ -56,6 +56,13 @@ namespace Beer::Rendering
                         0,
                         0,
                         binding->binding};
+                } else if (IsStructuredBufferBinding(binding))
+                {
+                    properties[binding->name] = {
+                        GetBufferType(binding),
+                        0,
+                        binding->block.padded_size,
+                        binding->binding};
                 }
             }
         }
@@ -183,6 +190,37 @@ namespace Beer::Rendering
         }
     }
 
+    PropertyType ShaderReflection::GetBufferType(SpvReflectDescriptorBinding* binding)
+    {
+        PropertyType propType = PropertyType::Unknown;
+        switch (binding->descriptor_type)
+        {
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC: {
+            bool isReadOnly = false;
+
+            if (binding->block.decoration_flags & SPV_REFLECT_DECORATION_NON_WRITABLE)
+            {
+                isReadOnly = true;
+            }
+
+            if (binding->resource_type & SPV_REFLECT_RESOURCE_FLAG_SRV)
+            {
+                isReadOnly = true;
+            }
+
+            propType = isReadOnly ? PropertyType::StructuredBuffer : PropertyType::RWStructuredBuffer;
+        }
+        break;
+
+        default:
+            propType = PropertyType::Unknown;
+            break;
+        }
+
+        return propType;
+    }
+
     bool ShaderReflection::IsMaterialSet(SpvReflectDescriptorSet* set)
     {
         return set->set == 1;
@@ -198,6 +236,11 @@ namespace Beer::Rendering
         return binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
             || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    }
+
+    bool ShaderReflection::IsStructuredBufferBinding(SpvReflectDescriptorBinding* binding)
+    {
+        return binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     }
 
     MeshBufferType ShaderReflection::GetBufferTypeFromName(const char* nameString)
@@ -371,6 +414,10 @@ namespace Beer::Rendering
             return vk::DescriptorType::eSampledImage;
         case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
             return vk::DescriptorType::eStorageImage;
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            return vk::DescriptorType::eStorageBuffer;
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+            return vk::DescriptorType::eStorageBufferDynamic;
         default:
             throw std::runtime_error("Unsupported descriptor type in Material reflection!");
         }

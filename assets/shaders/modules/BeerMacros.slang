@@ -9,14 +9,16 @@
 #define M_COLOR float4 color
 
 // Buffer Slots
-#define BIND_ENGINE_GLOBALS    [[vk::binding(0, 0)]]
-#define BIND_LIGHTING_GLOBALS  [[vk::binding(1, 0)]]
-#define BIND_MATERIAL_DATA     [[vk::binding(0, 1)]]
-#define BIND_MATERIAL_TEX(idx) [[vk::binding(idx, 1)]]
-#define BIND_MODEL_PUSH        [[vk::push_constant]]
+#define BIND_ENGINE_GLOBALS       [[vk::binding(0, 0)]]
+#define BIND_LIGHTING_GLOBALS     [[vk::binding(1, 0)]]
+#define BIND_MATERIAL_DATA        [[vk::binding(0, 1)]]
+#define BIND_MATERIAL_TEX(idx)    [[vk::binding(idx, 1)]]
+#define BIND_MATERIAL_BUFFER(idx) [[vk::binding(idx, 1)]]
+#define BIND_MODEL_PUSH           [[vk::push_constant]]
 
 // Function Shortcuts
-#define VERT                   [shader("vertex")]
-#define FRAG                   [shader("fragment")]
+#define VERT                      [shader("vertex")]
+#define FRAG                      [shader("fragment")]
+#define COMP                      [shader("compute")]
 
 #endif
