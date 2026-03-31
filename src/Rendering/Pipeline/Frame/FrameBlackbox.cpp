@@ -12,8 +12,7 @@ namespace Beer::Rendering
     constexpr VkImageUsageFlags COLOR_TEX_FLAGS = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
         | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT
         | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-        | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT
-        | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
+        | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     constexpr VkImageUsageFlags DEPTH_TEX_FLAGS = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
         | VK_IMAGE_USAGE_SAMPLED_BIT
@@ -25,6 +24,7 @@ namespace Beer::Rendering
         uint32_t width,
         uint32_t height,
         VkFormat format,
+        TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
         glm::vec4 clearColor)
@@ -37,6 +37,7 @@ namespace Beer::Rendering
         std::shared_ptr<Image> image = CreateRenderTextureImage(width,
             height,
             format,
+            access,
             clearColor);
 
         blackbox[name] = std::make_unique<RenderTexture>(name,
@@ -67,6 +68,7 @@ namespace Beer::Rendering
         uint32_t width,
         uint32_t height,
         VkFormat format,
+        TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
         glm::vec4 clearColor)
@@ -75,7 +77,7 @@ namespace Beer::Rendering
 
         if (renderTexture == nullptr)
         {
-            renderTexture = CreateRenderTexture2D(name, width, height, format, filter, tiling, clearColor);
+            renderTexture = CreateRenderTexture2D(name, width, height, format, access, filter, tiling, clearColor);
             return renderTexture;
         }
 
@@ -86,6 +88,7 @@ namespace Beer::Rendering
             std::shared_ptr<Image> image = CreateRenderTextureImage(width,
                 height,
                 format,
+                access,
                 clearColor);
 
             renderTexture->SetImage(std::move(image));
@@ -122,10 +125,15 @@ namespace Beer::Rendering
     std::shared_ptr<Image> FrameBlackbox::CreateRenderTextureImage(uint32_t width,
         uint32_t height,
         VkFormat format,
+        TextureAccess access,
         glm::vec4 clearColor)
     {
         bool isDepth = Core::ImageUtilities::IsDepthFormat(static_cast<vk::Format>(format));
         VkImageUsageFlags usageFlags = isDepth ? DEPTH_TEX_FLAGS : COLOR_TEX_FLAGS;
+
+        if (access == TextureAccess::ReadWrite)
+            usageFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
+
         vk::ImageAspectFlagBits aspectFlags = isDepth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
 
         return std::make_shared<Rendering::Image>(

@@ -9,6 +9,15 @@
 
 namespace Beer::Rendering
 {
+    enum class TextureAccess
+    {
+        Standard,
+        ReadWrite
+    };
+}
+
+namespace Beer::Rendering
+{
     class RenderTexture : public ITexture
         , public IRenderResource
     {
