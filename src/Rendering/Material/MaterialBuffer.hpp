@@ -4,7 +4,6 @@
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Uniforms/IShaderResource.hpp"
-#include <memory>
 #include <unordered_map>
 #include <vector>
 #include "Rendering/Material/MaterialData.hpp"

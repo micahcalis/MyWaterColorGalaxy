@@ -53,6 +53,7 @@ namespace Beer::Rendering
         void BindComputeContext(const ComputeContext* context);
 
         void DrawMeshSingle(const MeshDrawInfo& info);
+        void DrawMeshMultiple(const MeshDrawInfo& info, const uint32_t count);
         void Dispatch(const Threads threads);
     };
 } // namespace Beer::Rendering

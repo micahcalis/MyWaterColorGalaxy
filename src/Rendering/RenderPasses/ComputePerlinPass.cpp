@@ -26,7 +26,8 @@ namespace Beer::Rendering
         context.BlackBox->ReallocateIfNeeded(PERLIN_TEX_NAME,
             PERLIN_TEX_RES,
             PERLIN_TEX_RES,
-            static_cast<VkFormat>(vk::Format::eR8G8B8A8Unorm));
+            static_cast<VkFormat>(vk::Format::eR8G8B8A8Unorm),
+            TextureAccess::ReadWrite);
 
         RenderTexture* noiseTex = context.BlackBox->GetResource<RenderTexture>(PERLIN_TEX_NAME);
         perlinCompContext->SetTexture("_NoiseTex", noiseTex);

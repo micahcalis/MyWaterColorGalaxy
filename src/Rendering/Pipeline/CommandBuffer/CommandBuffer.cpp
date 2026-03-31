@@ -184,6 +184,24 @@ namespace Beer::Rendering
         }
     }
 
+    void CommandBuffer::DrawMeshMultiple(const MeshDrawInfo& info, const uint32_t count)
+    {
+        if (info.CanIndex())
+        {
+            commandBuffer.drawIndexed(info.GetIndexCount(),
+                count,
+                0,
+                0,
+                0);
+        } else
+        {
+            commandBuffer.draw(info.GetVertexCount(),
+                count,
+                0,
+                0);
+        }
+    }
+
     void CommandBuffer::Dispatch(const Threads threads)
     {
         if (threads.X == 0 || threads.Y == 0 || threads.Z == 0)

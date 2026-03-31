@@ -39,5 +39,6 @@ namespace Beer::Rendering
         static void InitializeFallbackBuffer();
         static void DestroyFallbackBuffer();
         static PhaseBuffer* GetFallbackBuffer() { return bufferFallback.get(); }
+        static VkDeviceSize CalculateSize(uint32_t count, size_t size);
     };
 } // namespace Beer::Rendering

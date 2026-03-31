@@ -5,9 +5,11 @@
 #include "Rendering/Compute/ComputeShader.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/ComputeTornadoParticlesPass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
+#include "Rendering/RenderPasses/RenderTornadoPass.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
@@ -21,6 +23,7 @@
 #include "System/Light/LightEntity.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include <memory>
+#include <print>
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 
 namespace Beer::System
@@ -40,6 +43,12 @@ namespace Beer::System
 
         computePerlinPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ComputePerlinPass>(
             "Compute Perlin", 90, defaultLitMaterial.get());
+
+        tornadoPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ComputeTornadoParticlesPass>(
+            "Compute Tornado", 80);
+
+        tornadoRenderPass = Rendering::IRenderPass::FetchFromRegister<Rendering::RenderTornadoPass>(
+            "Render Tornado", 400);
     }
 
     void GalaxyContext::Update()
@@ -137,6 +146,6 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, skyboxPass, computePerlinPass};
+        return {opaquePass, skyboxPass, computePerlinPass, tornadoPass, tornadoRenderPass};
     }
 } // namespace Beer::System

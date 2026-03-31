@@ -42,4 +42,9 @@ namespace Beer::Rendering
     {
         bufferFallback.reset();
     }
+
+    VkDeviceSize PhaseBuffer::CalculateSize(uint32_t count, size_t size)
+    {
+        return static_cast<VkDeviceSize>(count * size);
+    }
 } // namespace Beer::Rendering
