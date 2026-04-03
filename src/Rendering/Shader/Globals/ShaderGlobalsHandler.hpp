@@ -1,9 +1,12 @@
 #pragma once
 
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Shader/Globals/GlobalBuffer.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Uniforms/IShaderResource.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "vulkan/vulkan.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -17,6 +20,7 @@ namespace Beer::Rendering
     {
     private:
         std::unique_ptr<GlobalBuffer> globalsBuffer = nullptr;
+        std::unique_ptr<UniformDescriptor> transformDescriptor = nullptr;
         EngineGlobals engineGlobalsData;
         LightingGlobals lightingGlobalsData;
         vk::raii::PipelineLayout globalLayout = nullptr;
@@ -25,17 +29,20 @@ namespace Beer::Rendering
         ShaderGlobalsHandler(const Core::Device* device);
         void Update();
 
-        void Bind(CommandBuffer* commandBuffer) const;
+        void Bind(CommandBuffer* commandBuffer, const vk::PipelineBindPoint bindPoint) const;
 
         void SetTime(float time, float deltaTime);
         void SetCamera(const glm::mat4 viewMat, const glm::mat4 projMat, glm::vec3 cameraPos);
         void SetScreen(float width, float height);
         void SetMainLight(glm::vec3 position, glm::vec4 color);
         void SetAmbientLight(glm::vec4 shadowColor, glm::vec4 skyColor);
-        std::vector<vk::DescriptorSetLayout> GetLayouts() const;
+        void SetTransformBuffer(PhaseBuffer* transformBuffer);
+        std::vector<vk::DescriptorSetLayout> GetGlobalsLayout() const;
+        vk::DescriptorSetLayout GetTransformLayout() const;
 
     private:
         std::vector<IShaderResource*> GetGlobalResources() const;
         std::vector<vk::DescriptorSet> GetGlobalSets() const;
+        void InitializeTransformDescriptor(const Core::Device* device);
     };
 } // namespace Beer::Rendering

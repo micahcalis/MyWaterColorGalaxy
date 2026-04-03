@@ -5,6 +5,7 @@
 #include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "vulkan/vulkan.hpp"
+#include <memory>
 
 namespace Beer::Core
 {

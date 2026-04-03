@@ -60,6 +60,9 @@ namespace Beer::Rendering
         static constexpr std::string_view PASS_TRANSPARENT = "Transparent";
         static constexpr std::string_view PASS_SKYBOX = "Skybox";
 
+        static constexpr std::string_view KERNEL_INDEX = "Kernel";
+        static constexpr std::string_view KERNEL_NAME = "Compute";
+
     public:
         static std::string GetVertexEntryPoint(const nlohmann::basic_json<>& passData);
         static std::string GetFragmentEntryPoint(const nlohmann::basic_json<>& passData);
@@ -77,6 +80,9 @@ namespace Beer::Rendering
             vk::CompareOp& compareOp);
 
         static ShaderPassType GetPassType(const std::string& passName);
+
+        static uint32_t GetKernelIndex(const nlohmann::basic_json<>& kernelData);
+        static std::string GetKernelName(const nlohmann::basic_json<>& kernelData);
 
         static constexpr uint32_t Hash(std::string_view str)
         {

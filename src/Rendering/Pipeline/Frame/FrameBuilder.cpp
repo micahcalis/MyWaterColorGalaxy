@@ -23,6 +23,7 @@ namespace Beer::Rendering
     void FrameBuilder::BuildGraphEdges()
     {
         std::unordered_map<std::string, RenderPassNode*> latestWriters;
+        std::unordered_map<std::string, std::vector<RenderPassNode*>> latestReaders;
 
         for (auto& node : graph)
         {
@@ -31,25 +32,40 @@ namespace Beer::Rendering
                 const std::string& resourceName = dep.GetResourceName();
                 ResourceAction action = dep.GetAction();
 
-                bool isRead = action == ResourceAction::Read;
-                bool isWrite = action == ResourceAction::ColorWrite || action == ResourceAction::DepthWrite;
+                bool isRead = IsRead(action);
+                bool isWrite = IsWrite(action);
 
-                RenderPassNode* previousWriter = nullptr;
-                auto it = latestWriters.find(resourceName);
-                if (it != latestWriters.end())
+                auto writerIt = latestWriters.find(resourceName);
+                if (writerIt != latestWriters.end())
                 {
-                    previousWriter = it->second;
-                }
-
-                if (previousWriter && previousWriter != node.get() && (isRead || isWrite))
-                {
-                    previousWriter->AddEdge(node.get());
-                    node->InDegree++;
+                    RenderPassNode* previousWriter = writerIt->second;
+                    if (previousWriter != node.get() && !previousWriter->HasEdgeTo(node.get()))
+                    {
+                        previousWriter->AddEdge(node.get());
+                        node->InDegree++;
+                    }
                 }
 
                 if (isWrite)
                 {
+                    auto readersIt = latestReaders.find(resourceName);
+                    if (readersIt != latestReaders.end())
+                    {
+                        for (RenderPassNode* previousReader : readersIt->second)
+                        {
+                            if (previousReader != node.get() && !previousReader->HasEdgeTo(node.get()))
+                            {
+                                previousReader->AddEdge(node.get());
+                                node->InDegree++;
+                            }
+                        }
+                    }
+
                     latestWriters[resourceName] = node.get();
+                    latestReaders[resourceName].clear();
+                } else if (isRead)
+                {
+                    latestReaders[resourceName].push_back(node.get());
                 }
             }
         }
@@ -92,5 +108,20 @@ namespace Beer::Rendering
         }
 
         return sortedPasses;
+    }
+
+    bool FrameBuilder::IsRead(const ResourceAction action) const
+    {
+        return action == ResourceAction::ColorRead
+            || action == ResourceAction::ComputeRead
+            || action == ResourceAction::ComputeReadWrite;
+    }
+
+    bool FrameBuilder::IsWrite(const ResourceAction action) const
+    {
+        return action == ResourceAction::ColorWrite
+            || action == ResourceAction::DepthWrite
+            || action == ResourceAction::ComputeWrite
+            || action == ResourceAction::ComputeReadWrite;
     }
 } // namespace Beer::Rendering

@@ -11,5 +11,6 @@ namespace Beer::Rendering
         uint32_t Width = 0;
         uint32_t Height = 0;
         bool WritesToDepth = false;
+        bool IsDrawPass = true;
     };
 } // namespace Beer::Rendering

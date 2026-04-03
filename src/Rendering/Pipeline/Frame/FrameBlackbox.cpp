@@ -1,6 +1,9 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "FrameBlackbox.hpp"
+#include "ReallocData.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
+#include "Rendering/Buffer/SSBOType.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
@@ -16,12 +19,14 @@ namespace Beer::Rendering
     constexpr VkImageUsageFlags DEPTH_TEX_FLAGS = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
         | VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-        | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
 
     RenderTexture* FrameBlackbox::CreateRenderTexture2D(const std::string& name,
         uint32_t width,
         uint32_t height,
         VkFormat format,
+        TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
         glm::vec4 clearColor)
@@ -34,6 +39,7 @@ namespace Beer::Rendering
         std::shared_ptr<Image> image = CreateRenderTextureImage(width,
             height,
             format,
+            access,
             clearColor);
 
         blackbox[name] = std::make_unique<RenderTexture>(name,
@@ -44,10 +50,28 @@ namespace Beer::Rendering
         return GetResource<RenderTexture>(name);
     }
 
-    RenderTexture* FrameBlackbox::ReallocateIfNeeded(const std::string& name,
+    PhaseBuffer* FrameBlackbox::CreatePhaseBuffer(const std::string& name,
+        VkDeviceSize size,
+        SSBOType type)
+    {
+        if (blackbox.contains(name))
+        {
+            return static_cast<PhaseBuffer*>(blackbox[name].get());
+        }
+
+        std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size, type);
+
+        blackbox[name] = std::make_unique<PhaseBuffer>(name,
+            std::move(bufferHandle));
+
+        return GetResource<PhaseBuffer>(name);
+    }
+
+    ReallocRT FrameBlackbox::ReallocateIfNeeded(const std::string& name,
         uint32_t width,
         uint32_t height,
         VkFormat format,
+        TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
         glm::vec4 clearColor)
@@ -56,8 +80,8 @@ namespace Beer::Rendering
 
         if (renderTexture == nullptr)
         {
-            renderTexture = CreateRenderTexture2D(name, width, height, format, filter, tiling, clearColor);
-            return renderTexture;
+            renderTexture = CreateRenderTexture2D(name, width, height, format, access, filter, tiling, clearColor);
+            return {renderTexture, true};
         }
 
         ReallocationMask mask = renderTexture->GetAllocationMask(width, height, format, filter, tiling);
@@ -67,26 +91,56 @@ namespace Beer::Rendering
             std::shared_ptr<Image> image = CreateRenderTextureImage(width,
                 height,
                 format,
+                access,
                 clearColor);
 
             renderTexture->SetImage(std::move(image));
+            return {renderTexture, true};
         }
 
         if (mask.Has(ReallocationFlag::Sampler))
         {
             renderTexture->SetSampler(filter, tiling);
+            return {renderTexture, true};
         }
 
-        return renderTexture;
+        return {renderTexture, false};
+    }
+
+    ReallocPB FrameBlackbox::ReallocateIfNeeded(const std::string& name,
+        VkDeviceSize size,
+        SSBOType type)
+    {
+        PhaseBuffer* phaseBuffer = GetResource<PhaseBuffer>(name);
+
+        if (phaseBuffer == nullptr)
+        {
+            phaseBuffer = CreatePhaseBuffer(name, size);
+            return {phaseBuffer, true};
+        }
+
+        if (size != phaseBuffer->Size())
+        {
+            std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size, type);
+            phaseBuffer->SetBuffer(std::move(bufferHandle));
+            return {phaseBuffer, true};
+        }
+
+        return {phaseBuffer, false};
     }
 
     std::shared_ptr<Image> FrameBlackbox::CreateRenderTextureImage(uint32_t width,
         uint32_t height,
         VkFormat format,
+        TextureAccess access,
         glm::vec4 clearColor)
     {
         bool isDepth = Core::ImageUtilities::IsDepthFormat(static_cast<vk::Format>(format));
         VkImageUsageFlags usageFlags = isDepth ? DEPTH_TEX_FLAGS : COLOR_TEX_FLAGS;
+
+        if (access == TextureAccess::ReadWrite)
+            usageFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
+
         vk::ImageAspectFlagBits aspectFlags = isDepth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
 
         return std::make_shared<Rendering::Image>(
@@ -96,5 +150,10 @@ namespace Beer::Rendering
                 usageFlags,
                 aspectFlags,
                 *device));
+    }
+
+    std::shared_ptr<Buffer> FrameBlackbox::CreateSSBOHandle(VkDeviceSize size, SSBOType type)
+    {
+        return std::make_shared<Buffer>(Buffer::CreateSSBO(size, type));
     }
 } // namespace Beer::Rendering

@@ -27,7 +27,7 @@ namespace Beer::Core
         static uint32_t GetPhysicalDeviceScore(const vk::raii::PhysicalDevice& device, bool& hasGeomShader);
 
         static void GetQueueFamilyIndices(const std::vector<vk::QueueFamilyProperties> queueFamilyProperties,
-            uint32_t& graphicsIndex,
+            uint32_t& graphicsComputeIndex,
             uint32_t& presentIndex,
             const vk::raii::PhysicalDevice& physicalDevice,
             const vk::raii::SurfaceKHR& surface);

@@ -13,7 +13,10 @@ namespace Beer::Rendering
         Vector3,
         Vector4,
         Matrix4x4,
-        Texture2D
+        Texture2D,
+        RWTexture2D,
+        StructuredBuffer,
+        RWStructuredBuffer
     };
 
     struct ShaderProperty

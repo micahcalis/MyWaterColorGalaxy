@@ -1,8 +1,15 @@
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
+#include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
+#include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
+#include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
+#include "System/Components/General/Transform.hpp"
 #include "vulkan/vulkan.hpp"
+#include <stdexcept>
 
 namespace Beer::Rendering
 {
@@ -20,6 +27,9 @@ namespace Beer::Rendering
 
     void CommandBuffer::BeginRendering(const RenderingBeginData& beginData)
     {
+        if (!beginData.IsDrawPass)
+            return;
+
         vk::RenderingInfo renderingInfo{};
         renderingInfo.renderArea = vk::Rect2D({0, 0}, vk::Extent2D(beginData.Width, beginData.Height));
         renderingInfo.layerCount = 1;
@@ -44,8 +54,11 @@ namespace Beer::Rendering
         commandBuffer.setScissor(0, renderingInfo.renderArea);
     }
 
-    void CommandBuffer::EndRendering()
+    void CommandBuffer::EndRendering(const bool isDrawPass)
     {
+        if (!isDrawPass)
+            return;
+
         commandBuffer.endRendering();
     }
 
@@ -102,9 +115,44 @@ namespace Beer::Rendering
     {
         commandBuffer.pushConstants<Rendering::ModelPush>(
             shader->GetPipelineLayout(),
-            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
             0,
             modelPush);
+    }
+
+    void CommandBuffer::BindInstancingPush(const Rendering::Shader* shader)
+    {
+        commandBuffer.pushConstants<Rendering::ModelPush>(
+            shader->GetPipelineLayout(),
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
+            0,
+            ModelPush(0, 0, true));
+    }
+
+    void CommandBuffer::BindInstancingTransforms(const std::vector<System::Transform>& transforms,
+        const RenderContext& context,
+        const Rendering::Shader* shader)
+    {
+        BindInstancingPush(shader);
+
+        void* mappedTransformData = context.TransformBuffer->GetMappedPointer();
+
+        memcpy(mappedTransformData,
+            System::Transform::ToModelData(transforms).data(),
+            sizeof(ModelTransformData) * transforms.size());
+    }
+
+    void CommandBuffer::BindInstancingTransforms(const std::vector<ModelTransformData>& modelData,
+        const RenderContext& context,
+        const Rendering::Shader* shader)
+    {
+        BindInstancingPush(shader);
+
+        void* mappedTransformData = context.TransformBuffer->GetMappedPointer();
+
+        memcpy(mappedTransformData,
+            modelData.data(),
+            sizeof(ModelTransformData) * modelData.size());
     }
 
     void CommandBuffer::BindShaderPass(const ShaderPass* shaderPass)
@@ -144,6 +192,19 @@ namespace Beer::Rendering
         commandBuffer.bindIndexBuffer(buffers.IndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
     }
 
+    void CommandBuffer::BindComputeKernel(const ComputeKernel* kernel)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, kernel->Pipeline);
+    }
+
+    void CommandBuffer::BindComputeContext(const ComputeContext* context)
+    {
+        BindDescriptorSets(vk::PipelineBindPoint::eCompute,
+            context->GetCompute()->GetPipelineLayout(),
+            MaterialData::SET,
+            {context->GetDescriptorSet()});
+    }
+
     void CommandBuffer::DrawMeshSingle(const MeshDrawInfo& info)
     {
         if (info.CanIndex())
@@ -160,5 +221,31 @@ namespace Beer::Rendering
                 0,
                 0);
         }
+    }
+
+    void CommandBuffer::DrawMeshMultiple(const MeshDrawInfo& info, const uint32_t count)
+    {
+        if (info.CanIndex())
+        {
+            commandBuffer.drawIndexed(info.GetIndexCount(),
+                count,
+                0,
+                0,
+                0);
+        } else
+        {
+            commandBuffer.draw(info.GetVertexCount(),
+                count,
+                0,
+                0);
+        }
+    }
+
+    void CommandBuffer::Dispatch(const Threads threads)
+    {
+        if (threads.X == 0 || threads.Y == 0 || threads.Z == 0)
+            throw std::runtime_error("Can't Dispatch Compute With 0 Thread Groups");
+
+        commandBuffer.dispatch(threads.X, threads.Y, threads.Z);
     }
 } // namespace Beer::Rendering

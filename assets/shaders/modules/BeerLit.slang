@@ -60,7 +60,7 @@ namespace Lit
 
         private float3 Specular()
         {
-            float3 halfVec = normalize(light.GetDirection() + viewDirection);
+            float3 halfVec = normalize(light.GetDirection() + -viewDirection);
             float NdotH = saturate(dot(normal, halfVec));
             float LdotH = saturate(dot(light.GetDirection(), halfVec));
 
@@ -76,7 +76,7 @@ namespace Lit
 
         private float3 Fresnel()
         {
-            float NdotV = saturate(dot(viewDirection, normal));
+            float NdotV = saturate(dot(-viewDirection, normal));
             float fresnelPower = lerp(4, 2, smoothness);
             float fresnelIntensity = smoothness * 0.3;
             float fresnel = pow(1 - NdotV, fresnelPower) * fresnelIntensity;

@@ -17,7 +17,7 @@ namespace Beer::Core
     const vk::raii::Device& Device::GetLogicalDevice() const { return device; }
     const vk::raii::Queue& Device::GetGraphicsQueue() const { return graphicsQueue; }
     const vk::raii::Queue& Device::GetPresentQueue() const { return presentQueue; }
-    uint32_t Device::GetGraphicsIndex() const { return graphicsIndex; }
+    uint32_t Device::GetGraphicsIndex() const { return graphicsComputeIndex; }
 
     vk::SurfaceCapabilitiesKHR Device::GetSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const
     {
@@ -79,16 +79,16 @@ namespace Beer::Core
     void Device::CreateLogicalDevice(const vk::raii::SurfaceKHR& surface)
     {
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
-        graphicsIndex = 0;
+        graphicsComputeIndex = 0;
         uint32_t presentIndex = 0;
 
         VulkanInitUtilities::GetQueueFamilyIndices(queueFamilyProperties,
-            graphicsIndex,
+            graphicsComputeIndex,
             presentIndex,
             physicalDevice,
             surface);
 
-        bool graphicsCompatible = VulkanInitUtilities::IndexIsCompatible(graphicsIndex,
+        bool graphicsCompatible = VulkanInitUtilities::IndexIsCompatible(graphicsComputeIndex,
             queueFamilyProperties.size());
 
         bool presentCompatible = VulkanInitUtilities::IndexIsCompatible(presentIndex,
@@ -100,7 +100,7 @@ namespace Beer::Core
         }
 
         std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = {graphicsIndex, presentIndex};
+        std::set<uint32_t> uniqueQueueFamilies = {graphicsComputeIndex, presentIndex};
 
         float queuePriority = 0.5f;
         for (uint32_t queueFamily : uniqueQueueFamilies)
@@ -134,7 +134,7 @@ namespace Beer::Core
         deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         device = vk::raii::Device(physicalDevice, deviceCreateInfo);
-        graphicsQueue = vk::raii::Queue(device, graphicsIndex, 0);
+        graphicsQueue = vk::raii::Queue(device, graphicsComputeIndex, 0);
         presentQueue = vk::raii::Queue(device, presentIndex, 0);
     }
 } // namespace Beer::Core

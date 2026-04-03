@@ -4,6 +4,7 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Pipeline/Frame/ResourceActionCommand.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
+#include "System/Delegates/Delegate.hpp"
 #include <vector>
 
 namespace Beer::Rendering
@@ -31,7 +32,10 @@ namespace Beer::Rendering
         FrameGraph() {}
         void OnRenderSetup(const RenderContext& context);
         void PrepareBarriers(const RenderContext& context);
-        void Execute(CommandBuffer* commandBuffer, const RenderContext& context);
+        void Execute(CommandBuffer* commandBuffer,
+            const RenderContext& context,
+            System::Function<void> bindGlobals);
+
         void PrintGraph() const;
 
     private:

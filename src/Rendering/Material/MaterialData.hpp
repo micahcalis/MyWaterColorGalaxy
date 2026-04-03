@@ -9,7 +9,7 @@ namespace Beer::Rendering
     class MaterialData
     {
     public:
-        const static int SET = 1;
+        const static int SET = 2;
         const static int BINDING = 0;
         const static int DESC_COUNT = 1;
 

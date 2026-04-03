@@ -32,7 +32,10 @@ namespace Beer::System
         void SetTransform(Transform* transform) { this->transform = transform; }
         void SetLayer(Layer* layer) { this->layer = layer; }
 
-        BindHistory Bind(BindMask mask, Rendering::CommandBuffer* commandBuffer, const Rendering::ShaderPassType pass) override;
+        BindHistory Bind(BindMask mask,
+            Rendering::CommandBuffer* commandBuffer,
+            const Rendering::RenderContext& renderContext,
+            const Rendering::ShaderPassType pass) override;
 
         virtual bool HasPass(Rendering::ShaderPassType pass) const override { return material->GetShader()->HasPass(pass); }
         virtual Layer GetLayer() const override { return *layer; }

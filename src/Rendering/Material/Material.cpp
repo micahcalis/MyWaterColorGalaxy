@@ -1,9 +1,7 @@
 #include "Rendering/Material/Material.hpp"
+#include "IReflectedContext.hpp"
 #include "MaterialBuffer.hpp"
-#include "MaterialProperties.hpp"
-#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
-#include "vulkan/vulkan.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -16,112 +14,90 @@ namespace Beer::Rendering
     Material::Material(std::shared_ptr<Shader> shader)
         : shader(shader)
     {
-        InitializeMaterial();
+        InitializeBufferData(GetProperties());
     }
 
     Material::Material(const std::string& shaderName)
     {
         shader = Shader::Get(shaderName);
-        InitializeMaterial();
-    }
-
-    void Material::InitializeMaterial()
-    {
-        MaterialProperties* properties = shader->GetProperties();
-        buffer = std::make_unique<MaterialBuffer>(properties);
-        materialData = std::make_unique<MaterialData>(properties);
+        InitializeBufferData(GetProperties());
     }
 
     void Material::Update()
     {
-        if (dirtyFramesCount <= 0)
-            return;
+        if (dirtyFramesCountBuffer > 0)
+        {
+            buffer->Update(*materialData);
+            dirtyFramesCountBuffer--;
+        }
 
-        buffer->Update(*materialData);
-        dirtyFramesCount--;
+        for (auto& [name, framesLeft] : dirtyTextureCounts)
+        {
+            if (framesLeft > 0)
+            {
+                buffer->UpdateTextureDescriptor(name);
+                framesLeft--;
+            }
+        }
     }
 
     void Material::SetInt(const std::string& name, uint32_t val)
     {
-        PropertyType typeFetch = materialData->GetTypeByName(name);
-
-        if (typeFetch != PropertyType::Int)
-            return;
-
-        materialData->SetProperty(name, val);
-        MarkDirty();
+        IReflectedContext::SetInt(name, val);
+        MarkBufferDirty();
     }
 
     void Material::SetFloat(const std::string& name, float val)
     {
-        PropertyType typeFetch = materialData->GetTypeByName(name);
-
-        if (typeFetch != PropertyType::Float)
-            return;
-
-        materialData->SetProperty(name, val);
-        MarkDirty();
+        IReflectedContext::SetFloat(name, val);
+        MarkBufferDirty();
     }
 
     void Material::SetVector(const std::string& name, glm::vec4 val)
     {
-        PropertyType typeFetch = materialData->GetTypeByName(name);
-
-        switch (typeFetch)
-        {
-        case PropertyType::Vector2:
-            materialData->SetProperty(name, glm::vec2(val.x, val.y));
-            MarkDirty();
-            break;
-        case PropertyType::Vector3:
-            materialData->SetProperty(name, glm::vec3(val.x, val.y, val.z));
-            MarkDirty();
-            break;
-        case PropertyType::Vector4:
-            materialData->SetProperty(name, val);
-            MarkDirty();
-            break;
-        default:
-            return;
-        }
+        IReflectedContext::SetVector(name, val);
+        MarkBufferDirty();
     }
 
     void Material::SetColor(const std::string& name, glm::vec4 val)
     {
-        PropertyType typeFetch = materialData->GetTypeByName(name);
-
-        if (typeFetch != PropertyType::Vector4)
-            return;
-
-        materialData->SetProperty(name, val);
-        MarkDirty();
+        IReflectedContext::SetColor(name, val);
+        MarkBufferDirty();
     }
 
     void Material::SetMatrix(const std::string& name, glm::mat4 val)
     {
-        PropertyType typeFetch = materialData->GetTypeByName(name);
-
-        if (typeFetch != PropertyType::Matrix4x4)
-            return;
-
-        materialData->SetProperty(name, val);
-        MarkDirty();
+        IReflectedContext::SetMatrix(name, val);
+        MarkBufferDirty();
     }
 
-    void Material::SetTexture(const std::string& name, std::shared_ptr<ITexture> val)
+    void Material::SetTexture(const std::string& name, ITexture* val)
     {
-        PropertyType typeFetch = materialData->GetTypeByName(name);
-
-        if (typeFetch != PropertyType::Texture2D)
-            return;
-
-        buffer->SetTexture(name, val);
+        IReflectedContext::SetTexture(name, val);
+        MarkTextureDirty(name);
     }
 
-    void Material::MarkDirty()
+    void Material::MarkBufferDirty()
     {
-        dirtyFramesCount = UniformDescriptor::GetFramesInFlight();
+        dirtyFramesCountBuffer = UniformDescriptor::GetFramesInFlight();
         dirtyMaterialsQueue.insert(this);
+    }
+
+    void Material::MarkTextureDirty(const std::string& name)
+    {
+        dirtyTextureCounts[name] = UniformDescriptor::GetFramesInFlight();
+        dirtyMaterialsQueue.insert(this);
+    }
+
+    bool Material::HasDirtyTextures() const
+    {
+        for (const auto& dirtySet : dirtyTextureCounts)
+        {
+            if (dirtySet.second > 0)
+                return true;
+        }
+
+        return false;
     }
 
     void Material::UpdateDirtyMaterials()
@@ -131,7 +107,7 @@ namespace Beer::Rendering
             Material* material = *it;
             material->Update();
 
-            if (material->dirtyFramesCount <= 0)
+            if (material->dirtyFramesCountBuffer <= 0 && !material->HasDirtyTextures())
             {
                 it = dirtyMaterialsQueue.erase(it);
             } else

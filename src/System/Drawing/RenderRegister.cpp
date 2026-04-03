@@ -20,6 +20,14 @@ namespace Beer::System
         componentsMap[context].emplace_back(component);
     }
 
+    void RenderRegister::RemoveFromRegister(IRenderComponent* component)
+    {
+        for (auto& [context, componentList] : componentsMap)
+        {
+            std::erase(componentList, component);
+        }
+    }
+
     void RenderRegister::Cleanup()
     {
         for (auto& [context, componentList] : componentsMap)
@@ -49,6 +57,7 @@ namespace Beer::System
         }
 
         return Core::DrawCallPool(request.GetCommandBuffer(),
+            request.GetContext(),
             request.GetPass(),
             std::move(validatedComponents));
     }

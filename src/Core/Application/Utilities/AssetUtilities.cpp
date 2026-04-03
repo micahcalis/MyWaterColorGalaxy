@@ -51,12 +51,20 @@ namespace Beer::Core
         return buffer;
     }
 
-    static constexpr std::string_view SHADER_HEAD = "assets/shaders/";
+    static constexpr std::string_view SHADER_HEAD = "assets/shaders/graphics/";
     static constexpr std::string_view SHADER_TAIL = ".spv";
 
     std::filesystem::path AssetUtilities::GetShaderPath(const std::string& shaderName)
     {
         std::string subPath = std::string(SHADER_HEAD) + shaderName + std::string(SHADER_TAIL);
+        return GetBasePath(subPath);
+    }
+
+    static constexpr std::string_view COMPUTE_HEAD = "assets/shaders/compute/";
+
+    std::filesystem::path AssetUtilities::GetComputeShaderPath(const std::string& computeName)
+    {
+        std::string subPath = std::string(COMPUTE_HEAD) + computeName + std::string(SHADER_TAIL);
         return GetBasePath(subPath);
     }
 

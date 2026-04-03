@@ -10,7 +10,10 @@
 
 namespace Beer::System
 {
-    BindHistory SingleMeshRender::Bind(BindMask mask, Rendering::CommandBuffer* commandBuffer, const Rendering::ShaderPassType pass)
+    BindHistory SingleMeshRender::Bind(BindMask mask,
+        Rendering::CommandBuffer* commandBuffer,
+        const Rendering::RenderContext& renderContext,
+        const Rendering::ShaderPassType pass)
     {
         const Rendering::Shader* shader = material->GetShader();
 

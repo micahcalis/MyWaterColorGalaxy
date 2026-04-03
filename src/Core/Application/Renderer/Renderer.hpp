@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan_raii.hpp>
 #include <SDL3/SDL_video.h>
+#include "Core/Application/Managers/ComputeManager.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
@@ -47,6 +48,7 @@ namespace Beer::Core
         std::unique_ptr<Rendering::DescriptorAllocator> descriptorAllocator = nullptr;
 
         std::unique_ptr<ShaderManager> shaderManager = nullptr;
+        std::unique_ptr<ComputeManager> computeManager = nullptr;
         std::unique_ptr<MeshManager> meshManager = nullptr;
         std::unique_ptr<ImageAssetManager> imageAssetManager = nullptr;
         std::unique_ptr<Rendering::SamplerCache> samplerCache = nullptr;

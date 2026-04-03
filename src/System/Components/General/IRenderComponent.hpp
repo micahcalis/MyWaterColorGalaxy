@@ -9,15 +9,21 @@
 #include "System/Drawing/Layer.hpp"
 #include "vulkan/vulkan.hpp"
 
+namespace Beer::Rendering
+{
+    struct RenderContext;
+}
+
 namespace Beer::System
 {
     class IRenderComponent
     {
     public:
-        virtual ~IRenderComponent() = default;
+        virtual ~IRenderComponent();
 
         virtual BindHistory Bind(BindMask mask,
             Rendering::CommandBuffer* commandBuffer,
+            const Rendering::RenderContext& renderContext,
             const Rendering::ShaderPassType pass)
             = 0;
 

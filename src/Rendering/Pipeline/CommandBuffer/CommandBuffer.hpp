@@ -9,6 +9,13 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 #include "System/Components/General/Transform.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Compute/Threads.hpp"
+
+namespace Beer::Rendering
+{
+    struct RenderContext;
+}
 
 namespace Beer::Rendering
 {
@@ -24,7 +31,7 @@ namespace Beer::Rendering
         vk::CommandBuffer GetVk() const { return *commandBuffer; }
         void Begin();
         void BeginRendering(const RenderingBeginData& beginData);
-        void EndRendering();
+        void EndRendering(const bool isDrawPass);
         void End();
         void Reset();
 
@@ -44,10 +51,23 @@ namespace Beer::Rendering
         void BindModelPush(Rendering::ModelPush modelPush,
             const Rendering::Shader* shader);
 
+        void BindInstancingPush(const Rendering::Shader* shader);
+        void BindInstancingTransforms(const std::vector<System::Transform>& transforms,
+            const RenderContext& context,
+            const Rendering::Shader* shader);
+
+        void BindInstancingTransforms(const std::vector<ModelTransformData>& modelData,
+            const RenderContext& context,
+            const Rendering::Shader* shader);
+
         void BindShaderPass(const ShaderPass* shaderPass);
         void BindMaterial(const Material* material);
         void BindMesh(const Mesh* mesh, const MeshBufferOrder* order);
+        void BindComputeKernel(const ComputeKernel* compute);
+        void BindComputeContext(const ComputeContext* context);
 
         void DrawMeshSingle(const MeshDrawInfo& info);
+        void DrawMeshMultiple(const MeshDrawInfo& info, const uint32_t count);
+        void Dispatch(const Threads threads);
     };
 } // namespace Beer::Rendering
