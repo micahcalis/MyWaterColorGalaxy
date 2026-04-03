@@ -8,6 +8,7 @@
 #include <vulkan/vulkan.h>
 #include "Core/Application/Utilities/macros.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Buffer/SSBOType.hpp"
 
 namespace Beer::Rendering
 {
@@ -33,7 +34,8 @@ namespace Beer::Rendering
 
         static Buffer CreateStaging(VkDeviceSize size);
         static Buffer CreateUniform(VkDeviceSize size);
-        static Buffer CreateSSBO(VkDeviceSize size);
+        static Buffer CreatePersistent(VkDeviceSize size, VkBufferUsageFlags usage = 0);
+        static Buffer CreateSSBO(VkDeviceSize size, SSBOType type);
 
         void Upload(const void* data, size_t size, size_t offset = 0) const;
 
@@ -59,6 +61,7 @@ namespace Beer::Rendering
             size_t offset = 0) const;
 
         [[nodiscard]] VkBuffer GetHandle() const { return allocation.Buffer; }
+        [[nodiscard]] VmaAllocationInfo GetAllocInfo() { return allocation.Info; }
         BufferData GetData() const { return data; }
 
         NO_COPY(Buffer);

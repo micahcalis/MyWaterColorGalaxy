@@ -4,6 +4,7 @@ import BeerCore;
 import SphereTracing;
 import BeerLit;
 import SDF;
+import ColorSpace;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -34,13 +35,14 @@ struct VertexData
 //$ Blend On
 //$ Zwrite On
 
-VERT VertexData SphereRaymarchVert(MeshData input)
+VERT VertexData SphereRaymarchVert(MeshData input, INSTANCEID)
 {
+    GETMODELDATA
     VertexData output;
-    float4 positionWS = mul(_ObjToWorldMat, float4(input.positionOS, 1));
+    float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
     output.positionWS = positionWS.xyz;
-    output.transformCenter = mul(_ObjToWorldMat, float4(0, 0, 0, 1)).xyz;
+    output.transformCenter = mul(transform.objToWorldMat, float4(0, 0, 0, 1)).xyz;
     return output;
 }
 
@@ -105,12 +107,15 @@ FRAG float4 SphereRaymarchFrag(VertexData input) : SV_Target
     if (!trace.Hit)
         discard;
 
+    Color.ColorTraveler traveler = Color.ColorTraveler(_BaseColor.rgb);
+    traveler.ToggleSpace();
+
     Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
         viewDirWS,
         trace.Normal,
-        _BaseColor.rgb,
+        traveler.Color,
         _Smoothness,
         _Metallic);
-    
+
     return float4(brdf.Shade(), 1);
 }

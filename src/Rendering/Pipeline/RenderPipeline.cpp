@@ -2,12 +2,16 @@
 #include "CommandBuffer/RenderContext.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
+#include "Rendering/Buffer/SSBOType.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "System/Camera/Camera.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Light/ILight.hpp"
 #include <memory>
+#include <print>
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 
 namespace Beer::Rendering
@@ -18,15 +22,21 @@ namespace Beer::Rendering
     {
         frameBlackbox = std::make_unique<FrameBlackbox>(device, uploadManager);
 
-        colorTarget = frameBlackbox->CreateRenderTexture2D(std::string(Rendering::MAIN_COLOR),
+        colorTarget = frameBlackbox->CreateRenderTexture2D(std::string(MAIN_COLOR),
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::ColorFormat());
 
-        depthTarget = frameBlackbox->CreateRenderTexture2D(std::string(Rendering::MAIN_DEPTH),
+        depthTarget = frameBlackbox->CreateRenderTexture2D(std::string(MAIN_DEPTH),
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::DepthFormat());
+
+        transformBuffer = frameBlackbox->CreatePhaseBuffer(std::string(TRANSFORM_BUFFER_NAME),
+            PhaseBuffer::CalculateSize(TRANSFORM_BUFFER_COUNT, sizeof(ModelTransformData)),
+            SSBOType::Persisent);
+
+        Shader::Globals()->SetTransformBuffer(transformBuffer);
 
         this->renderRegister = renderRegister;
     }
@@ -36,15 +46,26 @@ namespace Beer::Rendering
         frameBuilder = FrameBuilder(GetSortedRenderPasses());
         frameGraph = frameBuilder.BuildGraph();
 
-        colorTarget = frameBlackbox->ReallocateIfNeeded(std::string(Rendering::MAIN_COLOR),
-            Core::Screen::Width(),
-            Core::Screen::Height(),
-            Core::Screen::ColorFormat());
+        colorTarget = frameBlackbox->ReallocateIfNeeded(std::string(MAIN_COLOR),
+                                       Core::Screen::Width(),
+                                       Core::Screen::Height(),
+                                       Core::Screen::ColorFormat())
+                          .AllocPointer;
 
-        depthTarget = frameBlackbox->ReallocateIfNeeded(std::string(Rendering::MAIN_DEPTH),
-            Core::Screen::Width(),
-            Core::Screen::Height(),
-            Core::Screen::DepthFormat());
+        depthTarget = frameBlackbox->ReallocateIfNeeded(std::string(MAIN_DEPTH),
+                                       Core::Screen::Width(),
+                                       Core::Screen::Height(),
+                                       Core::Screen::DepthFormat())
+                          .AllocPointer;
+
+        auto [transformBuffer, transformAllocated] = frameBlackbox->ReallocateIfNeeded(std::string(TRANSFORM_BUFFER_NAME),
+            PhaseBuffer::CalculateSize(TRANSFORM_BUFFER_COUNT, sizeof(ModelTransformData)),
+            SSBOType::Persisent);
+
+        if (transformAllocated)
+        {
+            Shader::Globals()->SetTransformBuffer(transformBuffer);
+        }
 
         RenderContext context = GetRenderContext();
         frameGraph.OnRenderSetup(context);
@@ -54,7 +75,12 @@ namespace Beer::Rendering
     void RenderPipeline::ExecuteFrame(CommandBuffer* commandBuffer)
     {
         RenderContext context = GetRenderContext();
-        frameGraph.Execute(commandBuffer, context);
+
+        System::Function<void> bindGlobals = [commandBuffer, context]() {
+            BindGlobals(commandBuffer, context);
+        };
+
+        frameGraph.Execute(commandBuffer, context, bindGlobals);
     }
 
     void RenderPipeline::FinalBlit(CommandBuffer* commandBuffer, vk::Image swapchainImage, vk::Extent2D swapchainExtent)
@@ -151,7 +177,14 @@ namespace Beer::Rendering
         context.MainLight = System::ILight::Main();
         context.MainColorTarget = colorTarget;
         context.MainDepthTarget = depthTarget;
+        context.TransformBuffer = transformBuffer;
         context.Register = renderRegister;
         return context;
+    }
+
+    void RenderPipeline::BindGlobals(CommandBuffer* commandBuffer, const RenderContext& context)
+    {
+        Rendering::Shader::Globals()->Bind(commandBuffer, vk::PipelineBindPoint::eGraphics);
+        Rendering::Shader::Globals()->Bind(commandBuffer, vk::PipelineBindPoint::eCompute);
     }
 } // namespace Beer::Rendering

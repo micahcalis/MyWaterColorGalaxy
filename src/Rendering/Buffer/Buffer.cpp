@@ -2,6 +2,7 @@
 #include "BufferAllocation.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
+#include "Rendering/Buffer/SSBOType.hpp"
 #include "vulkan/vulkan.hpp"
 #include <iostream>
 
@@ -33,10 +34,29 @@ namespace Beer::Rendering
         return {allocation, data};
     }
 
+    Buffer Buffer::CreatePersistent(VkDeviceSize size, VkBufferUsageFlags usage)
+    {
+        usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+        constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+            | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+        auto allocation = sharedAllocator->CreateBuffer(size,
+            usage,
+            VMA_MEMORY_USAGE_AUTO,
+            flags);
+
+        BufferData data{};
+        data.Size = size;
+
+        return {allocation, data};
+    }
+
     Buffer Buffer::CreateUniform(VkDeviceSize size)
     {
         constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+            | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
         auto allocation = sharedAllocator->CreateBuffer(size,
             usage,
@@ -49,13 +69,19 @@ namespace Beer::Rendering
         return {allocation, data};
     }
 
-    Buffer Buffer::CreateSSBO(VkDeviceSize size)
+    Buffer Buffer::CreateSSBO(VkDeviceSize size, SSBOType type)
     {
-        constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
-            | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+        constexpr VkBufferUsageFlags hybridUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT
             | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-        return CreateDeviceLocal(size, usage);
+        VkBufferUsageFlags usage = 0;
+
+        if (type == SSBOType::Hybrid)
+        {
+            usage = hybridUsage;
+        }
+
+        return CreatePersistent(size, usage);
     }
 
     void Buffer::Upload(const void* data, size_t size, size_t offset) const

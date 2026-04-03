@@ -4,6 +4,7 @@
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
 #include "Rendering/Pipeline/Frame/Resource/IRenderResource.hpp"
+#include "System/Delegates/Delegate.hpp"
 #include <print>
 
 namespace Beer::Rendering
@@ -44,12 +45,13 @@ namespace Beer::Rendering
         }
     }
 
-    void FrameGraph::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
+    void FrameGraph::Execute(CommandBuffer* commandBuffer,
+        const RenderContext& context,
+        System::Function<void> bindGlobals)
     {
         commandBuffer->Begin();
 
-        Rendering::Shader::Globals()->Bind(commandBuffer, vk::PipelineBindPoint::eGraphics);
-        Rendering::Shader::Globals()->Bind(commandBuffer, vk::PipelineBindPoint::eCompute);
+        bindGlobals();
 
         std::unordered_set<std::string> clearedResources;
 

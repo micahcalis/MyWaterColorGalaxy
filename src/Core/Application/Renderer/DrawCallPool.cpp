@@ -13,7 +13,7 @@ namespace Beer::Core
         for (auto component : renderComponents)
         {
             mask = component->GetBindMask(history);
-            history = component->Bind(mask, commandBuffer, shaderPass);
+            history = component->Bind(mask, commandBuffer, renderContext, shaderPass);
         }
     }
 } // namespace Beer::Core

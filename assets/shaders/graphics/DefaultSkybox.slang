@@ -30,10 +30,11 @@ struct VertexData
 //$ Zwrite Off
 //$ ZMode Always
 
-VERT VertexData SkyboxVert(MeshData input)
+VERT VertexData SkyboxVert(MeshData input, INSTANCEID)
 {
+    GETMODELDATA
     VertexData output;
-    float4 positionWS = mul(_ObjToWorldMat, float4(input.positionOS, 1));
+    float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
     output.positionWS = positionWS.xyz;
     return output;

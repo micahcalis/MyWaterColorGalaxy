@@ -1,26 +1,18 @@
-#pragma once
-
-#include "System/Components/General/SingleMeshRender.hpp"
-#include "Rendering/Mesh/MeshDrawInfo.hpp"
-#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
-#include "Rendering/Shader/ModelPush.hpp"
+#include "System/Components/General/MultipleMeshRender.hpp"
 #include "System/Drawing/BindHistory.hpp"
-#include "System/Drawing/BindMask.hpp"
-#include "System/Drawing/BindType.hpp"
 
 namespace Beer::System
 {
-    BindHistory SingleMeshRender::Bind(BindMask mask,
+    BindHistory MultipleMeshRender::Bind(BindMask mask,
         Rendering::CommandBuffer* commandBuffer,
         const Rendering::RenderContext& renderContext,
         const Rendering::ShaderPassType pass)
     {
         const Rendering::Shader* shader = material->GetShader();
 
-        if (transform != nullptr)
+        if (transforms.size() != 0)
         {
-            Rendering::ModelPush modelPush = transform->GetShaderTransform();
-            commandBuffer->BindModelPush(modelPush, shader);
+            commandBuffer->BindInstancingTransforms(transforms, renderContext, shader);
         }
 
         const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
@@ -39,14 +31,9 @@ namespace Beer::System
         {
             commandBuffer->BindMesh(mesh.get(), &shaderPass->BufferOrder);
         }
-
-        Rendering::MeshDrawInfo drawInfo = mesh->GetDrawInfo();
-        commandBuffer->DrawMeshSingle(drawInfo);
-
-        return BindHistory(shader, material.get(), mesh.get());
     }
 
-    BindMask SingleMeshRender::GetBindMask(const BindHistory& history) const
+    BindMask MultipleMeshRender::GetBindMask(const BindHistory& history) const
     {
         uint32_t bindMaskBits = 0;
 

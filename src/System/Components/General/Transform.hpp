@@ -1,8 +1,7 @@
 #pragma once
 
+#include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
-#include "Rendering/Shader/Shader.hpp"
-#include "vulkan/vulkan.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -38,7 +37,25 @@ namespace Beer::System
             glm::mat4 model = glm::translate(glm::mat4(1.0f), Position);
             model *= glm::toMat4(Rotation);
             model = glm::scale(model, Scale);
-            return {model, glm::inverse(model)};
+            return Rendering::ModelPush(model, glm::transpose(glm::inverse(model)), false);
+        }
+
+    public:
+        static std::vector<Rendering::ModelTransformData> ToModelData(const std::vector<Transform>& transforms)
+        {
+            std::vector<Rendering::ModelTransformData> data;
+            data.reserve(transforms.size());
+
+            for (const auto& transform : transforms)
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), transform.Position);
+                model *= glm::toMat4(transform.Rotation);
+                model = glm::scale(model, transform.Scale);
+
+                data.emplace_back(model, glm::transpose(glm::inverse(model)));
+            }
+
+            return data;
         }
     };
 } // namespace Beer::System

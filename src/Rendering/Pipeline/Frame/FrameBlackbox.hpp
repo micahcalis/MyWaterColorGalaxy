@@ -3,7 +3,9 @@
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
+#include "Rendering/Buffer/SSBOType.hpp"
 #include "Rendering/Pipeline/Frame/Resource/IRenderResource.hpp"
+#include "Rendering/Pipeline/Frame/ReallocData.hpp"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -37,7 +39,8 @@ namespace Beer::Rendering
             glm::vec4 clearColor = glm::vec4(0));
 
         PhaseBuffer* CreatePhaseBuffer(const std::string& name,
-            VkDeviceSize size);
+            VkDeviceSize size,
+            SSBOType type = SSBOType::Hybrid);
 
         template<typename T>
         T* GetResource(const std::string& name)
@@ -66,7 +69,7 @@ namespace Beer::Rendering
             }
         }
 
-        RenderTexture* ReallocateIfNeeded(const std::string& name,
+        ReallocRT ReallocateIfNeeded(const std::string& name,
             uint32_t width,
             uint32_t height,
             VkFormat format,
@@ -75,8 +78,9 @@ namespace Beer::Rendering
             vk::SamplerAddressMode tiling = vk::SamplerAddressMode::eRepeat,
             glm::vec4 clearColor = glm::vec4(0));
 
-        PhaseBuffer* ReallocateIfNeeded(const std::string& name,
-            VkDeviceSize size);
+        ReallocPB ReallocateIfNeeded(const std::string& name,
+            VkDeviceSize size,
+            SSBOType type = SSBOType::Hybrid);
 
     private:
         std::shared_ptr<Image> CreateRenderTextureImage(uint32_t width,
@@ -85,6 +89,6 @@ namespace Beer::Rendering
             TextureAccess access = TextureAccess::Standard,
             glm::vec4 clearColor = glm::vec4(0));
 
-        std::shared_ptr<Buffer> CreateSSBOHandle(VkDeviceSize size);
+        std::shared_ptr<Buffer> CreateSSBOHandle(VkDeviceSize size, SSBOType type);
     };
 } // namespace Beer::Rendering

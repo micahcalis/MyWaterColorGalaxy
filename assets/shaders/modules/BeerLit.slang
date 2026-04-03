@@ -60,7 +60,7 @@ namespace Lit
 
         private float3 Specular()
         {
-            float3 halfVec = normalize(light.GetDirection() + viewDirection);
+            float3 halfVec = normalize(light.GetDirection() + -viewDirection);
             float NdotH = saturate(dot(normal, halfVec));
             float LdotH = saturate(dot(light.GetDirection(), halfVec));
 

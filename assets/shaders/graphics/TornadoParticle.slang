@@ -29,7 +29,7 @@ struct Particle
 
 BIND_MATERIAL_BUFFER(1) StructuredBuffer<Particle> _ParticleBuffer;
 
-VERT VertexData SkyboxVert(MeshData input, uint instanceID : SV_InstanceID)
+VERT VertexData SkyboxVert(MeshData input, INSTANCEID)
 {
     VertexData output;
     float3 basePos = input.positionOS;
@@ -46,8 +46,6 @@ VERT VertexData SkyboxVert(MeshData input, uint instanceID : SV_InstanceID)
 FRAG float4 SkyboxFrag(VertexData input) : SV_Target
 {
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
-
     float fresnel = saturate(dot(input.normalWS, -viewDirWS));
-
     return float4(float3(0.788, 0.784, 0.565) * fresnel, 1);
 }

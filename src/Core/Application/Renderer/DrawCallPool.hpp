@@ -6,20 +6,27 @@
 #include "vulkan/vulkan.hpp"
 #include <vector>
 
+namespace Beer::Rendering
+{
+    struct RenderContext;
+}
+
 namespace Beer::Core
 {
     class DrawCallPool
     {
     private:
         Rendering::CommandBuffer* commandBuffer;
+        const Rendering::RenderContext& renderContext;
         Rendering::ShaderPassType shaderPass;
         std::vector<System::IRenderComponent*> renderComponents;
 
     public:
         DrawCallPool(Rendering::CommandBuffer* commandBuffer,
+            const Rendering::RenderContext& renderContext,
             Rendering::ShaderPassType shaderPass,
             std::vector<System::IRenderComponent*> renderComponents)
-            : commandBuffer(commandBuffer), shaderPass(shaderPass), renderComponents(std::move(renderComponents))
+            : commandBuffer(commandBuffer), renderContext(renderContext), shaderPass(shaderPass), renderComponents(std::move(renderComponents))
         {
         }
 

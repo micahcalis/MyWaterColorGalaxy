@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "System/Camera/Camera.hpp"
@@ -16,6 +17,7 @@ namespace Beer::Rendering
         FrameBlackbox* BlackBox = nullptr;
         RenderTexture* MainColorTarget = nullptr;
         RenderTexture* MainDepthTarget = nullptr;
+        PhaseBuffer* TransformBuffer = nullptr;
         System::RenderRegister* Register = nullptr;
     };
 } // namespace Beer::Rendering

@@ -33,10 +33,11 @@ struct VertexData
 //$ Blend On
 //$ Zwrite On
 
-VERT VertexData DefaultLitVert(MeshData input)
+VERT VertexData DefaultLitVert(MeshData input, INSTANCEID)
 {
+    GETMODELDATA
     VertexData output;
-    float4 positionWS = mul(_ObjToWorldMat, float4(input.positionOS, 1));
+    float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
     output.positionWS = positionWS.xyz;
     output.texCoord = input.texCoord;

@@ -1,35 +1,28 @@
 #pragma once
 
-#include "Rendering/Material/Material.hpp"
-#include "Rendering/Mesh/Mesh.hpp"
-#include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
-#include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
-#include "System/Components/General/Transform.hpp"
-#include <memory>
 
 namespace Beer::System
 {
-    class SingleMeshRender : public IRenderComponent
+    class MultipleMeshRender : public IRenderComponent
     {
-    private:
         std::shared_ptr<Rendering::Material> material;
         std::shared_ptr<Rendering::Mesh> mesh;
-        Transform* transform;
+        std::vector<Transform>& transforms;
         Layer* layer;
 
     public:
-        SingleMeshRender(std::shared_ptr<Rendering::Material> material,
+        MultipleMeshRender(std::shared_ptr<Rendering::Material> material,
             std::shared_ptr<Rendering::Mesh> mesh,
-            Transform* transform,
+            std::vector<Transform>& transforms,
             Layer* layer)
-            : material(material), mesh(mesh), transform(transform), layer(layer)
+            : material(material), mesh(mesh), transforms(transforms), layer(layer)
         {
         }
 
         void SetMaterial(std::shared_ptr<Rendering::Material> material) { this->material = std::move(material); }
         void SetMesh(std::shared_ptr<Rendering::Mesh> mesh) { this->mesh = std::move(mesh); }
-        void SetTransform(Transform* transform) { this->transform = transform; }
+        void SetTransforms(std::vector<Transform>& transforms) { this->transforms = transforms; }
         void SetLayer(Layer* layer) { this->layer = layer; }
 
         BindHistory Bind(BindMask mask,

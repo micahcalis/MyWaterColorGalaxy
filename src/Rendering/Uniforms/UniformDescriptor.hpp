@@ -40,7 +40,7 @@ namespace Beer::Rendering
         vk::DescriptorSetLayout GetLayout() const { return *layout; }
         void UpdateBufferInfo(uint32_t frameIndex, uint32_t binding, const Buffer& buffer, size_t size, size_t offset = 0);
         void UpdateImageInfo(uint32_t frameIndex, const ShaderProperty* property, const ITexture* texture);
-        void UpdateStructuredBufferInfo(uint32_t frameIndex, const ShaderProperty* property, const PhaseBuffer* buffer);
+        void UpdateStructuredBufferInfo(uint32_t frameIndex, const uint32_t binding, const PhaseBuffer* buffer);
 
         static uint32_t GetFramesInFlight() { return descriptorAllocator->FramesInFlight; }
         static uint32_t GetFrameIndex() { return frameIndex; }

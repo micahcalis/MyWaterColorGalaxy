@@ -2,6 +2,7 @@
 #include "Rendering/Pipeline/Frame/Resource/RenderResourceType.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/BufferSyncBarrier.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/BufferSyncState.hpp"
+#include "SSBOType.hpp"
 #include <memory>
 #include <utility>
 
@@ -34,7 +35,7 @@ namespace Beer::Rendering
 
     void PhaseBuffer::InitializeFallbackBuffer()
     {
-        std::shared_ptr<Buffer> bufferHandle = std::make_shared<Buffer>(Buffer::CreateSSBO(FALLBACK_SIZE));
+        std::shared_ptr<Buffer> bufferHandle = std::make_shared<Buffer>(Buffer::CreateSSBO(FALLBACK_SIZE, SSBOType::Hybrid));
         bufferFallback = std::make_shared<PhaseBuffer>("FallbackBuffer", std::move(bufferHandle));
     }
 

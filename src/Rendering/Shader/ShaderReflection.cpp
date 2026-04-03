@@ -223,7 +223,7 @@ namespace Beer::Rendering
 
     bool ShaderReflection::IsMaterialSet(SpvReflectDescriptorSet* set)
     {
-        return set->set == 1;
+        return set->set == 2;
     }
 
     bool ShaderReflection::IsCBufferBinding(SpvReflectDescriptorBinding* binding)

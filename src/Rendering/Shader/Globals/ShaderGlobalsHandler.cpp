@@ -1,17 +1,21 @@
 #include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
 #include "GlobalBuffer.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
+#include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "glm/matrix.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "vulkan/vulkan.hpp"
 #include <memory>
+#include <stdexcept>
 
 namespace Beer::Rendering
 {
     const int SET_INDEX = 0;
+    const int MODEL_SET_INDEX = 1;
 
     ShaderGlobalsHandler::ShaderGlobalsHandler(const Core::Device* device)
     {
@@ -26,8 +30,10 @@ namespace Beer::Rendering
             LightingGlobals::DESC_COUNT));
 
         globalsBuffer = std::make_unique<GlobalBuffer>(std::move(bufferBindings));
+        InitializeTransformDescriptor(device);
 
-        std::vector<vk::DescriptorSetLayout> setLayouts = GetLayouts();
+        std::vector<vk::DescriptorSetLayout> setLayouts = GetGlobalsLayout();
+        setLayouts.push_back(transformDescriptor->GetLayout());
 
         vk::PushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute;
@@ -49,12 +55,18 @@ namespace Beer::Rendering
         globalsBuffer->Update(LightingGlobals::BINDING, &lightingGlobalsData);
     }
 
-    void ShaderGlobalsHandler::Bind(CommandBuffer* commandBuffer, const vk::PipelineBindPoint bindPoint) const
+    void ShaderGlobalsHandler::Bind(CommandBuffer* commandBuffer,
+        const vk::PipelineBindPoint bindPoint) const
     {
         commandBuffer->BindDescriptorSets(bindPoint,
             *globalLayout,
             SET_INDEX,
             GetGlobalSets());
+
+        commandBuffer->BindDescriptorSets(bindPoint,
+            *globalLayout,
+            MODEL_SET_INDEX,
+            {transformDescriptor->GetSet(UniformDescriptor::GetFrameIndex())});
     }
 
     void ShaderGlobalsHandler::SetTime(float time, float deltaTime)
@@ -89,7 +101,20 @@ namespace Beer::Rendering
         lightingGlobalsData.SkyColor = skyColor;
     }
 
-    std::vector<vk::DescriptorSetLayout> ShaderGlobalsHandler::GetLayouts() const
+    void ShaderGlobalsHandler::SetTransformBuffer(PhaseBuffer* transformBuffer)
+    {
+        if (transformBuffer == nullptr)
+        {
+            throw std::runtime_error("Trying to bind nullptr TransformBuffer");
+        }
+
+        for (uint32_t i = 0; i < UniformDescriptor::GetFramesInFlight(); i++)
+        {
+            transformDescriptor->UpdateStructuredBufferInfo(i, 0, transformBuffer);
+        }
+    }
+
+    std::vector<vk::DescriptorSetLayout> ShaderGlobalsHandler::GetGlobalsLayout() const
     {
         std::vector<vk::DescriptorSetLayout> layouts;
         std::vector<IShaderResource*> globalResources = GetGlobalResources();
@@ -100,6 +125,11 @@ namespace Beer::Rendering
         }
 
         return layouts;
+    }
+
+    vk::DescriptorSetLayout ShaderGlobalsHandler::GetTransformLayout() const
+    {
+        return transformDescriptor->GetLayout();
     }
 
     std::vector<IShaderResource*> ShaderGlobalsHandler::GetGlobalResources() const
@@ -121,5 +151,18 @@ namespace Beer::Rendering
         return sets;
     }
 
+    void ShaderGlobalsHandler::InitializeTransformDescriptor(const Core::Device* device)
+    {
+        vk::DescriptorSetLayoutBinding transformBinding{};
+        transformBinding.binding = 0;
+        transformBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+        transformBinding.descriptorCount = 1;
+        transformBinding.stageFlags = vk::ShaderStageFlagBits::eVertex
+            | vk::ShaderStageFlagBits::eFragment
+            | vk::ShaderStageFlagBits::eCompute;
+
+        transformDescriptor = std::make_unique<UniformDescriptor>(
+            std::vector<vk::DescriptorSetLayoutBinding>{transformBinding});
+    }
 } // namespace Beer::Rendering
 

@@ -83,7 +83,8 @@ namespace Beer::Rendering
     {
         std::vector<vk::DescriptorSetLayout> setLayouts;
 
-        setLayouts.append_range(Shader::Globals()->GetLayouts());
+        setLayouts.append_range(Shader::Globals()->GetGlobalsLayout());
+        setLayouts.push_back(Shader::Globals()->GetTransformLayout());
         setLayouts.push_back(materialSetLayout);
 
         vk::PushConstantRange pushConstantRange{};

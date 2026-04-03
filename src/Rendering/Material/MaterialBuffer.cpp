@@ -48,7 +48,7 @@ namespace Beer::Rendering
         structuredBuffers[name] = buffer;
 
         uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
-        descriptor->UpdateStructuredBufferInfo(currentFrame, prop, buffer);
+        descriptor->UpdateStructuredBufferInfo(currentFrame, prop->Binding, buffer);
     }
 
     void MaterialBuffer::UpdateTextureDescriptor(const std::string& name)
@@ -76,7 +76,7 @@ namespace Beer::Rendering
             const ShaderProperty* prop = properties->GetShaderProperty(name);
             if (prop)
             {
-                descriptor->UpdateStructuredBufferInfo(currentFrame, prop, it->second);
+                descriptor->UpdateStructuredBufferInfo(currentFrame, prop->Binding, it->second);
             }
         }
     }
@@ -152,7 +152,7 @@ namespace Beer::Rendering
                 {
                     descriptor->UpdateStructuredBufferInfo(
                         i,
-                        &prop,
+                        prop.Binding,
                         bufferToBind);
                 }
 

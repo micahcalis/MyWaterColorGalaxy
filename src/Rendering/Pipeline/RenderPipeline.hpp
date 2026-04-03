@@ -1,13 +1,14 @@
 #pragma once
 
+#include "CommandBuffer/CommandBuffer.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Frame/FrameBlackbox.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Pipeline/Frame/FrameGraph.hpp"
 #include "Rendering/Pipeline/Frame/FrameBuilder.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
-#include "Rendering/RenderPasses/DrawOpaquePass.hpp"
-#include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
+#include "Rendering/Texture/RenderTexture.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 
 namespace Beer::Rendering
@@ -21,6 +22,7 @@ namespace Beer::Rendering
 
         Rendering::RenderTexture* colorTarget = nullptr;
         Rendering::RenderTexture* depthTarget = nullptr;
+        Rendering::PhaseBuffer* transformBuffer = nullptr;
         System::RenderRegister* renderRegister = nullptr;
 
     public:
@@ -36,5 +38,6 @@ namespace Beer::Rendering
     private:
         std::vector<IRenderPass*> GetSortedRenderPasses();
         RenderContext GetRenderContext();
+        static void BindGlobals(CommandBuffer* commandBuffer, const RenderContext& context);
     };
 } // namespace Beer::Rendering

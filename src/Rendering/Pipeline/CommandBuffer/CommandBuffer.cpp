@@ -1,9 +1,13 @@
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
+#include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
+#include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
+#include "System/Components/General/Transform.hpp"
 #include "vulkan/vulkan.hpp"
 #include <stdexcept>
 
@@ -114,6 +118,28 @@ namespace Beer::Rendering
             vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
             0,
             modelPush);
+    }
+
+    void CommandBuffer::BindInstancingPush(const Rendering::Shader* shader)
+    {
+        commandBuffer.pushConstants<Rendering::ModelPush>(
+            shader->GetPipelineLayout(),
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
+            0,
+            ModelPush(0, 0, true));
+    }
+
+    void CommandBuffer::BindInstancingTransforms(const std::vector<System::Transform>& transforms,
+        const RenderContext& context,
+        const Rendering::Shader* shader)
+    {
+        BindInstancingPush(shader);
+
+        void* mappedTransformData = context.TransformBuffer->GetMappedPointer();
+
+        memcpy(mappedTransformData,
+            System::Transform::ToModelData(transforms).data(),
+            sizeof(ModelTransformData) * transforms.size());
     }
 
     void CommandBuffer::BindShaderPass(const ShaderPass* shaderPass)

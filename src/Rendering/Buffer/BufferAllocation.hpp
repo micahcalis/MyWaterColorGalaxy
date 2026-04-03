@@ -8,12 +8,6 @@ namespace Beer::Rendering
 {
     struct BufferAllocation
     {
-        // It's not strictly required to disable the copy operands, but you can uncomment to prevent copies from being made.
-        // BufferAllocation& operator=(const BufferAllocation&) = delete;
-        // BufferAllocation(const BufferAllocation&) = delete;
-
-        // BufferAllocation& operator=(BufferAllocation&&) = default;
-        // BufferAllocation(BufferAllocation&&) = default;
     public:
         VkBuffer Buffer;
         VmaAllocation Allocation;

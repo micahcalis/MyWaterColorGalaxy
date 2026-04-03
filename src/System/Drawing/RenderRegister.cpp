@@ -49,6 +49,7 @@ namespace Beer::System
         }
 
         return Core::DrawCallPool(request.GetCommandBuffer(),
+            request.GetContext(),
             request.GetPass(),
             std::move(validatedComponents));
     }

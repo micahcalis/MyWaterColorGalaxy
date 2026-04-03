@@ -71,7 +71,7 @@ namespace Beer::Rendering
         descriptorAllocator->Device->GetLogicalDevice().updateDescriptorSets(descriptorWrite, nullptr);
     }
 
-    void UniformDescriptor::UpdateStructuredBufferInfo(uint32_t frameIndex, const ShaderProperty* property, const PhaseBuffer* buffer)
+    void UniformDescriptor::UpdateStructuredBufferInfo(uint32_t frameIndex, const uint32_t binding, const PhaseBuffer* buffer)
     {
         vk::DescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = buffer->GetHandle()->GetHandle();
@@ -80,7 +80,7 @@ namespace Beer::Rendering
 
         vk::WriteDescriptorSet descriptorWrite{};
         descriptorWrite.dstSet = *descriptorSets[frameIndex];
-        descriptorWrite.dstBinding = property->Binding;
+        descriptorWrite.dstBinding = binding;
         descriptorWrite.dstArrayElement = 0;
         descriptorWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
         descriptorWrite.descriptorCount = 1;

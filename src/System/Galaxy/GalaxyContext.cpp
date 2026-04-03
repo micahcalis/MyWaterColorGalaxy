@@ -59,10 +59,6 @@ namespace Beer::System
 
     void GalaxyContext::Load()
     {
-        // std::shared_ptr<Rendering::ComputeShader> computeTest = Rendering::ComputeShader::Get("TestCompute");
-        // computeTest->PrintConfig();
-        // std::shared_ptr<Rendering::ComputeContext> testContext = std::make_shared<Rendering::ComputeContext>(computeTest);
-
         Transform lightTransform{};
         lightTransform.Position = glm::vec3(0, 1000, 100);
 

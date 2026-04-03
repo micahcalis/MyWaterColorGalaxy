@@ -14,6 +14,11 @@
 
 namespace Beer::Rendering
 {
+    struct RenderContext;
+}
+
+namespace Beer::Rendering
+{
     class CommandBuffer
     {
         friend class Core::FrameResource;
@@ -44,6 +49,11 @@ namespace Beer::Rendering
             std::vector<vk::DescriptorSet> sets);
 
         void BindModelPush(Rendering::ModelPush modelPush,
+            const Rendering::Shader* shader);
+
+        void BindInstancingPush(const Rendering::Shader* shader);
+        void BindInstancingTransforms(const std::vector<System::Transform>& transforms,
+            const RenderContext& context,
             const Rendering::Shader* shader);
 
         void BindShaderPass(const ShaderPass* shaderPass);

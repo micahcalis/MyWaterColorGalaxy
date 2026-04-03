@@ -1,7 +1,9 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "FrameBlackbox.hpp"
+#include "ReallocData.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
+#include "Rendering/Buffer/SSBOType.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
@@ -49,14 +51,15 @@ namespace Beer::Rendering
     }
 
     PhaseBuffer* FrameBlackbox::CreatePhaseBuffer(const std::string& name,
-        VkDeviceSize size)
+        VkDeviceSize size,
+        SSBOType type)
     {
         if (blackbox.contains(name))
         {
             return static_cast<PhaseBuffer*>(blackbox[name].get());
         }
 
-        std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size);
+        std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size, type);
 
         blackbox[name] = std::make_unique<PhaseBuffer>(name,
             std::move(bufferHandle));
@@ -64,7 +67,7 @@ namespace Beer::Rendering
         return GetResource<PhaseBuffer>(name);
     }
 
-    RenderTexture* FrameBlackbox::ReallocateIfNeeded(const std::string& name,
+    ReallocRT FrameBlackbox::ReallocateIfNeeded(const std::string& name,
         uint32_t width,
         uint32_t height,
         VkFormat format,
@@ -78,7 +81,7 @@ namespace Beer::Rendering
         if (renderTexture == nullptr)
         {
             renderTexture = CreateRenderTexture2D(name, width, height, format, access, filter, tiling, clearColor);
-            return renderTexture;
+            return {renderTexture, true};
         }
 
         ReallocationMask mask = renderTexture->GetAllocationMask(width, height, format, filter, tiling);
@@ -92,34 +95,38 @@ namespace Beer::Rendering
                 clearColor);
 
             renderTexture->SetImage(std::move(image));
+            return {renderTexture, true};
         }
 
         if (mask.Has(ReallocationFlag::Sampler))
         {
             renderTexture->SetSampler(filter, tiling);
+            return {renderTexture, true};
         }
 
-        return renderTexture;
+        return {renderTexture, false};
     }
 
-    PhaseBuffer* FrameBlackbox::ReallocateIfNeeded(const std::string& name,
-        VkDeviceSize size)
+    ReallocPB FrameBlackbox::ReallocateIfNeeded(const std::string& name,
+        VkDeviceSize size,
+        SSBOType type)
     {
         PhaseBuffer* phaseBuffer = GetResource<PhaseBuffer>(name);
 
         if (phaseBuffer == nullptr)
         {
             phaseBuffer = CreatePhaseBuffer(name, size);
-            return phaseBuffer;
+            return {phaseBuffer, true};
         }
 
         if (size != phaseBuffer->Size())
         {
-            std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size);
+            std::shared_ptr<Buffer> bufferHandle = CreateSSBOHandle(size, type);
             phaseBuffer->SetBuffer(std::move(bufferHandle));
+            return {phaseBuffer, true};
         }
 
-        return phaseBuffer;
+        return {phaseBuffer, false};
     }
 
     std::shared_ptr<Image> FrameBlackbox::CreateRenderTextureImage(uint32_t width,
@@ -145,8 +152,8 @@ namespace Beer::Rendering
                 *device));
     }
 
-    std::shared_ptr<Buffer> FrameBlackbox::CreateSSBOHandle(VkDeviceSize size)
+    std::shared_ptr<Buffer> FrameBlackbox::CreateSSBOHandle(VkDeviceSize size, SSBOType type)
     {
-        return std::make_shared<Buffer>(Buffer::CreateSSBO(size));
+        return std::make_shared<Buffer>(Buffer::CreateSSBO(size, type));
     }
 } // namespace Beer::Rendering
