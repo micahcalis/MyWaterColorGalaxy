@@ -19,6 +19,7 @@ namespace Beer::System
     public:
         RenderRegister();
         void AddComponent(IRenderComponent* component, const ContextType context);
+        void RemoveFromRegister(IRenderComponent* component);
         void Cleanup();
         Core::DrawCallPool GetDrawCallPool(const DrawRequest& request);
 
@@ -46,6 +47,14 @@ namespace Beer::System
             RenderRegister::renderRegister->AddComponent(component.get(), context);
 
             return component;
+        }
+
+        static void DestroyComponent(IRenderComponent* component)
+        {
+            if (RenderRegister::renderRegister == nullptr)
+                throw std::runtime_error("Render Register not Initialized");
+
+            renderRegister->RemoveFromRegister(component);
         }
     };
 } // namespace Beer::System

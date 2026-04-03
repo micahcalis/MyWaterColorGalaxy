@@ -19,7 +19,7 @@ namespace Beer::System
     class IRenderComponent
     {
     public:
-        virtual ~IRenderComponent() = default;
+        virtual ~IRenderComponent();
 
         virtual BindHistory Bind(BindMask mask,
             Rendering::CommandBuffer* commandBuffer,

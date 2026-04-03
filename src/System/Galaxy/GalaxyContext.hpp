@@ -6,6 +6,7 @@
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/ComputePerlinPass.hpp"
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Default/MultipleContainerEntity.hpp"
 #include "System/Default/RotateEntitiesManager.hpp"
@@ -31,6 +32,8 @@ namespace Beer::System
         Rendering::ComputeTornadoParticlesPass* tornadoPass = nullptr;
         Rendering::RenderTornadoPass* tornadoRenderPass = nullptr;
         std::shared_ptr<Rendering::Material> defaultLitMaterial;
+        std::shared_ptr<Rendering::Texture2D> catTexture;
+        std::shared_ptr<Rendering::Material> catLitMaterial;
 
     public:
         GalaxyContext(Function<PlayerInput> getPlayerInput);

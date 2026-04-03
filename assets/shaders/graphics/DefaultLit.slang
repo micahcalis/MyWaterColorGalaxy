@@ -16,6 +16,7 @@ BIND_MATERIAL_TEX(1) Sampler2D _AlbedoMap;
 struct MeshData
 {
     M_POSITION;
+    M_NORMAL;
     M_UV;
 };
 
@@ -23,6 +24,7 @@ struct VertexData
 {
     float4 positionCS : SV_Position;
     float3 positionWS;
+    float3 normalWS;
     float2 texCoord;
 }
 
@@ -40,6 +42,7 @@ VERT VertexData DefaultLitVert(MeshData input, INSTANCEID)
     float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
     output.positionWS = input.positionOS.xyz;
+    output.normalWS = mul(transform.objToWorldDirMat, float4(input.normalOS, 1)).xyz;
     output.texCoord = input.texCoord;
     return output;
 }
@@ -50,10 +53,10 @@ FRAG float4 DefaultLitFrag(VertexData input) : SV_Target
 
     Lit.BRDF brdf = Lit.BRDF(GetMainLight(input.positionWS), 
         GetViewDirectionWS(input.positionWS),
-        float3(0, 0, 1),
+        input.normalWS,
         sample.rgb,
         _Smoothness,
         _Metallic);
 
-    return float4(sample.rgb, 1);
+    return float4(brdf.Shade(), 1);
 }

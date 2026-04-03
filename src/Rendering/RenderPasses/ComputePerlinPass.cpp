@@ -11,7 +11,6 @@ namespace Beer::Rendering
         : perlinViewMat(perlinViewMat), IRenderPass("Compute Perlin", intEvent)
     {
         std::shared_ptr<Rendering::ComputeShader> computeTest = Rendering::ComputeShader::Get("TestCompute");
-        computeTest->PrintConfig();
         perlinCompContext = std::make_shared<Rendering::ComputeContext>(computeTest);
 
         perlinCompContext->SetFloat("_Tiling", 4.0f);
@@ -26,7 +25,7 @@ namespace Beer::Rendering
         context.BlackBox->ReallocateIfNeeded(PERLIN_TEX_NAME,
             PERLIN_TEX_RES,
             PERLIN_TEX_RES,
-            static_cast<VkFormat>(vk::Format::eR8G8B8A8Unorm),
+            static_cast<VkFormat>(vk::Format::eR16G16B16A16Unorm),
             TextureAccess::ReadWrite);
 
         RenderTexture* noiseTex = context.BlackBox->GetResource<RenderTexture>(PERLIN_TEX_NAME);

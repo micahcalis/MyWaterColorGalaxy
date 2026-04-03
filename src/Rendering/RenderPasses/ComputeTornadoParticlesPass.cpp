@@ -11,7 +11,6 @@ namespace Beer::Rendering
         : IRenderPass("Compute Tornado", intEvent)
     {
         std::shared_ptr<Rendering::ComputeShader> computeTest = Rendering::ComputeShader::Get("TestInstancing");
-        computeTest->PrintConfig();
         instanceTestCompContext = std::make_shared<Rendering::ComputeContext>(computeTest);
 
         instanceTestCompContext->SetInt("_ParticleCount", TORNADO_PART_COUNT);

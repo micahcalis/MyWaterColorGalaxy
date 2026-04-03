@@ -93,6 +93,7 @@ namespace Beer::Core
         }
 
         Rendering::Material::UpdateDirtyMaterials();
+        renderRegister->Cleanup();
         uploadManager->FlushQueue(frameResources[frameIndex]);
         renderPipeline->InitializeFrame();
     }
