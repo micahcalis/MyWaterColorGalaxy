@@ -39,7 +39,7 @@ VERT VertexData DefaultLitVert(MeshData input, INSTANCEID)
     VertexData output;
     float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
-    output.positionWS = positionWS.xyz;
+    output.positionWS = input.positionOS.xyz;
     output.texCoord = input.texCoord;
     return output;
 }

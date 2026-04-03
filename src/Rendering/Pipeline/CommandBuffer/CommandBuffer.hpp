@@ -56,6 +56,10 @@ namespace Beer::Rendering
             const RenderContext& context,
             const Rendering::Shader* shader);
 
+        void BindInstancingTransforms(const std::vector<ModelTransformData>& modelData,
+            const RenderContext& context,
+            const Rendering::Shader* shader);
+
         void BindShaderPass(const ShaderPass* shaderPass);
         void BindMaterial(const Material* material);
         void BindMesh(const Mesh* mesh, const MeshBufferOrder* order);

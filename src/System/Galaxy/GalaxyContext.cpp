@@ -12,6 +12,7 @@
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "System/Components/General/MultipleMeshRender.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
@@ -55,6 +56,7 @@ namespace Beer::System
     {
         IContext::Update();
         playerEntity->Update();
+        testRotationEntity->Update();
     }
 
     void GalaxyContext::Load()
@@ -77,6 +79,22 @@ namespace Beer::System
 
         material->SetColor("_BaseColor", glm::vec4(0, 0.0f, 1, 1));
         material->SetFloat("_SphereRadius", 0.5f);
+
+        std::unique_ptr<MultipleMeshRender> multipleMeshRender = RenderRegister::CreateRenderComponent<MultipleMeshRender>(
+            ContextType::Galaxy, defaultLitMaterial, mesh, nullptr);
+
+        Transform rotationParent{};
+        rotationParent.Position = glm::vec3(-20, 0, 20);
+
+        std::println("try multiple entity");
+
+        testRotationEntity = registry.CreateEntity<MultipleContainerEntity<System::RotateEntitiesManager>>(
+            rotationParent,
+            std::move(multipleMeshRender),
+            10,
+            Layer::Default,
+            10.0f,
+            1.0f);
 
         shader->PrintConfig();
 

@@ -40,6 +40,15 @@ namespace Beer::System
             return Rendering::ModelPush(model, glm::transpose(glm::inverse(model)), false);
         }
 
+        [[nodiscard]] Rendering::ModelTransformData GetModelTransformData() const
+        {
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), Position);
+            model *= glm::toMat4(Rotation);
+            model = glm::scale(model, Scale);
+
+            return {model, glm::transpose(glm::inverse(model))};
+        }
+
     public:
         static std::vector<Rendering::ModelTransformData> ToModelData(const std::vector<Transform>& transforms)
         {

@@ -7,6 +7,8 @@
 #include "Rendering/RenderPasses/ComputePerlinPass.hpp"
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
 #include "System/Context/IContext.hpp"
+#include "System/Default/MultipleContainerEntity.hpp"
+#include "System/Default/RotateEntitiesManager.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Light/LightEntity.hpp"
@@ -20,6 +22,7 @@ namespace Beer::System
         PlayerEntity* playerEntity;
         LightEntity* mainLightEntity;
         std::vector<SingleStaticEntity*> staticEntities;
+        MultipleContainerEntity<System::RotateEntitiesManager>* testRotationEntity;
         Function<PlayerInput> getPlayerInput;
 
         Rendering::DrawOpaquePass* opaquePass = nullptr;

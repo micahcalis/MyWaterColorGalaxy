@@ -1,4 +1,5 @@
 #include "System/Components/General/MultipleMeshRender.hpp"
+#include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "System/Drawing/BindHistory.hpp"
 
 namespace Beer::System
@@ -9,10 +10,12 @@ namespace Beer::System
         const Rendering::ShaderPassType pass)
     {
         const Rendering::Shader* shader = material->GetShader();
+        std::vector<Rendering::ModelTransformData> modelTransformDatas;
 
-        if (transforms.size() != 0)
+        if (getModelTransformData != nullptr)
         {
-            commandBuffer->BindInstancingTransforms(transforms, renderContext, shader);
+            modelTransformDatas = getModelTransformData();
+            commandBuffer->BindInstancingTransforms(modelTransformDatas, renderContext, shader);
         }
 
         const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
@@ -31,6 +34,11 @@ namespace Beer::System
         {
             commandBuffer->BindMesh(mesh.get(), &shaderPass->BufferOrder);
         }
+
+        Rendering::MeshDrawInfo drawInfo = mesh->GetDrawInfo();
+        commandBuffer->DrawMeshMultiple(drawInfo, modelTransformDatas.size());
+
+        return BindHistory(shader, material.get(), mesh.get());
     }
 
     BindMask MultipleMeshRender::GetBindMask(const BindHistory& history) const

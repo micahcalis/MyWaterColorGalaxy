@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
+#include "System/Delegates/Delegate.hpp"
 
 namespace Beer::System
 {
@@ -8,21 +10,20 @@ namespace Beer::System
     {
         std::shared_ptr<Rendering::Material> material;
         std::shared_ptr<Rendering::Mesh> mesh;
-        std::vector<Transform>& transforms;
+        Function<std::vector<Rendering::ModelTransformData>> getModelTransformData;
         Layer* layer;
 
     public:
         MultipleMeshRender(std::shared_ptr<Rendering::Material> material,
             std::shared_ptr<Rendering::Mesh> mesh,
-            std::vector<Transform>& transforms,
             Layer* layer)
-            : material(material), mesh(mesh), transforms(transforms), layer(layer)
+            : material(material), mesh(mesh), layer(layer)
         {
         }
 
         void SetMaterial(std::shared_ptr<Rendering::Material> material) { this->material = std::move(material); }
         void SetMesh(std::shared_ptr<Rendering::Mesh> mesh) { this->mesh = std::move(mesh); }
-        void SetTransforms(std::vector<Transform>& transforms) { this->transforms = transforms; }
+        void SetModelDataFunction(Function<std::vector<Rendering::ModelTransformData>> getModelTransformData) { this->getModelTransformData = getModelTransformData; }
         void SetLayer(Layer* layer) { this->layer = layer; }
 
         BindHistory Bind(BindMask mask,

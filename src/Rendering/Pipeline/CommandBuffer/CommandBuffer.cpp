@@ -142,6 +142,19 @@ namespace Beer::Rendering
             sizeof(ModelTransformData) * transforms.size());
     }
 
+    void CommandBuffer::BindInstancingTransforms(const std::vector<ModelTransformData>& modelData,
+        const RenderContext& context,
+        const Rendering::Shader* shader)
+    {
+        BindInstancingPush(shader);
+
+        void* mappedTransformData = context.TransformBuffer->GetMappedPointer();
+
+        memcpy(mappedTransformData,
+            modelData.data(),
+            sizeof(ModelTransformData) * modelData.size());
+    }
+
     void CommandBuffer::BindShaderPass(const ShaderPass* shaderPass)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
