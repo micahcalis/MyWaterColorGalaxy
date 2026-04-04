@@ -12,7 +12,11 @@ public cbuffer EngineGlobals
     public float4x4 _ViewProjMat;
     public float4x4 _InvViewProjMat;
     public float3 _CameraPos;
+    public float3 _CameraDir;
     public float4 _ScreenParams;
+    public float4 _ZBufferParams;
+    public float4x4 _ViewMat;
+    public float4x4 _ProjMat;
 };
 
 BIND_LIGHTING_GLOBALS
@@ -77,4 +81,22 @@ public TransformData GetModelTransform(uint instanceId)
     }
 
     return transformData;
+}
+
+public struct CameraData
+{
+    public float3 position;
+    public float3 direction;
+    public float nearField;
+    public float farField;
+};
+
+public CameraData GetMainCamera()
+{
+    CameraData data;
+    data.position = _CameraPos;
+    data.direction = _CameraDir;
+    data.nearField = _ZBufferParams.x;
+    data.farField = _ZBufferParams.y;
+    return data;
 }

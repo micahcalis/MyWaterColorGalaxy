@@ -53,7 +53,8 @@ namespace Beer::System
 
     void Camera::BindToShaders()
     {
-        Rendering::Shader::Globals()->SetCamera(GetViewMatrix(), GetProjectionMatrix(), GetTransform()->Position);
+        Rendering::Shader::Globals()->SetCamera(GetViewMatrix(), GetProjectionMatrix(), GetTransform()->Position, GetTransform()->GetForward());
+        Rendering::Shader::Globals()->SetZBuffer(nearMin, farMax);
     }
 
     std::unique_ptr<Camera> Camera::CreateCamera(const CameraSettings settings,

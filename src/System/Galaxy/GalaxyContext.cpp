@@ -44,10 +44,14 @@ namespace Beer::System
         defaultLitMaterial = std::make_shared<Rendering::Material>("DefaultLit");
         defaultLitMaterial->SetColor("_BaseColor", glm::vec4(1));
 
-        catTexture = std::make_shared<Rendering::Texture2D>("Tex_CatAnguish");
+        // catTexture = std::make_shared<Rendering::Texture2D>("Tex_CatAnguish");
 
-        catLitMaterial = std::make_shared<Rendering::Material>("DefaultLit");
-        catLitMaterial->SetTexture("_AlbedoMap", catTexture.get());
+        catLitMaterial = std::make_shared<Rendering::Material>("SphereRaymarch");
+        // catLitMaterial->SetTexture("_AlbedoMap", catTexture.get());
+
+        catLitMaterial->SetColor("_BaseColor", glm::vec4(0.5f, 0.6f, 0.2f, 1));
+        catLitMaterial->SetVector("_Random", glm::vec4(0.8f));
+        catLitMaterial->SetInt("_ShapeIndex", 1);
 
         computePerlinPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ComputePerlinPass>(
             "Compute Perlin", 90, defaultLitMaterial.get());
@@ -62,8 +66,16 @@ namespace Beer::System
     void GalaxyContext::Update()
     {
         IContext::Update();
-        playerEntity->Update();
-        testRotationEntity->Update();
+
+        if (playerEntity != nullptr)
+        {
+            playerEntity->Update();
+        }
+
+        if (testRotationEntity != nullptr)
+        {
+            testRotationEntity->Update();
+        }
     }
 
     void GalaxyContext::Load()
@@ -94,7 +106,7 @@ namespace Beer::System
             std::move(multipleMeshRender),
             100,
             Layer::Default,
-            30.0f,
+            20.0f,
             0.3f);
 
         std::unique_ptr<SingleMeshRender> perlinRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
@@ -103,8 +115,8 @@ namespace Beer::System
         Transform perlinTransform{};
         perlinTransform.Position = glm::vec3(-2, -2, -2);
 
-        staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(perlinTransform),
-            std::move(perlinRenderComp)));
+        // staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(perlinTransform),
+        //     std::move(perlinRenderComp)));
 
         playerEntity = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
             nullptr,
@@ -114,47 +126,47 @@ namespace Beer::System
 
         int res = 10;
 
-        // for (int z = 0; z < res; z++)
-        // {
-        //     for (int y = 0; y < res; y++)
-        //     {
-        //         for (int x = 0; x < res; x++)
-        //         {
-        //             Transform staticTransform{};
-        //             pos = glm::vec3(x, y, z) * 2.0f;
-        //             staticTransform.Position = pos;
+        for (int z = 0; z < res; z++)
+        {
+            for (int y = 0; y < res; y++)
+            {
+                for (int x = 0; x < res; x++)
+                {
+                    Transform staticTransform{};
+                    pos = glm::vec3(x, y, z) * 2.0f;
+                    staticTransform.Position = pos;
 
-        //             std::shared_ptr<Rendering::Material> staticMaterial = std::make_shared<Rendering::Material>(shader);
+                    std::shared_ptr<Rendering::Material> staticMaterial = std::make_shared<Rendering::Material>(shader);
 
-        //             float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        //             float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        //             float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
-        //             float r1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
-        //             float r2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
-        //             float r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
-        //             float r4 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+                    float r1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+                    float r2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+                    float r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
+                    float r4 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.6;
 
-        //             float metallic = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        //             float smoothness = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float metallic = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                    float smoothness = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
-        //             int shapeIndex = glm::floor(static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.0f);
+                    int shapeIndex = glm::floor(static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.0f);
 
-        //             staticMaterial->SetColor("_BaseColor", glm::vec4(r, g, b, 1));
-        //             staticMaterial->SetVector("_Random", glm::vec4(r1, r2, r3, r4));
-        //             staticMaterial->SetInt("_ShapeIndex", shapeIndex);
-        //             staticMaterial->SetFloat("_Metallic", metallic);
-        //             staticMaterial->SetFloat("_Smoothness", smoothness);
+                    staticMaterial->SetColor("_BaseColor", glm::vec4(r, g, b, 1));
+                    staticMaterial->SetVector("_Random", glm::vec4(r1, r2, r3, r4));
+                    staticMaterial->SetInt("_ShapeIndex", shapeIndex);
+                    staticMaterial->SetFloat("_Metallic", metallic);
+                    staticMaterial->SetFloat("_Smoothness", smoothness);
 
-        //             std::unique_ptr<SingleMeshRender>
-        //                 staticRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
-        //                     ContextType::Galaxy, staticMaterial, mesh, nullptr, nullptr);
+                    std::unique_ptr<SingleMeshRender>
+                        staticRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
+                            ContextType::Galaxy, staticMaterial, mesh, nullptr, nullptr);
 
-        //             staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(staticTransform),
-        //                 std::move(staticRenderComp)));
-        //         }
-        //     }
-        // }
+                    staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(staticTransform),
+                        std::move(staticRenderComp)));
+                }
+            }
+        }
     }
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
