@@ -6,6 +6,7 @@
 #include "Rendering/Mesh/MeshBufferOrder.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
+#include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 #include "System/Components/General/Transform.hpp"
@@ -60,7 +61,10 @@ namespace Beer::Rendering
             const RenderContext& context,
             const Rendering::Shader* shader);
 
-        void BindShaderPass(const ShaderPass* shaderPass);
+        void BindShaderPass(const Shader* shader,
+            const ShaderPass* shaderPass,
+            const FragmentOutput& output);
+
         void BindMaterial(const Material* material);
         void BindMesh(const Mesh* mesh, const MeshBufferOrder* order);
         void BindComputeKernel(const ComputeKernel* compute);
@@ -69,5 +73,10 @@ namespace Beer::Rendering
         void DrawMeshSingle(const MeshDrawInfo& info);
         void DrawMeshMultiple(const MeshDrawInfo& info, const uint32_t count);
         void Dispatch(const Threads threads);
+
+        void Blit(RenderTexture* source,
+            Material* material,
+            const ShaderPassType pass,
+            const FragmentOutput& output);
     };
 } // namespace Beer::Rendering

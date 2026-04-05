@@ -32,8 +32,14 @@ namespace Beer::Rendering
         void Bind(CommandBuffer* commandBuffer, const vk::PipelineBindPoint bindPoint) const;
 
         void SetTime(float time, float deltaTime);
-        void SetCamera(const glm::mat4 viewMat, const glm::mat4 projMat, glm::vec3 cameraPos);
+
+        void SetCamera(const glm::mat4 viewMat,
+            const glm::mat4 projMat,
+            const glm::vec3 cameraPos,
+            const glm::vec3 cameraForward);
+
         void SetScreen(float width, float height);
+        void SetZBuffer(float nearPlane, float farPlane);
         void SetMainLight(glm::vec3 position, glm::vec4 color);
         void SetAmbientLight(glm::vec4 shadowColor, glm::vec4 skyColor);
         void SetTransformBuffer(PhaseBuffer* transformBuffer);

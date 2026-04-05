@@ -322,6 +322,55 @@ namespace Beer::Rendering
         return reflectedData;
     }
 
+    FragmentTemplate ShaderReflection::ReflectFragment(const std::vector<uint32_t>& spvCode, const std::string& fragmentEntryPoint)
+    {
+        SpvReflectShaderModule reflectModule = InitializeReflect(spvCode);
+        uint32_t varCount = 0;
+
+        spvReflectEnumerateEntryPointOutputVariables(&reflectModule,
+            fragmentEntryPoint.c_str(),
+            &varCount,
+            nullptr);
+
+        std::vector<SpvReflectInterfaceVariable*> outputVars(varCount);
+
+        spvReflectEnumerateEntryPointOutputVariables(&reflectModule,
+            fragmentEntryPoint.c_str(),
+            &varCount,
+            outputVars.data());
+
+        std::sort(outputVars.begin(), outputVars.end(), [](SpvReflectInterfaceVariable* a, SpvReflectInterfaceVariable* b) {
+            return a->location < b->location;
+        });
+
+        FragmentTemplate fragTemplate;
+
+        for (SpvReflectInterfaceVariable* var : outputVars)
+        {
+            if (var->decoration_flags & SPV_REFLECT_DECORATION_BUILT_IN)
+            {
+                if (var->built_in == SpvBuiltInFragDepth)
+                {
+                    fragTemplate.Add(FragOutputType::Depth, vk::ColorComponentFlagBits::eR);
+                }
+                continue;
+            }
+
+            uint32_t componentCount = 1; // Default to 1 (Scalar)
+
+            if (var->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_VECTOR)
+            {
+                componentCount = var->type_description->traits.numeric.vector.component_count;
+            }
+
+            vk::ColorComponentFlags components = GetComponentMask(componentCount);
+            fragTemplate.Add(FragOutputType::Color, components);
+        }
+
+        spvReflectDestroyShaderModule(&reflectModule);
+        return fragTemplate;
+    }
+
     SpvReflectShaderModule ShaderReflection::InitializeReflect(const std::vector<uint32_t>& spvCode)
     {
         SpvReflectShaderModule reflectModule;
@@ -420,6 +469,22 @@ namespace Beer::Rendering
             return vk::DescriptorType::eStorageBufferDynamic;
         default:
             throw std::runtime_error("Unsupported descriptor type in Material reflection!");
+        }
+    }
+
+    vk::ColorComponentFlags ShaderReflection::GetComponentMask(uint32_t componentCount)
+    {
+        switch (componentCount)
+        {
+        case 1:
+            return vk::ColorComponentFlagBits::eR;
+        case 2:
+            return vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG;
+        case 3:
+            return vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB;
+        case 4:
+        default:
+            return vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
         }
     }
 } // namespace Beer::Rendering

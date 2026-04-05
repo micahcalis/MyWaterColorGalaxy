@@ -33,14 +33,14 @@ namespace Beer::Rendering
         void OnRenderSetup(const RenderContext& context);
         void PrepareBarriers(const RenderContext& context);
         void Execute(CommandBuffer* commandBuffer,
-            const RenderContext& context,
+            RenderContext& context,
             System::Function<void> bindGlobals);
 
         void PrintGraph() const;
 
     private:
         RenderingBeginData GetNodeBeginData(RenderCommandNode& node,
-            const RenderContext& context,
+            RenderContext& context,
             std::unordered_set<std::string>& clearedResources);
     };
 

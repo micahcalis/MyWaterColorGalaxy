@@ -12,7 +12,12 @@ public cbuffer EngineGlobals
     public float4x4 _ViewProjMat;
     public float4x4 _InvViewProjMat;
     public float3 _CameraPos;
+    public float3 _CameraDir;
     public float4 _ScreenParams;
+    public float4 _ZBufferParams;
+    public float4x4 _ViewMat;
+    public float4x4 _ViewDirMat;
+    public float4x4 _ProjMat;
 };
 
 BIND_LIGHTING_GLOBALS
@@ -77,4 +82,67 @@ public TransformData GetModelTransform(uint instanceId)
     }
 
     return transformData;
+}
+
+public struct CameraData
+{
+    public float3 position;
+    public float3 direction;
+    public float nearField;
+    public float farField;
+};
+
+public CameraData GetMainCamera()
+{
+    CameraData data;
+    data.position = _CameraPos;
+    data.direction = _CameraDir;
+    data.nearField = _ZBufferParams.x;
+    data.farField = _ZBufferParams.y;
+    return data;
+}
+
+public float4 WorldToClip(float3 positionWS)
+{
+    return mul(_ViewProjMat, float4(positionWS, 1));
+}
+
+public float3 ClipToWorld(float4 positionCS)
+{
+    float4 worldPos = mul(_InvViewProjMat, positionCS);
+    return worldPos.xyz / worldPos.w; 
+}
+public float3 WorldToView(float3 positionWS)
+{
+    return mul(_ViewMat, float4(positionWS, 1)).xyz;
+}
+
+public float4 ViewToClip(float3 positionVS)
+{
+    return mul(_ProjMat, float4(positionVS, 1));
+}
+
+public float3 ObjToWorld(TransformData transform, float3 positionOS)
+{
+    return mul(transform.objToWorldMat, float4(positionOS, 1.0)).xyz;
+}
+
+public float3 ObjToWorldDir(TransformData transform, float3 dirOS)
+{
+    return mul((float3x3)transform.objToWorldDirMat, dirOS); 
+}
+
+public float3 UVDepthToWorld(float2 uv, float depth)
+{
+    float2 ndcXY = uv * 2.0 - 1.0; 
+    float4 clipPos = float4(ndcXY, depth, 1.0);
+    return ClipToWorld(clipPos);
+}
+
+public float LinearizeDepth(float hardwareDepth)
+{
+    float near = _ZBufferParams.x;
+    float far = _ZBufferParams.y;
+
+    return (near * far) / (far + hardwareDepth * (near - far));
 }

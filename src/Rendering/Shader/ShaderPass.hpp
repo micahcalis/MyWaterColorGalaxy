@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Rendering/Mesh/MeshBufferOrder.hpp"
+#include "FragmentOutput.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 
@@ -28,13 +29,16 @@ namespace Beer::Rendering
     struct ShaderPass
     {
     public:
-        vk::raii::Pipeline Pipeline;
         PassSettings Settings;
-        MeshBufferOrder BufferOrder;
+        VertexInput Input;
+        FragmentTemplate FragTemplate;
+        mutable std::unordered_map<FragmentOutput, vk::raii::Pipeline, FormatHasher> PipelineMap;
 
     public:
-        ShaderPass(vk::raii::Pipeline pipeline, const PassSettings settings, const MeshBufferOrder bufferOrder)
-            : Pipeline(std::move(pipeline)), Settings(settings), BufferOrder(bufferOrder)
+        ShaderPass(const PassSettings settings,
+            const VertexInput vertexInput,
+            const FragmentTemplate fragTemplate)
+            : Settings(settings), Input(vertexInput), FragTemplate(fragTemplate)
         {
         }
     };

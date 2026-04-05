@@ -1,12 +1,12 @@
 #pragma once
 
+#include "FragmentOutput.hpp"
 #include "Rendering/Shader/Globals/ShaderGlobalsHandler.hpp"
 #include "ShaderPass.hpp"
 #include <filesystem>
 #include <memory>
 #include <unordered_map>
 #include "Core/Application/Renderer/Device.hpp"
-#include "Core/Application/Renderer/Swapchain.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
@@ -26,6 +26,7 @@ namespace Beer::Rendering
 
         std::unordered_map<ShaderPassType, ShaderPass> passes;
         std::unique_ptr<MaterialProperties> materialProperties;
+        vk::raii::ShaderModule shaderModule = nullptr;
         vk::raii::PipelineLayout pipelineLayout = nullptr;
         vk::raii::DescriptorSetLayout materialSetLayout = nullptr;
 
@@ -40,8 +41,7 @@ namespace Beer::Rendering
 
         Shader(const std::filesystem::path& shaderPath,
             const std::filesystem::path& jsonPath,
-            const Core::Device& device,
-            const Core::Swapchain& swapchain);
+            const Core::Device& device);
 
         const ShaderPass* GetPass(ShaderPassType passType) const
         {
@@ -55,17 +55,18 @@ namespace Beer::Rendering
             return &it->second;
         }
 
+        const vk::Pipeline GetPipeline(const ShaderPass* pass, const FragmentOutput output) const;
+
         vk::DescriptorSetLayout GetMaterialSetLayout() const { return materialSetLayout; }
         vk::PipelineLayout GetPipelineLayout() const { return *pipelineLayout; }
         MaterialProperties* GetProperties() const { return materialProperties.get(); }
-        void BindPass(vk::CommandBuffer commandBuffer, const ShaderPassType passType) const;
 
         bool HasPass(ShaderPassType pass) const
         {
             return passes.contains(pass);
         }
 
-        void PrintConfig();
+        void PrintConfig() const;
 
     private:
         void CreateMaterialSetLayout(const Core::Device& device);
@@ -73,8 +74,9 @@ namespace Beer::Rendering
 
         vk::raii::Pipeline CreatePipeline(const PassSettings& settings,
             const VertexInput& input,
+            const FragmentTemplate& fragTemplate,
+            const FragmentOutput& output,
             const vk::ShaderModule shaderModule,
-            const Core::Device& device,
-            const Core::Swapchain& swapchain);
+            const Core::Device* device) const;
     };
 } // namespace Beer::Rendering

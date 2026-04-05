@@ -36,6 +36,7 @@ namespace Beer::Core
         Rendering::ShaderGlobalsHandler* GetGlobalsHandler() const { return globalsHandler.get(); }
 
         std::shared_ptr<Rendering::Shader> Load(const std::filesystem::path& path) override;
+        const Device* GetDevice() const { return device; }
 
     private:
         void Initialize();

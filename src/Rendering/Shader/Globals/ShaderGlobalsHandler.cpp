@@ -6,6 +6,7 @@
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "glm/ext/quaternion_common.hpp"
 #include "glm/matrix.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "vulkan/vulkan.hpp"
@@ -75,13 +76,25 @@ namespace Beer::Rendering
         engineGlobalsData.DeltaTime = deltaTime;
     }
 
-    void ShaderGlobalsHandler::SetCamera(const glm::mat4 viewMat, const glm::mat4 projMat, glm::vec3 cameraPos)
+    void ShaderGlobalsHandler::SetCamera(const glm::mat4 viewMat,
+        const glm::mat4 projMat,
+        const glm::vec3 cameraPos,
+        const glm::vec3 cameraForward)
     {
         glm::mat4 viewProjMat = projMat * viewMat;
         engineGlobalsData.ViewProjMat = viewProjMat;
         engineGlobalsData.InvViewProjMat = glm::inverse(viewProjMat);
 
         engineGlobalsData.CameraPos = cameraPos;
+        engineGlobalsData.CameraDir = cameraForward;
+        engineGlobalsData.ViewMat = viewMat;
+        engineGlobalsData.ViewDirMat = glm::mat4(glm::mat3(viewMat));
+        engineGlobalsData.ProjMat = projMat;
+    }
+
+    void ShaderGlobalsHandler::SetZBuffer(float nearPlane, float farPlane)
+    {
+        engineGlobalsData.ZBufferParams = glm::vec4(nearPlane, farPlane, 1.0f / nearPlane, 1.0f / farPlane);
     }
 
     void ShaderGlobalsHandler::SetScreen(float width, float height)

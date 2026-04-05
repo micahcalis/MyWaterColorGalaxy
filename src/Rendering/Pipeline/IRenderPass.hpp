@@ -5,6 +5,7 @@
 #include "Rendering/Pipeline/Frame/Dependency/PassDependencyList.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
 #include "Rendering/RenderPasses/RenderPassPool.hpp"
+#include "Rendering/Shader/FragmentOutput.hpp"
 #include <stdexcept>
 
 namespace Beer::Rendering

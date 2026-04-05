@@ -115,16 +115,19 @@ namespace Beer::Core
         vk::StructureChain<vk::PhysicalDeviceFeatures2,
             vk::PhysicalDeviceVulkan11Features,
             vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
+            vk::PhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT>
             featureChain{};
 
         vk::PhysicalDeviceFeatures features{};
         features.samplerAnisotropy = VK_TRUE;
+        features.independentBlend = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceFeatures2>().features = features;
         featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState = VK_TRUE;
+        featureChain.get<vk::PhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT>().dynamicRenderingUnusedAttachments = VK_TRUE;
 
         vk::DeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>();

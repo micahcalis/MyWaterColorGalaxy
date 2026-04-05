@@ -10,7 +10,12 @@ namespace Beer::Core
     {
     private:
         vk::raii::PhysicalDevice physicalDevice = nullptr;
-        std::vector<const char*> deviceExtensions = {vk::KHRSwapchainExtensionName};
+
+        std::vector<const char*> deviceExtensions = {
+            vk::KHRSwapchainExtensionName,
+            vk::KHRDynamicRenderingExtensionName,
+            vk::EXTDynamicRenderingUnusedAttachmentsExtensionName};
+
         vk::raii::Device device = nullptr;
         vk::PhysicalDeviceFeatures deviceFeatures;
         vk::raii::Queue graphicsQueue = nullptr;

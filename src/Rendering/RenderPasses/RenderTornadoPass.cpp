@@ -1,4 +1,5 @@
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
+#include "Core/Application/Renderer/Screen.hpp"
 #include "RenderGlobalSettings.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
@@ -26,9 +27,9 @@ namespace Beer::Rendering
     void RenderTornadoPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
     {
         const ShaderPass* pass = particleMaterial->GetShader()->GetPass(ShaderPassType::Opaque);
-        commandBuffer->BindShaderPass(pass);
+        commandBuffer->BindShaderPass(particleMaterial->GetShader(), pass, context.Output);
         commandBuffer->BindMaterial(particleMaterial.get());
-        commandBuffer->BindMesh(cubeMesh.get(), &pass->BufferOrder);
+        commandBuffer->BindMesh(cubeMesh.get(), &pass->Input.BufferOrder);
 
         Rendering::MeshDrawInfo drawInfo = cubeMesh->GetDrawInfo();
         commandBuffer->DrawMeshMultiple(drawInfo, TORNADO_PART_COUNT);
@@ -39,7 +40,8 @@ namespace Beer::Rendering
         PassDependencyList dependencies = PassDependencyList(name);
         dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
             ResourceAction::ColorWrite,
-            ResetOperator::ClearColor({0, 0, 0, 0})));
+            ResetOperator::ClearColor({0, 0, 0, 0}),
+            static_cast<vk::Format>(Core::Screen::ColorFormat())));
 
         dependencies.AddDependency(PassDependency(std::string(MAIN_DEPTH),
             ResourceAction::DepthWrite,

@@ -19,8 +19,13 @@ namespace Beer::Rendering
         ALIGN_16 glm::mat4 InvViewProjMat;
 
         ALIGN_16 glm::vec3 CameraPos;
-        PAD_4(1);
+        ALIGN_16 glm::vec3 CameraDir;
 
         ALIGN_16 glm::vec4 ScreenParams;
+        ALIGN_16 glm::vec4 ZBufferParams;
+
+        ALIGN_16 glm::mat4 ViewMat;
+        ALIGN_16 glm::mat4 ViewDirMat;
+        ALIGN_16 glm::mat4 ProjMat;
     };
 } // namespace Beer::Rendering

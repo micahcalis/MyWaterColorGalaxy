@@ -11,8 +11,7 @@ namespace Beer::Core
         return std::make_shared<Rendering::Shader>(
             path,
             jsonPath,
-            *device,
-            *swapchain);
+            *device);
     }
 
     void ShaderManager::Initialize()

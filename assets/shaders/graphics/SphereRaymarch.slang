@@ -5,6 +5,7 @@ import SphereTracing;
 import BeerLit;
 import SDF;
 import ColorSpace;
+import Deferred.DeferredUtils;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -31,8 +32,8 @@ struct VertexData
 //$ Pass Opaque
 //$ Vertex SphereRaymarchVert
 //$ Fragment SphereRaymarchFrag
-//$ Cull Front
-//$ Blend On
+//$ Cull None
+//$ Blend Off
 //$ Zwrite On
 
 VERT VertexData SphereRaymarchVert(MeshData input, INSTANCEID)
@@ -46,11 +47,19 @@ VERT VertexData SphereRaymarchVert(MeshData input, INSTANCEID)
     return output;
 }
 
-FRAG float4 SphereRaymarchFrag(VertexData input) : SV_Target
+FRAG Deferred.FragData SphereRaymarchFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
+    Deferred.FragData frag;
+
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
     SphereTracing.AABB boundingbox = SphereTracing.AABB(input.transformCenter, float3(2));
-    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS);
+
+    if (!boundingbox.ShouldMarch(_CameraPos, isFrontFace, _ZBufferParams.x))
+    {
+        discard;
+    }
+
+    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
     ray = boundingbox.AlignWithBox(ray);
 
     SphereTracing.TraceResult trace = SphereTracing.TraceResult(input.positionWS);
@@ -110,12 +119,25 @@ FRAG float4 SphereRaymarchFrag(VertexData input) : SV_Target
     Color.ColorTraveler traveler = Color.ColorTraveler(_BaseColor.rgb);
     traveler.ToggleSpace();
 
-    Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
-        viewDirWS,
-        trace.Normal,
-        traveler.Color,
-        _Smoothness,
-        _Metallic);
+    // Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
+    //     viewDirWS,
+    //     trace.Normal,
+    //     traveler.Color,
+    //     _Smoothness,
+    //     _Metallic);
 
-    return float4(brdf.Shade(), 1);
+    // frag. = float4(brdf.Shade(), 1);
+    // frag.depth = Deferred.WorldPosToDepth(trace.Position);
+
+    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(traveler.Color,
+        0,
+        trace.Position,
+        trace.Normal,
+        _Smoothness,
+        _Metallic,
+        0.5f);
+
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
+
+    return writer.Write();
 }

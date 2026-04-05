@@ -28,9 +28,9 @@ namespace Beer::Rendering
                     vk::PipelineStageFlagBits::eColorAttachmentOutput};
 
             case ResourceAction::DepthRead:
-                return {vk::ImageLayout::eDepthStencilReadOnlyOptimal,
-                    vk::AccessFlagBits::eDepthStencilAttachmentRead,
-                    vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests};
+                return {vk::ImageLayout::eShaderReadOnlyOptimal,
+                    vk::AccessFlagBits::eShaderRead,
+                    vk::PipelineStageFlagBits::eFragmentShader};
 
             case ResourceAction::DepthWrite:
                 return {vk::ImageLayout::eDepthStencilAttachmentOptimal,

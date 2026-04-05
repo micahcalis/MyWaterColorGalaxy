@@ -9,7 +9,8 @@ namespace Beer::Rendering
         Unknown = 0,
         Opaque = 1 << 0,
         Transparent = 1 << 1,
-        Skybox = 1 << 2
+        Skybox = 1 << 2,
+        DeferredShade = 1 << 3
     };
 
     inline constexpr uint32_t operator|(ShaderPassType a, ShaderPassType b)
@@ -26,4 +27,5 @@ namespace Beer::Rendering
     constexpr uint32_t PASS_OPAQUE_BITS = static_cast<uint32_t>(ShaderPassType::Opaque);
     constexpr uint32_t PASS_TRANSPARENT_BITS = static_cast<uint32_t>(ShaderPassType::Transparent);
     constexpr uint32_t PASS_SKYBOX_BITS = static_cast<uint32_t>(ShaderPassType::Skybox);
+    constexpr uint32_t PASS_DFRDSHADE_BITS = static_cast<uint32_t>(ShaderPassType::DeferredShade);
 } // namespace Beer::Rendering
