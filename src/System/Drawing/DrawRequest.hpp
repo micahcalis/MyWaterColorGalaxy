@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "Rendering/Shader/FragmentOutput.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Drawing/ContextMask.hpp"
 #include "System/Drawing/LayerMask.hpp"
@@ -35,7 +36,6 @@ namespace Beer::System
         Rendering::ShaderPassType GetPass() const { return pass; }
 
         [[nodiscard]] Rendering::CommandBuffer* GetCommandBuffer() const { return commandBuffer; }
-
         [[nodiscard]] const Rendering::RenderContext& GetContext() const { return renderContext; }
 
         [[nodiscard]] bool ValidateContext(ContextType validateContext) const

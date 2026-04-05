@@ -36,9 +36,9 @@ namespace Beer::Rendering
             skyboxMaterial->GetShader());
 
         const ShaderPass* pass = skyboxMaterial->GetShader()->GetPass(ShaderPassType::Skybox);
-        commandBuffer->BindShaderPass(pass);
+        commandBuffer->BindShaderPass(skyboxMaterial->GetShader(), pass, context.Output);
         commandBuffer->BindMaterial(skyboxMaterial.get());
-        commandBuffer->BindMesh(cubeMesh.get(), &pass->BufferOrder);
+        commandBuffer->BindMesh(cubeMesh.get(), &pass->Input.BufferOrder);
 
         Rendering::MeshDrawInfo drawInfo = cubeMesh->GetDrawInfo();
         commandBuffer->DrawMeshSingle(drawInfo);
@@ -49,7 +49,8 @@ namespace Beer::Rendering
         PassDependencyList dependencies = PassDependencyList(name);
         dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
             ResourceAction::ColorWrite,
-            ResetOperator::ClearColor({0, 0, 0, 0})));
+            ResetOperator::ClearColor({0, 0, 0, 0}),
+            static_cast<vk::Format>(Core::Screen::ColorFormat())));
 
         return dependencies;
     }

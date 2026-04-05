@@ -6,6 +6,7 @@
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "glm/ext/quaternion_common.hpp"
 #include "glm/matrix.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "vulkan/vulkan.hpp"
@@ -87,6 +88,7 @@ namespace Beer::Rendering
         engineGlobalsData.CameraPos = cameraPos;
         engineGlobalsData.CameraDir = cameraForward;
         engineGlobalsData.ViewMat = viewMat;
+        engineGlobalsData.ViewDirMat = glm::mat4(glm::mat3(viewMat));
         engineGlobalsData.ProjMat = projMat;
     }
 

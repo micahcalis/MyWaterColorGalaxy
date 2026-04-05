@@ -1,9 +1,8 @@
 #include "Rendering/Shader/Shader.hpp"
 #include <filesystem>
 #include <print>
-#include <stdexcept>
-#include "Core/Application/Renderer/Swapchain.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
+#include "FragmentOutput.hpp"
 #include "ModelPush.hpp"
 #include "Rendering/Shader/ShaderReflection.hpp"
 #include "ShaderPass.hpp"
@@ -17,8 +16,7 @@ namespace Beer::Rendering
 {
     Shader::Shader(const std::filesystem::path& shaderPath,
         const std::filesystem::path& jsonPath,
-        const Core::Device& device,
-        const Core::Swapchain& swapchain)
+        const Core::Device& device)
     {
         auto spvCode = Core::AssetUtilities::LoadSpvFile(shaderPath);
 
@@ -35,29 +33,19 @@ namespace Beer::Rendering
 
         std::vector<PassSettings> passesSettings = Rendering::ShaderReflection::ReflectSettingsJson(jsonPath);
         auto shaderCode = Core::AssetUtilities::ReadFile(shaderPath);
-        auto shaderModule = Core::AssetUtilities::CreateShaderModule(shaderCode,
+        shaderModule = Core::AssetUtilities::CreateShaderModule(shaderCode,
             device.GetLogicalDevice());
 
         for (const auto settings : passesSettings)
         {
             VertexInput passInput = ShaderReflection::ReflectVertexInput(spvCode, settings.Vertex);
-            passes.try_emplace(
-                settings.Type,
-                CreatePipeline(settings, passInput, shaderModule, device, swapchain),
+            FragmentTemplate passOutput = ShaderReflection::ReflectFragment(spvCode, settings.Fragment);
+
+            passes.try_emplace(settings.Type,
                 settings,
-                passInput.BufferOrder);
+                passInput,
+                passOutput);
         }
-    }
-
-    void Shader::BindPass(vk::CommandBuffer commandBuffer, const ShaderPassType passType) const
-    {
-        const ShaderPass* shaderPass = GetPass(passType);
-
-        if (shaderPass == nullptr)
-            throw std::runtime_error(
-                std::format("Shader doesn't have pass: {}", magic_enum::enum_name(passType)));
-
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPass->Pipeline);
     }
 
     std::shared_ptr<Shader> Shader::Get(const std::string& name)
@@ -68,6 +56,32 @@ namespace Beer::Rendering
     ShaderGlobalsHandler* Shader::Globals()
     {
         return shaderManager->GetGlobalsHandler();
+    }
+
+    const vk::Pipeline Shader::GetPipeline(const ShaderPass* pass, const FragmentOutput output) const
+    {
+        auto it = pass->PipelineMap.find(output);
+        if (it == pass->PipelineMap.end())
+        {
+            if (pass->FragTemplate.OutputCompatible(output))
+            {
+                vk::raii::Pipeline newPipeline = CreatePipeline(pass->Settings,
+                    pass->Input,
+                    pass->FragTemplate,
+                    output,
+                    *shaderModule,
+                    shaderManager->GetDevice());
+
+                auto insertResult = pass->PipelineMap.emplace(output, std::move(newPipeline));
+                it = insertResult.first;
+            } else
+            {
+                PrintConfig();
+                throw std::runtime_error("FragmentOutput formats do not match Shader's SPIR-V Template!");
+            }
+        }
+
+        return *it->second;
     }
 
     void Shader::CreateMaterialSetLayout(const Core::Device& device)
@@ -103,9 +117,10 @@ namespace Beer::Rendering
 
     vk::raii::Pipeline Shader::CreatePipeline(const PassSettings& settings,
         const VertexInput& input,
+        const FragmentTemplate& fragTemplate,
+        const FragmentOutput& output,
         const vk::ShaderModule shaderModule,
-        const Core::Device& device,
-        const Core::Swapchain& swapchain)
+        const Core::Device* device) const
     {
         vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
@@ -153,30 +168,41 @@ namespace Beer::Rendering
         multisamplingCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
         multisamplingCreateInfo.sampleShadingEnable = vk::False;
 
-        vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
-        colorBlendAttachment.blendEnable = settings.Blend ? vk::True : vk::False;
-        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-        colorBlendAttachment.srcColorBlendFactor = settings.SrcBlend;
-        colorBlendAttachment.dstColorBlendFactor = settings.DstBlend;
-        colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+        std::vector<vk::PipelineColorBlendAttachmentState> colorAttachments;
+        for (const auto& fragPair : fragTemplate.TemplateList)
+        {
+            if (fragPair.Type == FragOutputType::Depth)
+            {
+                continue;
+            }
+
+            vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
+            colorBlendAttachment.blendEnable = settings.Blend ? vk::True : vk::False;
+            colorBlendAttachment.colorWriteMask = fragPair.ColorComponents;
+            colorBlendAttachment.srcColorBlendFactor = settings.SrcBlend;
+            colorBlendAttachment.dstColorBlendFactor = settings.DstBlend;
+            colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+
+            colorAttachments.push_back(colorBlendAttachment);
+        }
 
         vk::PipelineColorBlendStateCreateInfo colorBlendCreateInfo{};
         colorBlendCreateInfo.logicOpEnable = vk::False;
         colorBlendCreateInfo.logicOp = vk::LogicOp::eCopy;
-        colorBlendCreateInfo.attachmentCount = 1;
-        colorBlendCreateInfo.pAttachments = &colorBlendAttachment;
+
+        colorBlendCreateInfo.attachmentCount = static_cast<uint32_t>(colorAttachments.size());
+        colorBlendCreateInfo.pAttachments = colorAttachments.data();
 
         vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
         depthStencilCreateInfo.depthTestEnable = settings.DepthTest ? vk::True : vk::False;
         depthStencilCreateInfo.depthWriteEnable = settings.DepthWrite ? vk::True : vk::False;
         depthStencilCreateInfo.depthCompareOp = settings.CompareOp;
         depthStencilCreateInfo.depthBoundsTestEnable = vk::False;
-        depthStencilCreateInfo.stencilTestEnable = vk ::False;
+        depthStencilCreateInfo.stencilTestEnable = vk::False;
 
         vk::PipelineRenderingCreateInfo renderingCreateInfo{};
-        vk::Format colorFormat = swapchain.GetImageFormat();
-        renderingCreateInfo.colorAttachmentCount = 1;
-        renderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+        renderingCreateInfo.colorAttachmentCount = static_cast<uint32_t>(output.ColorFormats.size());
+        renderingCreateInfo.pColorAttachmentFormats = output.ColorFormats.data();
         renderingCreateInfo.depthAttachmentFormat = Shader::shaderManager->GetDepthFormat();
 
         vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
@@ -196,16 +222,17 @@ namespace Beer::Rendering
         graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-        vk::raii::Pipeline pipeline(device.GetLogicalDevice(), nullptr, graphicsPipelineCreateInfo);
+        vk::raii::Pipeline pipeline(device->GetLogicalDevice(), nullptr, graphicsPipelineCreateInfo);
         return pipeline;
     }
 
-    void Shader::PrintConfig()
+    void Shader::PrintConfig() const
     {
         for (auto& pass : passes)
         {
             std::println("Pass Type: {}", magic_enum::enum_name(pass.second.Settings.Type));
-            pass.second.BufferOrder.Print();
+            pass.second.Input.BufferOrder.Print();
+            pass.second.FragTemplate.Print();
         }
 
         materialProperties->Print();

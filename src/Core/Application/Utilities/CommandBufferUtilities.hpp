@@ -38,9 +38,6 @@ namespace Beer::Core
             const Rendering::MeshBufferOrder& bufferOrder,
             bool& canIndex);
 
-        static void BindShaderPass(vk::CommandBuffer commandBuffer,
-            const Rendering::ShaderPass* shaderPass);
-
         static void DrawCall(vk::CommandBuffer commandBuffer,
             const vk::raii::Pipeline& pipeline,
             const VkBuffer& vertexBuffer);

@@ -59,6 +59,7 @@ namespace Beer::Rendering
         static constexpr std::string_view PASS_OPAQUE = "Opaque";
         static constexpr std::string_view PASS_TRANSPARENT = "Transparent";
         static constexpr std::string_view PASS_SKYBOX = "Skybox";
+        static constexpr std::string_view PASS_DEFERRED_SHADE = "DeferredShade";
 
         static constexpr std::string_view KERNEL_INDEX = "Kernel";
         static constexpr std::string_view KERNEL_NAME = "Compute";

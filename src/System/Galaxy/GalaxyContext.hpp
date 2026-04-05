@@ -2,6 +2,7 @@
 
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/RenderPasses/ComputeTornadoParticlesPass.hpp"
+#include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/ComputePerlinPass.hpp"
@@ -31,6 +32,8 @@ namespace Beer::System
         Rendering::ComputePerlinPass* computePerlinPass = nullptr;
         Rendering::ComputeTornadoParticlesPass* tornadoPass = nullptr;
         Rendering::RenderTornadoPass* tornadoRenderPass = nullptr;
+        Rendering::DeferredShadePass* deferredShadePass = nullptr;
+
         std::shared_ptr<Rendering::Material> defaultLitMaterial;
         std::shared_ptr<Rendering::Texture2D> catTexture;
         std::shared_ptr<Rendering::Material> catLitMaterial;

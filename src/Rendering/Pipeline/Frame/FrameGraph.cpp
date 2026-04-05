@@ -46,7 +46,7 @@ namespace Beer::Rendering
     }
 
     void FrameGraph::Execute(CommandBuffer* commandBuffer,
-        const RenderContext& context,
+        RenderContext& context,
         System::Function<void> bindGlobals)
     {
         commandBuffer->Begin();
@@ -71,7 +71,7 @@ namespace Beer::Rendering
     }
 
     RenderingBeginData FrameGraph::GetNodeBeginData(RenderCommandNode& node,
-        const RenderContext& context,
+        RenderContext& context,
         std::unordered_set<std::string>& clearedResources)
     {
         RenderingBeginData beginData{};
@@ -80,6 +80,7 @@ namespace Beer::Rendering
         bool extentSet = false;
 
         PassDependencyList deps = node.RenderPass->GetDependencies();
+        context.Output = deps.GetOutput();
 
         for (const PassDependency& dep : deps.GetDependencies())
         {

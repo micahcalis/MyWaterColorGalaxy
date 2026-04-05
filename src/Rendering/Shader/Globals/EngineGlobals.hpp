@@ -25,6 +25,7 @@ namespace Beer::Rendering
         ALIGN_16 glm::vec4 ZBufferParams;
 
         ALIGN_16 glm::mat4 ViewMat;
+        ALIGN_16 glm::mat4 ViewDirMat;
         ALIGN_16 glm::mat4 ProjMat;
     };
 } // namespace Beer::Rendering

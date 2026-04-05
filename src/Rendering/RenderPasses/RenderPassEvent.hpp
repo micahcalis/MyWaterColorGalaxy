@@ -8,6 +8,7 @@ namespace Beer::Rendering
     {
         SKYBOX = 100,
         OPAQUE = 200,
+        DEFERRED_SHADE = 300,
         END = 1000
     };
 }

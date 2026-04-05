@@ -3,6 +3,7 @@
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "System/Drawing/BindHistory.hpp"
 #include "System/Drawing/BindMask.hpp"
@@ -27,7 +28,7 @@ namespace Beer::System
 
         if (mask.Has(BindType::Shader))
         {
-            commandBuffer->BindShaderPass(shaderPass);
+            commandBuffer->BindShaderPass(shader, shaderPass, renderContext.Output);
         }
 
         if (mask.Has(BindType::Material))
@@ -37,7 +38,7 @@ namespace Beer::System
 
         if (mask.Has(BindType::Mesh))
         {
-            commandBuffer->BindMesh(mesh.get(), &shaderPass->BufferOrder);
+            commandBuffer->BindMesh(mesh.get(), &shaderPass->Input.BufferOrder);
         }
 
         Rendering::MeshDrawInfo drawInfo = mesh->GetDrawInfo();

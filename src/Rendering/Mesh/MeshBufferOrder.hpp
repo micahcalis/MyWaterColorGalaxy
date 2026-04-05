@@ -22,7 +22,7 @@ namespace Beer::Rendering
             order.clear();
         }
 
-        void Print()
+        void Print() const
         {
             for (auto& element : order)
             {

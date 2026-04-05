@@ -31,4 +31,7 @@
 #define BEER_STR(x) _BEER_STR(x)
 #define BEER_CONCAT(a, b) a ## b
 
+// Blit
+#define BIND_BLIT_SRC(idx) [[vk::binding(idx, 2)]] Sampler2D _BlitSource;
+
 #endif

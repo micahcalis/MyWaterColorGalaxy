@@ -13,15 +13,20 @@ namespace Beer::Rendering
 {
     void DrawOpaquePass::OnRenderSetup(const RenderContext& context)
     {
-        context.BlackBox->ReallocateIfNeeded(context.MainColorTarget->Name(),
+        context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_ALBEDO),
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::ColorFormat());
 
-        context.BlackBox->ReallocateIfNeeded(context.MainDepthTarget->Name(),
+        context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_NORMAL),
             Core::Screen::Width(),
             Core::Screen::Height(),
-            Core::Screen::DepthFormat());
+            GBUFFER_NORMAL_FORMAT);
+
+        context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_MAT),
+            Core::Screen::Width(),
+            Core::Screen::Height(),
+            Core::Screen::ColorFormat());
     }
 
     void DrawOpaquePass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
@@ -39,9 +44,7 @@ namespace Beer::Rendering
     PassDependencyList DrawOpaquePass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
-        dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
-            ResourceAction::ColorWrite,
-            ResetOperator::ClearColor({0, 0, 0, 0})));
+        dependencies.AddDependencies(RenderGlobalUtilities::GetGBufferDependencies(true));
 
         dependencies.AddDependency(PassDependency(std::string(MAIN_DEPTH),
             ResourceAction::DepthWrite,

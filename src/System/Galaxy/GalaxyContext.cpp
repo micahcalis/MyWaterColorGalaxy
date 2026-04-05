@@ -6,6 +6,7 @@
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/ComputeTornadoParticlesPass.hpp"
+#include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
@@ -41,6 +42,9 @@ namespace Beer::System
         skyboxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawSkyboxPass>(
             std::string(Rendering::SKYBOX_PASS));
 
+        deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
+            std::string(Rendering::DEFERRED_SHADE_PASS));
+
         defaultLitMaterial = std::make_shared<Rendering::Material>("DefaultLit");
         defaultLitMaterial->SetColor("_BaseColor", glm::vec4(1));
 
@@ -52,6 +56,8 @@ namespace Beer::System
         catLitMaterial->SetColor("_BaseColor", glm::vec4(0.5f, 0.6f, 0.2f, 1));
         catLitMaterial->SetVector("_Random", glm::vec4(0.8f));
         catLitMaterial->SetInt("_ShapeIndex", 1);
+        catLitMaterial->SetFloat("_Smoothness", 0.5f);
+        catLitMaterial->SetFloat("_Metalllic", 0.8f);
 
         computePerlinPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ComputePerlinPass>(
             "Compute Perlin", 90, defaultLitMaterial.get());
@@ -72,10 +78,10 @@ namespace Beer::System
             playerEntity->Update();
         }
 
-        if (testRotationEntity != nullptr)
-        {
-            testRotationEntity->Update();
-        }
+        // if (testRotationEntity != nullptr)
+        // {
+        //     testRotationEntity->Update();
+        // }
     }
 
     void GalaxyContext::Load()
@@ -89,34 +95,34 @@ namespace Beer::System
             glm::vec4(0.2, 0.23, 0.35, 1),
             glm::vec4(0.86, 0.98, 1, 1));
 
-        Transform playerTransform{};
-        playerTransform.Position = PLAYER_SETTINGS.StartPos;
-
         std::shared_ptr<Rendering::Shader> shader = Rendering::Shader::Get("SphereRaymarch");
         std::shared_ptr<Rendering::Mesh> mesh = Rendering::Mesh::Get("MDL_Cube");
 
-        std::unique_ptr<MultipleMeshRender> multipleMeshRender = RenderRegister::CreateRenderComponent<MultipleMeshRender>(
-            ContextType::Galaxy, catLitMaterial, mesh, nullptr);
+        // std::unique_ptr<MultipleMeshRender> multipleMeshRender = RenderRegister::CreateRenderComponent<MultipleMeshRender>(
+        //     ContextType::Galaxy, catLitMaterial, mesh, nullptr);
 
-        Transform rotationParent{};
-        rotationParent.Position = glm::vec3(-20, 0, 20);
+        // Transform rotationParent{};
+        // rotationParent.Position = glm::vec3(-20, 0, 20);
 
-        testRotationEntity = registry.CreateEntity<MultipleContainerEntity<System::RotateEntitiesManager>>(
-            rotationParent,
-            std::move(multipleMeshRender),
-            100,
-            Layer::Default,
-            20.0f,
-            0.3f);
+        // testRotationEntity = registry.CreateEntity<MultipleContainerEntity<System::RotateEntitiesManager>>(
+        //     rotationParent,
+        //     std::move(multipleMeshRender),
+        //     100,
+        //     Layer::Default,
+        //     20.0f,
+        //     0.3f);
 
-        std::unique_ptr<SingleMeshRender> perlinRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
-            ContextType::Galaxy, defaultLitMaterial, mesh, nullptr, nullptr);
+        // std::unique_ptr<SingleMeshRender> perlinRenderComp = RenderRegister::CreateRenderComponent<SingleMeshRender>(
+        //     ContextType::Galaxy, defaultLitMaterial, mesh, nullptr, nullptr);
 
-        Transform perlinTransform{};
-        perlinTransform.Position = glm::vec3(-2, -2, -2);
+        // Transform perlinTransform{};
+        // perlinTransform.Position = glm::vec3(-2, -2, -2);
 
         // staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(perlinTransform),
         //     std::move(perlinRenderComp)));
+
+        Transform playerTransform{};
+        playerTransform.Position = PLAYER_SETTINGS.StartPos;
 
         playerEntity = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
             nullptr,
@@ -171,6 +177,7 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, skyboxPass, computePerlinPass, tornadoPass, tornadoRenderPass};
+        return {opaquePass, deferredShadePass};
+        // /return {opaquePass, skyboxPass, deferredShadePass, computePerlinPass, tornadoPass, tornadoRenderPass};
     }
 } // namespace Beer::System

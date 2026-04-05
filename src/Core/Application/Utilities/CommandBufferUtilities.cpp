@@ -134,12 +134,6 @@ namespace Beer::Core
         commandBuffer.bindIndexBuffer(buffers.IndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
     }
 
-    void CommandBufferUtilities::BindShaderPass(vk::CommandBuffer commandBuffer,
-        const Rendering::ShaderPass* shaderPass)
-    {
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPass->Pipeline);
-    }
-
     void CommandBufferUtilities::DrawCall(vk::CommandBuffer commandBuffer,
         const vk::raii::Pipeline& pipeline,
         const VkBuffer& vertexBuffer)

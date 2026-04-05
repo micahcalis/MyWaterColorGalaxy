@@ -2,6 +2,7 @@
 
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
+#include "Rendering/Shader/FragmentOutput.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "System/Camera/Camera.hpp"
 #include "System/Drawing/RenderRegister.hpp"
@@ -19,5 +20,6 @@ namespace Beer::Rendering
         RenderTexture* MainDepthTarget = nullptr;
         PhaseBuffer* TransformBuffer = nullptr;
         System::RenderRegister* Register = nullptr;
+        FragmentOutput Output{};
     };
 } // namespace Beer::Rendering

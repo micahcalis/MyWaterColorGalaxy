@@ -4,6 +4,7 @@
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
+#include "Rendering/Shader/FragmentOutput.hpp"
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
@@ -155,10 +156,12 @@ namespace Beer::Rendering
             sizeof(ModelTransformData) * modelData.size());
     }
 
-    void CommandBuffer::BindShaderPass(const ShaderPass* shaderPass)
+    void CommandBuffer::BindShaderPass(const Shader* shader,
+        const ShaderPass* shaderPass,
+        const FragmentOutput& output)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
-            shaderPass->Pipeline);
+            shader->GetPipeline(shaderPass, output));
     }
 
     void CommandBuffer::BindMaterial(const Material* material)
@@ -247,5 +250,20 @@ namespace Beer::Rendering
             throw std::runtime_error("Can't Dispatch Compute With 0 Thread Groups");
 
         commandBuffer.dispatch(threads.X, threads.Y, threads.Z);
+    }
+
+    void CommandBuffer::Blit(RenderTexture* source,
+        Material* material,
+        const ShaderPassType pass,
+        const FragmentOutput& output)
+    {
+        const Rendering::Shader* shader = material->GetShader();
+        const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
+
+        material->SetTexture("_BlitSource", source);
+        BindShaderPass(shader, shaderPass, output);
+        BindMaterial(material);
+
+        commandBuffer.draw(3, 1, 0, 0);
     }
 } // namespace Beer::Rendering

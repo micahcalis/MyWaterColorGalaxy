@@ -119,15 +119,25 @@ FRAG Deferred.FragData SphereRaymarchFrag(VertexData input, bool isFrontFace : S
     Color.ColorTraveler traveler = Color.ColorTraveler(_BaseColor.rgb);
     traveler.ToggleSpace();
 
-    Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
-        viewDirWS,
+    // Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
+    //     viewDirWS,
+    //     trace.Normal,
+    //     traveler.Color,
+    //     _Smoothness,
+    //     _Metallic);
+
+    // frag. = float4(brdf.Shade(), 1);
+    // frag.depth = Deferred.WorldPosToDepth(trace.Position);
+
+    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(traveler.Color,
+        0,
+        trace.Position,
         trace.Normal,
-        traveler.Color,
         _Smoothness,
-        _Metallic);
+        _Metallic,
+        0.5f);
 
-    frag.color = float4(brdf.Shade(), 1);
-    frag.depth = Deferred.WorldPosToDepth(trace.Position);
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
 
-    return frag;
+    return writer.Write();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "Rendering/Shader/FragmentOutput.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "vulkan/vulkan.hpp"

@@ -1,4 +1,5 @@
 #include "System/Components/General/MultipleMeshRender.hpp"
+#include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "System/Drawing/BindHistory.hpp"
 
@@ -22,7 +23,7 @@ namespace Beer::System
 
         if (mask.Has(BindType::Shader))
         {
-            commandBuffer->BindShaderPass(shaderPass);
+            commandBuffer->BindShaderPass(material->GetShader(), shaderPass, renderContext.Output);
         }
 
         if (mask.Has(BindType::Material))
@@ -32,7 +33,7 @@ namespace Beer::System
 
         if (mask.Has(BindType::Mesh))
         {
-            commandBuffer->BindMesh(mesh.get(), &shaderPass->BufferOrder);
+            commandBuffer->BindMesh(mesh.get(), &shaderPass->Input.BufferOrder);
         }
 
         Rendering::MeshDrawInfo drawInfo = mesh->GetDrawInfo();
