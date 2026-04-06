@@ -177,7 +177,7 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, deferredShadePass};
+        return {opaquePass, deferredShadePass, tornadoPass, tornadoRenderPass};
         // /return {opaquePass, skyboxPass, deferredShadePass, computePerlinPass, tornadoPass, tornadoRenderPass};
     }
 } // namespace Beer::System

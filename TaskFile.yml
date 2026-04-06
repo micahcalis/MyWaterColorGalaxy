@@ -34,3 +34,16 @@ tasks:
     cmds:
       # 3. Made the clean task 100% cross-platform
       - cmake -E rm -rf {{.BUILD_DIR}}
+
+# example: task generateatlas FONT=MirandaSans
+  generateatlas:
+    desc: "Generate an MSDF font atlas. Usage: task generateatlas FONT=Roboto-Regular"
+    vars:
+      FONT: '{{.FONT | default "Roboto-Regular"}}'
+      # This points to the root assets folder where your Taskfile lives
+      FONT_DIR: 'assets/fonts' 
+    cmds:
+      - echo "Generating MSDF Font Atlas for {{.FONT}} in root assets folder..."
+      # Added -imageout to explicitly place the PNG next to the JSON
+      - tools/msdf-atlas-gen/msdf-atlas-gen.exe -font {{.FONT_DIR}}/{{.FONT}}.ttf -type msdf -size 32 -format png -imageout {{.FONT_DIR}}/{{.FONT}}.png -json {{.FONT_DIR}}/{{.FONT}}.json
+      - echo "Successfully generated {{.FONT}}.png and {{.FONT}}.json in {{.FONT_DIR}}!"

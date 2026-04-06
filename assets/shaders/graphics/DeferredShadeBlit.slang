@@ -53,7 +53,6 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
 
     Deferred.DeferredShadeData data = reader.Read(positionWS);
 
-
     Lit.BRDF brdf = Lit.BRDF(GetMainLight(positionWS),
         GetViewDirectionWS(positionWS),
         data.normalWS,

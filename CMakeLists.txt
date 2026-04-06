@@ -120,7 +120,7 @@ set(ASSETS_DST "${CMAKE_SOURCE_DIR}/bin/assets")
 # 1. Write a mini CMake script to handle the smart copying
 set(COPY_SCRIPT "${CMAKE_BINARY_DIR}/copy_assets.cmake")
 file(WRITE "${COPY_SCRIPT}" 
-    "file(COPY \"${ASSETS_SRC}/\" DESTINATION \"${ASSETS_DST}/\" PATTERN \"shaders\" EXCLUDE)\n"
+    "file(COPY \"${ASSETS_SRC}/\" DESTINATION \"${ASSETS_DST}/\" PATTERN \"shaders\" EXCLUDE PATTERN \"*.ttf\" EXCLUDE)\n"
 )
 
 # 2. Run this script as an 'ALL' target (runs on every build automatically)
