@@ -1,5 +1,6 @@
 #include "Core/Application/Renderer/Renderer.hpp"
 #include "Core/Application/Managers/ComputeManager.hpp"
+#include "Core/Application/Managers/FontAssetManager.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
@@ -16,6 +17,7 @@
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
+#include "Rendering/Text/FontAsset.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "Screen.hpp"
@@ -266,6 +268,11 @@ namespace Beer::Core
             uploadManager.get());
 
         Rendering::Image::SetImageAssetManager(imageAssetManager.get());
+
+        fontAssetManager = std::make_unique<FontAssetManager>(&device,
+            uploadManager.get());
+
+        Rendering::FontAsset::SetFontAssetManager(fontAssetManager.get());
 
         renderRegister = std::make_unique<System::RenderRegister>();
         System::RenderRegister::SetRenderRegister(renderRegister.get());

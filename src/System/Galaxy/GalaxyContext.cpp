@@ -13,6 +13,7 @@
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "Rendering/Text/FontAsset.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/General/MultipleMeshRender.hpp"
@@ -67,6 +68,8 @@ namespace Beer::System
 
         tornadoRenderPass = Rendering::IRenderPass::FetchFromRegister<Rendering::RenderTornadoPass>(
             "Render Tornado", 400);
+
+        mirandaSansFont = Rendering::FontAsset::Get("MirandaSans");
     }
 
     void GalaxyContext::Update()

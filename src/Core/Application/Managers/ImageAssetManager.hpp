@@ -11,6 +11,7 @@ namespace Beer::Core
 {
     class ImageAssetManager : public IAssetManager<Rendering::Image>
     {
+    private:
         const Device* device;
         UploadManager* uploadManager;
 

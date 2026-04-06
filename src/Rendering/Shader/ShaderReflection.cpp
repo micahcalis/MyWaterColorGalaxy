@@ -6,7 +6,7 @@
 #include "Vendor/spirv_reflect/spirv_reflect.h"
 #include <fstream>
 #include <stdexcept>
-#include "Vendor./nlohmann/json.hpp"
+#include "Vendor/nlohmann/json.hpp"
 #include "Rendering/Shader/VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 #include <algorithm>
