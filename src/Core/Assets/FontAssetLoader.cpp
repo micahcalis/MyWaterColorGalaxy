@@ -8,9 +8,10 @@
 
 namespace Beer::Core
 {
-    std::vector<uint32_t> FontAssetLoader::ConvertStringToUniCode(const std::string& text)
+    void FontAssetLoader::ConvertStringToUniCode(std::vector<uint32_t>& codepoints,
+        const std::string& text)
     {
-        std::vector<uint32_t> codepoints;
+        codepoints.clear();
         codepoints.reserve(text.size());
 
         size_t i = 0;
@@ -51,8 +52,6 @@ namespace Beer::Core
 
             codepoints.push_back(codepoint);
         }
-
-        return codepoints;
     }
 
     std::unordered_map<uint32_t, Rendering::GlyphData> FontAssetLoader::ReadCharacterMap(const std::filesystem::path& jsonPath)
@@ -62,7 +61,7 @@ namespace Beer::Core
         std::ifstream file(jsonPath);
 
         if (!file.is_open())
-            throw std::runtime_error("Failed to open Shader JSON: " + jsonPath.string());
+            throw std::runtime_error("Failed to open Font JSON: " + jsonPath.string());
 
         nlohmann::json j;
         file >> j;

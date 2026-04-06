@@ -13,6 +13,8 @@ namespace Beer::Core
 
 namespace Beer::Rendering
 {
+    static const uint32_t FALLBACK_KEYCODE = 42;
+
     class FontAsset
     {
     private:
@@ -30,9 +32,27 @@ namespace Beer::Rendering
         static std::shared_ptr<FontAsset> Get(const std::string& name);
 
         FontAsset(std::shared_ptr<Texture2D> fontAtlas,
-            std::unordered_map<uint32_t, GlyphData> characterMap)
-            : fontAtlas(fontAtlas), characterMap(characterMap)
+            std::unordered_map<uint32_t, GlyphData> characterMap);
+
+        const GlyphData& GetGlyph(uint32_t uniCode) const
         {
+            auto it = characterMap.find(uniCode);
+
+            if (it != characterMap.end())
+            {
+                return it->second;
+            }
+
+            auto fallbackIt = characterMap.find(FALLBACK_KEYCODE);
+            if (fallbackIt != characterMap.end())
+            {
+                return fallbackIt->second;
+            }
+
+            static const GlyphData emptyDummyGlyph{};
+            return emptyDummyGlyph;
         }
+
+        Texture2D* GetTexture() const { return fontAtlas.get(); }
     };
 } // namespace Beer::Rendering
