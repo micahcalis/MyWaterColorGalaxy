@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Text/GlyphData.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include <cstdint>
@@ -30,6 +31,7 @@ namespace Beer::Rendering
         }
 
         static std::shared_ptr<FontAsset> Get(const std::string& name);
+        static Shader* GetTextShader();
 
         FontAsset(std::shared_ptr<Texture2D> fontAtlas,
             std::unordered_map<uint32_t, GlyphData> characterMap);

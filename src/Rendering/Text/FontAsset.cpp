@@ -14,4 +14,9 @@ namespace Beer::Rendering
     {
         return fontAssetManager->Get(name);
     }
+
+    Shader* FontAsset::GetTextShader()
+    {
+        return fontAssetManager->GetTextShader();
+    }
 } // namespace Beer::Rendering

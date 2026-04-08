@@ -28,4 +28,23 @@ namespace Beer::Rendering
             return glm::mat3x4(transposed[0], transposed[1], transposed[2]);
         }
     };
+
+    enum class AnchorMode : int32_t
+    {
+        Center = 0,
+        BottomLeft = 1,
+        TopLeft = 2,
+        BottomRight = 3,
+        TopRight = 4
+    };
+
+    struct ALIGN_16 RectPush
+    {
+    public:
+        glm::vec2 Anchor;
+        glm::vec2 Scale;
+        float Depth;
+        float Rotation;
+        AnchorMode Mode;
+    };
 } // namespace Beer::Rendering

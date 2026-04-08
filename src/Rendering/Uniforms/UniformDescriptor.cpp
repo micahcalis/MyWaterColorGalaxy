@@ -2,6 +2,7 @@
 #include "DescriptorAllocator.hpp"
 #include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
+#include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
 #include <stdexcept>
 
@@ -63,6 +64,36 @@ namespace Beer::Rendering
         descriptorWrite.dstBinding = property->Binding;
         descriptorWrite.dstArrayElement = 0;
         descriptorWrite.descriptorType = property->Type == PropertyType::RWTexture2D
+            ? vk::DescriptorType::eStorageImage
+            : vk::DescriptorType::eCombinedImageSampler;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pImageInfo = &imageInfo;
+
+        descriptorAllocator->Device->GetLogicalDevice().updateDescriptorSets(descriptorWrite, nullptr);
+    }
+
+    void UniformDescriptor::UpdateImageInfo(uint32_t frameIndex, uint32_t binding, TextureAccess access, const ITexture* texture)
+    {
+        vk::DescriptorImageInfo imageInfo{};
+        imageInfo.imageView = texture->GetImageView();
+        if (access == TextureAccess::ReadWrite)
+        {
+            imageInfo.imageLayout = vk::ImageLayout::eGeneral;
+            imageInfo.sampler = nullptr;
+        } else if (access == TextureAccess::Standard)
+        {
+            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            imageInfo.sampler = texture->GetSampler()->GetVk();
+        } else
+        {
+            throw std::runtime_error("Unsupported Texture Access Type tried binding to Uniform Descriptor");
+        }
+
+        vk::WriteDescriptorSet descriptorWrite{};
+        descriptorWrite.dstSet = *descriptorSets[frameIndex];
+        descriptorWrite.dstBinding = binding;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = access == TextureAccess::ReadWrite
             ? vk::DescriptorType::eStorageImage
             : vk::DescriptorType::eCombinedImageSampler;
         descriptorWrite.descriptorCount = 1;

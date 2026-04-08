@@ -101,6 +101,7 @@ namespace Beer::Rendering
         case Hash(PASS_TRANSPARENT): return ShaderPassType::Transparent;
         case Hash(PASS_SKYBOX): return ShaderPassType::Skybox;
         case Hash(PASS_DEFERRED_SHADE): return ShaderPassType::DeferredShade;
+        case Hash(PASS_UI): return ShaderPassType::UserInterface;
         default: return ShaderPassType::Unknown;
         }
     }

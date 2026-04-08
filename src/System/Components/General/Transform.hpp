@@ -2,6 +2,8 @@
 
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
+#include "System/Delegates/Delegate.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -47,6 +49,15 @@ namespace Beer::System
             model = glm::scale(model, Scale);
 
             return {model, glm::transpose(glm::inverse(model))};
+        }
+
+        UITransform GetUITransform() const
+        {
+            return UITransform(
+                glm::vec2(Position.x, Position.y),
+                Position.z,
+                glm::eulerAngles(Rotation).z,
+                glm::vec2(Scale.x, Scale.y));
         }
 
     public:

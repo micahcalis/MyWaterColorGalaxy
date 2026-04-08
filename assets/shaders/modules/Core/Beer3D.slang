@@ -1,33 +1,8 @@
-#include "BeerMacros.slang"
+#include "Core/BeerMacros.slang"
 
-module BeerCore;
+import Core.BeerCore;
 
-import Lights;
-
-BIND_ENGINE_GLOBALS
-public cbuffer EngineGlobals
-{
-    public float _Time;
-    public float _DeltaTime;
-    public float4x4 _ViewProjMat;
-    public float4x4 _InvViewProjMat;
-    public float3 _CameraPos;
-    public float3 _CameraDir;
-    public float4 _ScreenParams;
-    public float4 _ZBufferParams;
-    public float4x4 _ViewMat;
-    public float4x4 _ViewDirMat;
-    public float4x4 _ProjMat;
-};
-
-BIND_LIGHTING_GLOBALS
-public cbuffer LightingGlobals
-{
-    public float4 _MainLightColor;
-    public float4 _ShadowColor;
-    public float4 _SkyColor;
-    public float3 _MainLightPos;
-}
+module Beer3D;
 
 BIND_MODEL_PUSH
 public cbuffer ModelParams
@@ -44,20 +19,6 @@ public struct TransformData
 }
 
 BIND_INSTANCING_BUFFER StructuredBuffer<TransformData> _TransformInstancingBuffer;
-
-public float3 GetViewDirectionWS(float3 positionWS)
-{
-    return normalize(positionWS - _CameraPos);
-}
-
-public Light GetMainLight(float3 positionWS)
-{
-    return Light(_MainLightPos, 
-        positionWS, 
-        _MainLightColor.rgb, 
-        _ShadowColor.rgb, 
-        _SkyColor.rgb);
-}
 
 float4x4 CompleteModelTransform(float3x4 transform)
 {
@@ -82,24 +43,6 @@ public TransformData GetModelTransform(uint instanceId)
     }
 
     return transformData;
-}
-
-public struct CameraData
-{
-    public float3 position;
-    public float3 direction;
-    public float nearField;
-    public float farField;
-};
-
-public CameraData GetMainCamera()
-{
-    CameraData data;
-    data.position = _CameraPos;
-    data.direction = _CameraDir;
-    data.nearField = _ZBufferParams.x;
-    data.farField = _ZBufferParams.y;
-    return data;
 }
 
 public float4 WorldToClip(float3 positionWS)
@@ -137,12 +80,4 @@ public float3 UVDepthToWorld(float2 uv, float depth)
     float2 ndcXY = uv * 2.0 - 1.0; 
     float4 clipPos = float4(ndcXY, depth, 1.0);
     return ClipToWorld(clipPos);
-}
-
-public float LinearizeDepth(float hardwareDepth)
-{
-    float near = _ZBufferParams.x;
-    float far = _ZBufferParams.y;
-
-    return (near * far) / (far + hardwareDepth * (near - far));
 }

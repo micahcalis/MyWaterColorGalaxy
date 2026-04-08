@@ -9,15 +9,20 @@
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
+#include "Rendering/RenderPasses/DrawUIPass.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
+#include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Text/FontAsset.hpp"
+#include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/General/MultipleMeshRender.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
+#include "System/Components/UI/TextRenderComponent.hpp"
+#include "System/Components/UI/UIRect.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
@@ -46,8 +51,11 @@ namespace Beer::System
         deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
             std::string(Rendering::DEFERRED_SHADE_PASS));
 
+        drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
+            std::string(Rendering::UI_PASS));
+
         defaultLitMaterial = std::make_shared<Rendering::Material>("DefaultLit");
-        defaultLitMaterial->SetColor("_BaseColor", glm::vec4(1));
+        defaultLitMaterial->SetColor("_BaseColor", glm::vec4(0, 0, 0, 1));
 
         // catTexture = std::make_shared<Rendering::Texture2D>("Tex_CatAnguish");
 
@@ -70,6 +78,10 @@ namespace Beer::System
             "Render Tornado", 400);
 
         mirandaSansFont = Rendering::FontAsset::Get("MirandaSans");
+        fontMaterial = std::make_shared<Rendering::FontMaterial>(mirandaSansFont);
+
+        fontMaterial->SetColor(glm::vec4(1, 0, 1, 1));
+        fontMaterial->SetSize(0.06f);
     }
 
     void GalaxyContext::Update()
@@ -123,6 +135,19 @@ namespace Beer::System
 
         // staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(perlinTransform),
         //     std::move(perlinRenderComp)));
+
+        std::unique_ptr<TextRenderComponent> textRenderComponent = RenderRegister::CreateRenderComponent<TextRenderComponent>(
+            ContextType::Galaxy, fontMaterial, nullptr);
+
+        Transform textTransform{};
+        UIRect textRect{};
+        textRect.Mode = Rendering::AnchorMode::Center;
+
+        textEntity = registry.CreateEntity<TextDisplayEntity>(std::move(textTransform),
+            std::move(textRect),
+            std::move(textRenderComponent));
+
+        textEntity->SetText("Max is een kleine daggoe");
 
         Transform playerTransform{};
         playerTransform.Position = PLAYER_SETTINGS.StartPos;
@@ -180,7 +205,7 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, deferredShadePass, tornadoPass, tornadoRenderPass};
+        return {opaquePass, deferredShadePass, drawUIPass};
         // /return {opaquePass, skyboxPass, deferredShadePass, computePerlinPass, tornadoPass, tornadoRenderPass};
     }
 } // namespace Beer::System

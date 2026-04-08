@@ -5,6 +5,7 @@
 #include "System/Context/ContextType.hpp"
 #include "System/Drawing/DrawRequest.hpp"
 #include <memory>
+#include <print>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -55,6 +56,11 @@ namespace Beer::System
                 throw std::runtime_error("Render Register not Initialized");
 
             renderRegister->RemoveFromRegister(component);
+        }
+
+        void DebugSize() const
+        {
+            std::println("Draw Call Pool Amount {}", componentsMap.size());
         }
     };
 } // namespace Beer::System

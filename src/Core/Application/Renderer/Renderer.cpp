@@ -18,6 +18,7 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
 #include "Rendering/Text/FontAsset.hpp"
+#include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "Screen.hpp"
@@ -94,7 +95,8 @@ namespace Beer::Core
             throw std::runtime_error("failed to wait for fence");
         }
 
-        Rendering::Material::UpdateDirtyMaterials();
+        Rendering::Material::UpdateDirty();
+        Rendering::FontMaterial::UpdateDirty();
         renderRegister->Cleanup();
         uploadManager->FlushQueue(frameResources[frameIndex]);
         renderPipeline->InitializeFrame();

@@ -262,6 +262,8 @@ namespace Beer::Rendering
             return MeshBufferType::Uv;
         if (semantic.find(ShaderParseDef::COLOR_ATTRIB) != std::string_view::npos)
             return MeshBufferType::Color;
+        if (semantic.find(ShaderParseDef::POS2D_ATTRIB) != std::string_view::npos)
+            return MeshBufferType::Position2D;
 
         throw std::runtime_error("Shader Semantic unknown");
     }

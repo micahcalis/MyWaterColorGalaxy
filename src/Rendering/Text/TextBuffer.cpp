@@ -2,8 +2,8 @@
 #include "Core/Assets/FontAssetLoader.hpp"
 #include "FontSettings.hpp"
 #include "Rendering/Text/GlyphData.hpp"
-#include "TextVertex.hpp"
 #include <cstdint>
+#include <iostream>
 
 namespace Beer::Rendering
 {
@@ -13,50 +13,72 @@ namespace Beer::Rendering
 
     TextBuffer::TextBuffer()
     {
-        vertexBuffer = std::make_shared<Buffer>(Buffer::CreateDynamic(
-            MAX_CHARACTERS * QUAD_VERTICES * sizeof(TextVertex),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
+        posBuffer = std::make_shared<Buffer>(Buffer::CreateDynamic(
+            MAX_CHARACTERS * QUAD_VERTICES * sizeof(glm::vec2),
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+
+        uvBuffer = std::make_shared<Buffer>(Buffer::CreateDynamic(
+            MAX_CHARACTERS * QUAD_VERTICES * sizeof(glm::vec2),
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
         indexBuffer = std::make_shared<Buffer>(Buffer::CreateDynamic(
             MAX_CHARACTERS * QUAD_INDICES * sizeof(uint32_t),
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT));
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+
+        vertexCount = 0;
+        indexCount = 0;
     }
 
     void TextBuffer::Update(const std::string& text,
         const FontAsset* fontAsset,
-        const FontSettings& settings,
-        const glm::vec2 anchor,
-        const float depth)
+        const FontSettings& settings)
     {
         Core::FontAssetLoader::ConvertStringToUniCode(cachedUniCodes, text);
 
-        CalculateVertices(cachedVertices,
+        if (cachedUniCodes.size() > MAX_CHARACTERS)
+        {
+            cachedUniCodes.resize(MAX_CHARACTERS);
+        }
+
+        CalculateVertices(cachedPositions,
+            cachedUVs,
             cachedIndices,
             cachedUniCodes,
             fontAsset,
-            settings,
-            anchor,
-            depth);
+            settings);
 
-        vertexBuffer->Upload(cachedVertices.data(), cachedVertices.size() * sizeof(TextVertex));
-        indexBuffer->Upload(cachedIndices.data(), cachedIndices.size() * sizeof(uint32_t));
+        if (!cachedIndices.empty())
+        {
+            posBuffer->Upload(cachedPositions.data(), cachedPositions.size() * sizeof(glm::vec2));
+            uvBuffer->Upload(cachedUVs.data(), cachedUVs.size() * sizeof(glm::vec2));
+            indexBuffer->Upload(cachedIndices.data(), cachedIndices.size() * sizeof(uint32_t));
+        }
+
+        vertexCount = cachedPositions.size();
+        indexCount = cachedIndices.size();
     }
 
-    void TextBuffer::CalculateVertices(std::vector<TextVertex>& textVertices,
-        std::vector<uint32_t>& textIndices,
+    MeshDrawInfo TextBuffer::GetDrawInfo() const
+    {
+        return MeshDrawInfo(true, vertexCount, indexCount);
+    }
+
+    void TextBuffer::CalculateVertices(std::vector<glm::vec2>& positions,
+        std::vector<glm::vec2>& uvs,
+        std::vector<uint32_t>& indices,
         const std::vector<uint32_t>& uniCodes,
         const FontAsset* fontAsset,
-        const FontSettings& settings,
-        const glm::vec2 anchor,
-        const float depth)
+        const FontSettings& settings)
     {
-        textVertices.clear();
-        textVertices.reserve(uniCodes.size() * QUAD_VERTICES);
+        positions.clear();
+        uvs.clear();
+        indices.clear();
 
-        textIndices.clear();
-        textIndices.reserve(uniCodes.size() * QUAD_INDICES);
+        positions.reserve(uniCodes.size() * QUAD_VERTICES);
+        uvs.reserve(uniCodes.size() * QUAD_VERTICES);
+        indices.reserve(uniCodes.size() * QUAD_INDICES);
 
-        glm::vec2 currentPosition = anchor;
+        glm::vec2 currentPosition = glm::vec2(0);
         float atlasWidth = fontAsset->GetTexture()->GetWidth();
         float atlasHeight = fontAsset->GetTexture()->GetHeight();
         uint32_t iter = 0;
@@ -65,37 +87,54 @@ namespace Beer::Rendering
         {
             const GlyphData& glyph = fontAsset->GetGlyph(uniCode);
 
-            float uMin = glyph.AtlasBounds.Left / atlasWidth;
-            float uMax = glyph.AtlasBounds.Right / atlasWidth;
-            float vMin = glyph.AtlasBounds.Bottom / atlasHeight;
-            float vMax = glyph.AtlasBounds.Top / atlasHeight;
+            float letterStartX = currentPosition.x;
+            currentPosition.x += (glyph.Advance * settings.FontSize);
 
-            float xMin = currentPosition.x + (glyph.CharacterBounds.Left * settings.FontSize);
-            float xMax = currentPosition.x + (glyph.CharacterBounds.Right * settings.FontSize);
+            if (glyph.CharacterBounds.Right == glyph.CharacterBounds.Left
+                || glyph.CharacterBounds.Top == glyph.CharacterBounds.Bottom)
+            {
+                continue;
+            }
 
-            float yMin = currentPosition.y + (glyph.CharacterBounds.Bottom * settings.FontSize);
-            float yMax = currentPosition.y + (glyph.CharacterBounds.Top * settings.FontSize);
+            float uMin = glyph.AtlasBounds.Right / atlasWidth;
+            float uMax = glyph.AtlasBounds.Left / atlasWidth;
+            float vTop = 1.0f - glyph.AtlasBounds.Top / atlasHeight;
+            float vBottom = 1.0f - glyph.AtlasBounds.Bottom / atlasHeight;
 
-            float z = depth;
+            float xMin = letterStartX + (glyph.CharacterBounds.Left * settings.FontSize);
+            float xMax = letterStartX + (glyph.CharacterBounds.Right * settings.FontSize);
 
-            textVertices.push_back({{xMin, yMax, z}, {uMin, vMax}}); // TL
-            textVertices.push_back({{xMin, yMin, z}, {uMin, vMin}}); // BL
-            textVertices.push_back({{xMax, yMax, z}, {uMax, vMax}}); // TR
-            textVertices.push_back({{xMax, yMin, z}, {uMax, vMin}}); // BR
+            float screenYTop = currentPosition.y - (glyph.CharacterBounds.Top * settings.FontSize);
+            float screenYBottom = currentPosition.y - (glyph.CharacterBounds.Bottom * settings.FontSize);
+
+            // Top-Left
+            positions.push_back({xMin, screenYTop});
+            uvs.push_back({uMax, vTop});
+
+            // Bottom-Left
+            positions.push_back({xMin, screenYBottom});
+            uvs.push_back({uMax, vBottom});
+
+            // Top-Right
+            positions.push_back({xMax, screenYTop});
+            uvs.push_back({uMin, vTop});
+
+            // Bottom-Right
+            positions.push_back({xMax, screenYBottom});
+            uvs.push_back({uMin, vBottom});
 
             uint32_t nIndex = iter * QUAD_VERTICES;
 
             // TRI 1
-            textIndices.push_back(nIndex);
-            textIndices.push_back(nIndex + 1);
-            textIndices.push_back(nIndex + 2);
+            indices.push_back(nIndex);
+            indices.push_back(nIndex + 1);
+            indices.push_back(nIndex + 2);
 
             // TRI 2
-            textIndices.push_back(nIndex + 2);
-            textIndices.push_back(nIndex + 1);
-            textIndices.push_back(nIndex + 3);
+            indices.push_back(nIndex + 2);
+            indices.push_back(nIndex + 1);
+            indices.push_back(nIndex + 3);
 
-            currentPosition.x += (glyph.Advance * settings.FontSize);
             iter++;
         }
     }

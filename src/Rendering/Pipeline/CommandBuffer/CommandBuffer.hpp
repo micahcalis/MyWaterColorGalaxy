@@ -6,6 +6,8 @@
 #include "Rendering/Mesh/MeshBufferOrder.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
+#include "Rendering/Text/FontMaterial.hpp"
+#include "Rendering/Text/TextBuffer.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
@@ -52,6 +54,9 @@ namespace Beer::Rendering
         void BindModelPush(Rendering::ModelPush modelPush,
             const Rendering::Shader* shader);
 
+        void BindRectPush(Rendering::RectPush rectPush,
+            const Rendering::Shader* shader);
+
         void BindInstancingPush(const Rendering::Shader* shader);
         void BindInstancingTransforms(const std::vector<System::Transform>& transforms,
             const RenderContext& context,
@@ -66,7 +71,9 @@ namespace Beer::Rendering
             const FragmentOutput& output);
 
         void BindMaterial(const Material* material);
+        void BindFontMaterial(const FontMaterial* fontMaterial);
         void BindMesh(const Mesh* mesh, const MeshBufferOrder* order);
+        void BindTextBuffer(const TextBuffer* textBuffer);
         void BindComputeKernel(const ComputeKernel* compute);
         void BindComputeContext(const ComputeContext* context);
 

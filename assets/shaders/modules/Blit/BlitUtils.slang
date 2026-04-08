@@ -1,6 +1,6 @@
-    #include "BeerMacros.slang"
+    #include "Core/BeerMacros.slang"
 
-    import BeerCore;
+    import Core.BeerCore;
 
     module BlitUtils;
 

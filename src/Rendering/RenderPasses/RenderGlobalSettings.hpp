@@ -19,6 +19,7 @@ namespace Beer::Rendering
     constexpr std::string_view OPAQUE_PASS = "Opaque";
     constexpr std::string_view SKYBOX_PASS = "Skybox";
     constexpr std::string_view DEFERRED_SHADE_PASS = "DeferredShade";
+    constexpr std::string_view UI_PASS = "UserInterface";
 
     constexpr static uint32_t TRANSFORM_BUFFER_COUNT = 100'000;
     constexpr std::string_view TRANSFORM_BUFFER_NAME = "TransformInstancingBuffer";
