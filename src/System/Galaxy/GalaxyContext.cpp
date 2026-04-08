@@ -22,7 +22,7 @@
 #include "System/Components/General/MultipleMeshRender.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Components/UI/TextRenderComponent.hpp"
-#include "System/Components/UI/UIRect.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
@@ -139,12 +139,11 @@ namespace Beer::System
         std::unique_ptr<TextRenderComponent> textRenderComponent = RenderRegister::CreateRenderComponent<TextRenderComponent>(
             ContextType::Galaxy, fontMaterial, nullptr);
 
-        Transform textTransform{};
-        UIRect textRect{};
-        textRect.Mode = Rendering::AnchorMode::Center;
+        UITransform textTransform{};
+        textTransform.Anchor = AnchorMode::BottomLeft;
+        textTransform.Scale = glm::vec2(1);
 
         textEntity = registry.CreateEntity<TextDisplayEntity>(std::move(textTransform),
-            std::move(textRect),
             std::move(textRenderComponent));
 
         textEntity->SetText("Max is een kleine daggoe");

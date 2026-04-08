@@ -51,15 +51,6 @@ namespace Beer::System
             return {model, glm::transpose(glm::inverse(model))};
         }
 
-        UITransform GetUITransform() const
-        {
-            return UITransform(
-                glm::vec2(Position.x, Position.y),
-                Position.z,
-                glm::eulerAngles(Rotation).z,
-                glm::vec2(Scale.x, Scale.y));
-        }
-
     public:
         static std::vector<Rendering::ModelTransformData> ToModelData(const std::vector<Transform>& transforms)
         {

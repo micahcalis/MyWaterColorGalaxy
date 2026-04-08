@@ -2,8 +2,8 @@
 #include "Core/Assets/FontAssetLoader.hpp"
 #include "FontSettings.hpp"
 #include "Rendering/Text/GlyphData.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include <cstdint>
-#include <iostream>
 
 namespace Beer::Rendering
 {
@@ -31,7 +31,9 @@ namespace Beer::Rendering
 
     void TextBuffer::Update(const std::string& text,
         const FontAsset* fontAsset,
-        const FontSettings& settings)
+        const FontSettings& fontSettings,
+        const System::TextSettings& settings,
+        const System::UITransform* transform)
     {
         Core::FontAssetLoader::ConvertStringToUniCode(cachedUniCodes, text);
 
@@ -40,12 +42,10 @@ namespace Beer::Rendering
             cachedUniCodes.resize(MAX_CHARACTERS);
         }
 
-        CalculateVertices(cachedPositions,
-            cachedUVs,
-            cachedIndices,
-            cachedUniCodes,
-            fontAsset,
-            settings);
+        CalculateVertices(fontAsset,
+            fontSettings,
+            settings,
+            transform);
 
         if (!cachedIndices.empty())
         {
@@ -63,32 +63,30 @@ namespace Beer::Rendering
         return MeshDrawInfo(true, vertexCount, indexCount);
     }
 
-    void TextBuffer::CalculateVertices(std::vector<glm::vec2>& positions,
-        std::vector<glm::vec2>& uvs,
-        std::vector<uint32_t>& indices,
-        const std::vector<uint32_t>& uniCodes,
-        const FontAsset* fontAsset,
-        const FontSettings& settings)
+    void TextBuffer::CalculateVertices(const FontAsset* fontAsset,
+        const FontSettings& fontSettings,
+        const System::TextSettings& settings,
+        const System::UITransform* transform)
     {
-        positions.clear();
-        uvs.clear();
-        indices.clear();
+        cachedPositions.clear();
+        cachedUVs.clear();
+        cachedIndices.clear();
 
-        positions.reserve(uniCodes.size() * QUAD_VERTICES);
-        uvs.reserve(uniCodes.size() * QUAD_VERTICES);
-        indices.reserve(uniCodes.size() * QUAD_INDICES);
+        cachedPositions.reserve(cachedUniCodes.size() * QUAD_VERTICES);
+        cachedUVs.reserve(cachedUniCodes.size() * QUAD_VERTICES);
+        cachedIndices.reserve(cachedUniCodes.size() * QUAD_INDICES);
 
         glm::vec2 currentPosition = glm::vec2(0);
         float atlasWidth = fontAsset->GetTexture()->GetWidth();
         float atlasHeight = fontAsset->GetTexture()->GetHeight();
         uint32_t iter = 0;
 
-        for (const auto& uniCode : uniCodes)
+        for (const auto& uniCode : cachedUniCodes)
         {
             const GlyphData& glyph = fontAsset->GetGlyph(uniCode);
 
             float letterStartX = currentPosition.x;
-            currentPosition.x += (glyph.Advance * settings.FontSize);
+            currentPosition.x += (glyph.Advance * fontSettings.FontSize);
 
             if (glyph.CharacterBounds.Right == glyph.CharacterBounds.Left
                 || glyph.CharacterBounds.Top == glyph.CharacterBounds.Bottom)
@@ -101,39 +99,39 @@ namespace Beer::Rendering
             float vTop = 1.0f - glyph.AtlasBounds.Top / atlasHeight;
             float vBottom = 1.0f - glyph.AtlasBounds.Bottom / atlasHeight;
 
-            float xMin = letterStartX + (glyph.CharacterBounds.Left * settings.FontSize);
-            float xMax = letterStartX + (glyph.CharacterBounds.Right * settings.FontSize);
+            float xMin = letterStartX + (glyph.CharacterBounds.Left * fontSettings.FontSize);
+            float xMax = letterStartX + (glyph.CharacterBounds.Right * fontSettings.FontSize);
 
-            float screenYTop = currentPosition.y - (glyph.CharacterBounds.Top * settings.FontSize);
-            float screenYBottom = currentPosition.y - (glyph.CharacterBounds.Bottom * settings.FontSize);
+            float screenYTop = currentPosition.y - (glyph.CharacterBounds.Top * fontSettings.FontSize);
+            float screenYBottom = currentPosition.y - (glyph.CharacterBounds.Bottom * fontSettings.FontSize);
 
             // Top-Left
-            positions.push_back({xMin, screenYTop});
-            uvs.push_back({uMax, vTop});
+            cachedPositions.push_back({xMin, screenYTop});
+            cachedUVs.push_back({uMax, vTop});
 
             // Bottom-Left
-            positions.push_back({xMin, screenYBottom});
-            uvs.push_back({uMax, vBottom});
+            cachedPositions.push_back({xMin, screenYBottom});
+            cachedUVs.push_back({uMax, vBottom});
 
             // Top-Right
-            positions.push_back({xMax, screenYTop});
-            uvs.push_back({uMin, vTop});
+            cachedPositions.push_back({xMax, screenYTop});
+            cachedUVs.push_back({uMin, vTop});
 
             // Bottom-Right
-            positions.push_back({xMax, screenYBottom});
-            uvs.push_back({uMin, vBottom});
+            cachedPositions.push_back({xMax, screenYBottom});
+            cachedUVs.push_back({uMin, vBottom});
 
             uint32_t nIndex = iter * QUAD_VERTICES;
 
             // TRI 1
-            indices.push_back(nIndex);
-            indices.push_back(nIndex + 1);
-            indices.push_back(nIndex + 2);
+            cachedIndices.push_back(nIndex);
+            cachedIndices.push_back(nIndex + 1);
+            cachedIndices.push_back(nIndex + 2);
 
             // TRI 2
-            indices.push_back(nIndex + 2);
-            indices.push_back(nIndex + 1);
-            indices.push_back(nIndex + 3);
+            cachedIndices.push_back(nIndex + 2);
+            cachedIndices.push_back(nIndex + 1);
+            cachedIndices.push_back(nIndex + 3);
 
             iter++;
         }

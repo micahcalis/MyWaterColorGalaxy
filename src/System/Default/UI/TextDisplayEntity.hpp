@@ -1,27 +1,22 @@
 #pragma once
 
 #include "Rendering/Shader/ModelPush.hpp"
-#include "System/Components/General/Transform.hpp"
-#include "System/Components/Registry/GameEntity.hpp"
+#include "System/Components/Registry/UIEntity.hpp"
 #include "System/Components/UI/TextRenderComponent.hpp"
-#include "System/Components/UI/UIRect.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include <memory>
 
 namespace Beer::System
 {
-    class TextDisplayEntity : public GameEntity
+    class TextDisplayEntity : public UIEntity
     {
-    private:
-        UIRect rect;
-
     public:
-        TextDisplayEntity(Transform transform,
-            UIRect rect,
+        TextDisplayEntity(UITransform transform,
             std::unique_ptr<TextRenderComponent> textRenderComp)
-            : GameEntity(transform, nullptr, Layer::UI), rect(rect)
+            : UIEntity(transform, nullptr, Layer::UI)
         {
-            textRenderComp->SetGetRectPush([this, rect, transform]() -> Rendering::RectPush {
-                return transform.GetUITransform().GetRectPush(rect);
+            textRenderComp->SetGetTransform([this]() -> UITransform* {
+                return &this->uiTransform;
             });
 
             this->renderComponent = (std::move(textRenderComp));
@@ -29,13 +24,14 @@ namespace Beer::System
 
         void SetText(const std::string& text)
         {
-            TextRenderComponent* textRenderComp = static_cast<TextRenderComponent*>(renderComponent.get());
-            textRenderComp->SetText(text);
+            GetTextComponent()->SetText(text);
         }
 
         void Update() override
         {
         }
+
+        [[nodiscard]] TextRenderComponent* GetTextComponent() { return static_cast<TextRenderComponent*>(renderComponent.get()); }
 
     private:
         void InitializeManager() override

@@ -4,7 +4,8 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
 #include "Rendering/Text/FontAsset.hpp"
-#include "Rendering/Text/TextVertex.hpp"
+#include "System/Components/UI/TextSettings.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -35,16 +36,16 @@ namespace Beer::Rendering
 
         void Update(const std::string& text,
             const FontAsset* fontAsset,
-            const FontSettings& settings);
+            const FontSettings& fontSettings,
+            const System::TextSettings& settings,
+            const System::UITransform* transform);
 
         MeshDrawInfo GetDrawInfo() const;
 
     private:
-        void CalculateVertices(std::vector<glm::vec2>& positions,
-            std::vector<glm::vec2>& uvs,
-            std::vector<uint32_t>& indices,
-            const std::vector<uint32_t>& uniCodes,
-            const FontAsset* fontAsset,
-            const FontSettings& settings);
+        void CalculateVertices(const FontAsset* fontAsset,
+            const FontSettings& fontSettings,
+            const System::TextSettings& settings,
+            const System::UITransform* transform);
     };
 } // namespace Beer::Rendering

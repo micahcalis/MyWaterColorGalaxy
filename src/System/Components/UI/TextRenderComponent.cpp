@@ -7,9 +7,16 @@ namespace Beer::System
 {
     void TextRenderComponent::SetText(const std::string& text)
     {
+        if (cachedText == text)
+            return;
+
         textBuffer->Update(text,
             fontMaterial->GetAsset(),
-            fontMaterial->GetSettings());
+            fontMaterial->GetSettings(),
+            textSettings,
+            getTransform());
+
+        cachedText = text;
     }
 
     BindHistory TextRenderComponent::Bind(BindMask mask,
@@ -19,9 +26,9 @@ namespace Beer::System
     {
         const Rendering::Shader* shader = fontMaterial->GetShader();
 
-        if (getRectPush != nullptr)
+        if (getTransform != nullptr)
         {
-            commandBuffer->BindRectPush(getRectPush(), shader);
+            commandBuffer->BindRectPush(getTransform()->Rect.GetRectPush(), shader);
         }
 
         const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
