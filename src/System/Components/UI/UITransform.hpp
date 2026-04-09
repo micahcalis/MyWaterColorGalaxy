@@ -2,6 +2,7 @@
 
 #include "glm/glm.hpp"
 #include "Rendering/Shader/RectPush.hpp"
+#include <stdexcept>
 
 namespace Beer::System
 {
@@ -88,11 +89,54 @@ namespace Beer::System
         glm::vec2 Scale = glm::vec2(1);
         PixelRect Rect{};
 
+    private:
+        std::vector<UITransform*> children;
+
     public:
         glm::vec2 GetPixelAnchor(const AnchorMode mode) const;
         void CalculatePixelRect();
 
+        void BindChild(UITransform* child)
+        {
+            if (child == nullptr)
+                return;
+
+            if (this->IsDescendantOf(child))
+            {
+                throw std::runtime_error("Trying to Bind Circular Dependency in UI Hierarchy");
+            }
+
+            if (child->Parent != nullptr)
+            {
+                child->Parent->UnbindChild(child);
+            }
+
+            children.push_back(child);
+            child->Parent = this;
+        }
+
+        void UnbindChild(UITransform* child)
+        {
+            std::erase(children, child);
+
+            if (child->Parent == this)
+            {
+                child->Parent = nullptr;
+            }
+        }
+
+        void HierarchalUpdate()
+        {
+            CalculatePixelRect();
+
+            for (auto& child : children)
+            {
+                child->HierarchalUpdate();
+            }
+        }
+
     private:
         static glm::vec2 GetPivotOffset(AnchorMode pivot);
+        bool IsDescendantOf(UITransform* potentialParent) const;
     };
 } // namespace Beer::System

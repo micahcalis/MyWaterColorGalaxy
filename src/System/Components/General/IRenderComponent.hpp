@@ -7,7 +7,6 @@
 #include "System/Drawing/BindHistory.hpp"
 #include "System/Drawing/BindMask.hpp"
 #include "System/Drawing/Layer.hpp"
-#include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
 {

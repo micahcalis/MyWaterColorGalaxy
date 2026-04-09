@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Text/TextBuffer.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "Rendering/Text/FontMaterial.hpp"

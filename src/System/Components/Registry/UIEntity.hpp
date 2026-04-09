@@ -8,20 +8,24 @@ namespace Beer::System
     class UIEntity : public IEntity
     {
     protected:
-        UITransform uiTransform;
+        UITransform rootTransform;
 
     public:
         virtual ~UIEntity() = default;
 
-        [[nodiscard]] UITransform* GetUITransform() { return &uiTransform; }
+        [[nodiscard]] UITransform* GetRootTransform() { return &rootTransform; }
 
     protected:
-        UIEntity(UITransform uiTransform,
+        UIEntity(UITransform rootTransform,
             std::unique_ptr<IRenderComponent> renderComponent,
             Layer layer = Layer::UI)
-            : uiTransform(uiTransform), IEntity(std::move(renderComponent), layer)
+            : rootTransform(rootTransform), IEntity(std::move(renderComponent), layer)
         {
-            //  uiTransform.Parent = Core::Screen::ScreenTransform();
+        }
+
+        void UpdateHierarchy()
+        {
+            rootTransform.HierarchalUpdate();
         }
     };
 } // namespace Beer::System

@@ -23,14 +23,18 @@ namespace Beer::System
 
     void UITransform::CalculatePixelRect()
     {
-        glm::vec2 anchorOffset = Parent->GetPixelAnchor(Anchor);
+        glm::vec2 anchorOffset = glm::vec2(0);
+        if (Parent != nullptr)
+        {
+            anchorOffset = Parent->GetPixelAnchor(Anchor);
+        }
 
         PixelRect unitRect{};
         unitRect.Scale(Scale);
         unitRect.Rotate(Rotation);
         unitRect.Scale(glm::vec2(Core::Screen::RectUnitLength()));
 
-        glm::vec2 unitOffset = Position + GetPivotOffset(Pivot) * Scale;
+        glm::vec2 unitOffset = Position - GetPivotOffset(Pivot) * Scale;
         unitOffset *= Core::Screen::RectUnitLength();
         unitRect.Move(unitOffset + anchorOffset);
 
@@ -51,5 +55,25 @@ namespace Beer::System
         case AnchorMode::MiddleLeft: return glm::vec2(-0.5f, 0);
         case AnchorMode::MiddleRight: return glm::vec2(0.5f, 0);
         }
+    }
+
+    bool UITransform::IsDescendantOf(UITransform* potentialParent) const
+    {
+        if (potentialParent == nullptr)
+            return false;
+        if (potentialParent == this)
+            return true;
+
+        UITransform* current = this->Parent;
+        while (current != nullptr)
+        {
+            if (current == potentialParent)
+            {
+                return true;
+            }
+            current = current->Parent;
+        }
+
+        return false;
     }
 } // namespace Beer::System

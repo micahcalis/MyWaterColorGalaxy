@@ -16,7 +16,7 @@ namespace Beer::System
             : UIEntity(transform, nullptr, Layer::UI)
         {
             textRenderComp->SetGetTransform([this]() -> UITransform* {
-                return &this->uiTransform;
+                return GetRootTransform();
             });
 
             this->renderComponent = (std::move(textRenderComp));
