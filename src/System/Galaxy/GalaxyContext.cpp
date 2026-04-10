@@ -1,6 +1,7 @@
 #pragma once
 
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Compute/ComputeShader.hpp"
 #include "Rendering/Material/Material.hpp"
@@ -26,6 +27,7 @@
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
+#include "System/Default/UI/TestQuadTreeEntity.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Components/Registry/Registry.hpp"
@@ -81,7 +83,7 @@ namespace Beer::System
         fontMaterial = std::make_shared<Rendering::FontMaterial>(mirandaSansFont);
 
         fontMaterial->SetColor(glm::vec4(1, 0, 1, 1));
-        fontMaterial->SetSize(0.06f);
+        fontMaterial->SetSize(100.0f);
     }
 
     void GalaxyContext::Update()
@@ -97,6 +99,8 @@ namespace Beer::System
         // {
         //     testRotationEntity->Update();
         // }
+
+        testQuadTreeEntity->Update();
     }
 
     void GalaxyContext::Load()
@@ -140,13 +144,21 @@ namespace Beer::System
             ContextType::Galaxy, fontMaterial, nullptr);
 
         UITransform textTransform{};
-        textTransform.Anchor = AnchorMode::BottomLeft;
+        textTransform.Anchor = AnchorMode::Center;
         textTransform.Scale = glm::vec2(1);
 
         textEntity = registry.CreateEntity<TextDisplayEntity>(std::move(textTransform),
             std::move(textRenderComponent));
 
         textEntity->SetText("Max is een kleine daggoe");
+
+        UITransform testQuadTreeTransform{};
+        testQuadTreeTransform.Anchor = AnchorMode::BottomLeft;
+        testQuadTreeTransform.Scale = glm::vec2(1);
+        testQuadTreeTransform.Pivot = AnchorMode::BottomLeft;
+
+        testQuadTreeEntity = registry.CreateEntity<TestQuadTreeEntity>(
+            std::move(testQuadTreeTransform));
 
         Transform playerTransform{};
         playerTransform.Position = PLAYER_SETTINGS.StartPos;

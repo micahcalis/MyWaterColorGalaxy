@@ -18,6 +18,7 @@ public cbuffer EngineGlobals
     public float4x4 _ViewMat;
     public float4x4 _ViewDirMat;
     public float4x4 _ProjMat;
+    public float4x4 _UIOrthoProjMat;
 };
 
 BIND_LIGHTING_GLOBALS

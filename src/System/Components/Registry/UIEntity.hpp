@@ -1,5 +1,4 @@
 #pragma once
-#include "Core/Application/Renderer/Screen.hpp"
 #include "System/Components/Registry/IEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 
@@ -12,7 +11,6 @@ namespace Beer::System
 
     public:
         virtual ~UIEntity() = default;
-
         [[nodiscard]] UITransform* GetRootTransform() { return &rootTransform; }
 
     protected:

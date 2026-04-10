@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "System/Components/Registry/UIEntity.hpp"
 #include "System/Components/UI/TextRenderComponent.hpp"
@@ -19,6 +20,7 @@ namespace Beer::System
                 return GetRootTransform();
             });
 
+            Core::Screen::ScreenTransform()->BindChild(GetRootTransform());
             this->renderComponent = (std::move(textRenderComp));
         }
 

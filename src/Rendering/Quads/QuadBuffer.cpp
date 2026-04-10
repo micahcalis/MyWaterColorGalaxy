@@ -3,6 +3,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "glm/glm.hpp"
 #include <array>
+#include <print>
 
 namespace Beer::Rendering
 {
@@ -11,10 +12,10 @@ namespace Beer::Rendering
     static constexpr int QUAD_INDICES = 6;
 
     static constexpr std::array<glm::vec2, QUAD_VERTICES> QUAD_UVS = {
-        glm::vec2(0),
+        glm::vec2(1, 1),
         glm::vec2(1, 0),
         glm::vec2(0, 1),
-        glm::vec2(1, 1)};
+        glm::vec2(0, 0)};
 
     static constexpr size_t PIXEL_RECT_SIZE = sizeof(System::PixelRect);
     static constexpr size_t UV_RECT_SIZE = sizeof(glm::vec2) * QUAD_VERTICES;
@@ -73,6 +74,7 @@ namespace Beer::Rendering
         cpuPositions.clear();
         cpuUVs.clear();
         cpuPositions.clear();
+        cpuIndices.clear();
     }
 
     void QuadBuffer::PushVertices(const System::PixelRect& rect)

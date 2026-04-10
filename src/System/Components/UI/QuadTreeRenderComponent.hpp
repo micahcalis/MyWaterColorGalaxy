@@ -13,8 +13,8 @@ namespace Beer::System
     {
     private:
         Function<std::vector<UIRenderItem>> getRenderItems;
-        std::unique_ptr<Rendering::QuadDrawCallPool> drawCallPool;
         std::unique_ptr<Rendering::QuadBuffer> quadBuffer;
+        std::unique_ptr<Rendering::QuadDrawCallPool> drawCallPool;
 
     public:
         QuadTreeRenderComponent();
@@ -31,7 +31,7 @@ namespace Beer::System
             const Rendering::RenderContext& renderContext,
             const Rendering::ShaderPassType pass) override;
 
-        bool HasPass(Rendering::ShaderPassType pass) { return pass == Rendering::ShaderPassType::UserInterface; }
+        bool HasPass(Rendering::ShaderPassType pass) const override { return pass == Rendering::ShaderPassType::UserInterface; }
         Layer GetLayer() const override { return Layer::UI; }
         BindMask GetBindMask(const BindHistory& history) const override;
 

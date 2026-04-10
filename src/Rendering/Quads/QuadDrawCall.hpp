@@ -5,6 +5,7 @@
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Text/TextBuffer.hpp"
+#include <print>
 
 namespace Beer::Rendering
 {
@@ -38,6 +39,19 @@ namespace Beer::Rendering
         void Execute(CommandBuffer* commandBuffer,
             const RenderContext& context,
             const ShaderPassType pass) const;
+
+        void Print() const
+        {
+            std::println("Is Quad Draw Call: {}", !IsText());
+
+            if (!IsText())
+            {
+                std::println("First Index: {}", firstIndex);
+                std::println("Index Count: {}", indexCount);
+            }
+
+            std::println("Draw Call end");
+        }
 
     private:
         void DrawQuads(CommandBuffer* commandBuffer,

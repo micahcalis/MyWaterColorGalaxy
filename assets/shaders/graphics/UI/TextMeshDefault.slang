@@ -3,6 +3,7 @@
 import Core.BeerCore;
 import Core.Beer2D;
 import UI.TextMesh;
+import UI.SpriteMesh;
 
 //$ Pass UserInterface
 //$ Vertex TextVert
@@ -13,10 +14,10 @@ import UI.TextMesh;
 //$ ZWrite Off
 //$ ZMode Always
 
-VERT Text.VertData TextVert(Text.MeshData input)
+VERT Text.VertData TextVert(Sprite.MeshData input)
 {
     Text.VertData output;
-    output.positionCS = Text.GetPositionCS(input);
+    output.positionCS = Sprite.GetPositionCS(input);
     output.uv = input.texCoord;
     return output;
 }

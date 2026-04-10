@@ -17,6 +17,7 @@
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Light/LightEntity.hpp"
 #include "System/Default/UI/TextDisplayEntity.hpp"
+#include "System/Default/UI/TestQuadTreeEntity.hpp"
 #include <vector>
 
 namespace Beer::System
@@ -29,6 +30,7 @@ namespace Beer::System
         std::vector<SingleStaticEntity*> staticEntities;
         MultipleContainerEntity<System::RotateEntitiesManager>* testRotationEntity;
         TextDisplayEntity* textEntity;
+        TestQuadTreeEntity* testQuadTreeEntity;
 
         Function<PlayerInput> getPlayerInput;
 

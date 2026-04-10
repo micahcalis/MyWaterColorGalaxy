@@ -22,6 +22,16 @@ namespace Beer::Rendering
         void Update(std::vector<System::UIRenderItem> renderItems);
         [[nodiscard]] std::vector<QuadDrawCall>& GetDrawCalls() { return drawCalls; }
 
+        void PrintDrawCalls() const
+        {
+            std::println("Draw Call Count: {}", drawCalls.size());
+
+            for (auto& drawCall : drawCalls)
+            {
+                drawCall.Print();
+            }
+        }
+
     private:
         void SortRenderItems(std::vector<System::UIRenderItem>& renderItems);
         void BuildDrawCalls(std::vector<System::UIRenderItem>& renderItems);
