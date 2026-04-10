@@ -30,6 +30,7 @@ namespace Beer::System
 
         void SetGetTransform(Function<UITransform*> getTransform) { this->getTransform = getTransform; }
         void SetText(const std::string& text);
+        void ReloadTextBuffer();
 
         BindHistory Bind(BindMask mask,
             Rendering::CommandBuffer* commandBuffer,

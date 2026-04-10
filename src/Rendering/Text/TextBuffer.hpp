@@ -6,6 +6,7 @@
 #include "Rendering/Text/FontAsset.hpp"
 #include "System/Components/UI/TextSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "Rendering/Text/TextAlignUtilities.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -21,8 +22,11 @@ namespace Beer::Rendering
         std::shared_ptr<Buffer> indexBuffer;
         uint32_t vertexCount;
         uint32_t indexCount;
+        std::string cachedText;
 
         std::vector<uint32_t> cachedUniCodes;
+        std::vector<TextWord> cachedWords;
+        std::vector<TextLine> cachedLines;
         std::vector<glm::vec2> cachedPositions;
         std::vector<glm::vec2> cachedUVs;
         std::vector<uint32_t> cachedIndices;
@@ -39,6 +43,14 @@ namespace Beer::Rendering
             const FontSettings& fontSettings,
             const System::TextSettings& settings,
             const System::UITransform* transform);
+
+        void Reload(const FontAsset* fontAsset,
+            const FontSettings& fontSettings,
+            const System::TextSettings& settings,
+            const System::UITransform* transform)
+        {
+            Update(cachedText, fontAsset, fontSettings, settings, transform);
+        }
 
         MeshDrawInfo GetDrawInfo() const;
 

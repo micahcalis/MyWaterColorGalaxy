@@ -31,6 +31,8 @@ namespace Beer::System
 
         void Update() override
         {
+            rootTransform.HierarchalUpdate();
+            GetTextComponent()->ReloadTextBuffer();
         }
 
         [[nodiscard]] TextRenderComponent* GetTextComponent() { return static_cast<TextRenderComponent*>(renderComponent.get()); }

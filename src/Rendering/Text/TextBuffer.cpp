@@ -3,6 +3,7 @@
 #include "FontSettings.hpp"
 #include "Rendering/Text/GlyphData.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "TextAlignUtilities.hpp"
 #include <cstdint>
 
 namespace Beer::Rendering
@@ -56,6 +57,7 @@ namespace Beer::Rendering
 
         vertexCount = cachedPositions.size();
         indexCount = cachedIndices.size();
+        cachedText = text;
     }
 
     MeshDrawInfo TextBuffer::GetDrawInfo() const
@@ -81,59 +83,83 @@ namespace Beer::Rendering
         float atlasHeight = fontAsset->GetTexture()->GetHeight();
         uint32_t iter = 0;
 
-        for (const auto& uniCode : cachedUniCodes)
+        cachedWords = TextAlignUtilities::UniCodesToWords(cachedUniCodes,
+            fontAsset,
+            settings);
+
+        TextFormatRect formatRect = TextFormatRect(settings,
+            transform->Rect,
+            fontSettings.FontSize);
+
+        cachedLines = TextAlignUtilities::DivideWordsIntoLines(cachedWords,
+            formatRect);
+
+        size_t lineIndex = 0;
+        for (auto& line : cachedLines)
         {
-            const GlyphData& glyph = fontAsset->GetGlyph(uniCode);
+            glm::vec2 currentPosition = TextAlignUtilities::GetLineStart(line,
+                formatRect,
+                lineIndex,
+                cachedLines.size());
 
-            float letterStartX = currentPosition.x;
-            currentPosition.x += (glyph.Advance * fontSettings.FontSize);
-
-            if (glyph.CharacterBounds.Right == glyph.CharacterBounds.Left
-                || glyph.CharacterBounds.Top == glyph.CharacterBounds.Bottom)
+            for (auto& word : line.Words)
             {
-                continue;
+                for (auto& character : word.Characters)
+                {
+                    const GlyphData glyph = character.Glyph;
+
+                    float letterStartX = currentPosition.x;
+                    currentPosition.x += (glyph.Advance + settings.CharacterSpacing) * formatRect.UnitFontSize;
+
+                    if (glyph.CharacterBounds.Right == glyph.CharacterBounds.Left
+                        || glyph.CharacterBounds.Top == glyph.CharacterBounds.Bottom)
+                    {
+                        continue;
+                    }
+
+                    float uMin = glyph.AtlasBounds.Right / atlasWidth;
+                    float uMax = glyph.AtlasBounds.Left / atlasWidth;
+                    float vTop = 1.0f - glyph.AtlasBounds.Top / atlasHeight;
+                    float vBottom = 1.0f - glyph.AtlasBounds.Bottom / atlasHeight;
+
+                    float xMin = letterStartX + (glyph.CharacterBounds.Left * formatRect.UnitFontSize);
+                    float xMax = letterStartX + (glyph.CharacterBounds.Right * formatRect.UnitFontSize);
+
+                    float screenYTop = currentPosition.y + (glyph.CharacterBounds.Top * formatRect.UnitFontSize);
+                    float screenYBottom = currentPosition.y + (glyph.CharacterBounds.Bottom * formatRect.UnitFontSize);
+
+                    // Top-Left
+                    cachedPositions.push_back({xMin, screenYTop});
+                    cachedUVs.push_back({uMax, vTop});
+
+                    // Bottom-Left
+                    cachedPositions.push_back({xMin, screenYBottom});
+                    cachedUVs.push_back({uMax, vBottom});
+
+                    // Top-Right
+                    cachedPositions.push_back({xMax, screenYTop});
+                    cachedUVs.push_back({uMin, vTop});
+
+                    // Bottom-Right
+                    cachedPositions.push_back({xMax, screenYBottom});
+                    cachedUVs.push_back({uMin, vBottom});
+
+                    uint32_t nIndex = iter * QUAD_VERTICES;
+
+                    // TRI 1
+                    cachedIndices.push_back(nIndex);
+                    cachedIndices.push_back(nIndex + 1);
+                    cachedIndices.push_back(nIndex + 2);
+
+                    // TRI 2
+                    cachedIndices.push_back(nIndex + 2);
+                    cachedIndices.push_back(nIndex + 1);
+                    cachedIndices.push_back(nIndex + 3);
+
+                    iter++;
+                }
             }
-
-            float uMin = glyph.AtlasBounds.Right / atlasWidth;
-            float uMax = glyph.AtlasBounds.Left / atlasWidth;
-            float vTop = 1.0f - glyph.AtlasBounds.Top / atlasHeight;
-            float vBottom = 1.0f - glyph.AtlasBounds.Bottom / atlasHeight;
-
-            float xMin = letterStartX + (glyph.CharacterBounds.Left * fontSettings.FontSize);
-            float xMax = letterStartX + (glyph.CharacterBounds.Right * fontSettings.FontSize);
-
-            float screenYTop = currentPosition.y - (glyph.CharacterBounds.Top * fontSettings.FontSize);
-            float screenYBottom = currentPosition.y - (glyph.CharacterBounds.Bottom * fontSettings.FontSize);
-
-            // Top-Left
-            cachedPositions.push_back({xMin, screenYTop});
-            cachedUVs.push_back({uMax, vTop});
-
-            // Bottom-Left
-            cachedPositions.push_back({xMin, screenYBottom});
-            cachedUVs.push_back({uMax, vBottom});
-
-            // Top-Right
-            cachedPositions.push_back({xMax, screenYTop});
-            cachedUVs.push_back({uMin, vTop});
-
-            // Bottom-Right
-            cachedPositions.push_back({xMax, screenYBottom});
-            cachedUVs.push_back({uMin, vBottom});
-
-            uint32_t nIndex = iter * QUAD_VERTICES;
-
-            // TRI 1
-            cachedIndices.push_back(nIndex);
-            cachedIndices.push_back(nIndex + 1);
-            cachedIndices.push_back(nIndex + 2);
-
-            // TRI 2
-            cachedIndices.push_back(nIndex + 2);
-            cachedIndices.push_back(nIndex + 1);
-            cachedIndices.push_back(nIndex + 3);
-
-            iter++;
+            lineIndex++;
         }
     }
 } // namespace Beer::Rendering

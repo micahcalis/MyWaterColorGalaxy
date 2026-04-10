@@ -19,6 +19,14 @@ namespace Beer::System
         cachedText = text;
     }
 
+    void TextRenderComponent::ReloadTextBuffer()
+    {
+        textBuffer->Reload(fontMaterial->GetAsset(),
+            fontMaterial->GetSettings(),
+            textSettings,
+            getTransform());
+    }
+
     BindHistory TextRenderComponent::Bind(BindMask mask,
         Rendering::CommandBuffer* commandBuffer,
         const Rendering::RenderContext& renderContext,

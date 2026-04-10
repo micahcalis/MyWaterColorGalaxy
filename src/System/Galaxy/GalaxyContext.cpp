@@ -23,6 +23,7 @@
 #include "System/Components/General/MultipleMeshRender.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Components/UI/TextRenderComponent.hpp"
+#include "System/Components/UI/TextSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
@@ -83,7 +84,7 @@ namespace Beer::System
         fontMaterial = std::make_shared<Rendering::FontMaterial>(mirandaSansFont);
 
         fontMaterial->SetColor(glm::vec4(1, 0, 1, 1));
-        fontMaterial->SetSize(100.0f);
+        fontMaterial->SetSize(0.1f);
     }
 
     void GalaxyContext::Update()
@@ -101,6 +102,7 @@ namespace Beer::System
         // }
 
         testQuadTreeEntity->Update();
+        textEntity->Update();
     }
 
     void GalaxyContext::Load()
@@ -140,8 +142,12 @@ namespace Beer::System
         // staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(perlinTransform),
         //     std::move(perlinRenderComp)));
 
+        TextSettings textSettings{};
+        textSettings.HorizontalAlignment = HorizontalAlignment::Center;
+        textSettings.VerticalAlignment = VerticalAlignment::Middle;
+
         std::unique_ptr<TextRenderComponent> textRenderComponent = RenderRegister::CreateRenderComponent<TextRenderComponent>(
-            ContextType::Galaxy, fontMaterial, nullptr);
+            ContextType::Galaxy, fontMaterial, nullptr, textSettings);
 
         UITransform textTransform{};
         textTransform.Anchor = AnchorMode::Center;
@@ -150,7 +156,7 @@ namespace Beer::System
         textEntity = registry.CreateEntity<TextDisplayEntity>(std::move(textTransform),
             std::move(textRenderComponent));
 
-        textEntity->SetText("Max is een kleine daggoe");
+        textEntity->SetText("Max is een kleine daggoe Max is een kleine daggoe Max is een kleine daggoe");
 
         UITransform testQuadTreeTransform{};
         testQuadTreeTransform.Anchor = AnchorMode::BottomLeft;
