@@ -2,6 +2,8 @@
 
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/InputManager.hpp"
+#include "System/Components/Colliders/QuadColliderManager.hpp"
+#include "System/Components/Colliders/QuadColliderRegistry.hpp"
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/WorldContainer.hpp"
 #include "System/Camera/CameraManager.hpp"
@@ -19,6 +21,7 @@ namespace Beer::System
         std::unique_ptr<InputManager> inputManager = nullptr;
         std::unique_ptr<CameraManager> cameraManager = nullptr;
         std::unique_ptr<LightManager> lightManager = nullptr;
+        std::unique_ptr<QuadColliderManager> quadColliderManager = nullptr;
 
     public:
         void Initialize();
@@ -28,7 +31,10 @@ namespace Beer::System
         void InitializeBase();
         void InitializeContextFactory();
         void InitializeContext();
+        void InitializeColliders();
         void InitializeGalaxy();
+
         void UpdateBase();
+        void UpdateColliders();
     };
 } // namespace Beer::System

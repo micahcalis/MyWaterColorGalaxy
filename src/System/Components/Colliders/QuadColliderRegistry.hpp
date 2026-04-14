@@ -12,7 +12,6 @@ namespace Beer::System
         std::vector<QuadCollider*> colliders;
 
     public:
-        QuadColliderRegistry();
         void AddCollider(QuadCollider* collider);
         void RemoveFromRegister(QuadCollider* collider);
         void Cleanup();
@@ -22,6 +21,11 @@ namespace Beer::System
         inline static QuadColliderRegistry* quadColliderRegistry = nullptr;
 
     public:
+        static void SetQuadColliderRegistry(QuadColliderRegistry* registry)
+        {
+            quadColliderRegistry = registry;
+        }
+
         static std::unique_ptr<QuadCollider> CreateCollider(UITransform* transform);
         static void DestroyCollider(QuadCollider* collider);
     };

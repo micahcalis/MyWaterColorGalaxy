@@ -1,6 +1,9 @@
 #include "System/Base/GameManager.hpp"
+#include "Input/MouseInput.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/InputManager.hpp"
+#include "System/Components/Colliders/QuadColliderManager.hpp"
+#include "System/Components/Colliders/QuadColliderRegistry.hpp"
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Context/WorldContainer.hpp"
@@ -17,6 +20,7 @@ namespace Beer::System
         InitializeBase();
         InitializeContext();
         InitializeContextFactory();
+        InitializeColliders();
         // temporary, we dont start gaming immediately
         InitializeGalaxy();
     }
@@ -24,6 +28,7 @@ namespace Beer::System
     void GameManager::Update()
     {
         UpdateBase();
+        quadColliderManager->Update();
         worldContainer->UpdateContexts();
     }
 
@@ -57,6 +62,13 @@ namespace Beer::System
         IContext::SetWorldContainer(worldContainer.get());
     }
 
+    void GameManager::InitializeColliders()
+    {
+        quadColliderManager = std::make_unique<QuadColliderManager>([this]() -> MouseInput {
+            return inputManager->GetMouseInput();
+        });
+    }
+
     void GameManager::InitializeGalaxy()
     {
         contextHandler->LoadContext(ContextType::Galaxy);
@@ -65,6 +77,7 @@ namespace Beer::System
     void GameManager::UpdateBase()
     {
         clockManager->Update();
+        inputManager->Update();
         cameraManager->Update();
         lightManager->Update();
     }

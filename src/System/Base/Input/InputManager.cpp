@@ -8,6 +8,12 @@
 
 namespace Beer::System
 {
+    void InputManager::Update()
+    {
+        previousMouseState = currentMouseState;
+        currentMouseState = SDL_GetMouseState(nullptr, nullptr);
+    }
+
     glm::vec2 InputManager::GetMovementVector()
     {
         int keys;
@@ -56,5 +62,21 @@ namespace Beer::System
 
         SDL_GetMouseState(&mouseX, &mouseY);
         return glm::vec2(mouseX, mouseY);
+    }
+
+    MouseInput InputManager::GetMouseInput()
+    {
+        bool isLeftDown = (currentMouseState & SDL_BUTTON_LMASK) != 0;
+        bool isRightDown = (currentMouseState & SDL_BUTTON_RMASK) != 0;
+
+        bool wasLeftDown = (previousMouseState & SDL_BUTTON_LMASK) != 0;
+        bool wasRightDown = (previousMouseState & SDL_BUTTON_RMASK) != 0;
+
+        return MouseInput{
+            GetMousePosition(),
+            isLeftDown && !wasLeftDown,
+            isLeftDown,
+            isRightDown && !wasRightDown,
+            isRightDown};
     }
 } // namespace Beer::System
