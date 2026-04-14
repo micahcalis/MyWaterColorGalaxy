@@ -9,6 +9,7 @@ cbuffer MaterialData
     float4 _TintColor;
     float2 _Scale;
     float2 _Offset;
+    Sprite.ButtonState _ButtonState;
 };
 
 BIND_MATERIAL_TEX(1) Sampler2D _SpriteTex;
@@ -32,11 +33,11 @@ VERT Sprite.VertData SpriteVert(Sprite.MeshData input)
 
 FRAG float4 SpriteFrag(Sprite.VertData input) : SV_Target
 {
-    Sprite.Sprite sprite = Sprite.Sprite(input.uv, _SpriteTex);
+    Sprite.Sprite sprite = Sprite.Sprite(input.uv, _SpriteTex, _ButtonState);
     sprite.SetScaleOffset(_Scale, _Offset);
     sprite.SetTint(_TintColor);
 
-    return float4(input.uv, 0, 0.5);
+    return float4(Sprite.GetButtonColor(_ButtonState), 1);
 
     return sprite.GetColor();
 }

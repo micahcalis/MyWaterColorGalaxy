@@ -8,10 +8,17 @@ namespace Beer::System
     {
     protected:
         UITransform rootTransform;
+        bool isDirty = false;
+        uint32_t screenVersion = 0;
 
     public:
         virtual ~UIEntity() = default;
         [[nodiscard]] UITransform* GetRootTransform() { return &rootTransform; }
+
+        void MarkDirty()
+        {
+            isDirty = true;
+        }
 
     protected:
         UIEntity(UITransform rootTransform,
@@ -19,11 +26,17 @@ namespace Beer::System
             Layer layer = Layer::UI)
             : rootTransform(rootTransform), IEntity(std::move(renderComponent), layer)
         {
+            MarkDirty();
         }
 
         void UpdateHierarchy()
         {
             rootTransform.HierarchalUpdate();
+        }
+
+        bool NeedsUpdate() const
+        {
+            return isDirty || screenVersion != Core::Screen::Version();
         }
     };
 } // namespace Beer::System

@@ -1,7 +1,5 @@
 #include "System/Components/Colliders/QuadColliderManager.hpp"
 #include "QuadCollider.hpp"
-#include <algorithm>
-#include <print>
 
 namespace Beer::System
 {

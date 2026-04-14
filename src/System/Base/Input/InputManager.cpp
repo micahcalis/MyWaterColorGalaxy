@@ -1,6 +1,7 @@
 #pragma once
 
 #include "System/Base/Input/InputManager.hpp"
+#include "Core/Application/Renderer/Screen.hpp"
 #include "SDL3/SDL_keyboard.h"
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_scancode.h"
@@ -61,7 +62,7 @@ namespace Beer::System
         float mouseY = 0.0f;
 
         SDL_GetMouseState(&mouseX, &mouseY);
-        return glm::vec2(mouseX, mouseY);
+        return glm::vec2(mouseX, Core::Screen::Height() - mouseY);
     }
 
     MouseInput InputManager::GetMouseInput()

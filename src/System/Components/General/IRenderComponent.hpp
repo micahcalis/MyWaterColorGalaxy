@@ -15,6 +15,12 @@ namespace Beer::Rendering
 
 namespace Beer::System
 {
+    enum class RenderCompType
+    {
+        Mesh,
+        Sprite
+    };
+
     class IRenderComponent
     {
     public:
@@ -33,5 +39,6 @@ namespace Beer::System
         virtual const Rendering::Shader* GetPrimaryShader() const = 0;
         virtual const Rendering::Material* GetPrimaryMaterial() const = 0;
         virtual const Rendering::Mesh* GetPrimaryMesh() const = 0;
+        virtual RenderCompType GetType() const = 0;
     };
 } // namespace Beer::System

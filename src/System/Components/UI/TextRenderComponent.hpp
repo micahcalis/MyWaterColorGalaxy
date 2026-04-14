@@ -3,13 +3,14 @@
 #include "Rendering/Text/TextBuffer.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "Rendering/Text/FontMaterial.hpp"
+#include "System/Components/UI/UIRenderComponent.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "TextSettings.hpp"
 #include "UITransform.hpp"
 
 namespace Beer::System
 {
-    class TextRenderComponent : public IRenderComponent
+    class TextRenderComponent : public UIRenderComponent
     {
     private:
         std::shared_ptr<Rendering::FontMaterial> fontMaterial;
@@ -44,6 +45,14 @@ namespace Beer::System
         const Rendering::Shader* GetPrimaryShader() const override { return fontMaterial->GetShader(); }
         const Rendering::Material* GetPrimaryMaterial() const override { return nullptr; }
         const Rendering::Mesh* GetPrimaryMesh() const override { return nullptr; }
+
+        float GetDepth() const override
+        {
+            if (getTransform == nullptr)
+                return 100.0f;
+
+            return getTransform()->Depth;
+        }
 
         void SetHorizontalAlignment(const HorizontalAlignment alignment) { textSettings.HorizontalAlignment = alignment; }
         void SetVerticalAlignment(const VerticalAlignment alignment) { textSettings.VerticalAlignment = alignment; }

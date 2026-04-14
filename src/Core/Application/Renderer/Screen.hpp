@@ -44,10 +44,12 @@ namespace Beer::Core
 
     private:
         static Screen instance;
+        inline static uint32_t version = 0;
 
         static void SetScreen(const Screen screen)
         {
             instance = screen;
+            version++;
         }
 
     public:
@@ -58,6 +60,7 @@ namespace Beer::Core
         static float Aspect() { return instance.aspect; }
         static float RectUnitLength() { return instance.rectUnitLength; }
         [[nodiscard]] static System::UITransform* ScreenTransform() { return &instance.screenTransform; }
+        static uint32_t Version() { return version; }
     };
 
     inline Screen Screen::instance;

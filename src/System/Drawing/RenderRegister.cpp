@@ -2,7 +2,10 @@
 
 #include "System/Drawing/RenderRegister.hpp"
 #include "Core/Application/Renderer/DrawCallPool.hpp"
+#include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
+#include "System/Components/UI/UIRenderComponent.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
 
 namespace Beer::System
@@ -56,6 +59,11 @@ namespace Beer::System
             }
         }
 
+        if (request.GetPass() == Rendering::ShaderPassType::UserInterface)
+        {
+            validatedComponents = SortUIComponents(validatedComponents);
+        }
+
         return Core::DrawCallPool(request.GetCommandBuffer(),
             request.GetContext(),
             request.GetPass(),
@@ -66,6 +74,31 @@ namespace Beer::System
     {
         return request.ValidateLayer(component->GetLayer())
             && component->HasPass(request.GetPass());
+    }
+
+    std::vector<IRenderComponent*> RenderRegister::SortUIComponents(const std::vector<IRenderComponent*>& validatedComponents)
+    {
+        std::vector<IRenderComponent*> uiComponents;
+        uiComponents.reserve(validatedComponents.size());
+
+        for (auto& component : validatedComponents)
+        {
+            if (component->GetType() == RenderCompType::Sprite)
+            {
+                uiComponents.push_back(component);
+            }
+        }
+
+        std::sort(uiComponents.begin(),
+            uiComponents.end(),
+            [](const IRenderComponent* a, const IRenderComponent* b) -> bool {
+                const UIRenderComponent* uiCompA = static_cast<const UIRenderComponent*>(a);
+                const UIRenderComponent* uiCompB = static_cast<const UIRenderComponent*>(b);
+
+                return uiCompA->GetDepth() < uiCompB->GetDepth();
+            });
+
+        return uiComponents;
     }
 
 } // namespace Beer::System

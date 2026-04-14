@@ -1,12 +1,13 @@
 #pragma once
 
+#include "System/Components/General/MeshRenderComponent.hpp"
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "System/Delegates/Delegate.hpp"
 
 namespace Beer::System
 {
-    class MultipleMeshRender : public IRenderComponent
+    class MultipleMeshRender : public MeshRenderComponent
     {
         std::shared_ptr<Rendering::Material> material;
         std::shared_ptr<Rendering::Mesh> mesh;

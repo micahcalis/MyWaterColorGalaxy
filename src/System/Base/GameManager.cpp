@@ -3,7 +3,6 @@
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/InputManager.hpp"
 #include "System/Components/Colliders/QuadColliderManager.hpp"
-#include "System/Components/Colliders/QuadColliderRegistry.hpp"
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Context/WorldContainer.hpp"

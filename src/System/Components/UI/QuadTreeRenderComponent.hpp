@@ -2,6 +2,8 @@
 
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
+#include "System/Components/UI/UIRenderComponent.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "Rendering/Quads/QuadDrawCallPool.hpp"
@@ -9,12 +11,13 @@
 
 namespace Beer::System
 {
-    class QuadTreeRenderComponent : public IRenderComponent
+    class QuadTreeRenderComponent : public UIRenderComponent
     {
     private:
         Function<std::vector<UIRenderItem>> getRenderItems;
         std::unique_ptr<Rendering::QuadBuffer> quadBuffer;
         std::unique_ptr<Rendering::QuadDrawCallPool> drawCallPool;
+        UITransform* rootTransform = nullptr;
 
     public:
         QuadTreeRenderComponent();
@@ -22,6 +25,11 @@ namespace Beer::System
         void SetGetRenderItems(Function<std::vector<UIRenderItem>> getRenderItems)
         {
             this->getRenderItems = getRenderItems;
+        }
+
+        void SetRootTransform(UITransform* rootTransform)
+        {
+            this->rootTransform = rootTransform;
         }
 
         void UpdateQuadDraw();
@@ -38,5 +46,13 @@ namespace Beer::System
         const Rendering::Shader* GetPrimaryShader() const override { return nullptr; }
         const Rendering::Material* GetPrimaryMaterial() const override { return nullptr; }
         const Rendering::Mesh* GetPrimaryMesh() const override { return nullptr; }
+
+        float GetDepth() const override
+        {
+            if (rootTransform == nullptr)
+                return 100.0f;
+
+            return rootTransform->Depth;
+        }
     };
 } // namespace Beer::System

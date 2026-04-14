@@ -31,12 +31,15 @@ namespace Sprite
         private float2 scale = (float2)1;
         private float2 offset = (float2)0;
         private float4 tint = (float4)1;
+        private float3 buttonColor;
 
         public __init(float2 _uv, 
-            Sampler2D _spriteTex)
+            Sampler2D _spriteTex,
+            ButtonState _buttonstate = ButtonState.Default)
         {
             uv = _uv;
             spriteTex = _spriteTex;
+            buttonColor = GetButtonColor(_buttonstate);
         }
 
         [mutating]
@@ -56,7 +59,32 @@ namespace Sprite
         {
             float2 coord = (uv * scale) + offset;
             float4 sample = spriteTex.Sample(coord);
+            sample = saturate(float4(sample.rgb + buttonColor, sample.a));
             return sample * tint;
         }
+    }
+
+    public enum ButtonState : int
+    {
+        Default = 0,
+        Hover = 1,
+        Click = 2
+    };
+
+    public float3 GetButtonColor(ButtonState state)
+    {
+        switch (state)
+        {
+            case ButtonState.Default:
+                return float3(0, 0, 0);
+
+            case ButtonState.Hover:
+                return float3(0.2, 0.2, 0.2);
+
+            case ButtonState.Click:
+                return float3(0.5, 0.5, 0.5);
+        }
+        
+        return float3(0, 0, 0);
     }
 }

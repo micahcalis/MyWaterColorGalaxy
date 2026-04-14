@@ -2,12 +2,15 @@
 
 #include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Text/TextBuffer.hpp"
+#include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/QuadTreeRenderComponent.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
+#include <memory>
+#include <print>
 
 namespace Beer::System
 {
@@ -18,8 +21,10 @@ namespace Beer::System
         std::shared_ptr<Rendering::TextBuffer> textBuffer;
         TextSettings textSettings{};
 
+        std::shared_ptr<Rendering::Material> rootMaterial;
         std::shared_ptr<Rendering::Material> quadMaterial;
         std::vector<UISubEntity> diagonalChainEntities;
+        std::unique_ptr<Button> testButton;
 
     public:
         TestQuadTreeEntity(UITransform initialTransform)
@@ -34,6 +39,7 @@ namespace Beer::System
                 textSettings,
                 &rootTransform);
 
+            rootMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
             quadMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
 
             UITransform* previousTransform = &rootTransform;
@@ -51,6 +57,9 @@ namespace Beer::System
                 previousTransform->BindChild(diagonalChainEntities[i].GetTransform());
                 previousTransform = diagonalChainEntities[i].GetTransform();
             }
+
+            testButton = std::make_unique<Button>(&rootTransform, rootMaterial.get());
+            testButton->SetOnClick([]() -> void { std::println("click"); });
         }
 
     protected:
@@ -61,7 +70,7 @@ namespace Beer::System
         std::vector<UIRenderItem> GetRenderItems() override
         {
             std::vector<UIRenderItem> renderItems;
-            renderItems.push_back(UIRenderItem(&rootTransform, quadMaterial.get()));
+            renderItems.push_back(UIRenderItem(&rootTransform, rootMaterial.get()));
 
             for (size_t i = 0; i < diagonalChainEntities.size(); i++)
             {

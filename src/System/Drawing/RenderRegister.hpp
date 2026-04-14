@@ -2,6 +2,7 @@
 
 #include "Core/Application/Renderer/DrawCallPool.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
+#include "System/Components/UI/UIRenderComponent.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Drawing/DrawRequest.hpp"
 #include <memory>
@@ -26,6 +27,7 @@ namespace Beer::System
 
     private:
         bool IsRenderComponentValid(const DrawRequest& request, IRenderComponent* component);
+        std::vector<IRenderComponent*> SortUIComponents(const std::vector<IRenderComponent*>& validatedComponents);
 
     private:
         inline static RenderRegister* renderRegister = nullptr;

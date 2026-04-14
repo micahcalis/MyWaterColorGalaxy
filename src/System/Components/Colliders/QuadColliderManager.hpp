@@ -16,11 +16,6 @@ namespace Beer::System
         QuadCollider* previousCollider = nullptr;
 
     public:
-        ~QuadColliderManager()
-        {
-            QuadColliderRegistry::SetQuadColliderRegistry(nullptr);
-        }
-
         QuadColliderManager(Function<MouseInput> getMouseInput);
         void Update();
 
