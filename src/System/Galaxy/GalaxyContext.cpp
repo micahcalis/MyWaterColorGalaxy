@@ -96,10 +96,10 @@ namespace Beer::System
             playerEntity->Update();
         }
 
-        // if (testRotationEntity != nullptr)
-        // {
-        //     testRotationEntity->Update();
-        // }
+        if (testRotationEntity != nullptr)
+        {
+            testRotationEntity->Update();
+        }
 
         testQuadTreeEntity->Update();
         textEntity->Update();

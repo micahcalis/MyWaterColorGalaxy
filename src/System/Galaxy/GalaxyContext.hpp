@@ -25,12 +25,12 @@ namespace Beer::System
     class GalaxyContext : public IContext
     {
     private:
-        PlayerEntity* playerEntity;
-        LightEntity* mainLightEntity;
+        PlayerEntity* playerEntity = nullptr;
+        LightEntity* mainLightEntity = nullptr;
         std::vector<SingleStaticEntity*> staticEntities;
-        MultipleContainerEntity<System::RotateEntitiesManager>* testRotationEntity;
-        TextDisplayEntity* textEntity;
-        TestQuadTreeEntity* testQuadTreeEntity;
+        MultipleContainerEntity<System::RotateEntitiesManager>* testRotationEntity = nullptr;
+        TextDisplayEntity* textEntity = nullptr;
+        TestQuadTreeEntity* testQuadTreeEntity = nullptr;
 
         Function<PlayerInput> getPlayerInput;
 
