@@ -1,21 +1,20 @@
 #pragma once
 
+#include "Rendering/Material/IDirtyTracker.hpp"
 #include "Rendering/Material/IReflectedContext.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include <memory>
-#include <unordered_set>
 
 namespace Beer::Rendering
 {
     class Material : public IReflectedContext
+        , public IDirtyTracker<Material>
     {
     private:
         std::shared_ptr<Shader> shader = nullptr;
-        uint32_t dirtyFramesCountBuffer = 0;
         std::unordered_map<std::string, uint32_t> dirtyTextureCounts;
 
     public:
-        ~Material();
         Material(std::shared_ptr<Shader> shader);
         Material(const std::string& shaderName);
         const Shader* GetShader() const { return shader.get(); }
@@ -28,18 +27,13 @@ namespace Beer::Rendering
         void SetMatrix(const std::string& name, glm::mat4 val) override;
         void SetTexture(const std::string& name, ITexture* val) override;
 
+        bool IsDirty() const override;
+
     private:
-        void MarkBufferDirty();
         void MarkTextureDirty(const std::string& name);
         bool HasDirtyTextures() const;
 
     protected:
         MaterialProperties* GetProperties() override { return shader->GetProperties(); }
-
-    private:
-        static inline std::unordered_set<Material*> dirtyMaterialsQueue;
-
-    public:
-        static void UpdateDirtyMaterials();
     };
 } // namespace Beer::Rendering

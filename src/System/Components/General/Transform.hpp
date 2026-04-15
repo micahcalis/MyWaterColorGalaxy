@@ -2,6 +2,8 @@
 
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
+#include "System/Delegates/Delegate.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL

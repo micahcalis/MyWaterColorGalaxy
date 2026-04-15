@@ -12,7 +12,7 @@ namespace Beer::Rendering
     {
     private:
         VmaAllocator vmaAllocator;
-        const Core::Device& device; // A shared_ptr would likely be preferrable.
+        const Core::Device& device;
 
     public:
         BufferAllocator(const Core::Device& device, const vk::raii::Instance& instance);

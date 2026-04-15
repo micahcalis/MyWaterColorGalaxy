@@ -12,7 +12,8 @@ namespace Beer::Rendering
         Tangent,
         Uv,
         Color,
-        Count
+        Count,
+        Position2D,
     };
 
     constexpr std::array<size_t, static_cast<size_t>(MeshBufferType::Count)> MESH_BUFFER_SIZES = {

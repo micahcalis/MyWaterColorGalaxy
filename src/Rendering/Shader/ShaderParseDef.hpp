@@ -16,6 +16,7 @@ namespace Beer::Rendering
         static constexpr std::string_view TANG_ATTRIB = "tangentOS";
         static constexpr std::string_view UV_ATTRIB = "texCoord";
         static constexpr std::string_view COLOR_ATTRIB = "color";
+        static constexpr std::string_view POS2D_ATTRIB = "position2DOS";
 
     private:
         static constexpr std::string_view PASS = "Pass";
@@ -60,6 +61,7 @@ namespace Beer::Rendering
         static constexpr std::string_view PASS_TRANSPARENT = "Transparent";
         static constexpr std::string_view PASS_SKYBOX = "Skybox";
         static constexpr std::string_view PASS_DEFERRED_SHADE = "DeferredShade";
+        static constexpr std::string_view PASS_UI = "UserInterface";
 
         static constexpr std::string_view KERNEL_INDEX = "Kernel";
         static constexpr std::string_view KERNEL_NAME = "Compute";

@@ -32,5 +32,10 @@ namespace Beer::Core
         }
 
         void BindDrawCalls();
+
+        void DebugPoolSize() const
+        {
+            std::println("Render Components in DrawCallPool: {}", renderComponents.size());
+        }
     };
 } // namespace Beer::Core

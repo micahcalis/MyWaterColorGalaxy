@@ -6,11 +6,6 @@
 
 namespace Beer::Rendering
 {
-    Material::~Material()
-    {
-        dirtyMaterialsQueue.erase(this);
-    }
-
     Material::Material(std::shared_ptr<Shader> shader)
         : shader(shader)
     {
@@ -44,31 +39,31 @@ namespace Beer::Rendering
     void Material::SetInt(const std::string& name, uint32_t val)
     {
         IReflectedContext::SetInt(name, val);
-        MarkBufferDirty();
+        MarkDirty();
     }
 
     void Material::SetFloat(const std::string& name, float val)
     {
         IReflectedContext::SetFloat(name, val);
-        MarkBufferDirty();
+        MarkDirty();
     }
 
     void Material::SetVector(const std::string& name, glm::vec4 val)
     {
         IReflectedContext::SetVector(name, val);
-        MarkBufferDirty();
+        MarkDirty();
     }
 
     void Material::SetColor(const std::string& name, glm::vec4 val)
     {
         IReflectedContext::SetColor(name, val);
-        MarkBufferDirty();
+        MarkDirty();
     }
 
     void Material::SetMatrix(const std::string& name, glm::mat4 val)
     {
         IReflectedContext::SetMatrix(name, val);
-        MarkBufferDirty();
+        MarkDirty();
     }
 
     void Material::SetTexture(const std::string& name, ITexture* val)
@@ -77,16 +72,10 @@ namespace Beer::Rendering
         MarkTextureDirty(name);
     }
 
-    void Material::MarkBufferDirty()
-    {
-        dirtyFramesCountBuffer = UniformDescriptor::GetFramesInFlight();
-        dirtyMaterialsQueue.insert(this);
-    }
-
     void Material::MarkTextureDirty(const std::string& name)
     {
         dirtyTextureCounts[name] = UniformDescriptor::GetFramesInFlight();
-        dirtyMaterialsQueue.insert(this);
+        dirtyQueue.insert(this);
     }
 
     bool Material::HasDirtyTextures() const
@@ -100,20 +89,8 @@ namespace Beer::Rendering
         return false;
     }
 
-    void Material::UpdateDirtyMaterials()
+    bool Material::IsDirty() const
     {
-        for (auto it = dirtyMaterialsQueue.begin(); it != dirtyMaterialsQueue.end();)
-        {
-            Material* material = *it;
-            material->Update();
-
-            if (material->dirtyFramesCountBuffer <= 0 && !material->HasDirtyTextures())
-            {
-                it = dirtyMaterialsQueue.erase(it);
-            } else
-            {
-                ++it;
-            }
-        }
+        return dirtyFramesCountBuffer > 0 || HasDirtyTextures();
     }
 } // namespace Beer::Rendering

@@ -117,6 +117,22 @@ namespace Beer::Core
         return GetBasePath(subPath);
     }
 
+    static constexpr std::string_view FONT_HEAD = "assets/fonts/";
+    static constexpr std::string_view FONT_TAIL = ".png";
+
+    std::filesystem::path AssetUtilities::GetFontAssetPath(const std::string& fontName)
+    {
+        std::string subPath = std::string(FONT_HEAD) + fontName + std::string(FONT_TAIL);
+        return GetBasePath(subPath);
+    }
+
+    std::filesystem::path AssetUtilities::GetFontAssetJsonPath(const std::filesystem::path& pngPath)
+    {
+        std::filesystem::path jsonPath = pngPath;
+        jsonPath.replace_extension(JSON_TAIL);
+        return jsonPath;
+    }
+
     [[nodiscard]] vk::raii::ShaderModule AssetUtilities::CreateShaderModule(const std::vector<char>& code,
         const vk::raii::Device& device)
     {

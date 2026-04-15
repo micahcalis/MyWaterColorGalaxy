@@ -1,5 +1,6 @@
 #pragma once
 
+#include "MeshRenderComponent.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
@@ -10,7 +11,7 @@
 
 namespace Beer::System
 {
-    class SingleMeshRender : public IRenderComponent
+    class SingleMeshRender : public MeshRenderComponent
     {
     private:
         std::shared_ptr<Rendering::Material> material;

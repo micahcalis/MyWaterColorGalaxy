@@ -34,4 +34,10 @@
 // Blit
 #define BIND_BLIT_SRC(idx) [[vk::binding(idx, 2)]] Sampler2D _BlitSource;
 
+// Math
+#define PI 3.14159265359f
+#define TAU 6.28318530717f
+#define RAD2DEG 57.2957795131f
+#define DEG2RAD 0.01745329251f
+ 
 #endif

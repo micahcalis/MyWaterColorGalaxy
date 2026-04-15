@@ -13,7 +13,7 @@ namespace Beer::Core
     void Application::Run()
     {
         windowManager.InitializeWindow();
-        SDL_SetWindowRelativeMouseMode(windowManager.GetWindow(), true);
+        // SDL_SetWindowRelativeMouseMode(windowManager.GetWindow(), true);
         InitializeVulkan();
         InitializeGame();
         MainLoop();

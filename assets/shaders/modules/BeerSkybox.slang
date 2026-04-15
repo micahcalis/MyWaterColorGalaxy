@@ -1,6 +1,6 @@
 module BeerSkybox;
 
-import BeerCore;
+import Core.BeerCore;
 
 namespace Skybox
 {

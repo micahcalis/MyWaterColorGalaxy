@@ -6,12 +6,15 @@
 #include "Rendering/Mesh/MeshBufferOrder.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
+#include "Rendering/Text/FontMaterial.hpp"
+#include "Rendering/Text/TextBuffer.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 #include "System/Components/General/Transform.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Compute/Threads.hpp"
+#include "Rendering/Quads/QuadBuffer.hpp"
 
 namespace Beer::Rendering
 {
@@ -52,7 +55,11 @@ namespace Beer::Rendering
         void BindModelPush(Rendering::ModelPush modelPush,
             const Rendering::Shader* shader);
 
+        void BindRectPush(Rendering::RectPush rectPush,
+            const Rendering::Shader* shader);
+
         void BindInstancingPush(const Rendering::Shader* shader);
+
         void BindInstancingTransforms(const std::vector<System::Transform>& transforms,
             const RenderContext& context,
             const Rendering::Shader* shader);
@@ -66,12 +73,16 @@ namespace Beer::Rendering
             const FragmentOutput& output);
 
         void BindMaterial(const Material* material);
+        void BindFontMaterial(const FontMaterial* fontMaterial);
         void BindMesh(const Mesh* mesh, const MeshBufferOrder* order);
+        void BindTextBuffer(const TextBuffer* textBuffer);
+        void BindQuadBuffer(const QuadBuffer* quadBuffer);
         void BindComputeKernel(const ComputeKernel* compute);
         void BindComputeContext(const ComputeContext* context);
 
         void DrawMeshSingle(const MeshDrawInfo& info);
         void DrawMeshMultiple(const MeshDrawInfo& info, const uint32_t count);
+        void DrawIndexedSlice(const uint32_t firstIndex, const uint32_t indexCount, const uint32_t instanceCount = 1);
         void Dispatch(const Threads threads);
 
         void Blit(RenderTexture* source,

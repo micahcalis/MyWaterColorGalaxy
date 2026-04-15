@@ -34,6 +34,7 @@ namespace Beer::Rendering
 
         static Buffer CreateStaging(VkDeviceSize size);
         static Buffer CreateUniform(VkDeviceSize size);
+        static Buffer CreateDynamic(VkDeviceSize size, VkBufferUsageFlags usage);
         static Buffer CreatePersistent(VkDeviceSize size, VkBufferUsageFlags usage = 0);
         static Buffer CreateSSBO(VkDeviceSize size, SSBOType type);
 

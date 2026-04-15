@@ -1,6 +1,7 @@
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "ImageAllocation.hpp"
 #include <stdexcept>
+
 namespace Beer::Rendering
 {
     BufferAllocator::BufferAllocator(const Core::Device& device, const vk::raii::Instance& instance)

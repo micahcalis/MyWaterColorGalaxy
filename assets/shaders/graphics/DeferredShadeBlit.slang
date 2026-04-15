@@ -1,6 +1,7 @@
-#include "BeerMacros.slang"
+#include "Core/BeerMacros.slang"
 
-import BeerCore;
+import Core.BeerCore;
+import Core.Beer3D;
 import Blit.BlitUtils;
 import Deferred.DeferredUtils;
 import BeerLit;
@@ -52,7 +53,6 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
     float3 positionWS = UVDepthToWorld(input.uv, depth);
 
     Deferred.DeferredShadeData data = reader.Read(positionWS);
-
 
     Lit.BRDF brdf = Lit.BRDF(GetMainLight(positionWS),
         GetViewDirectionWS(positionWS),

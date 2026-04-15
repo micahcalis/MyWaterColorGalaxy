@@ -100,6 +100,15 @@ namespace Beer::Rendering
     void ShaderGlobalsHandler::SetScreen(float width, float height)
     {
         engineGlobalsData.ScreenParams = glm::vec4(width, height, 1.0f / width, 1.0f / height);
+
+        engineGlobalsData.ScreenParams = glm::vec4(width, height, 1.0f / width, 1.0f / height);
+
+        // GLM Signature: glm::ortho(left, right, bottom, top, zNear, zFar)
+        // By passing 'height' to the 'bottom' parameter, we perfectly counteract
+        // Vulkan's upside-down clip space natively.
+        glm::mat4 proj = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
+
+        engineGlobalsData.UIOrthoProjMat = proj;
     }
 
     void ShaderGlobalsHandler::SetMainLight(glm::vec3 position, glm::vec4 color)

@@ -1,9 +1,8 @@
-#include "System/Components/Registry/GameEntity.hpp"
-#include "GameEntity.hpp"
+#include "System/Components/Registry/IEntity.hpp"
 
 namespace Beer::System
 {
-    void GameEntity::SetId(Registry* assigner, uint32_t id)
+    void IEntity::SetId(Registry* assigner, uint32_t id)
     {
         if (assigner == nullptr)
             return;
@@ -11,7 +10,7 @@ namespace Beer::System
         this->id = id;
     }
 
-    bool GameEntity::IsAssigned() const
+    bool IEntity::IsAssigned() const
     {
         return id != 0;
     }

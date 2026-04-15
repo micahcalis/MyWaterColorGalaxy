@@ -6,7 +6,7 @@
 #include "Vendor/spirv_reflect/spirv_reflect.h"
 #include <fstream>
 #include <stdexcept>
-#include "Vendor./nlohmann/json.hpp"
+#include "Vendor/nlohmann/json.hpp"
 #include "Rendering/Shader/VertexInput.hpp"
 #include "vulkan/vulkan.hpp"
 #include <algorithm>
@@ -262,6 +262,8 @@ namespace Beer::Rendering
             return MeshBufferType::Uv;
         if (semantic.find(ShaderParseDef::COLOR_ATTRIB) != std::string_view::npos)
             return MeshBufferType::Color;
+        if (semantic.find(ShaderParseDef::POS2D_ATTRIB) != std::string_view::npos)
+            return MeshBufferType::Position2D;
 
         throw std::runtime_error("Shader Semantic unknown");
     }

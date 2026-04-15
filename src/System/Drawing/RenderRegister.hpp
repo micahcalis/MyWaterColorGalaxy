@@ -2,9 +2,11 @@
 
 #include "Core/Application/Renderer/DrawCallPool.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
+#include "System/Components/UI/UIRenderComponent.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Drawing/DrawRequest.hpp"
 #include <memory>
+#include <print>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -25,6 +27,7 @@ namespace Beer::System
 
     private:
         bool IsRenderComponentValid(const DrawRequest& request, IRenderComponent* component);
+        std::vector<IRenderComponent*> SortUIComponents(const std::vector<IRenderComponent*>& validatedComponents);
 
     private:
         inline static RenderRegister* renderRegister = nullptr;
@@ -55,6 +58,11 @@ namespace Beer::System
                 throw std::runtime_error("Render Register not Initialized");
 
             renderRegister->RemoveFromRegister(component);
+        }
+
+        void DebugSize() const
+        {
+            std::println("Draw Call Pool Amount {}", componentsMap.size());
         }
     };
 } // namespace Beer::System

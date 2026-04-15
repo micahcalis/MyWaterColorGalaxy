@@ -1,6 +1,7 @@
 #pragma once
 
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Compute/ComputeShader.hpp"
 #include "Rendering/Material/Material.hpp"
@@ -9,17 +10,25 @@
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
+#include "Rendering/RenderPasses/DrawUIPass.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
+#include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "Rendering/Text/FontAsset.hpp"
+#include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/General/MultipleMeshRender.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
+#include "System/Components/UI/TextRenderComponent.hpp"
+#include "System/Components/UI/TextSettings.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
+#include "System/Default/UI/TestQuadTreeEntity.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Components/Registry/Registry.hpp"
@@ -45,8 +54,11 @@ namespace Beer::System
         deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
             std::string(Rendering::DEFERRED_SHADE_PASS));
 
+        drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
+            std::string(Rendering::UI_PASS));
+
         defaultLitMaterial = std::make_shared<Rendering::Material>("DefaultLit");
-        defaultLitMaterial->SetColor("_BaseColor", glm::vec4(1));
+        defaultLitMaterial->SetColor("_BaseColor", glm::vec4(0, 0, 0, 1));
 
         // catTexture = std::make_shared<Rendering::Texture2D>("Tex_CatAnguish");
 
@@ -67,6 +79,12 @@ namespace Beer::System
 
         tornadoRenderPass = Rendering::IRenderPass::FetchFromRegister<Rendering::RenderTornadoPass>(
             "Render Tornado", 400);
+
+        mirandaSansFont = Rendering::FontAsset::Get("MirandaSans");
+        fontMaterial = std::make_shared<Rendering::FontMaterial>(mirandaSansFont);
+
+        fontMaterial->SetColor(glm::vec4(1, 0, 1, 1));
+        fontMaterial->SetSize(0.1f);
     }
 
     void GalaxyContext::Update()
@@ -78,10 +96,13 @@ namespace Beer::System
             playerEntity->Update();
         }
 
-        // if (testRotationEntity != nullptr)
-        // {
-        //     testRotationEntity->Update();
-        // }
+        if (testRotationEntity != nullptr)
+        {
+            testRotationEntity->Update();
+        }
+
+        testQuadTreeEntity->Update();
+        textEntity->Update();
     }
 
     void GalaxyContext::Load()
@@ -120,6 +141,30 @@ namespace Beer::System
 
         // staticEntities.emplace_back(registry.CreateEntity<SingleStaticEntity>(std::move(perlinTransform),
         //     std::move(perlinRenderComp)));
+
+        TextSettings textSettings{};
+        textSettings.HorizontalAlignment = HorizontalAlignment::Center;
+        textSettings.VerticalAlignment = VerticalAlignment::Middle;
+
+        std::unique_ptr<TextRenderComponent> textRenderComponent = RenderRegister::CreateRenderComponent<TextRenderComponent>(
+            ContextType::Galaxy, fontMaterial, nullptr, textSettings);
+
+        UITransform textTransform{};
+        textTransform.Anchor = AnchorMode::Center;
+        textTransform.Scale = glm::vec2(1);
+
+        textEntity = registry.CreateEntity<TextDisplayEntity>(std::move(textTransform),
+            std::move(textRenderComponent));
+
+        textEntity->SetText("Max is een kleine daggoe Max is een kleine daggoe Max is een kleine daggoe");
+
+        UITransform testQuadTreeTransform{};
+        testQuadTreeTransform.Anchor = AnchorMode::BottomLeft;
+        testQuadTreeTransform.Scale = glm::vec2(1);
+        testQuadTreeTransform.Pivot = AnchorMode::BottomLeft;
+
+        testQuadTreeEntity = registry.CreateEntity<TestQuadTreeEntity>(
+            std::move(testQuadTreeTransform));
 
         Transform playerTransform{};
         playerTransform.Position = PLAYER_SETTINGS.StartPos;
@@ -177,7 +222,7 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, deferredShadePass};
+        return {opaquePass, deferredShadePass, drawUIPass};
         // /return {opaquePass, skyboxPass, deferredShadePass, computePerlinPass, tornadoPass, tornadoRenderPass};
     }
 } // namespace Beer::System

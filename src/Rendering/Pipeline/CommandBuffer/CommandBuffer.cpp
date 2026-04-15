@@ -8,6 +8,7 @@
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
+#include "Rendering/Text/FontMaterial.hpp"
 #include "System/Components/General/Transform.hpp"
 #include "vulkan/vulkan.hpp"
 #include <stdexcept>
@@ -121,6 +122,16 @@ namespace Beer::Rendering
             modelPush);
     }
 
+    void CommandBuffer::BindRectPush(Rendering::RectPush rectPush,
+        const Rendering::Shader* shader)
+    {
+        commandBuffer.pushConstants<Rendering::RectPush>(
+            shader->GetPipelineLayout(),
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
+            0,
+            rectPush);
+    }
+
     void CommandBuffer::BindInstancingPush(const Rendering::Shader* shader)
     {
         commandBuffer.pushConstants<Rendering::ModelPush>(
@@ -172,6 +183,14 @@ namespace Beer::Rendering
             {material->GetDescriptorSet()});
     }
 
+    void CommandBuffer::BindFontMaterial(const FontMaterial* fontMaterial)
+    {
+        BindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+            fontMaterial->GetShader()->GetPipelineLayout(),
+            MaterialData::SET,
+            {fontMaterial->GetDescriptorSet()});
+    }
+
     void CommandBuffer::BindMesh(const Mesh* mesh, const MeshBufferOrder* bufferOrder)
     {
         std::vector<vk::Buffer> activeBuffers;
@@ -193,6 +212,28 @@ namespace Beer::Rendering
             return;
 
         commandBuffer.bindIndexBuffer(buffers.IndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
+    }
+
+    void CommandBuffer::BindTextBuffer(const TextBuffer* textBuffer)
+    {
+        vk::Buffer buffers[] = {
+            textBuffer->GetPosBuffer()->GetHandle(),
+            textBuffer->GetUVBuffer()->GetHandle()};
+        VkDeviceSize offsets[] = {0, 0};
+
+        commandBuffer.bindVertexBuffers(0, buffers, offsets);
+        commandBuffer.bindIndexBuffer(textBuffer->GetIndexBuffer()->GetHandle(), 0, vk::IndexType::eUint32);
+    }
+
+    void CommandBuffer::BindQuadBuffer(const QuadBuffer* quadBuffer)
+    {
+        vk::Buffer buffers[] = {
+            quadBuffer->GetPosBuffer()->GetHandle(),
+            quadBuffer->GetUVBuffer()->GetHandle()};
+        VkDeviceSize offsets[] = {0, 0};
+
+        commandBuffer.bindVertexBuffers(0, buffers, offsets);
+        commandBuffer.bindIndexBuffer(quadBuffer->GetIndexBuffer()->GetHandle(), 0, vk::IndexType::eUint32);
     }
 
     void CommandBuffer::BindComputeKernel(const ComputeKernel* kernel)
@@ -242,6 +283,15 @@ namespace Beer::Rendering
                 0,
                 0);
         }
+    }
+
+    void CommandBuffer::DrawIndexedSlice(const uint32_t firstIndex, const uint32_t indexCount, const uint32_t instanceCount)
+    {
+        commandBuffer.drawIndexed(indexCount,
+            instanceCount,
+            firstIndex,
+            0,
+            0);
     }
 
     void CommandBuffer::Dispatch(const Threads threads)

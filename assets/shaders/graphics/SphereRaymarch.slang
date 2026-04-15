@@ -1,6 +1,7 @@
-#include "BeerMacros.slang"
+#include "Core/BeerMacros.slang"
 
-import BeerCore;
+import Core.BeerCore;
+import Core.Beer3D;
 import SphereTracing;
 import BeerLit;
 import SDF;

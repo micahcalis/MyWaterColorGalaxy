@@ -69,6 +69,22 @@ namespace Beer::Rendering
         return {allocation, data};
     }
 
+    Buffer Buffer::CreateDynamic(VkDeviceSize size, VkBufferUsageFlags usage)
+    {
+        constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+            | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+        auto allocation = sharedAllocator->CreateBuffer(size,
+            usage,
+            VMA_MEMORY_USAGE_AUTO,
+            flags);
+
+        BufferData data{};
+        data.Size = size;
+
+        return {allocation, data};
+    }
+
     Buffer Buffer::CreateSSBO(VkDeviceSize size, SSBOType type)
     {
         constexpr VkBufferUsageFlags hybridUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT
