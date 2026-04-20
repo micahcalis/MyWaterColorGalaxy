@@ -5,7 +5,7 @@
 
 namespace Beer::Rendering
 {
-    static uint32_t TORNADO_PART_COUNT = 1052;
+    static const uint32_t TORNADO_PART_COUNT = 1052 * 8;
     static const std::string TORNADO_BUFFER_NAME = "TornadoBuffer";
 
     class ComputeTornadoParticlesPass : public IRenderPass

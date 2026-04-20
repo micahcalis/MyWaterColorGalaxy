@@ -4,6 +4,7 @@ import Core.BeerCore;
 import Core.Beer3D;
 import BeerLit;
 
+// Micah: here are the material properties
 BIND_MATERIAL_DATA
 cbuffer MaterialData
 {
@@ -12,6 +13,7 @@ cbuffer MaterialData
     float _Metallic;
 };
 
+// Micah: we can bind materail textures / ssbo's
 BIND_MATERIAL_TEX(1) Sampler2D _AlbedoMap;
 
 struct MeshData
@@ -29,6 +31,7 @@ struct VertexData
     float2 texCoord;
 }
 
+// Micah: these are the pass settings, exported to JSON
 //$ Pass Opaque
 //$ Vertex DefaultLitVert
 //$ Fragment DefaultLitFrag
@@ -38,6 +41,7 @@ struct VertexData
 
 VERT VertexData DefaultLitVert(MeshData input, INSTANCEID)
 {
+    // Micah: helper Macro to get transform data
     GETMODELDATA
     VertexData output;
     float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));

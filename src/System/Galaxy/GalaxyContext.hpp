@@ -30,7 +30,7 @@ namespace Beer::System
         std::vector<SingleStaticEntity*> staticEntities;
         MultipleContainerEntity<System::RotateEntitiesManager>* testRotationEntity = nullptr;
         TextDisplayEntity* textEntity = nullptr;
-        TestQuadTreeEntity* testQuadTreeEntity = nullptr;
+        // TestQuadTreeEntity* testQuadTreeEntity = nullptr;
 
         Function<PlayerInput> getPlayerInput;
 

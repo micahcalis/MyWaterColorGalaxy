@@ -50,6 +50,12 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
         materialSample);
 
     float depth = _DepthBuffer.Sample(input.uv);
+
+    if (Deferred.IsBackground(depth))
+    {
+        discard;
+    }
+
     float3 positionWS = UVDepthToWorld(input.uv, depth);
 
     Deferred.DeferredShadeData data = reader.Read(positionWS);

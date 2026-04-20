@@ -34,7 +34,7 @@ VERT VertexData SkyboxVert(MeshData input, INSTANCEID)
 {
     VertexData output;
     float3 basePos = input.positionOS;
-    float3 scaledPos = basePos * 1.0f;
+    float3 scaledPos = basePos * 0.5f;
     float3 positionWS = _ParticleBuffer[instanceID].pos + scaledPos;
 
     output.positionCS = mul(_ViewProjMat, float4(positionWS, 1));

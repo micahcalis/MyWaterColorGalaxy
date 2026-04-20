@@ -112,9 +112,6 @@ namespace Beer::Core
         if (!resize)
             return;
 
-        if (System::Camera::Main() == nullptr)
-            return;
-
         frameResource.Reset();
 
         UpdateGlobals();
@@ -326,10 +323,19 @@ namespace Beer::Core
     void Renderer::UpdateGlobals()
     {
         Rendering::Shader::Globals()->SetScreen(static_cast<float>(Screen::Width()), static_cast<float>(Screen::Height()));
-        System::Camera::Main()->BindToShaders();
+
+        System::Camera* mainCamera = System::Camera::Main();
+        if (mainCamera != nullptr)
+        {
+            mainCamera->BindToShaders();
+        }
+
         System::ILight* light = System::ILight::Main();
-        Rendering::Shader::Globals()->SetMainLight(light->GetPosition(), light->GetDirectColor());
-        Rendering::Shader::Globals()->SetAmbientLight(light->GetShadowColor(), light->GetAmbientColor());
+        if (light != nullptr)
+        {
+            Rendering::Shader::Globals()->SetMainLight(light->GetPosition(), light->GetDirectColor());
+            Rendering::Shader::Globals()->SetAmbientLight(light->GetShadowColor(), light->GetAmbientColor());
+        }
 
         Rendering::Shader::Globals()->Update();
     }

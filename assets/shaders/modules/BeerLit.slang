@@ -52,10 +52,10 @@ namespace Lit
         {
             float roughness = 1 - metallic;
             float3 base = lambert * roughness;
-            float3 specCol = light.GetLightColor() * metallic;
+            float3 specCol = light.GetSkyColor() * metallic;
             float fresnel = dot(viewDirection, normal);
             float3 schlik = (1 - saturate(fresnel)) * albedo * metallic * 0.1;
-            return base + specCol + schlik;
+            return base + specCol * schlik;
         }
 
         private float3 Specular()

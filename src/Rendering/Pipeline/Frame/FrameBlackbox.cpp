@@ -1,7 +1,9 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
+#include "Core/Application/Jobs/ImageClearJob.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "FrameBlackbox.hpp"
 #include "ReallocData.hpp"
+#include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Buffer/SSBOType.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
@@ -143,13 +145,21 @@ namespace Beer::Rendering
 
         vk::ImageAspectFlagBits aspectFlags = isDepth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
 
-        return std::make_shared<Rendering::Image>(
+        std::shared_ptr<Rendering::Image> renderTexImage = std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(width,
                 height,
                 format,
                 usageFlags,
                 aspectFlags,
                 *device));
+
+        if (!isDepth)
+        {
+            std::unique_ptr<Core::ImageClearJob> imageClearJob = std::make_unique<Core::ImageClearJob>(renderTexImage, clearColor);
+            uploadManager->AddJob(std::move(imageClearJob));
+        }
+
+        return renderTexImage;
     }
 
     std::shared_ptr<Buffer> FrameBlackbox::CreateSSBOHandle(VkDeviceSize size, SSBOType type)

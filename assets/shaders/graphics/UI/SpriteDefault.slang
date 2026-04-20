@@ -36,8 +36,6 @@ FRAG float4 SpriteFrag(Sprite.VertData input) : SV_Target
     Sprite.Sprite sprite = Sprite.Sprite(input.uv, _SpriteTex, _ButtonState);
     sprite.SetScaleOffset(_Scale, _Offset);
     sprite.SetTint(_TintColor);
-
-    return float4(Sprite.GetButtonColor(_ButtonState), 1);
-
+    
     return sprite.GetColor();
 }

@@ -69,6 +69,11 @@ namespace Deferred
         return normalize(n);
     }
 
+    public bool IsBackground(float depth)
+    {
+        return depth >= 1.0f;
+    }
+
     public struct DeferredWriter
     {
         private DeferredShadeData data;

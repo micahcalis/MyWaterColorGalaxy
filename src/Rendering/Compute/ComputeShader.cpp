@@ -117,7 +117,7 @@ namespace Beer::Rendering
         return pipeline;
     }
 
-    void ComputeShader::PrintConfig()
+    void ComputeShader::PrintConfig() const
     {
         for (auto& kernel : kernels)
         {

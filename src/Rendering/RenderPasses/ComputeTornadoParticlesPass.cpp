@@ -14,7 +14,7 @@ namespace Beer::Rendering
         instanceTestCompContext = std::make_shared<Rendering::ComputeContext>(computeTest);
 
         instanceTestCompContext->SetInt("_ParticleCount", TORNADO_PART_COUNT);
-        instanceTestCompContext->SetFloat("_Speed", 5.0f);
+        instanceTestCompContext->SetFloat("_Speed", 2.5f);
         instanceTestCompContext->SetFloat("_MaxRadius", 8.0f);
         instanceTestCompContext->Update();
     }

@@ -101,7 +101,7 @@ namespace Beer::System
             testRotationEntity->Update();
         }
 
-        testQuadTreeEntity->Update();
+        // testQuadTreeEntity->Update();
         textEntity->Update();
     }
 
@@ -163,8 +163,8 @@ namespace Beer::System
         testQuadTreeTransform.Scale = glm::vec2(1);
         testQuadTreeTransform.Pivot = AnchorMode::BottomLeft;
 
-        testQuadTreeEntity = registry.CreateEntity<TestQuadTreeEntity>(
-            std::move(testQuadTreeTransform));
+        // testQuadTreeEntity = registry.CreateEntity<TestQuadTreeEntity>(
+        //     std::move(testQuadTreeTransform));
 
         Transform playerTransform{};
         playerTransform.Position = PLAYER_SETTINGS.StartPos;
@@ -222,7 +222,8 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, deferredShadePass, drawUIPass};
+        return {};
+        return {opaquePass, deferredShadePass, skyboxPass, computePerlinPass};
         // /return {opaquePass, skyboxPass, deferredShadePass, computePerlinPass, tornadoPass, tornadoRenderPass};
     }
 } // namespace Beer::System

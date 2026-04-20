@@ -1,6 +1,11 @@
 #include "Rendering/RenderPasses/DrawUIPass.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
+#include "Rendering/RenderPasses/Painting/InteractivePaintingPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include "System/Context/ContextType.hpp"
 #include "System/Drawing/Layer.hpp"
 
 namespace Beer::Rendering
@@ -14,7 +19,7 @@ namespace Beer::Rendering
         System::DrawRequest drawRequest = System::DrawRequest(commandBuffer,
             context,
             Rendering::ShaderPassType::UserInterface,
-            System::ContextMask(System::CTXT_GALAXY_BITS),
+            System::ContextMask(System::CTXT_PAINT_TOOL_BITS),
             System::LayerMask(System::LAYER_UI_BITS));
 
         Core::DrawCallPool drawPool = context.Register->GetDrawCallPool(drawRequest);
@@ -28,6 +33,9 @@ namespace Beer::Rendering
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
+
+        dependencies.AddDependency(PassDependency(INTERACTIVE_PAINT_NAME,
+            ResourceAction::ColorRead));
 
         return dependencies;
     }

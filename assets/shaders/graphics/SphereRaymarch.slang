@@ -130,7 +130,7 @@ FRAG Deferred.FragData SphereRaymarchFrag(VertexData input, bool isFrontFace : S
     // frag. = float4(brdf.Shade(), 1);
     // frag.depth = Deferred.WorldPosToDepth(trace.Position);
 
-    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(traveler.Color,
+    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(_BaseColor.rgb,
         0,
         trace.Position,
         trace.Normal,
