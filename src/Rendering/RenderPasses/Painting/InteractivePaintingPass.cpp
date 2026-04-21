@@ -15,6 +15,7 @@ namespace Beer::Rendering
         : IRenderPass("Interactive Painting Pass", RenderPassEvent::PRE_USER_INTERFACE), displayMaterial(displayMaterial)
     {
         paintingCompContext = std::make_shared<ComputeContext>("Painting/InteractivePainting");
+        paintingCompContext->GetCompute()->PrintConfig();
         paintingKernel = paintingCompContext->GetCompute()->GetKernelIndex("PaintMouse");
         UpdateRandomColor();
     }
@@ -31,6 +32,21 @@ namespace Beer::Rendering
                                 vk::SamplerAddressMode::eClampToEdge,
                                 glm::vec4(1, 1, 1, 0))
                 .AllocPointer);
+
+        RenderTexture* arrayTexture = static_cast<RenderTexture*>(
+            context.BlackBox->ReallocateIfNeeded("TestArray",
+                                I_PAINT_RES_X,
+                                I_PAINT_RES_Y,
+                                static_cast<VkFormat>(vk::Format::eR16G16B16A16Unorm),
+                                TextureAccess::ReadWrite,
+                                vk::Filter::eLinear,
+                                vk::SamplerAddressMode::eClampToEdge,
+                                glm::vec4(1, 1, 1, 0),
+                                4)
+                .AllocPointer);
+
+        paintingCompContext->SetTexture("_TestArray", arrayTexture);
+        paintingCompContext->Update();
 
         SetPaintingParams(paintTexture);
 
@@ -56,6 +72,10 @@ namespace Beer::Rendering
         PassDependencyList dependencies = PassDependencyList(name);
         dependencies.AddDependency(PassDependency(INTERACTIVE_PAINT_NAME,
             ResourceAction::ComputeReadWrite));
+
+        dependencies.AddDependency(PassDependency("TestArray",
+            ResourceAction::ComputeReadWrite));
+
         return dependencies;
     }
 

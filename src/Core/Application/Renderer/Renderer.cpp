@@ -98,8 +98,8 @@ namespace Beer::Core
         Rendering::Material::UpdateDirty();
         Rendering::FontMaterial::UpdateDirty();
         renderRegister->Cleanup();
-        uploadManager->FlushQueue(frameResources[frameIndex]);
         renderPipeline->InitializeFrame();
+        uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
     void Renderer::Draw()
@@ -288,6 +288,7 @@ namespace Beer::Core
                 VkFormat(depthFormat),
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                 vk::ImageAspectFlagBits::eDepth,
+                1,
                 device));
     }
 

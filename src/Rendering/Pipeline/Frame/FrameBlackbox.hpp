@@ -36,7 +36,8 @@ namespace Beer::Rendering
             TextureAccess access = TextureAccess::Standard,
             vk::Filter filter = vk::Filter::eLinear,
             vk::SamplerAddressMode tiling = vk::SamplerAddressMode::eRepeat,
-            glm::vec4 clearColor = glm::vec4(0));
+            glm::vec4 clearColor = glm::vec4(0),
+            uint32_t layerCount = 1);
 
         PhaseBuffer* CreatePhaseBuffer(const std::string& name,
             VkDeviceSize size,
@@ -76,7 +77,8 @@ namespace Beer::Rendering
             TextureAccess access = TextureAccess::Standard,
             vk::Filter filter = vk::Filter::eLinear,
             vk::SamplerAddressMode tiling = vk::SamplerAddressMode::eRepeat,
-            glm::vec4 clearColor = glm::vec4(0));
+            glm::vec4 clearColor = glm::vec4(0),
+            uint32_t layerCount = 1);
 
         ReallocPB ReallocateIfNeeded(const std::string& name,
             VkDeviceSize size,
@@ -87,7 +89,8 @@ namespace Beer::Rendering
             uint32_t height,
             VkFormat format,
             TextureAccess access = TextureAccess::Standard,
-            glm::vec4 clearColor = glm::vec4(0));
+            glm::vec4 clearColor = glm::vec4(0),
+            uint32_t layerCount = 1);
 
         std::shared_ptr<Buffer> CreateSSBOHandle(VkDeviceSize size, SSBOType type);
     };

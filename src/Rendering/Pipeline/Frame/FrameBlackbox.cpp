@@ -31,7 +31,8 @@ namespace Beer::Rendering
         TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
-        glm::vec4 clearColor)
+        glm::vec4 clearColor,
+        uint32_t layerCount)
     {
         if (blackbox.contains(name))
         {
@@ -42,7 +43,8 @@ namespace Beer::Rendering
             height,
             format,
             access,
-            clearColor);
+            clearColor,
+            layerCount);
 
         blackbox[name] = std::make_unique<RenderTexture>(name,
             std::move(image),
@@ -76,17 +78,18 @@ namespace Beer::Rendering
         TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
-        glm::vec4 clearColor)
+        glm::vec4 clearColor,
+        uint32_t layerCount)
     {
         RenderTexture* renderTexture = GetResource<RenderTexture>(name);
 
         if (renderTexture == nullptr)
         {
-            renderTexture = CreateRenderTexture2D(name, width, height, format, access, filter, tiling, clearColor);
+            renderTexture = CreateRenderTexture2D(name, width, height, format, access, filter, tiling, clearColor, layerCount);
             return {renderTexture, true};
         }
 
-        ReallocationMask mask = renderTexture->GetAllocationMask(width, height, format, filter, tiling);
+        ReallocationMask mask = renderTexture->GetAllocationMask(width, height, format, filter, tiling, layerCount);
 
         if (mask.Has(ReallocationFlag::Image))
         {
@@ -94,7 +97,8 @@ namespace Beer::Rendering
                 height,
                 format,
                 access,
-                clearColor);
+                clearColor,
+                layerCount);
 
             renderTexture->SetImage(std::move(image));
             return {renderTexture, true};
@@ -135,7 +139,8 @@ namespace Beer::Rendering
         uint32_t height,
         VkFormat format,
         TextureAccess access,
-        glm::vec4 clearColor)
+        glm::vec4 clearColor,
+        uint32_t layerCount)
     {
         bool isDepth = Core::ImageUtilities::IsDepthFormat(static_cast<vk::Format>(format));
         VkImageUsageFlags usageFlags = isDepth ? DEPTH_TEX_FLAGS : COLOR_TEX_FLAGS;
@@ -151,6 +156,7 @@ namespace Beer::Rendering
                 format,
                 usageFlags,
                 aspectFlags,
+                layerCount,
                 *device));
 
         if (!isDepth)

@@ -1,6 +1,7 @@
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "ReallocationFlags.hpp"
+#include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/ImageSyncBarrier.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/ImageSyncState.hpp"
@@ -35,7 +36,8 @@ namespace Beer::Rendering
         uint32_t height,
         VkFormat format,
         vk::Filter filter,
-        vk::SamplerAddressMode tiling)
+        vk::SamplerAddressMode tiling,
+        uint32_t layerCount)
     {
         uint32_t bits = 0;
 
@@ -43,7 +45,8 @@ namespace Beer::Rendering
 
         if (imageData.Extent.width != width
             || imageData.Extent.height != height
-            || imageData.Format != format)
+            || imageData.Format != format
+            || imageData.ArrayLayers != layerCount)
         {
             bits |= REALLOC_IMAGE_BITS;
         }

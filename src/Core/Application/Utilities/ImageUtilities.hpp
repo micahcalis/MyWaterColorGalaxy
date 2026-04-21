@@ -27,6 +27,7 @@ namespace Beer::Core
         static vk::ImageView CreateImageView(vk::Image image,
             vk::Format format,
             vk::ImageAspectFlagBits aspectFlags,
+            uint32_t layerCount,
             const Device& device);
 
         static vk::Format FindSupportedFormat(const std::vector<vk::Format> candidates,

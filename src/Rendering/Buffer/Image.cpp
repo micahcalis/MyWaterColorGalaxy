@@ -20,6 +20,7 @@ namespace Beer::Rendering
         VkFormat format,
         VkImageUsageFlags usage,
         vk::ImageAspectFlagBits aspectFlags,
+        uint32_t layerCount,
         const Core::Device& device)
     {
         auto allocation = sharedAllocator->CreateImage(width,
@@ -27,17 +28,20 @@ namespace Beer::Rendering
             format,
             VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
             usage,
-            VMA_MEMORY_USAGE_AUTO);
+            VMA_MEMORY_USAGE_AUTO,
+            layerCount);
 
         auto defaultView = Core::ImageUtilities::CreateImageView(allocation.Image,
             vk::Format(format),
             aspectFlags,
+            layerCount,
             device);
 
         ImageData data{};
         data.Extent = vk::Extent3D(width, height, 1);
         data.Format = format;
         data.AspectMask = aspectFlags;
+        data.ArrayLayers = layerCount;
 
         return {allocation, defaultView, data};
     }

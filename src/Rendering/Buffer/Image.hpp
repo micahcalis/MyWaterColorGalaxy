@@ -40,6 +40,7 @@ namespace Beer::Rendering
             VkFormat format,
             VkImageUsageFlags usage,
             vk::ImageAspectFlagBits aspectFlags,
+            uint32_t layerCount,
             const Core::Device& device);
 
         static void SetImageAssetManager(Core::ImageAssetManager* imageAssetManager)

@@ -33,7 +33,8 @@ namespace Beer::Rendering
             VkFormat format,
             VkImageTiling tiling,
             VkImageUsageFlags usage,
-            VmaMemoryUsage memoryUsage) const;
+            VmaMemoryUsage memoryUsage,
+            uint32_t layerCount) const;
 
         void DestroyBuffer(BufferAllocation& buffer);
         void DestroyImage(ImageAllocation& image);

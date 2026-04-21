@@ -96,7 +96,8 @@ namespace Beer::Rendering
         VkFormat format,
         VkImageTiling tiling,
         VkImageUsageFlags usage,
-        VmaMemoryUsage memoryUsage) const
+        VmaMemoryUsage memoryUsage,
+        uint32_t layerCount) const
     {
         ImageAllocation imageAlloc{};
 
@@ -107,7 +108,7 @@ namespace Beer::Rendering
         imageInfo.extent.height = height;
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
+        imageInfo.arrayLayers = layerCount;
         imageInfo.format = format;
         imageInfo.tiling = tiling;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;

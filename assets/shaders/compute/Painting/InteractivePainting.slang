@@ -20,6 +20,7 @@ cbuffer ComputeData
 }
 
 BIND_MATERIAL_TEX(1) RWTexture2D<float4> _PaintTex;
+BIND_MATERIAL_TEX(2) RWTexture2DArray<float4> _TestArray;
 
 //$ Kernel PaintMouse
 
@@ -27,6 +28,7 @@ COMP
 [numthreads(8, 8, 1)]
 void PaintMouse(uint3 id : SV_DispatchThreadID)
 {
+    _TestArray[uint3(id.xy, 0)] = float4(1, 0, 0, 1);
     bool isClicking = _MouseClick != 0;
 
     if (!isClicking)

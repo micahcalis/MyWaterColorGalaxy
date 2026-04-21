@@ -46,7 +46,8 @@ namespace Beer::Rendering
             uint32_t height,
             VkFormat format,
             vk::Filter filter,
-            vk::SamplerAddressMode tiling);
+            vk::SamplerAddressMode tiling,
+            uint32_t layerCount);
 
         std::unique_ptr<ISyncBarrier> GetBarrier(const ResourceAction action) override;
 
