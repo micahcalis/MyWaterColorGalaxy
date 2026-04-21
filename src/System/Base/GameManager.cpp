@@ -1,4 +1,5 @@
 #include "System/Base/GameManager.hpp"
+#include "Input/ButtonInput.hpp"
 #include "Input/MouseInput.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/InputManager.hpp"
@@ -53,6 +54,7 @@ namespace Beer::System
             [inputManagerP]() -> PlayerInput { return PlayerInput(inputManagerP->GetMovementVector(), inputManagerP->GetMouseVector()); };
 
         Function<MouseInput> getMouseInput = [this]() -> MouseInput { return inputManager->GetMouseInput(); };
+        Function<ButtonInput> getDebugKeyInput = [this]() -> ButtonInput { return inputManager->GetDebugButtonInput(); };
 
         contextHandler->RegisterContextFactory(ContextType::Galaxy,
             [getPlayerInput]() -> std::shared_ptr<IContext> {
@@ -60,8 +62,8 @@ namespace Beer::System
             });
 
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
-            [getMouseInput]() -> std::shared_ptr<PaintToolContext> {
-                return std::make_shared<PaintToolContext>(getMouseInput);
+            [getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
+                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput);
             });
     }
 

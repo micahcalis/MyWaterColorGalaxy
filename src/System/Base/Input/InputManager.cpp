@@ -80,4 +80,9 @@ namespace Beer::System
             isRightDown && !wasRightDown,
             isRightDown};
     }
+
+    ButtonInput InputManager::GetDebugButtonInput()
+    {
+        return debugKeyCache.UpdateInput();
+    }
 } // namespace Beer::System

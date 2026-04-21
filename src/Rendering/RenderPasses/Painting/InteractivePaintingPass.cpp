@@ -1,5 +1,4 @@
 #include "Rendering/RenderPasses/Painting/InteractivePaintingPass.hpp"
-#include "Core/Application/Renderer/Screen.hpp"
 #include "InteractivePaintingPass.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
@@ -7,6 +6,7 @@
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "glm/fwd.hpp"
+#include "vulkan/vulkan.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -15,9 +15,8 @@ namespace Beer::Rendering
         : IRenderPass("Interactive Painting Pass", RenderPassEvent::PRE_USER_INTERFACE), displayMaterial(displayMaterial)
     {
         paintingCompContext = std::make_shared<ComputeContext>("Painting/InteractivePainting");
-        paintingCompContext->GetCompute()->PrintConfig();
         paintingKernel = paintingCompContext->GetCompute()->GetKernelIndex("PaintMouse");
-        displayMaterial->GetShader()->PrintConfig();
+        UpdateRandomColor();
     }
 
     void InteractivePaintingPass::OnRenderSetup(const RenderContext& context)
@@ -27,13 +26,21 @@ namespace Beer::Rendering
                                 I_PAINT_RES_X,
                                 I_PAINT_RES_Y,
                                 static_cast<VkFormat>(vk::Format::eR16G16B16A16Unorm),
-                                TextureAccess::ReadWrite)
+                                TextureAccess::ReadWrite,
+                                vk::Filter::eLinear,
+                                vk::SamplerAddressMode::eClampToEdge,
+                                glm::vec4(1, 1, 1, 0))
                 .AllocPointer);
 
         SetPaintingParams(paintTexture);
-        displayMaterial->SetTexture("_SpriteTex", paintTexture);
-        displayMaterial->SetVector("_Scale", glm::vec4(1));
-        displayMaterial->SetColor("_TintColor", glm::vec4(1));
+
+        System::ButtonInput debugKeyInput = getDebugKeyInput();
+        if (debugKeyInput.ButtonStart)
+        {
+            UpdateRandomColor();
+        }
+
+        displayMaterial->SetTexture("_PaintTex", paintTexture);
     }
 
     void InteractivePaintingPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
@@ -73,7 +80,18 @@ namespace Beer::Rendering
 
         paintingCompContext->SetVector("_MousePos", glm::vec4(input.PixelPos, 0, 0));
         paintingCompContext->SetInt("_MouseClick", input.LeftClickHold ? 1 : 0);
+        paintingCompContext->SetFloat("_PaintIntensity", 5.0f);
 
+        paintingCompContext->Update();
+    }
+
+    void InteractivePaintingPass::UpdateRandomColor()
+    {
+        float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+        paintingCompContext->SetColor("_PaintColor", glm::vec4(r, g, b, 1));
         paintingCompContext->Update();
     }
 } // namespace Beer::Rendering

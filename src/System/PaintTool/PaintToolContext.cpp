@@ -18,6 +18,7 @@ namespace Beer::System
             [this]() -> UITransform* { return colorMixerEntity->GetRootTransform(); });
 
         interactivePaintingPass->SetGetMouseInput(getMouseInput);
+        interactivePaintingPass->SetGetDebugKeyInput(getDebugKeyInput);
 
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));

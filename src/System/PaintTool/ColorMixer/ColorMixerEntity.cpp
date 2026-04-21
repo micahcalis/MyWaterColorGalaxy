@@ -8,7 +8,8 @@ namespace Beer::System
     ColorMixerEntity::ColorMixerEntity()
         : QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
-        colorMixerDisplayMat = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        colorMixerDisplayMat = std::make_shared<Rendering::Material>("UI/ColorMixerSprite");
+        colorMixerDisplayMat->SetColor("_CanvasColor", glm::vec4(0.969f, 0.969f, 0.914, 1));
 
         rootTransform.Anchor = AnchorMode::Center;
         rootTransform.Pivot = AnchorMode::Center;

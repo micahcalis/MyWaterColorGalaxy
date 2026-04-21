@@ -5,31 +5,32 @@ namespace Color
     public enum Space
     {
         RGB,
-        HSV
+        HSV,
+        CMYK
     }
 
     public struct ColorTraveler
     {
-        public float3 Color;
+        public float4 Color;
         private Space currentSpace;
 
         public __init(float3 rgb)
         {
-            Color = rgb;
+            Color = float4(rgb, 1);
             currentSpace = Space.RGB;
         }
 
         [mutating]
-        public void ToggleSpace()
+        public void ToggleSpaceHSV()
         {
             if (currentSpace == Space.RGB)
             {
-                RGBtoHSV();
+                Color = float4(Functions.RGBtoHSV(Color.rgb), 1.0f);
                 currentSpace = Space.HSV;
             }
             else
             {
-                HSVtoRGB();
+                Color = float4(Functions.HSVtoRGB(Color.rgb), 1.0f);
                 currentSpace = Space.RGB;
             }
         }
@@ -38,11 +39,13 @@ namespace Color
         {
             return currentSpace;
         }
+    }
 
-        [mutating]
-        private void RGBtoHSV()
+    namespace Functions
+    {
+        public float3 RGBtoHSV(float3 rgb)
         {
-            float3 c = Color;
+            float3 c = rgb;
             float4 k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
             float4 p = lerp(float4(c.bg, k.wz), float4(c.gb, k.xy), step(c.b, c.g));
             float4 q = lerp(float4(p.xyw, c.r), float4(c.r, p.yzx), step(p.x, c.r));
@@ -50,16 +53,49 @@ namespace Color
             float d = q.x - min(q.w, q.y);
             float e = 1.0e-10;
 
-            Color = float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+            return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
         }
 
-        [mutating]
-        private void HSVtoRGB()
+        public float3 HSVtoRGB(float3 hsv)
         {
-            float3 c = Color;
+            float3 c = hsv;
             float4 k = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
             float3 p = abs(frac(c.xxx + k.xyz) * 6.0 - k.www);
-            Color = c.z * lerp(k.xxx, saturate(p - k.xxx), c.y);
+            return c.z * lerp(k.xxx, saturate(p - k.xxx), c.y);
+        }
+
+        public float3 CMYKtoRGB(float4 cmyk)
+        {
+            float c = cmyk.x;
+            float m = cmyk.y;
+            float y = cmyk.z;
+            float k = cmyk.w;
+
+            float invK = 1.0 - k;
+            float r = 1.0 - min(1.0, c * invK + k);
+            float g = 1.0 - min(1.0, m * invK + k);
+            float b = 1.0 - min(1.0, y * invK + k);
+
+            return clamp(float3(r, g, b), 0.0, 1.0);
+        }
+
+        public float4 RGBtoCMYK(float3 rgb) 
+        {
+            float r = rgb.r;
+            float g = rgb.g;
+            float b = rgb.b;
+            float k = min(1.0 - r, min(1.0 - g, 1.0 - b));
+            float3 cmy = (float3)0;
+            float invK = 1.0 - k;
+
+            if (invK != 0.0) 
+            {
+                cmy.x = (1.0 - r - k) / invK;
+                cmy.y = (1.0 - g - k) / invK;
+                cmy.z = (1.0 - b - k) / invK;
+            }
+
+            return clamp(float4(cmy, k), 0.0, 1.0);
         }
     }
 }

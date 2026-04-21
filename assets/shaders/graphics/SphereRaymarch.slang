@@ -117,19 +117,6 @@ FRAG Deferred.FragData SphereRaymarchFrag(VertexData input, bool isFrontFace : S
     if (!trace.Hit)
         discard;
 
-    Color.ColorTraveler traveler = Color.ColorTraveler(_BaseColor.rgb);
-    traveler.ToggleSpace();
-
-    // Lit.BRDF brdf = Lit.BRDF(GetMainLight(trace.Position), 
-    //     viewDirWS,
-    //     trace.Normal,
-    //     traveler.Color,
-    //     _Smoothness,
-    //     _Metallic);
-
-    // frag. = float4(brdf.Shade(), 1);
-    // frag.depth = Deferred.WorldPosToDepth(trace.Position);
-
     Deferred.DeferredShadeData data = Deferred.DeferredShadeData(_BaseColor.rgb,
         0,
         trace.Position,

@@ -6,6 +6,7 @@
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/Delegate.hpp"
+#include "System/Base/Input/ButtonInput.hpp"
 
 namespace Beer::Rendering
 {
@@ -18,6 +19,7 @@ namespace Beer::Rendering
     private:
         System::Function<System::MouseInput> getMouseInput;
         System::Function<System::UITransform*> getCanvasTransform;
+        System::Function<System::ButtonInput> getDebugKeyInput;
         std::shared_ptr<ComputeContext> paintingCompContext;
         uint32_t paintingKernel;
         Material* displayMaterial;
@@ -35,11 +37,17 @@ namespace Beer::Rendering
             this->getCanvasTransform = getCanvasTransform;
         }
 
+        void SetGetDebugKeyInput(System::Function<System::ButtonInput> getDebugKeyInput)
+        {
+            this->getDebugKeyInput = getDebugKeyInput;
+        }
+
         void OnRenderSetup(const RenderContext& context) override;
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context) override;
         PassDependencyList GetDependencies() const override;
 
     private:
         void SetPaintingParams(RenderTexture* paintTexture);
+        void UpdateRandomColor();
     };
 } // namespace Beer::Rendering
