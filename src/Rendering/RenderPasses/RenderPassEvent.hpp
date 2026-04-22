@@ -6,6 +6,7 @@ namespace Beer::Rendering
 {
     enum class RenderPassEvent : uint32_t
     {
+        WATER_COL_SIM = 10,
         SKYBOX = 100,
         OPAQUE = 200,
         DEFERRED_SHADE = 300,

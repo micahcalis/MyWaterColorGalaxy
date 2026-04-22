@@ -1,9 +1,11 @@
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
+#include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/Painting/InteractivePaintingPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -22,6 +24,10 @@ namespace Beer::System
 
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));
+
+        paintSimSubPipeline = std::make_unique<PaintSimSubPipeline>(colorMixerEntity->GetColorMixerMat(),
+            getMouseInput,
+            [this]() -> UITransform* { return colorMixerEntity->GetRootTransform(); });
     }
 
     void PaintToolContext::Update()
@@ -36,7 +42,12 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> PaintToolContext::GetRenderPasses()
     {
-        return {interactivePaintingPass, drawUIPass};
+        std::vector<Rendering::IRenderPass*> passes;
+        // passes.push_back(interactivePaintingPass);
+        passes.push_back(drawUIPass);
+        passes.append_range(paintSimSubPipeline->GetRenderPasses());
+
+        return passes;
     }
 
 } // namespace Beer::System

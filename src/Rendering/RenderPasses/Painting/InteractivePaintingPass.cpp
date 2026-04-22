@@ -33,21 +33,6 @@ namespace Beer::Rendering
                                 glm::vec4(1, 1, 1, 0))
                 .AllocPointer);
 
-        RenderTexture* arrayTexture = static_cast<RenderTexture*>(
-            context.BlackBox->ReallocateIfNeeded("TestArray",
-                                I_PAINT_RES_X,
-                                I_PAINT_RES_Y,
-                                static_cast<VkFormat>(vk::Format::eR16G16B16A16Unorm),
-                                TextureAccess::ReadWrite,
-                                vk::Filter::eLinear,
-                                vk::SamplerAddressMode::eClampToEdge,
-                                glm::vec4(1, 1, 1, 0),
-                                4)
-                .AllocPointer);
-
-        paintingCompContext->SetTexture("_TestArray", arrayTexture);
-        paintingCompContext->Update();
-
         SetPaintingParams(paintTexture);
 
         System::ButtonInput debugKeyInput = getDebugKeyInput();
@@ -71,9 +56,6 @@ namespace Beer::Rendering
     {
         PassDependencyList dependencies = PassDependencyList(name);
         dependencies.AddDependency(PassDependency(INTERACTIVE_PAINT_NAME,
-            ResourceAction::ComputeReadWrite));
-
-        dependencies.AddDependency(PassDependency("TestArray",
             ResourceAction::ComputeReadWrite));
 
         return dependencies;
