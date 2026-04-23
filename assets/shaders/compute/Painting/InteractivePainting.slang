@@ -6,6 +6,8 @@ import Painting.ColorMixing;
 import Math.PartialDerivative;
 import Painting.PaintBrush;
 import Painting.Pigment;
+import Painting.FluidPhysics;
+import Physics.Flux;
 
 BIND_MATERIAL_DATA
 cbuffer ComputeData
@@ -21,6 +23,7 @@ cbuffer ComputeData
     float _BrushIntensity;
     float _BrushSmoothness;
     Painting.Pigment _BrushPigment;
+    float _TextureSlopeIntensity;
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _CanvasSource;
@@ -29,6 +32,7 @@ BIND_MATERIAL_TEX(3) RWTexture2D<float4> _ShallowWater;
 BIND_MATERIAL_TEX(4) RWTexture2DArray<float4> _SuspendedPigment;
 BIND_MATERIAL_TEX(5) RWTexture2DArray<float4> _DepositedPigment;
 BIND_MATERIAL_TEX(6) RWTexture2D<float4> _PigmentRender;
+BIND_MATERIAL_TEX(7) RWTexture2D<float4> _FluxBuffer;
 
 public struct CanvasSampler : Math.IHeightSampler
 {
@@ -72,7 +76,9 @@ public struct ShallowWaterWrite : Painting.IWaterWrite
 
     public void Write(float water)
     {
-        _ShallowWater[coord].a += water;
+        float4 currentData = _ShallowWater[coord];
+        currentData.b += water;
+        _ShallowWater[coord] = saturate(currentData);
     }
 }
 
@@ -121,3 +127,115 @@ void InjectPaint(uint3 id : SV_DispatchThreadID)
     //TODO: PIGMENT INJECTING
 }
 
+public struct WaterVolumeReader : Painting.IVolumeReader
+{
+    private int2 baseCoord;
+
+    public __init(int2 _baseCoord)
+    {
+        baseCoord = _baseCoord;
+    }
+
+    public float Read(int2 offset)
+    {
+        int2 coord = baseCoord + offset;
+
+        if (any(coord < 0) || coord.x >= _PaintResolution.x || coord.y >= _PaintResolution.y)
+        {
+            return _ShallowWater[uint2(baseCoord)].b;
+        }
+
+        return _ShallowWater[uint2(coord)].b;
+    }
+}
+
+public struct CanvasSlopeReader : Painting.ITextureSlopeReader
+{
+    private int2 baseCoord;
+
+    public __init(int2 _baseCoord)
+    {
+        baseCoord = _baseCoord;
+    }
+
+    public Painting.TextureSlope Read(int2 offset)
+    {
+        uint2 coord = (uint2)(clamp(baseCoord + offset, 0, _PaintResolution - 1));
+        float4 sample = _CanvasTarget[coord];
+
+        Painting.TextureSlope slope;
+        slope.X = (sample.r - 0.5f) * 2.0f; 
+        slope.Y = (sample.g - 0.5f) * 2.0f;
+        slope.Height = sample.b;
+
+        return slope;
+    }
+}
+
+public struct FluxReader : Painting.IFlux2DReader
+{
+    private int2 baseCoord;
+
+    public __init(int2 _baseCoord)
+    {
+        baseCoord = _baseCoord;
+    }
+
+    public Physics.Flux2D Read(int2 offset)
+    {
+        int2 coord = baseCoord + offset;
+
+        if (any(coord < 0) || coord.x >= _PaintResolution.x || coord.y >= _PaintResolution.y)
+        {
+            Physics.Flux2D zeroFlux = (Physics.Flux2D)0; 
+            return zeroFlux;
+        }
+
+        float4 sample = _FluxBuffer[uint2(coord)];
+
+        Physics.Flux2D flux;
+        flux.Left = sample.r; 
+        flux.Right = sample.g; 
+        flux.Up = sample.b; 
+        flux.Down = sample.a; 
+
+        return flux;
+    }
+}
+
+//$ Kernel CalculateFluidFlux
+
+COMP
+[numthreads(8, 8, 1)]
+void CalculateFluidFlux(uint3 id : SV_DispatchThreadID)
+{
+    WaterVolumeReader volumeReader = WaterVolumeReader(id.xy);
+    CanvasSlopeReader slopeReader = CanvasSlopeReader(id.xy);
+    FluxReader fluxReader = FluxReader(id.xy);
+    Physics.Flux2D currentFlux = fluxReader.Read(0);
+
+    Painting.FluxUpdater<WaterVolumeReader, CanvasSlopeReader> fluxUpdater = 
+        Painting.FluxUpdater<WaterVolumeReader, CanvasSlopeReader>(volumeReader, slopeReader, currentFlux);
+
+    Physics.Flux2D newFlux = fluxUpdater.UpdateFlux();
+
+    _FluxBuffer[id.xy] = float4(newFlux.Left,
+        newFlux.Right,
+        newFlux.Up,
+        newFlux.Down);
+}
+
+COMP
+[numthreads(8, 8, 1)]
+void ResolveFluidFlux(uint3 id : SV_DispatchThreadID)
+{
+    FluxReader fluxReader = FluxReader(id.xy);
+    WaterVolumeReader volumeReader = WaterVolumeReader(id.xy);
+    float currentVolume = volumeReader.Read(0);
+
+    Painting.FluxResolver<FluxReader> fluxResolver =
+        Painting.FluxResolver<FluxReader>(fluxReader, currentVolume);
+
+    float newVolume = fluxResolver.Resolve();
+    _ShallowWater[id.xy] = float4(0, 0, newVolume, 0);
+}

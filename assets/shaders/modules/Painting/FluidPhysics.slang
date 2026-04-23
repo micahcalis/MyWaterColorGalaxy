@@ -1,0 +1,151 @@
+#include "Core/BeerMacros.slang"
+
+import Core.BeerCore;
+import Physics.Flux;
+
+module FluidPhysics;
+
+namespace Painting
+{
+    public interface IVolumeReader
+    {
+        public float Read(int2 offset);
+    }
+
+    public struct TextureSlope
+    {
+        public float X;
+        public float Y;
+        public float Height;
+    }
+
+    public interface ITextureSlopeReader
+    {
+        public TextureSlope Read(int2 offset);
+    }
+
+    static const int2 LEFT = int2(-1, 0);
+    static const int2 RIGHT = int2(1, 0);
+    static const int2 UP = int2(0, 1);
+    static const int2 DOWN = int2(0, -1);
+
+    #define FLOW_DIR_COUNT 4
+    static const int2[FLOW_DIR_COUNT] FLOW_DIRS = int2[FLOW_DIR_COUNT](LEFT, RIGHT, UP, DOWN);
+
+    static const float GRAVITY = 9.81f;
+    static const float MAX_FLUX_ACCEL = 5.0f;
+    static const float FLUX_DAMPING = 0.8f;
+
+    public struct FluxUpdater<TVolumeReader : IVolumeReader, 
+        TTextureSlopeReader : ITextureSlopeReader>
+    {
+        private TVolumeReader volumeReader;
+        private TTextureSlopeReader slopeReader;
+        private Physics.Flux2D currentFlux;
+
+        public __init(TVolumeReader _volumeReader, 
+            TTextureSlopeReader _slopeReader,
+            Physics.Flux2D _currentFlux)
+        {
+            volumeReader = _volumeReader;
+            slopeReader = _slopeReader;
+            currentFlux =_currentFlux;
+        }
+
+        [mutating]
+        public Physics.Flux2D UpdateFlux()
+        {
+            float currentVolume = volumeReader.Read(0);
+            
+            [unroll(FLOW_DIR_COUNT)]
+            for (int i = 0; i < FLOW_DIR_COUNT; i++)
+            {
+                int2 direction = FLOW_DIRS[i];
+                float compareVolume = volumeReader.Read(direction);
+                TextureSlope compareSlope = slopeReader.Read(direction);
+
+                float acceleration = CalculateAcceleration(currentVolume, 
+                    compareVolume,
+                    compareSlope,
+                    (float2)direction);
+
+                currentFlux.SetByIndex(i, ApplyAcceleration(currentFlux.GetByIndex(i), acceleration));
+            }
+
+            currentFlux.Normalize(currentVolume);
+            return currentFlux;
+        }
+
+        private float CalculateAcceleration(float currentVolume, 
+            float compareVolume, 
+            TextureSlope compareSlope,
+            float2 direction)
+        {
+            float pressureDelta = currentVolume - compareVolume;
+            float acceleration = pressureDelta * _DeltaTime * GRAVITY;
+            acceleration *= max(0.0f, dot(float2(direction.x, direction.y), float2(compareSlope.X, compareSlope.Y)));
+            return clamp(acceleration, -MAX_FLUX_ACCEL, MAX_FLUX_ACCEL);
+        }
+
+        private float ApplyAcceleration(float oldVal, float acceleration)
+        {
+            float newVal = oldVal + acceleration;
+            newVal *= FLUX_DAMPING;
+            return max(newVal, 0.0f);
+        }
+    }
+
+    public interface IFlux2DReader
+    {
+        public Physics.Flux2D Read(int2 offset);
+    }
+
+    public struct Flow
+    {
+        public float FluidAmount;
+    }
+
+    public struct FluxResolver<TFluxReader : IFlux2DReader>
+    {
+        TFluxReader fluxReader;
+        Flow totalFlow;
+
+        public __init(TFluxReader _fluxReader, float volume)
+        {
+            fluxReader = _fluxReader;
+            totalFlow.FluidAmount = volume;
+        }
+
+        [mutating]
+        public float Resolve()
+        {
+            Flow inFlow = GetInFlow();
+            Flow outFlow = GetOutFlow();
+            totalFlow.FluidAmount += inFlow.FluidAmount - outFlow.FluidAmount;
+
+            return max(totalFlow.FluidAmount, 0.0f);
+        }
+
+        private Flow GetInFlow()
+        {
+            Flow inFlow = (Flow)0;
+
+            [unroll(FLOW_DIR_COUNT)]
+            for (int i = 0; i < FLOW_DIR_COUNT; i++)
+            {
+                Physics.Flux2D flux = fluxReader.Read(FLOW_DIRS[i]);
+                inFlow.FluidAmount += flux.GetByIndex(Physics.Flux2D.GetOpposite(i));
+            }
+
+            return inFlow;
+        }
+
+        private Flow GetOutFlow()
+        {
+            Physics.Flux2D flux = fluxReader.Read(0);
+            Flow outFlow = (Flow)0;
+            outFlow.FluidAmount = flux.GetSum();
+            return outFlow;
+        }
+    }
+}

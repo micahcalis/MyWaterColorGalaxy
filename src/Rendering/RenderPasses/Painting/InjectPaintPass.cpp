@@ -10,7 +10,7 @@ namespace Beer::Rendering
     InjectPaintPass::InjectPaintPass(WaterColorSimBuffers* simulationBuffers,
         System::Function<System::MouseInput> getMouseInput,
         System::Function<System::UITransform*> getCanvasTransform)
-        : simulationBuffers(simulationBuffers), getMouseInput(getMouseInput), getCanvasTransform(getCanvasTransform), IRenderPass("InjectPaintPass", RenderPassEvent::WATER_COL_SIM)
+        : simulationBuffers(simulationBuffers), getMouseInput(getMouseInput), getCanvasTransform(getCanvasTransform), IRenderPass("InjectPaintPass", static_cast<uint32_t>(RenderPassEvent::WATER_COL_SIM) + 1)
     {
     }
 

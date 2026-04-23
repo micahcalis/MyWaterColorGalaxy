@@ -33,5 +33,6 @@ FRAG float4 ColorMixerFrag(Sprite.VertData input) : SV_Target
     float4 paintSample = _PaintTex.Sample(input.uv);
     float3 canvasColor = lerp(_CanvasColor.rgb, paintSample.rgb, paintSample.a);
     
-    return float4(canvasColor, _CanvasColor.a);
+    return float4(paintSample.rgb, 1.0f);
+   // return float4(canvasColor, _CanvasColor.a);
 }

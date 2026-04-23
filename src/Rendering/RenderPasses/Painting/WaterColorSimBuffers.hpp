@@ -23,6 +23,7 @@ namespace Beer::Rendering
 
     static const uint32_t CANVAS_GENERATION_KERNEL = 0;
     static const uint32_t PAINT_INJECT_KERNEL = 1;
+    static const uint32_t WATER_DNMCS_KERNEL = 2;
 
     class WaterColorSimBuffers
     {
