@@ -2,8 +2,9 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
+#include "Rendering/RenderPasses/Painting/ResolveFluidFluxPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
-#include "Rendering/RenderPasses/Painting/WaterDynamicsPass.hpp"
+#include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 
 namespace Beer::System
@@ -24,13 +25,17 @@ namespace Beer::System
             getMouseInput,
             getCanvasTransform);
 
-        waterDynamicsPass = Rendering::IRenderPass::FetchFromRegister<Rendering::WaterDynamicsPass>(
-            "WaterDynamicsPass",
+        calculateFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::CalculateFluidFluxPass>(
+            "CalculateFluidFluxPass",
+            simulationBuffers.get());
+
+        resolveFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ResolveFluidFluxPass>(
+            "ResolveFluidFluxPass",
             simulationBuffers.get());
     }
 
     std::vector<Rendering::IRenderPass*> PaintSimSubPipeline::GetRenderPasses() const
     {
-        return {generateCanvasPass, injectPaintPass, waterDynamicsPass};
+        return {generateCanvasPass, injectPaintPass, calculateFluidFluxPass, resolveFluidFluxPass};
     }
 } // namespace Beer::System

@@ -78,7 +78,7 @@ public struct ShallowWaterWrite : Painting.IWaterWrite
     {
         float4 currentData = _ShallowWater[coord];
         currentData.b += water;
-        _ShallowWater[coord] = saturate(currentData);
+        _ShallowWater[coord] = currentData;
     }
 }
 
@@ -215,7 +215,7 @@ void CalculateFluidFlux(uint3 id : SV_DispatchThreadID)
     Physics.Flux2D currentFlux = fluxReader.Read(0);
 
     Painting.FluxUpdater<WaterVolumeReader, CanvasSlopeReader> fluxUpdater = 
-        Painting.FluxUpdater<WaterVolumeReader, CanvasSlopeReader>(volumeReader, slopeReader, currentFlux);
+        Painting.FluxUpdater<WaterVolumeReader, CanvasSlopeReader>(volumeReader, slopeReader, currentFlux, _TextureSlopeIntensity);
 
     Physics.Flux2D newFlux = fluxUpdater.UpdateFlux();
 
@@ -224,6 +224,8 @@ void CalculateFluidFlux(uint3 id : SV_DispatchThreadID)
         newFlux.Up,
         newFlux.Down);
 }
+
+//$ Kernel ResolveFluidFlux
 
 COMP
 [numthreads(8, 8, 1)]

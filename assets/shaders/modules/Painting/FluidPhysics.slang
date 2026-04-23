@@ -34,7 +34,7 @@ namespace Painting
 
     static const float GRAVITY = 9.81f;
     static const float MAX_FLUX_ACCEL = 5.0f;
-    static const float FLUX_DAMPING = 0.8f;
+    static const float FLUX_DAMPING = 0.98f;
 
     public struct FluxUpdater<TVolumeReader : IVolumeReader, 
         TTextureSlopeReader : ITextureSlopeReader>
@@ -42,14 +42,17 @@ namespace Painting
         private TVolumeReader volumeReader;
         private TTextureSlopeReader slopeReader;
         private Physics.Flux2D currentFlux;
+        private float textureSlopeIntensity;
 
         public __init(TVolumeReader _volumeReader, 
             TTextureSlopeReader _slopeReader,
-            Physics.Flux2D _currentFlux)
+            Physics.Flux2D _currentFlux,
+            float _textureSlopeIntensity)
         {
             volumeReader = _volumeReader;
             slopeReader = _slopeReader;
             currentFlux =_currentFlux;
+            textureSlopeIntensity = _textureSlopeIntensity;
         }
 
         [mutating]
@@ -82,8 +85,10 @@ namespace Painting
             float2 direction)
         {
             float pressureDelta = currentVolume - compareVolume;
-            float acceleration = pressureDelta * _DeltaTime * GRAVITY;
-            acceleration *= max(0.0f, dot(float2(direction.x, direction.y), float2(compareSlope.X, compareSlope.Y)));
+            float slopeInfluence = dot(direction, float2(compareSlope.X, compareSlope.Y));
+            float totalForce = pressureDelta + (slopeInfluence * textureSlopeIntensity);
+            float acceleration = totalForce * _DeltaTime * GRAVITY;
+            
             return clamp(acceleration, -MAX_FLUX_ACCEL, MAX_FLUX_ACCEL);
         }
 
