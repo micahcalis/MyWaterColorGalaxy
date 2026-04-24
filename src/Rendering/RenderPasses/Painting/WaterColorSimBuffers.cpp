@@ -73,4 +73,19 @@ namespace Beer::Rendering
                                 PIGMENT_LAYERS)
                 .AllocPointer);
     }
+
+    void WaterColorSimBuffers::ReallocateDeposited(const RenderContext& context)
+    {
+        DepositedPigment = static_cast<RenderTexture*>(
+            context.BlackBox->ReallocateIfNeeded(DEPOSITED_PIGMENT,
+                                SIMULATION_RES_X,
+                                SIMULATION_RES_Y,
+                                static_cast<VkFormat>(DEPOSITED_PIGMENT_FORMAT),
+                                TextureAccess::ReadWrite,
+                                vk::Filter::eLinear,
+                                vk::SamplerAddressMode::eRepeat,
+                                glm::vec4(0),
+                                PIGMENT_LAYERS)
+                .AllocPointer);
+    }
 } // namespace Beer::Rendering

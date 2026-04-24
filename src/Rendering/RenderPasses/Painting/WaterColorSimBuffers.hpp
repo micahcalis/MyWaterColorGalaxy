@@ -31,6 +31,7 @@ namespace Beer::Rendering
     static const uint32_t CALC_FLUX_KERNEL = 2;
     static const uint32_t PIGMENT_FLUX_KERNEL = 3;
     static const uint32_t FLUID_FLUX_KERNEL = 4;
+    static const uint32_t TRANSFER_PGMNT_KERNEL = 5;
 
     class WaterColorSimBuffers
     {
@@ -51,6 +52,7 @@ namespace Beer::Rendering
         void ReallocateWater(const RenderContext& context);
         void ReallocateFlux(const RenderContext& context);
         void ReallocateSuspended(const RenderContext& context);
+        void ReallocateDeposited(const RenderContext& context);
 
         RenderTexture* GetSuspendedPong(bool isSource)
         {

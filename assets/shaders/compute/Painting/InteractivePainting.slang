@@ -24,6 +24,7 @@ cbuffer ComputeData
     float _BrushSmoothness;
     Painting.Pigment _BrushPigment;
     float _TextureSlopeIntensity;
+    float _TransferSpeed;
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _CanvasSource;
@@ -245,7 +246,7 @@ void CalculateFluidFlux(uint3 id : SV_DispatchThreadID)
         newFlux.Down);
 }
 
-public struct PigmentReader : Painting.IPigmentReader
+public struct SuspendedReader : Painting.ISuspendedReader
 {
     private int2 baseCoord;
     private int level;
@@ -277,13 +278,13 @@ void ResolvePigmentFlux(uint3 id : SV_DispatchThreadID)
 {
     FluxReader fluxReader = FluxReader(id.xy);
     WaterVolumeReader volumeReader = WaterVolumeReader(id.xy);
-    PigmentReader pigmentReader = PigmentReader(id.xy, id.z);
-    float4 currentPigment = pigmentReader.Read(0);
+    SuspendedReader suspendedReader = SuspendedReader(id.xy, id.z);
+    float4 currentPigment = suspendedReader.Read(0);
 
-    Painting.PigmentResolver<WaterVolumeReader, FluxReader, PigmentReader> pigmentResolver =
-        Painting.PigmentResolver<WaterVolumeReader, FluxReader, PigmentReader>(volumeReader, 
+    Painting.PigmentResolver<WaterVolumeReader, FluxReader, SuspendedReader> pigmentResolver =
+        Painting.PigmentResolver<WaterVolumeReader, FluxReader, SuspendedReader>(volumeReader, 
             fluxReader, 
-            pigmentReader, 
+            suspendedReader, 
             currentPigment);
     
     float4 newPigment = pigmentResolver.Resolve();
@@ -305,4 +306,78 @@ void ResolveWaterFlux(uint3 id : SV_DispatchThreadID)
 
     float newVolume = fluxResolver.Resolve();
     _ShallowWater[id.xy] = float4(0, 0, newVolume, 0);
+}
+
+public struct SuspendedPigmentReader : Painting.IPigmentReader
+{
+    private Painting.PigmentLocation location;
+    private uint2 coord;
+
+    public __init(Painting.Pigment _pigment, uint2 _coord)
+    {
+        location = Painting.PigmentLocation(_pigment);
+        coord = _coord;
+    }
+
+    public float Read()
+    {
+        float4 sample = _SuspendedPigmentTarget[uint3(coord, location.Layer)];
+        return sample[location.ChannelIndex];
+    }
+}
+
+public struct DepositedPigmentReader : Painting.IPigmentReader
+{
+    private Painting.PigmentLocation location;
+    private uint2 coord;
+
+    public __init(Painting.Pigment _pigment, uint2 _coord)
+    {
+        location = Painting.PigmentLocation(_pigment);
+        coord = _coord;
+    }
+
+    public float Read()
+    {
+        float4 sample = _DepositedPigment[uint3(coord, location.Layer)];
+        return sample[location.ChannelIndex];
+    }
+}
+
+//$ Kernel TransferPigment
+
+COMP
+[numthreads(8, 8, 1)]
+void TransferPigment(uint3 id : SV_DispatchThreadID)
+{
+    CanvasSlopeReader slopeReader = CanvasSlopeReader(id.xy);
+    float4 suspendedWrite;
+    float4 depositedWrite;
+
+    Painting.PigmentTransferer<SuspendedPigmentReader,
+        DepositedPigmentReader,
+        CanvasSlopeReader> transferer;
+
+    for (int i = 0; i < 4; i++)
+    {
+        Painting.Pigment pigment = Painting.GetPigmentFromThread(id.z, i);
+        SuspendedPigmentReader suspendedReader = SuspendedPigmentReader(pigment, id.xy);
+        DepositedPigmentReader depositedReader = DepositedPigmentReader(pigment, id.xy);
+
+        transferer = Painting.PigmentTransferer<SuspendedPigmentReader,
+        DepositedPigmentReader,
+
+        CanvasSlopeReader>(suspendedReader, 
+            depositedReader, 
+            slopeReader,
+            pigment,
+            _TransferSpeed);
+        
+        Painting.TransferOutput transfer = transferer.Transfer();
+        suspendedWrite[i] = transfer.Suspended;
+        depositedWrite[i] = transfer.Deposited;
+    }
+
+    _SuspendedPigmentTarget[id] = suspendedWrite;
+    _DepositedPigment[id] = depositedWrite; 
 }

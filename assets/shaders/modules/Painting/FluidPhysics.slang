@@ -167,28 +167,28 @@ namespace Painting
         }
     }
 
-    public interface IPigmentReader
+    public interface ISuspendedReader
     {
         public float4 Read(int2 offset);
     }
 
     public struct PigmentResolver<TVolumeReader : IVolumeReader,
         TFluxReader : IFlux2DReader,
-        TPigmentReader : IPigmentReader> : IFluxResolver<float4, PigmentFlow>
+        TSuspendedReader : ISuspendedReader> : IFluxResolver<float4, PigmentFlow>
     {
         private TVolumeReader volumeReader;
         private TFluxReader fluxReader;
-        private TPigmentReader pigmentReader;
+        private TSuspendedReader suspendedReader;
         private PigmentFlow totalFlow;
 
         public __init(TVolumeReader _volumeReader,
             TFluxReader _fluxReader,
-            TPigmentReader _pigmentReader,
+            TSuspendedReader _suspendedReader,
             float4 _pigmentAmount)
         {
             volumeReader = _volumeReader;
             fluxReader = _fluxReader;
-            pigmentReader = _pigmentReader;
+            suspendedReader = _suspendedReader;
             totalFlow.PigmentAmount = _pigmentAmount;
         }
 
@@ -214,7 +214,7 @@ namespace Painting
                 int2 dir = FLOW_DIRS[d];
                 
                 float inVolume = volumeReader.Read(dir);
-                float4 inPigment = pigmentReader.Read(dir);
+                float4 inPigment = suspendedReader.Read(dir);
                 float4 inConcentration = GetConcentration(inPigment, inVolume);
 
                 Physics.Flux2D inFlux = fluxReader.Read(dir);

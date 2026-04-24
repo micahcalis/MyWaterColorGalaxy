@@ -21,7 +21,7 @@ namespace Beer::Rendering
         simulationBuffers->SimulationContext->SetTexture("_FluxBuffer", simulationBuffers->FluxBuffer);
         simulationBuffers->SimulationContext->SetTexture("_CanvasTarget", simulationBuffers->CanvasBuffer);
         simulationBuffers->SimulationContext->SetVector("_PaintResolution", glm::vec4((float)SIMULATION_RES_X, (float)SIMULATION_RES_Y, 0, 0));
-        simulationBuffers->SimulationContext->SetFloat("_TextureSlopeIntensity", 0.4f);
+        simulationBuffers->SimulationContext->SetFloat("_TextureSlopeIntensity", 0.1f);
         simulationBuffers->SimulationContext->Update();
     }
 
