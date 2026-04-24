@@ -100,6 +100,14 @@ namespace Painting
         }
     }
 
+    public interface IFluxResolver<TOutput, TFlow>
+    {
+        [mutating]
+        public TOutput Resolve();
+        public TFlow GetInFlow();
+        public TFlow GetOutFlow();
+    }
+
     public interface IFlux2DReader
     {
         public Physics.Flux2D Read(int2 offset);
@@ -110,15 +118,20 @@ namespace Painting
         public float FluidAmount;
     }
 
-    public struct FluxResolver<TFluxReader : IFlux2DReader>
+    public struct PigmentFlow
+    {
+        public float4 PigmentAmount;
+    }
+
+    public struct FluxWaterResolver<TFluxReader : IFlux2DReader> : IFluxResolver<float, Flow>
     {
         TFluxReader fluxReader;
         Flow totalFlow;
 
-        public __init(TFluxReader _fluxReader, float volume)
+        public __init(TFluxReader _fluxReader, float _volume)
         {
             fluxReader = _fluxReader;
-            totalFlow.FluidAmount = volume;
+            totalFlow.FluidAmount = _volume;
         }
 
         [mutating]
@@ -151,6 +164,94 @@ namespace Painting
             Flow outFlow = (Flow)0;
             outFlow.FluidAmount = flux.GetSum();
             return outFlow;
+        }
+    }
+
+    public interface IPigmentReader
+    {
+        public float4 Read(int2 offset);
+    }
+
+    public struct PigmentResolver<TVolumeReader : IVolumeReader,
+        TFluxReader : IFlux2DReader,
+        TPigmentReader : IPigmentReader> : IFluxResolver<float4, PigmentFlow>
+    {
+        private TVolumeReader volumeReader;
+        private TFluxReader fluxReader;
+        private TPigmentReader pigmentReader;
+        private PigmentFlow totalFlow;
+
+        public __init(TVolumeReader _volumeReader,
+            TFluxReader _fluxReader,
+            TPigmentReader _pigmentReader,
+            float4 _pigmentAmount)
+        {
+            volumeReader = _volumeReader;
+            fluxReader = _fluxReader;
+            pigmentReader = _pigmentReader;
+            totalFlow.PigmentAmount = _pigmentAmount;
+        }
+
+        [mutating]
+        public float4 Resolve()
+        {
+            PigmentFlow inFlow = GetInFlow();
+            PigmentFlow outFlow = GetOutFlow();
+            
+            totalFlow.PigmentAmount += inFlow.PigmentAmount - outFlow.PigmentAmount;
+        
+            return max(totalFlow.PigmentAmount, 0.0f);
+        }
+
+        private PigmentFlow GetInFlow()
+        {
+            PigmentFlow inFlow = (PigmentFlow)0;
+            inFlow.PigmentAmount = 0;
+
+            [unroll(FLOW_DIR_COUNT)]
+            for (int d = 0; d < FLOW_DIR_COUNT; d++)
+            {
+                int2 dir = FLOW_DIRS[d];
+                
+                float inVolume = volumeReader.Read(dir);
+                float4 inPigment = pigmentReader.Read(dir);
+                float4 inConcentration = GetConcentration(inPigment, inVolume);
+
+                Physics.Flux2D inFlux = fluxReader.Read(dir);
+                float waterGained = inFlux.GetByIndex(Physics.Flux2D.GetOpposite(d));
+
+                inFlow.PigmentAmount += inConcentration * waterGained;
+            }
+
+            return inFlow;
+        }
+
+        private PigmentFlow GetOutFlow()
+        {
+            Physics.Flux2D myFlux = fluxReader.Read(0);
+            float currentFluxFlow = myFlux.GetSum();
+
+            float currentVolume = volumeReader.Read(0);
+            float4 currentConcentration = GetConcentration(totalFlow.PigmentAmount, currentVolume);
+
+            PigmentFlow outFlow = (PigmentFlow)0;
+            outFlow.PigmentAmount = currentFluxFlow * currentConcentration;
+            
+            return outFlow;
+        }
+
+        private float4 GetConcentration(float4 pigment, float volume)
+        {
+            float safeVolume = max(volume, 1e-9f);
+            float4 rawConcentration = saturate(pigment / safeVolume);
+
+            float minFlowVolume = 1e-8f; 
+            float maxFlowVolume = 1e-3f; 
+
+            float carryCapacity = smoothstep(minFlowVolume, maxFlowVolume, volume);
+            carryCapacity = pow(carryCapacity, 0.1f);
+            
+            return rawConcentration * carryCapacity;
         }
     }
 }

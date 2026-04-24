@@ -29,10 +29,11 @@ cbuffer ComputeData
 BIND_MATERIAL_TEX(1) Sampler2D _CanvasSource;
 BIND_MATERIAL_TEX(2) RWTexture2D<float4> _CanvasTarget;
 BIND_MATERIAL_TEX(3) RWTexture2D<float4> _ShallowWater;
-BIND_MATERIAL_TEX(4) RWTexture2DArray<float4> _SuspendedPigment;
-BIND_MATERIAL_TEX(5) RWTexture2DArray<float4> _DepositedPigment;
-BIND_MATERIAL_TEX(6) RWTexture2D<float4> _PigmentRender;
-BIND_MATERIAL_TEX(7) RWTexture2D<float4> _FluxBuffer;
+BIND_MATERIAL_TEX(4) RWTexture2DArray<float4> _SuspendedPigmentSource;
+BIND_MATERIAL_TEX(5) RWTexture2DArray<float4> _SuspendedPigmentTarget;
+BIND_MATERIAL_TEX(6) RWTexture2DArray<float4> _DepositedPigment;
+BIND_MATERIAL_TEX(7) RWTexture2D<float4> _PigmentRender;
+BIND_MATERIAL_TEX(8) RWTexture2D<float4> _FluxBuffer;
 
 public struct CanvasSampler : Math.IHeightSampler
 {
@@ -65,7 +66,7 @@ void ComputeCanvas(uint3 id : SV_DispatchThreadID)
 
 //$ Kernel InjectPaint
 
-public struct ShallowWaterWrite : Painting.IWaterWrite
+public struct ShallowWaterWrite : Painting.IFluidWrite
 {
     private uint2 coord;
 
@@ -74,11 +75,31 @@ public struct ShallowWaterWrite : Painting.IWaterWrite
         coord = _coord;
     }
 
-    public void Write(float water)
+    public void Write(float fluid)
     {
         float4 currentData = _ShallowWater[coord];
-        currentData.b += water;
+        currentData.b += fluid;
         _ShallowWater[coord] = currentData;
+    }
+}
+
+public struct PigmentChannelWrite : Painting.IFluidWrite
+{
+    private uint2 coord;
+    private Painting.PigmentLocation location;
+
+    public __init(uint2 _coord, Painting.Pigment _pigment)
+    {
+        coord = _coord;
+        location = Painting.PigmentLocation(_pigment);
+    }
+
+    public void Write(float fluid)
+    {
+        uint3 layerCoord = uint3(coord, location.Layer);
+        float4 currentData = _SuspendedPigmentSource[layerCoord];
+        currentData[location.ChannelIndex] += fluid;
+        _SuspendedPigmentSource[layerCoord] = currentData;
     }
 }
 
@@ -122,9 +143,8 @@ void InjectPaint(uint3 id : SV_DispatchThreadID)
         _BrushPigment);
 
     ShallowWaterWrite waterWrite = ShallowWaterWrite(id.xy);
-    brush.PaintOnWater(waterWrite, brushDist);
-
-    //TODO: PIGMENT INJECTING
+    PigmentChannelWrite pigmentWrite = PigmentChannelWrite(id.xy, _BrushPigment);
+    brush.Paint(waterWrite, pigmentWrite, brushDist);
 }
 
 public struct WaterVolumeReader : Painting.IVolumeReader
@@ -225,18 +245,63 @@ void CalculateFluidFlux(uint3 id : SV_DispatchThreadID)
         newFlux.Down);
 }
 
-//$ Kernel ResolveFluidFlux
+public struct PigmentReader : Painting.IPigmentReader
+{
+    private int2 baseCoord;
+    private int level;
+
+    public __init(int2 _baseCoord, int _level)
+    {
+        baseCoord = _baseCoord;
+        level = _level;
+    }
+
+    public float4 Read(int2 offset)
+    {
+        int2 coord = baseCoord + offset;
+
+        if (any(coord < 0) || coord.x >= _PaintResolution.x || coord.y >= _PaintResolution.y)
+        {
+            return float4(0.0f);
+        }
+
+        return _SuspendedPigmentSource[uint3(baseCoord, level)];
+    }
+}
+
+//$ Kernel ResolvePigmentFlux
 
 COMP
 [numthreads(8, 8, 1)]
-void ResolveFluidFlux(uint3 id : SV_DispatchThreadID)
+void ResolvePigmentFlux(uint3 id : SV_DispatchThreadID)
+{
+    FluxReader fluxReader = FluxReader(id.xy);
+    WaterVolumeReader volumeReader = WaterVolumeReader(id.xy);
+    PigmentReader pigmentReader = PigmentReader(id.xy, id.z);
+    float4 currentPigment = pigmentReader.Read(0);
+
+    Painting.PigmentResolver<WaterVolumeReader, FluxReader, PigmentReader> pigmentResolver =
+        Painting.PigmentResolver<WaterVolumeReader, FluxReader, PigmentReader>(volumeReader, 
+            fluxReader, 
+            pigmentReader, 
+            currentPigment);
+    
+    float4 newPigment = pigmentResolver.Resolve();
+    _SuspendedPigmentTarget[id] = newPigment;
+}
+
+//$ Kernel ResolveWaterFlux
+
+COMP
+[numthreads(8, 8, 1)]
+void ResolveWaterFlux(uint3 id : SV_DispatchThreadID)
 {
     FluxReader fluxReader = FluxReader(id.xy);
     WaterVolumeReader volumeReader = WaterVolumeReader(id.xy);
     float currentVolume = volumeReader.Read(0);
 
-    Painting.FluxResolver<FluxReader> fluxResolver =
-        Painting.FluxResolver<FluxReader>(fluxReader, currentVolume);
+    Painting.FluxWaterResolver<FluxReader> fluxResolver =
+        Painting.FluxWaterResolver<FluxReader>(fluxReader, currentVolume);
 
     float newVolume = fluxResolver.Resolve();
     _ShallowWater[id.xy] = float4(0, 0, newVolume, 0);

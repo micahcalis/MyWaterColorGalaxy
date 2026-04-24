@@ -5,7 +5,7 @@
 namespace Beer::Rendering
 {
     ResolveFluidFluxPass::ResolveFluidFluxPass(WaterColorSimBuffers* simulationBuffers)
-        : simulationBuffers(simulationBuffers), IRenderPass("ResolveFluidFluxPass", static_cast<uint32_t>(RenderPassEvent::WATER_COL_SIM) + 3)
+        : simulationBuffers(simulationBuffers), IRenderPass("ResolveFluidFluxPass", static_cast<uint32_t>(RenderPassEvent::WATER_COL_SIM) + 4)
     {
     }
 
@@ -22,7 +22,7 @@ namespace Beer::Rendering
     void ResolveFluidFluxPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
     {
         Threads threads = Threads::GetCustom(SIMULATION_RES_X, 8, SIMULATION_RES_Y, 8);
-        commandBuffer->BindComputeKernel(simulationBuffers->SimulationContext->GetCompute()->GetKernel(RESOLVE_FLUX_KERNEL));
+        commandBuffer->BindComputeKernel(simulationBuffers->SimulationContext->GetCompute()->GetKernel(FLUID_FLUX_KERNEL));
         commandBuffer->BindComputeContext(simulationBuffers->SimulationContext.get());
         commandBuffer->Dispatch(threads);
     }

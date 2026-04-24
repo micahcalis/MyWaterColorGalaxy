@@ -1,7 +1,10 @@
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
+#include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UITransform.hpp"
 
@@ -9,18 +12,29 @@ namespace Beer::Rendering
 {
     InjectPaintPass::InjectPaintPass(WaterColorSimBuffers* simulationBuffers,
         System::Function<System::MouseInput> getMouseInput,
-        System::Function<System::UITransform*> getCanvasTransform)
-        : simulationBuffers(simulationBuffers), getMouseInput(getMouseInput), getCanvasTransform(getCanvasTransform), IRenderPass("InjectPaintPass", static_cast<uint32_t>(RenderPassEvent::WATER_COL_SIM) + 1)
+        System::Function<System::UITransform*> getCanvasTransform,
+        System::Function<System::ButtonInput> getDebugButtonInput)
+        : simulationBuffers(simulationBuffers), getMouseInput(getMouseInput), getCanvasTransform(getCanvasTransform), getDebugButtonInput(getDebugButtonInput), IRenderPass("InjectPaintPass", static_cast<uint32_t>(RenderPassEvent::WATER_COL_SIM) + 1)
     {
     }
 
     void InjectPaintPass::OnRenderSetup(const RenderContext& context)
     {
+        System::ButtonInput buttonInput = getDebugButtonInput();
+        if (buttonInput.ButtonStart)
+        {
+            brushIndex = (brushIndex + 1) % 4;
+        }
+
         simulationBuffers->ReallocateWater(context);
+        simulationBuffers->ReallocateSuspended(context);
         simulationBuffers->SimulationContext->SetTexture("_ShallowWater", simulationBuffers->ShallowWater);
+        simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentSource", simulationBuffers->GetSuspendedPong(true));
+        simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentTarget", simulationBuffers->GetSuspendedPong(false));
         simulationBuffers->SimulationContext->SetFloat("_BrushRadius", 0.1f);
         simulationBuffers->SimulationContext->SetFloat("_BrushIntensity", 5.0f);
         simulationBuffers->SimulationContext->SetFloat("_BrushSmoothness", 0.5f);
+        simulationBuffers->SimulationContext->SetInt("_BrushPigment", brushIndex);
         simulationBuffers->SimulationContext->SetVector("_PaintResolution", glm::vec4((float)SIMULATION_RES_X, (float)SIMULATION_RES_Y, 0, 0));
 
         SetMouseInput();
@@ -42,6 +56,12 @@ namespace Beer::Rendering
     {
         PassDependencyList dependencies = PassDependencyList(name);
         dependencies.AddDependency(PassDependency(SHALLOW_WATER,
+            ResourceAction::ComputeReadWrite));
+
+        dependencies.AddDependency(PassDependency(SUSPENDED_PIGMENT_A,
+            ResourceAction::ComputeReadWrite));
+
+        dependencies.AddDependency(PassDependency(SUSPENDED_PIGMENT_B,
             ResourceAction::ComputeReadWrite));
 
         return dependencies;

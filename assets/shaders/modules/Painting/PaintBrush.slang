@@ -7,9 +7,9 @@ module PaintBrush;
 
 namespace Painting
 {
-    public interface IWaterWrite
+    public interface IFluidWrite
     {
-        public void Write(float water);
+        public void Write(float fluid);
     }
 
     public struct Brush
@@ -30,10 +30,13 @@ namespace Painting
             pigment = _pigment;
         }
 
-        public void PaintOnWater<TWaterWrite : IWaterWrite>(TWaterWrite writer,
+        public void Paint<TWaterWrite : IFluidWrite, TPigmentWrite : IFluidWrite>(TWaterWrite waterWriter,
+            TPigmentWrite pigmentWriter,
             float brushDistance)
         {
-            writer.Write(GetBrushScalar(brushDistance));
+            float brushScalar = GetBrushScalar(brushDistance);
+            waterWriter.Write(brushScalar);
+            pigmentWriter.Write(brushScalar);
         }
 
         private float GetBrushScalar(float brushDistance)

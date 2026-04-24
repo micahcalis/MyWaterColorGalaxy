@@ -4,8 +4,10 @@
 #include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
 #include "Rendering/RenderPasses/Painting/ResolveFluidFluxPass.hpp"
+#include "Rendering/RenderPasses/Painting/ResolvePigmentFluxPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
+#include "System/Base/Input/ButtonInput.hpp"
 #include "System/Components/General/ISubRenderPipeline.hpp"
 #include <memory>
 
@@ -18,12 +20,14 @@ namespace Beer::System
         Rendering::GenerateCanvasPass* generateCanvasPass;
         Rendering::InjectPaintPass* injectPaintPass;
         Rendering::CalculateFluidFluxPass* calculateFluidFluxPass;
+        Rendering::ResolvePigmentFluxPass* resolvePigmentFluxPass;
         Rendering::ResolveFluidFluxPass* resolveFluidFluxPass;
 
     public:
         PaintSimSubPipeline(Rendering::Material* debugMaterial,
             System::Function<System::MouseInput> getMouseInput,
-            System::Function<System::UITransform*> getCanvasTransform);
+            System::Function<System::UITransform*> getCanvasTransform,
+            System::Function<System::ButtonInput> getDebugButtonInput);
 
         std::vector<Rendering::IRenderPass*> GetRenderPasses() const override;
     };

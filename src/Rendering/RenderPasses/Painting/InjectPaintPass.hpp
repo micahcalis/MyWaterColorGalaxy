@@ -3,6 +3,7 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
+#include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 
 namespace Beer::Rendering
@@ -13,11 +14,15 @@ namespace Beer::Rendering
         WaterColorSimBuffers* simulationBuffers;
         System::Function<System::MouseInput> getMouseInput;
         System::Function<System::UITransform*> getCanvasTransform;
+        System::Function<System::ButtonInput> getDebugButtonInput;
+
+        int brushIndex = 0;
 
     public:
         InjectPaintPass(WaterColorSimBuffers* simulationBuffers,
             System::Function<System::MouseInput> getMouseInput,
-            System::Function<System::UITransform*> getCanvasTransform);
+            System::Function<System::UITransform*> getCanvasTransform,
+            System::Function<System::ButtonInput> getDebugButtonInput);
 
         void OnRenderSetup(const RenderContext& context) override;
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context) override;

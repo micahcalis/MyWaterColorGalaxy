@@ -3,6 +3,7 @@
 #include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
 #include "Rendering/RenderPasses/Painting/ResolveFluidFluxPass.hpp"
+#include "Rendering/RenderPasses/Painting/ResolvePigmentFluxPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
 #include "System/Drawing/RenderRegister.hpp"
@@ -11,7 +12,8 @@ namespace Beer::System
 {
     PaintSimSubPipeline::PaintSimSubPipeline(Rendering::Material* debugMaterial,
         System::Function<System::MouseInput> getMouseInput,
-        System::Function<System::UITransform*> getCanvasTransform)
+        System::Function<System::UITransform*> getCanvasTransform,
+        System::Function<System::ButtonInput> getDebugButtonInput)
     {
         simulationBuffers = std::make_unique<Rendering::WaterColorSimBuffers>(debugMaterial);
 
@@ -23,10 +25,15 @@ namespace Beer::System
             "InjectPaintPass",
             simulationBuffers.get(),
             getMouseInput,
-            getCanvasTransform);
+            getCanvasTransform,
+            getDebugButtonInput);
 
         calculateFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::CalculateFluidFluxPass>(
             "CalculateFluidFluxPass",
+            simulationBuffers.get());
+
+        resolvePigmentFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ResolvePigmentFluxPass>(
+            "ResolvePigmentFluxPass",
             simulationBuffers.get());
 
         resolveFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ResolveFluidFluxPass>(
@@ -36,6 +43,6 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> PaintSimSubPipeline::GetRenderPasses() const
     {
-        return {generateCanvasPass, injectPaintPass, calculateFluidFluxPass, resolveFluidFluxPass};
+        return {generateCanvasPass, injectPaintPass, calculateFluidFluxPass, resolvePigmentFluxPass, resolveFluidFluxPass};
     }
 } // namespace Beer::System

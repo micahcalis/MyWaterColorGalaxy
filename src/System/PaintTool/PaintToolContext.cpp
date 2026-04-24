@@ -25,9 +25,11 @@ namespace Beer::System
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));
 
-        paintSimSubPipeline = std::make_unique<PaintSimSubPipeline>(colorMixerEntity->GetColorMixerMat(),
+        paintSimSubPipeline = std::make_unique<PaintSimSubPipeline>(
+            colorMixerEntity->GetColorMixerMat(),
             getMouseInput,
-            [this]() -> UITransform* { return colorMixerEntity->GetRootTransform(); });
+            [this]() -> UITransform* { return colorMixerEntity->GetRootTransform(); },
+            getDebugKeyInput);
     }
 
     void PaintToolContext::Update()
