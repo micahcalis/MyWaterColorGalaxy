@@ -31,42 +31,12 @@ cbuffer ComputeData
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _CanvasSource;
-BIND_MATERIAL_TEX(2) RWTexture2D<float4> _CanvasTarget;
-BIND_MATERIAL_TEX(3) RWTexture2D<float4> _ShallowWater;
-BIND_MATERIAL_TEX(4) RWTexture2DArray<float4> _SuspendedPigmentSource;
-BIND_MATERIAL_TEX(5) RWTexture2DArray<float4> _SuspendedPigmentTarget;
-BIND_MATERIAL_TEX(6) RWTexture2DArray<float4> _DepositedPigment;
-BIND_MATERIAL_TEX(7) RWTexture2D<float4> _PigmentRender;
-BIND_MATERIAL_TEX(8) RWTexture2D<float4> _FluxBuffer;
-
-public struct CanvasSampler : Math.IHeightSampler
-{
-    public float Sample(float2 uv)
-    {
-        return _CanvasSource.SampleLevel(uv, 0.0f).r;
-    }
-}
-
-//$ Kernel ComputeCanvas
-
-COMP
-[numthreads(8, 8, 1)]
-void ComputeCanvas(uint3 id : SV_DispatchThreadID)
-{
-    float2 uv = ((float2)id.xy + 0.5) / _PaintResolution;
-    CanvasSampler canvasSampler = CanvasSampler();
-
-    Math.PartialDerivativeSolver<CanvasSampler> partialDerivSolver = Math.PartialDerivativeSolver<CanvasSampler>(
-        uv, 
-        float2( 1.0f / _PaintResolution.x, 1.0f / _PaintResolution.y),
-        canvasSampler);
-
-    Math.PartialDerivative partialDerivative = partialDerivSolver.Solve();
-    partialDerivative.Compress();
-    float height = canvasSampler.Sample(uv);
-
-    _CanvasTarget[id.xy] = float4(partialDerivative.X, partialDerivative.Y, height, 0);
-}
+BIND_MATERIAL_TEX(2) RWTexture2D<float> _ShallowWater;
+BIND_MATERIAL_TEX(3) RWTexture2DArray<float4> _SuspendedPigmentSource;
+BIND_MATERIAL_TEX(4) RWTexture2DArray<float4> _SuspendedPigmentTarget;
+BIND_MATERIAL_TEX(5) RWTexture2DArray<float4> _DepositedPigment;
+BIND_MATERIAL_TEX(6) RWTexture2D<float4> _PigmentRender;
+BIND_MATERIAL_TEX(7) RWTexture2D<float4> _FluxBuffer;
 
 //$ Kernel InjectPaint
 
@@ -81,8 +51,8 @@ public struct ShallowWaterWrite : Painting.IFluidWrite
 
     public void Write(float fluid)
     {
-        float4 currentData = _ShallowWater[coord];
-        currentData.b += fluid;
+        float currentData = _ShallowWater[coord];
+        currentData += fluid;
         _ShallowWater[coord] = currentData;
     }
 }
@@ -166,10 +136,10 @@ public struct WaterVolumeReader : Painting.IVolumeReader
 
         if (any(coord < 0) || coord.x >= _PaintResolution.x || coord.y >= _PaintResolution.y)
         {
-            return _ShallowWater[uint2(baseCoord)].b;
+            return _ShallowWater[uint2(baseCoord)];
         }
 
-        return _ShallowWater[uint2(coord)].b;
+        return _ShallowWater[uint2(coord)];
     }
 }
 
@@ -286,29 +256,21 @@ void ResolveWaterFlux(uint3 id : SV_DispatchThreadID)
 
     float newVolume = fluxResolver.Resolve();
     newVolume = max(newVolume, 1e-4);
-    _ShallowWater[id.xy] = float4(0, 0, newVolume, 0);
+    _ShallowWater[id.xy] = newVolume;
 }
 
-public struct CanvasSlopeReader : Painting.ITextureSlopeReader
+public struct CanvasHeightReader : Painting.IHeightReader
 {
-    private int2 baseCoord;
+    private float2 uv;
 
-    public __init(int2 _baseCoord)
+    public __init(float2 _uv)
     {
-        baseCoord = _baseCoord;
+        uv = _uv;
     }
 
-    public Painting.TextureSlope Read(int2 offset)
+    public float Read()
     {
-        uint2 coord = (uint2)(clamp(baseCoord + offset, 0, _PaintResolution - 1));
-        float4 sample = _CanvasTarget[coord];
-
-        Painting.TextureSlope slope;
-        slope.X = (sample.r - 0.5f) * 2.0f; 
-        slope.Y = (sample.g - 0.5f) * 2.0f;
-        slope.Height = sample.b;
-
-        return slope;
+        return _CanvasSource.SampleLevel(uv, 0.0f).r;
     }
 }
 
@@ -354,13 +316,14 @@ COMP
 [numthreads(8, 8, 1)]
 void TransferPigment(uint3 id : SV_DispatchThreadID)
 {
-    CanvasSlopeReader slopeReader = CanvasSlopeReader(id.xy);
+    float2 uv = ((float2)id.xy + 0.5) / _PaintResolution;
+    CanvasHeightReader heightReader = CanvasHeightReader(uv);
     float4 suspendedWrite;
     float4 depositedWrite;
 
     Painting.PigmentTransferer<SuspendedPigmentReader,
         DepositedPigmentReader,
-        CanvasSlopeReader> transferer;
+        CanvasHeightReader> transferer;
 
     for (int i = 0; i < 4; i++)
     {
@@ -369,13 +332,12 @@ void TransferPigment(uint3 id : SV_DispatchThreadID)
         DepositedPigmentReader depositedReader = DepositedPigmentReader(pigment, id.xy);
 
         transferer = Painting.PigmentTransferer<SuspendedPigmentReader,
-        DepositedPigmentReader,
-
-        CanvasSlopeReader>(suspendedReader, 
-            depositedReader, 
-            slopeReader,
-            pigment,
-            _TransferSpeed);
+            DepositedPigmentReader,
+            CanvasHeightReader>(suspendedReader, 
+                depositedReader, 
+                heightReader,
+                pigment,
+                _TransferSpeed);
         
         Painting.TransferOutput transfer = transferer.Transfer();
         suspendedWrite[i] = transfer.Suspended;
@@ -434,5 +396,5 @@ void EvaporateWater(uint3 id : SV_DispatchThreadID)
     float evaporatedVolume = currentVolume - _EvaporationRate * _DeltaTime * 1e-5f;
     evaporatedVolume = max(evaporatedVolume, 1e-4f);
 
-    _ShallowWater[id.xy].b = evaporatedVolume;
+    _ShallowWater[id.xy] = evaporatedVolume;
 }

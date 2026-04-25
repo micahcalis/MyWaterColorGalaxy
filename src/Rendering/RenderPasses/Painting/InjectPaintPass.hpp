@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Rendering/Pipeline/IRenderPass.hpp"
-#include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/MouseInput.hpp"

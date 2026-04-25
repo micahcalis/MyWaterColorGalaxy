@@ -11,18 +11,8 @@ namespace Beer::Rendering
     WaterColorSimBuffers::WaterColorSimBuffers(Material* debugMaterial)
         : debugMaterial(debugMaterial)
     {
+        CanvasBaseTexture = std::make_shared<Texture2D>(Image::GetAsset(CANVAS_BASE_NAME));
         SimulationContext = std::make_shared<ComputeContext>("Painting/InteractivePainting");
-    }
-
-    void WaterColorSimBuffers::ReallocateCanvas(const RenderContext& context)
-    {
-        CanvasBuffer = static_cast<RenderTexture*>(
-            context.BlackBox->ReallocateIfNeeded(CANVAS_BUFFER,
-                                SIMULATION_RES_X,
-                                SIMULATION_RES_Y,
-                                static_cast<VkFormat>(CANVAS_BUFFER_FORMAT),
-                                TextureAccess::ReadWrite)
-                .AllocPointer);
     }
 
     void WaterColorSimBuffers::ReallocateWater(const RenderContext& context)

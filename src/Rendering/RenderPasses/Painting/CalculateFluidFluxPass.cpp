@@ -16,10 +16,8 @@ namespace Beer::Rendering
     {
         simulationBuffers->ReallocateWater(context);
         simulationBuffers->ReallocateFlux(context);
-        simulationBuffers->ReallocateCanvas(context);
         simulationBuffers->SimulationContext->SetTexture("_ShallowWater", simulationBuffers->ShallowWater);
         simulationBuffers->SimulationContext->SetTexture("_FluxBuffer", simulationBuffers->FluxBuffer);
-        simulationBuffers->SimulationContext->SetTexture("_CanvasTarget", simulationBuffers->CanvasBuffer);
         simulationBuffers->SimulationContext->SetVector("_PaintResolution", glm::vec4((float)SIMULATION_RES_X, (float)SIMULATION_RES_Y, 0, 0));
         simulationBuffers->SimulationContext->Update();
     }
@@ -39,9 +37,6 @@ namespace Beer::Rendering
             ResourceAction::ComputeReadWrite));
 
         dependencies.AddDependency(PassDependency(FLUX_BUFFER,
-            ResourceAction::ComputeReadWrite));
-
-        dependencies.AddDependency(PassDependency(CANVAS_BUFFER,
             ResourceAction::ComputeReadWrite));
 
         return dependencies;

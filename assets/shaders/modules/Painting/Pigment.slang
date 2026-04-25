@@ -97,6 +97,11 @@ namespace Painting
         public float Read();
     }
 
+    public interface IHeightReader
+    {
+        public float Read();
+    }
+
     public struct TransferOutput
     {
         public float Suspended;
@@ -105,17 +110,17 @@ namespace Painting
 
     public struct PigmentTransferer<TSuspendedReader : IPigmentReader,
         TDepositedReader : IPigmentReader,
-        TTextureSlopeReader : ITextureSlopeReader>
+        THeightReader : IHeightReader>
     {
         private TSuspendedReader suspendedReader;
         private TDepositedReader depositedReader;
-        private TTextureSlopeReader textureSlopeReader;
+        private THeightReader textureSlopeReader;
         private PigmentProperties properties;
         private float transferSpeed;
 
         public __init(TSuspendedReader _suspendedReader, 
             TDepositedReader _depositedReader,
-            TTextureSlopeReader _textureSlopeReader,
+            THeightReader _textureSlopeReader,
             Pigment _pigment, 
             float _transferSpeed)
         {
@@ -130,7 +135,7 @@ namespace Painting
         {
             float suspended = suspendedReader.Read();
             float deposited = depositedReader.Read();
-            float canvasHeight = textureSlopeReader.Read(0).Height;
+            float canvasHeight = textureSlopeReader.Read();
 
             float delta = transferSpeed * _DeltaTime;
 

@@ -13,10 +13,9 @@ namespace Beer::Rendering
 
     void TransferPigmentPass::OnRenderSetup(const RenderContext& context)
     {
-        simulationBuffers->ReallocateCanvas(context);
         simulationBuffers->ReallocateSuspended(context);
         simulationBuffers->ReallocateDeposited(context);
-        simulationBuffers->SimulationContext->SetTexture("_CanvasTarget", simulationBuffers->CanvasBuffer);
+        simulationBuffers->SimulationContext->SetTexture("_CanvasSource", simulationBuffers->CanvasBaseTexture.get());
         simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentTarget", simulationBuffers->GetSuspendedPong(false));
         simulationBuffers->SimulationContext->SetTexture("_DepositedPigment", simulationBuffers->DepositedPigment);
         simulationBuffers->SimulationContext->SetFloat("_TransferSpeed", 1.5f);
@@ -37,9 +36,6 @@ namespace Beer::Rendering
     PassDependencyList TransferPigmentPass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
-
-        dependencies.AddDependency(PassDependency(CANVAS_BUFFER,
-            ResourceAction::ComputeReadWrite));
 
         dependencies.AddDependency(PassDependency(SUSPENDED_PIGMENT_A,
             ResourceAction::ComputeReadWrite));
