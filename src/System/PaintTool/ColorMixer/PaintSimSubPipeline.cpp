@@ -1,5 +1,6 @@
 #include "System/PaintTool/ColorMixer/PaintSimSubPipeline.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/Painting/EvaporateWaterPass.hpp"
 #include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
 #include "Rendering/RenderPasses/Painting/RenderPigmentPass.hpp"
@@ -49,6 +50,10 @@ namespace Beer::System
         renderPigmentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::RenderPigmentPass>(
             "RenderPigmentPass",
             simulationBuffers.get());
+
+        evaporateWaterPass = Rendering::IRenderPass::FetchFromRegister<Rendering::EvaporateWaterPass>(
+            "EvaporateWaterPass",
+            simulationBuffers.get());
     }
 
     std::vector<Rendering::IRenderPass*> PaintSimSubPipeline::GetRenderPasses() const
@@ -59,6 +64,7 @@ namespace Beer::System
             resolvePigmentFluxPass,
             resolveFluidFluxPass,
             transferPigmentPass,
-            renderPigmentPass};
+            renderPigmentPass,
+            evaporateWaterPass};
     }
 } // namespace Beer::System

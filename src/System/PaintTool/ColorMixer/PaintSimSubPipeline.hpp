@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
+#include "Rendering/RenderPasses/Painting/EvaporateWaterPass.hpp"
 #include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
 #include "Rendering/RenderPasses/Painting/RenderPigmentPass.hpp"
@@ -26,6 +27,7 @@ namespace Beer::System
         Rendering::ResolveFluidFluxPass* resolveFluidFluxPass;
         Rendering::TransferPigmentPass* transferPigmentPass;
         Rendering::RenderPigmentPass* renderPigmentPass;
+        Rendering::EvaporateWaterPass* evaporateWaterPass;
 
     public:
         PaintSimSubPipeline(Rendering::Material* debugMaterial,

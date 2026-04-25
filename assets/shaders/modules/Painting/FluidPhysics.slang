@@ -36,23 +36,16 @@ namespace Painting
     static const float MAX_FLUX_ACCEL = 5.0f;
     static const float FLUX_DAMPING = 0.98f;
 
-    public struct FluxUpdater<TVolumeReader : IVolumeReader, 
-        TTextureSlopeReader : ITextureSlopeReader>
+    public struct FluxUpdater<TVolumeReader : IVolumeReader>
     {
         private TVolumeReader volumeReader;
-        private TTextureSlopeReader slopeReader;
         private Physics.Flux2D currentFlux;
-        private float textureSlopeIntensity;
 
         public __init(TVolumeReader _volumeReader, 
-            TTextureSlopeReader _slopeReader,
-            Physics.Flux2D _currentFlux,
-            float _textureSlopeIntensity)
+            Physics.Flux2D _currentFlux)
         {
             volumeReader = _volumeReader;
-            slopeReader = _slopeReader;
             currentFlux =_currentFlux;
-            textureSlopeIntensity = _textureSlopeIntensity;
         }
 
         [mutating]
@@ -65,12 +58,7 @@ namespace Painting
             {
                 int2 direction = FLOW_DIRS[i];
                 float compareVolume = volumeReader.Read(direction);
-                TextureSlope compareSlope = slopeReader.Read(direction);
-
-                float acceleration = CalculateAcceleration(currentVolume, 
-                    compareVolume,
-                    compareSlope,
-                    (float2)direction);
+                float acceleration = CalculateAcceleration(currentVolume, compareVolume);
 
                 currentFlux.SetByIndex(i, ApplyAcceleration(currentFlux.GetByIndex(i), acceleration));
             }
@@ -79,16 +67,11 @@ namespace Painting
             return currentFlux;
         }
 
-        private float CalculateAcceleration(float currentVolume, 
-            float compareVolume, 
-            TextureSlope compareSlope,
-            float2 direction)
+        private float CalculateAcceleration(float currentVolume, float compareVolume)
         {
             float pressureDelta = currentVolume - compareVolume;
-            float slopeInfluence = dot(direction, float2(compareSlope.X, compareSlope.Y));
-            float totalForce = pressureDelta + (slopeInfluence * textureSlopeIntensity);
-            float acceleration = totalForce * _DeltaTime * GRAVITY;
-            
+            float acceleration = pressureDelta * _DeltaTime * GRAVITY;
+
             return clamp(acceleration, -MAX_FLUX_ACCEL, MAX_FLUX_ACCEL);
         }
 
@@ -243,15 +226,7 @@ namespace Painting
         private float4 GetConcentration(float4 pigment, float volume)
         {
             float safeVolume = max(volume, 1e-9f);
-            float4 rawConcentration = saturate(pigment / safeVolume);
-
-            float minFlowVolume = 1e-8f; 
-            float maxFlowVolume = 1e-3f; 
-
-            float carryCapacity = smoothstep(minFlowVolume, maxFlowVolume, volume);
-            carryCapacity = pow(carryCapacity, 0.1f);
-            
-            return rawConcentration * carryCapacity;
+            return max(pigment / safeVolume, 0.0f);
         }
     }
 }

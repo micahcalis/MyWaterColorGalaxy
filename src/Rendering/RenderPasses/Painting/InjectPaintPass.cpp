@@ -23,7 +23,7 @@ namespace Beer::Rendering
         System::ButtonInput buttonInput = getDebugButtonInput();
         if (buttonInput.ButtonStart)
         {
-            brushIndex = (brushIndex + 1) % 4;
+            brushIndex = (brushIndex + 1) % 12;
         }
 
         simulationBuffers->ReallocateWater(context);

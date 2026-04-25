@@ -3,7 +3,7 @@
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
-#include "Rendering/RenderPasses/Painting/InteractivePaintingPass.hpp"
+#include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Drawing/Layer.hpp"
@@ -34,7 +34,7 @@ namespace Beer::Rendering
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
 
-        dependencies.AddDependency(PassDependency(INTERACTIVE_PAINT_NAME,
+        dependencies.AddDependency(PassDependency(PIGMENT_RENDER,
             ResourceAction::ColorRead));
 
         return dependencies;

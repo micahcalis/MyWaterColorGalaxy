@@ -83,7 +83,14 @@ namespace Painting
 
         public float3 Render()
         {
-            OpticalLayer paintLayer = CalculatePaintLayer();
+            float paintThickness;
+            OpticalLayer paintLayer = CalculatePaintLayer(paintThickness);
+
+            if (paintThickness < 1e-4f)
+            {
+                return paperColor;
+            }
+
             OpticalLayer paperLayer = OpticalLayer(paperColor, 0);
 
             float3 numerator = paintLayer.Transmittance * paintLayer.Transmittance * paperLayer.Reflectance;
@@ -93,9 +100,9 @@ namespace Painting
             return paintLayer.Reflectance + numerator / denominator;
         }
 
-        private OpticalLayer CalculatePaintLayer()
+        private OpticalLayer CalculatePaintLayer(out float thickness)
         {
-            Painting.PigmentProperties properties; float thickness;
+            Painting.PigmentProperties properties;
             CombineProperties(properties, thickness);
 
             MunkSolver solver = MunkSolver(properties, thickness);
@@ -105,7 +112,7 @@ namespace Painting
         private void CombineProperties(out Painting.PigmentProperties properties, out float thickness)
         {
             properties = Painting.PigmentProperties(0, 0, 0, 0 ,0);
-            thickness = 1e-4f;
+            thickness = 0;
 
             [unroll(NUM_PIGMENTS)]
             for (int i = 0; i < NUM_PIGMENTS; i++)
@@ -121,8 +128,11 @@ namespace Painting
                 thickness += currentThickness;
             }
 
-            properties.K /= thickness;
-            properties.S /= thickness;
+            if (thickness >= 1e-4f)
+            {
+                properties.K /= thickness;
+                properties.S /= thickness;
+            }
         }
     }
 }

@@ -2,7 +2,6 @@
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
-#include "Rendering/RenderPasses/Painting/InteractivePaintingPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include <memory>
@@ -12,15 +11,6 @@ namespace Beer::System
     void PaintToolContext::Load()
     {
         colorMixerEntity = registry.CreateEntity<ColorMixerEntity>();
-
-        interactivePaintingPass = Rendering::IRenderPass::FetchFromRegister<Rendering::InteractivePaintingPass>(
-            Rendering::INTERACTIVE_PAINT_PASS, colorMixerEntity->GetColorMixerMat());
-
-        interactivePaintingPass->SetGetCanvasTransform(
-            [this]() -> UITransform* { return colorMixerEntity->GetRootTransform(); });
-
-        interactivePaintingPass->SetGetMouseInput(getMouseInput);
-        interactivePaintingPass->SetGetDebugKeyInput(getDebugKeyInput);
 
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));
@@ -45,7 +35,6 @@ namespace Beer::System
     std::vector<Rendering::IRenderPass*> PaintToolContext::GetRenderPasses()
     {
         std::vector<Rendering::IRenderPass*> passes;
-        // passes.push_back(interactivePaintingPass);
         passes.push_back(drawUIPass);
         passes.append_range(paintSimSubPipeline->GetRenderPasses());
 

@@ -16,7 +16,8 @@ namespace Beer::Rendering
         simulationBuffers->ReallocateRender(context);
         simulationBuffers->SimulationContext->SetTexture("_DepositedPigment", simulationBuffers->DepositedPigment);
         simulationBuffers->SimulationContext->SetTexture("_PigmentRender", simulationBuffers->PigmentRender);
-        simulationBuffers->SimulationContext->SetColor("_CanvasColor", glm::vec4(0.969f, 0.969f, 0.914, 1));
+        simulationBuffers->SimulationContext->SetColor("_CanvasColor", CANVAS_COLOR);
+        simulationBuffers->SimulationContext->SetFloat("_SuspendedOpacity", 0.4f);
         simulationBuffers->SimulationContext->SetVector("_PaintResolution", glm::vec4((float)SIMULATION_RES_X, (float)SIMULATION_RES_Y, 0, 0));
         simulationBuffers->SimulationContext->Update();
 

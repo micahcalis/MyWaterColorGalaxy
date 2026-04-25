@@ -19,7 +19,7 @@ namespace Beer::Rendering
         simulationBuffers->SimulationContext->SetTexture("_CanvasTarget", simulationBuffers->CanvasBuffer);
         simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentTarget", simulationBuffers->GetSuspendedPong(false));
         simulationBuffers->SimulationContext->SetTexture("_DepositedPigment", simulationBuffers->DepositedPigment);
-        simulationBuffers->SimulationContext->SetFloat("_TransferSpeed", 10.0f);
+        simulationBuffers->SimulationContext->SetFloat("_TransferSpeed", 1.5f);
         simulationBuffers->SimulationContext->SetVector("_PaintResolution", glm::vec4((float)SIMULATION_RES_X, (float)SIMULATION_RES_Y, 0, 0));
         simulationBuffers->SimulationContext->Update();
 

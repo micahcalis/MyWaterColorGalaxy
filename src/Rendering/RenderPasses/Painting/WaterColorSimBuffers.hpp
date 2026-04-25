@@ -34,6 +34,7 @@ namespace Beer::Rendering
     static const uint32_t FLUID_FLUX_KERNEL = 4;
     static const uint32_t TRANSFER_PGMNT_KERNEL = 5;
     static const uint32_t RENDER_PGMNT_KERNEL = 6;
+    static const uint32_t EVAPORATE_KERNEL = 7;
 
     class WaterColorSimBuffers
     {

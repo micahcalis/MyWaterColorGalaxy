@@ -24,9 +24,10 @@ cbuffer ComputeData
     float _BrushIntensity;
     float _BrushSmoothness;
     Painting.Pigment _BrushPigment;
-    float _TextureSlopeIntensity;
     float _TransferSpeed;
     float4 _CanvasColor;
+    float _SuspendedOpacity;
+    float _EvaporationRate;
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _CanvasSource;
@@ -172,29 +173,6 @@ public struct WaterVolumeReader : Painting.IVolumeReader
     }
 }
 
-public struct CanvasSlopeReader : Painting.ITextureSlopeReader
-{
-    private int2 baseCoord;
-
-    public __init(int2 _baseCoord)
-    {
-        baseCoord = _baseCoord;
-    }
-
-    public Painting.TextureSlope Read(int2 offset)
-    {
-        uint2 coord = (uint2)(clamp(baseCoord + offset, 0, _PaintResolution - 1));
-        float4 sample = _CanvasTarget[coord];
-
-        Painting.TextureSlope slope;
-        slope.X = (sample.r - 0.5f) * 2.0f; 
-        slope.Y = (sample.g - 0.5f) * 2.0f;
-        slope.Height = sample.b;
-
-        return slope;
-    }
-}
-
 public struct FluxReader : Painting.IFlux2DReader
 {
     private int2 baseCoord;
@@ -233,12 +211,11 @@ COMP
 void CalculateFluidFlux(uint3 id : SV_DispatchThreadID)
 {
     WaterVolumeReader volumeReader = WaterVolumeReader(id.xy);
-    CanvasSlopeReader slopeReader = CanvasSlopeReader(id.xy);
     FluxReader fluxReader = FluxReader(id.xy);
     Physics.Flux2D currentFlux = fluxReader.Read(0);
 
-    Painting.FluxUpdater<WaterVolumeReader, CanvasSlopeReader> fluxUpdater = 
-        Painting.FluxUpdater<WaterVolumeReader, CanvasSlopeReader>(volumeReader, slopeReader, currentFlux, _TextureSlopeIntensity);
+    Painting.FluxUpdater<WaterVolumeReader> fluxUpdater = 
+        Painting.FluxUpdater<WaterVolumeReader>(volumeReader, currentFlux);
 
     Physics.Flux2D newFlux = fluxUpdater.UpdateFlux();
 
@@ -268,7 +245,7 @@ public struct SuspendedReader : Painting.ISuspendedReader
             return float4(0.0f);
         }
 
-        return _SuspendedPigmentSource[uint3(baseCoord, level)];
+        return _SuspendedPigmentSource[uint3(coord, level)];
     }
 }
 
@@ -290,6 +267,7 @@ void ResolvePigmentFlux(uint3 id : SV_DispatchThreadID)
             currentPigment);
     
     float4 newPigment = pigmentResolver.Resolve();
+    newPigment = max(newPigment, 1e-6f);
     _SuspendedPigmentTarget[id] = newPigment;
 }
 
@@ -307,7 +285,31 @@ void ResolveWaterFlux(uint3 id : SV_DispatchThreadID)
         Painting.FluxWaterResolver<FluxReader>(fluxReader, currentVolume);
 
     float newVolume = fluxResolver.Resolve();
+    newVolume = max(newVolume, 1e-4);
     _ShallowWater[id.xy] = float4(0, 0, newVolume, 0);
+}
+
+public struct CanvasSlopeReader : Painting.ITextureSlopeReader
+{
+    private int2 baseCoord;
+
+    public __init(int2 _baseCoord)
+    {
+        baseCoord = _baseCoord;
+    }
+
+    public Painting.TextureSlope Read(int2 offset)
+    {
+        uint2 coord = (uint2)(clamp(baseCoord + offset, 0, _PaintResolution - 1));
+        float4 sample = _CanvasTarget[coord];
+
+        Painting.TextureSlope slope;
+        slope.X = (sample.r - 0.5f) * 2.0f; 
+        slope.Y = (sample.g - 0.5f) * 2.0f;
+        slope.Height = sample.b;
+
+        return slope;
+    }
 }
 
 public struct SuspendedPigmentReader : Painting.IPigmentReader
@@ -395,6 +397,7 @@ public struct ThicknessReader : Painting.IThicknessReader
         for (int i = 0; i < PIGMENT_LAYERS; i++)
         {
             samples[i] = _DepositedPigment[uint3(_coord, i)];
+            samples[i] += _SuspendedPigmentTarget[uint3(_coord, i)] * _SuspendedOpacity;
         }
     }
 
@@ -417,4 +420,19 @@ void RenderPigment(uint3 id : SV_DispatchThreadID)
         _CanvasColor.rgb);
 
     _PigmentRender[id.xy] = float4(renderer.Render(), 1.0f);
+}
+
+//$ Kernel EvaporateWater
+
+COMP
+[numthreads(8, 8, 1)]
+void EvaporateWater(uint3 id : SV_DispatchThreadID)
+{
+    WaterVolumeReader waterVolumeReader = WaterVolumeReader(id.xy);
+
+    float currentVolume = waterVolumeReader.Read(0);
+    float evaporatedVolume = currentVolume - _EvaporationRate * _DeltaTime * 1e-5f;
+    evaporatedVolume = max(evaporatedVolume, 1e-4f);
+
+    _ShallowWater[id.xy].b = evaporatedVolume;
 }
