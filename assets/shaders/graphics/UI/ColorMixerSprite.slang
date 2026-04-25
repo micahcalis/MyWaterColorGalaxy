@@ -31,8 +31,8 @@ VERT Sprite.VertData ColorMixerVert(Sprite.MeshData input)
 
 FRAG float4 ColorMixerFrag(Sprite.VertData input) : SV_Target
 {
-    float4 debugSample = _DebugArrayTex.Sample(float3(input.uv, 0));
-    return float4(debugSample.rgb, 1);
+    // float4 debugSample = _DebugArrayTex.Sample(float3(input.uv, 0));
+    // return float4(debugSample.rgb, 1);
 
     float4 paintSample = _PaintTex.Sample(input.uv);
     float3 canvasColor = lerp(_CanvasColor.rgb, paintSample.rgb, paintSample.a);

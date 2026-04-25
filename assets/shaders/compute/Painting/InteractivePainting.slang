@@ -8,6 +8,7 @@ import Painting.PaintBrush;
 import Painting.Pigment;
 import Painting.FluidPhysics;
 import Physics.Flux;
+import Painting.KubelkaMunk;
 
 BIND_MATERIAL_DATA
 cbuffer ComputeData
@@ -25,6 +26,7 @@ cbuffer ComputeData
     Painting.Pigment _BrushPigment;
     float _TextureSlopeIntensity;
     float _TransferSpeed;
+    float4 _CanvasColor;
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _CanvasSource;
@@ -380,4 +382,39 @@ void TransferPigment(uint3 id : SV_DispatchThreadID)
 
     _SuspendedPigmentTarget[id] = suspendedWrite;
     _DepositedPigment[id] = depositedWrite; 
+}
+
+#define PIGMENT_LAYERS 3
+
+public struct ThicknessReader : Painting.IThicknessReader
+{
+    private float4[PIGMENT_LAYERS] samples;
+
+    public __init(uint2 _coord)
+    {
+        for (int i = 0; i < PIGMENT_LAYERS; i++)
+        {
+            samples[i] = _DepositedPigment[uint3(_coord, i)];
+        }
+    }
+
+    public float Read(int index)
+    {
+        Painting.PigmentLocation location = Painting.PigmentLocation((Painting.Pigment)index);
+        return samples[location.Layer][location.ChannelIndex];
+    }
+}
+
+//$ Kernel RenderPigment
+
+COMP
+[numthreads(8, 8, 1)]
+void RenderPigment(uint3 id : SV_DispatchThreadID)
+{
+    ThicknessReader thicknessReader = ThicknessReader(id.xy);
+    Painting.KubelkaMunkRenderer<ThicknessReader> renderer = Painting.KubelkaMunkRenderer<ThicknessReader>(
+        thicknessReader,
+        _CanvasColor.rgb);
+
+    _PigmentRender[id.xy] = float4(renderer.Render(), 1.0f);
 }

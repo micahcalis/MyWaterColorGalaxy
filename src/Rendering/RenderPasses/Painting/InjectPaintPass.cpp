@@ -41,7 +41,6 @@ namespace Beer::Rendering
         SetCanvasRect();
 
         simulationBuffers->SimulationContext->Update();
-        simulationBuffers->debugMaterial->SetTexture("_PaintTex", simulationBuffers->ShallowWater);
     }
 
     void InjectPaintPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)

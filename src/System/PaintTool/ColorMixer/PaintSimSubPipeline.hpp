@@ -3,6 +3,7 @@
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
 #include "Rendering/RenderPasses/Painting/GenerateCanvasPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
+#include "Rendering/RenderPasses/Painting/RenderPigmentPass.hpp"
 #include "Rendering/RenderPasses/Painting/ResolveFluidFluxPass.hpp"
 #include "Rendering/RenderPasses/Painting/ResolvePigmentFluxPass.hpp"
 #include "Rendering/RenderPasses/Painting/TransferPigmentPass.hpp"
@@ -24,6 +25,7 @@ namespace Beer::System
         Rendering::ResolvePigmentFluxPass* resolvePigmentFluxPass;
         Rendering::ResolveFluidFluxPass* resolveFluidFluxPass;
         Rendering::TransferPigmentPass* transferPigmentPass;
+        Rendering::RenderPigmentPass* renderPigmentPass;
 
     public:
         PaintSimSubPipeline(Rendering::Material* debugMaterial,

@@ -25,6 +25,7 @@ namespace Beer::Rendering
     static const vk::Format FLUX_BUFFER_FORMAT = vk::Format::eR32G32B32A32Sfloat;
     static const std::string PIGMENT_RENDER = "PigmentRender";
     static const vk::Format PIGMENT_RENDER_FORMAT = vk::Format::eR16G16B16A16Unorm;
+    static const glm::vec4 CANVAS_COLOR = glm::vec4(0.969f, 0.969f, 0.914, 1);
 
     static const uint32_t CANVAS_GENERATION_KERNEL = 0;
     static const uint32_t PAINT_INJECT_KERNEL = 1;
@@ -32,6 +33,7 @@ namespace Beer::Rendering
     static const uint32_t PIGMENT_FLUX_KERNEL = 3;
     static const uint32_t FLUID_FLUX_KERNEL = 4;
     static const uint32_t TRANSFER_PGMNT_KERNEL = 5;
+    static const uint32_t RENDER_PGMNT_KERNEL = 6;
 
     class WaterColorSimBuffers
     {
@@ -53,6 +55,7 @@ namespace Beer::Rendering
         void ReallocateFlux(const RenderContext& context);
         void ReallocateSuspended(const RenderContext& context);
         void ReallocateDeposited(const RenderContext& context);
+        void ReallocateRender(const RenderContext& context);
 
         RenderTexture* GetSuspendedPong(bool isSource)
         {
