@@ -1,6 +1,7 @@
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
+#include "ColorMixer/PigmentButton.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -20,6 +21,10 @@ namespace Beer::System
             getMouseInput,
             [this]() -> UITransform* { return colorMixerEntity->GetRootTransform(); },
             getDebugKeyInput);
+
+        paintSimSubPipeline->GetInjectPaintPass()->SetGetCurrentPigment([this]() -> PigmentType {
+            return colorMixerEntity->GetMixerManager()->GetCurrentPigment();
+        });
     }
 
     void PaintToolContext::Update()

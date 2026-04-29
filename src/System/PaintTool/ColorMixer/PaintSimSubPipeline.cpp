@@ -23,8 +23,7 @@ namespace Beer::System
             "InjectPaintPass",
             simulationBuffers.get(),
             getMouseInput,
-            getCanvasTransform,
-            getDebugButtonInput);
+            getCanvasTransform);
 
         calculateFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::CalculateFluidFluxPass>(
             "CalculateFluidFluxPass",

@@ -34,5 +34,6 @@ namespace Beer::System
             System::Function<System::ButtonInput> getDebugButtonInput);
 
         std::vector<Rendering::IRenderPass*> GetRenderPasses() const override;
+        [[nodiscard]] Rendering::InjectPaintPass* GetInjectPaintPass() const { return injectPaintPass; }
     };
 } // namespace Beer::System
