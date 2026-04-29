@@ -175,15 +175,17 @@ namespace Beer::Rendering
 
     PropertyType ShaderReflection::GetTextureType(SpvReflectDescriptorBinding* binding)
     {
+        bool isArray = binding->image.arrayed != 0;
+
         PropertyType propType = PropertyType::Unknown;
         switch (binding->descriptor_type)
         {
         case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
         case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-            return PropertyType::Texture2D;
+            return isArray ? PropertyType::Texture2DArray : PropertyType::Texture2D;
 
         case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-            return PropertyType::RWTexture2D;
+            return isArray ? PropertyType::RWTexture2DArray : PropertyType::RWTexture2D;
 
         default:
             return PropertyType::Unknown;

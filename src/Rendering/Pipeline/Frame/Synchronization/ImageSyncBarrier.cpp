@@ -31,6 +31,7 @@ namespace Beer::Rendering
         state->CurrentLayout = targetState.Layout;
         state->CurrentAccess = targetState.Access;
         state->CurrentStage = targetState.Stage;
+        state->CurrentAction = action;
     }
 
     void ImageSyncBarrier::RecordBarrier(CommandBuffer* commandBuffer)

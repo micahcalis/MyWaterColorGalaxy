@@ -25,8 +25,13 @@ namespace Beer::Core
 
         size_t totalSize = GetTotalQueueSize();
 
-        std::shared_ptr<Rendering::Buffer> stagingBuffer = std::make_shared<Rendering::Buffer>(
-            Rendering::Buffer::CreateStaging(totalSize));
+        std::shared_ptr<Rendering::Buffer> stagingBuffer = nullptr;
+
+        if (totalSize != 0)
+        {
+            stagingBuffer = std::make_shared<Rendering::Buffer>(
+                Rendering::Buffer::CreateStaging(totalSize));
+        }
 
         vk::raii::CommandBuffer copyCommandBuffer = CommandBufferUtilities::BeginSingleTimeCommands(frameResource, device);
 

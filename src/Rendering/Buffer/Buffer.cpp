@@ -100,6 +100,24 @@ namespace Beer::Rendering
         return CreatePersistent(size, usage);
     }
 
+    Buffer Buffer::CreateReadback(VkDeviceSize size)
+    {
+        constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+        constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT
+            | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+        auto allocation = sharedAllocator->CreateBuffer(size,
+            usage,
+            VMA_MEMORY_USAGE_AUTO,
+            flags);
+
+        BufferData data{};
+        data.Size = size;
+
+        return {allocation, data};
+    }
+
     void Buffer::Upload(const void* data, size_t size, size_t offset) const
     {
         if (size + offset > this->data.Size)
@@ -116,6 +134,11 @@ namespace Beer::Rendering
         {
             throw std::runtime_error("Cannot direct upload to unmapped GPU memory!");
         }
+    }
+
+    void Buffer::Invalidate()
+    {
+        vmaInvalidateAllocation(allocator->GetAllocator(), allocation.Allocation, 0, VK_WHOLE_SIZE);
     }
 
     void Buffer::CopyToCmd(Buffer& dstBuffer,

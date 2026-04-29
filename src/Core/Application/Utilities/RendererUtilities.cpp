@@ -7,25 +7,30 @@
 #include <iostream>
 #include <print>
 #include <stdexcept>
+#include <format>
 
 namespace Beer::Core
 {
+
     bool RendererUtilities::AcquireNextImage(Swapchain* swapchain,
         const FrameResource& frameResource,
         uint32_t& imageIndex)
     {
         auto [result, index] = swapchain->AcquireNextImage(*frameResource.GetImageAvailableSemaphore());
         imageIndex = index;
+
         if (result == vk::Result::eSuccess)
         {
             return true;
         }
 
-        assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady && "Swapchain result timeout or not ready");
+        if (result == vk::Result::eSuboptimalKHR)
+        {
+            std::println(std::cerr, "[Warning] RendererUtilities::AcquireNextImage: Swapchain is suboptimal!");
+            return true;
+        }
 
-        std::println(std::cerr, "failed to acquire swap chain image!");
-
-        return false;
+        throw std::runtime_error(std::format("[Error] RendererUtilities::AcquireNextImage failed! Vulkan Result: {}", vk::to_string(result)));
     }
 
     vk::RenderingAttachmentInfo RendererUtilities::CreateColorAttachmentInfo(vk::ImageView imageView, vk::ClearValue clearColor)

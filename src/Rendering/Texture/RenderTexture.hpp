@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/ImageSyncState.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
 #include "Rendering/Pipeline/Frame//Resource/IRenderResource.hpp"
@@ -37,6 +38,8 @@ namespace Beer::Rendering
         uint32_t Height() const { return image->GetData().Extent.height; }
         std::string Name() const { return name; }
         [[nodiscard]] Image* GetImage() const { return image.get(); }
+        std::unique_ptr<ISyncBarrier> GetBarrier(const ResourceAction action) override;
+        ResourceAction GetCurrentAction() const { return syncState->CurrentAction; }
 
     private:
         void SetImage(std::shared_ptr<Image> image);
@@ -46,9 +49,8 @@ namespace Beer::Rendering
             uint32_t height,
             VkFormat format,
             vk::Filter filter,
-            vk::SamplerAddressMode tiling);
-
-        std::unique_ptr<ISyncBarrier> GetBarrier(const ResourceAction action) override;
+            vk::SamplerAddressMode tiling,
+            uint32_t layerCount);
 
         ImageSyncState* GetSyncState()
         {

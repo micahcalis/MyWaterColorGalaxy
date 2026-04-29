@@ -7,19 +7,20 @@
 
 namespace Beer::Rendering
 {
-    constexpr std::string_view MAIN_COLOR = "MainColor";
-    constexpr std::string_view MAIN_DEPTH = "MainDepth";
-    constexpr std::string_view GBUFFER_NORMAL = "GBufferNormal";
-    constexpr std::string_view GBUFFER_ALBEDO = "GBufferAlbedo";
-    constexpr std::string_view GBUFFER_MAT = "GBufferMaterial";
+    const std::string MAIN_COLOR = "MainColor";
+    const std::string MAIN_DEPTH = "MainDepth";
+    const std::string GBUFFER_NORMAL = "GBufferNormal";
+    const std::string GBUFFER_ALBEDO = "GBufferAlbedo";
+    const std::string GBUFFER_MAT = "GBufferMaterial";
     const VkFormat GBUFFER_NORMAL_FORMAT = VK_FORMAT_R16G16_SFLOAT;
     const VkFormat GBUFFER_ALBEDO_FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
     const VkFormat GBUFFER_MAT_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
 
-    constexpr std::string_view OPAQUE_PASS = "Opaque";
-    constexpr std::string_view SKYBOX_PASS = "Skybox";
-    constexpr std::string_view DEFERRED_SHADE_PASS = "DeferredShade";
-    constexpr std::string_view UI_PASS = "UserInterface";
+    const std::string OPAQUE_PASS = "Opaque";
+    const std::string SKYBOX_PASS = "Skybox";
+    const std::string DEFERRED_SHADE_PASS = "DeferredShade";
+    const std::string UI_PASS = "UserInterface";
+    const std::string INTERACTIVE_PAINT_PASS = "InteractivePaint";
 
     constexpr static uint32_t TRANSFORM_BUFFER_COUNT = 100'000;
     constexpr std::string_view TRANSFORM_BUFFER_NAME = "TransformInstancingBuffer";

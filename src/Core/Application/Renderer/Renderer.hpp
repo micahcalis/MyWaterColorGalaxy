@@ -6,6 +6,7 @@
 #include "Core/Application/Managers/FontAssetManager.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
+#include "Core/Application/Managers/ReadbackManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
@@ -58,6 +59,7 @@ namespace Beer::Core
 
         std::unique_ptr<Rendering::RenderPassPool> renderPassPool = nullptr;
         std::unique_ptr<Rendering::RenderPipeline> renderPipeline = nullptr;
+        std::unique_ptr<ReadbackManager> readbackManager = nullptr;
 
         int frameIndex = 0;
         bool frameBufferResized = false;

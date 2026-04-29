@@ -18,4 +18,9 @@ namespace Math
     {
         return max(min(r, g), min(max(r, g), b));
     }
+
+    public float InverseLerp(float a, float b, float t)
+    {
+        return (t - a)/(b - a);
+    }
 }

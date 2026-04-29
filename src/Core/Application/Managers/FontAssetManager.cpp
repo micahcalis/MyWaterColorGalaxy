@@ -25,6 +25,7 @@ namespace Beer::Core
                 VK_FORMAT_R8G8B8A8_UNORM,
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
                 vk::ImageAspectFlagBits::eColor,
+                1,
                 *device));
 
         std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(

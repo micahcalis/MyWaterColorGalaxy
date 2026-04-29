@@ -32,6 +32,7 @@ namespace Beer::System
         void InitializeContext();
         void InitializeColliders();
         void InitializeGalaxy();
+        void InitializePaintTool();
 
         void UpdateBase();
         void UpdateColliders();

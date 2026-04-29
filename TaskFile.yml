@@ -35,7 +35,7 @@ tasks:
       # 3. Made the clean task 100% cross-platform
       - cmake -E rm -rf {{.BUILD_DIR}}
 
-# example: task generateatlas FONT=MirandaSans
+  # example: task generateatlas FONT=MirandaSans
   generateatlas:
     desc: "Generate an MSDF font atlas. Usage: task generateatlas FONT=Roboto-Regular"
     vars:
@@ -47,3 +47,10 @@ tasks:
       # Added -imageout to explicitly place the PNG next to the JSON
       - tools/msdf-atlas-gen/msdf-atlas-gen.exe -font {{.FONT_DIR}}/{{.FONT}}.ttf -type msdf -size 32 -format png -imageout {{.FONT_DIR}}/{{.FONT}}.png -json {{.FONT_DIR}}/{{.FONT}}.json
       - echo "Successfully generated {{.FONT}}.png and {{.FONT}}.json in {{.FONT_DIR}}!"
+
+  slangreload:
+    desc: "Forcefully kill the Slang language server so VS Code auto-restarts it"
+    cmds:
+      - cmd: taskkill /IM slangd.exe /F
+        ignore_error: true
+      - echo "Slang language server sniped! VS Code should spin up a fresh instance immediately."

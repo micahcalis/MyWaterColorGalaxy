@@ -1,15 +1,18 @@
 #include "System/Base/GameManager.hpp"
+#include "Input/ButtonInput.hpp"
 #include "Input/MouseInput.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/InputManager.hpp"
 #include "System/Components/Colliders/QuadColliderManager.hpp"
 #include "System/Context/ContextHandler.hpp"
+#include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Context/WorldContainer.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/Galaxy/GalaxyContext.hpp"
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
+#include "System/PaintTool/PaintToolContext.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -21,7 +24,8 @@ namespace Beer::System
         InitializeContextFactory();
         InitializeColliders();
         // temporary, we dont start gaming immediately
-        InitializeGalaxy();
+        // InitializeGalaxy();
+        InitializePaintTool();
     }
 
     void GameManager::Update()
@@ -49,9 +53,18 @@ namespace Beer::System
         auto getPlayerInput =
             [inputManagerP]() -> PlayerInput { return PlayerInput(inputManagerP->GetMovementVector(), inputManagerP->GetMouseVector()); };
 
-        contextHandler->RegisterContextFactory(ContextType::Galaxy, [getPlayerInput]() -> std::shared_ptr<IContext> {
-            return std::make_shared<GalaxyContext>(getPlayerInput);
-        });
+        Function<MouseInput> getMouseInput = [this]() -> MouseInput { return inputManager->GetMouseInput(); };
+        Function<ButtonInput> getDebugKeyInput = [this]() -> ButtonInput { return inputManager->GetDebugButtonInput(); };
+
+        contextHandler->RegisterContextFactory(ContextType::Galaxy,
+            [getPlayerInput]() -> std::shared_ptr<IContext> {
+                return std::make_shared<GalaxyContext>(getPlayerInput);
+            });
+
+        contextHandler->RegisterContextFactory(ContextType::PaintTool,
+            [getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
+                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput);
+            });
     }
 
     void GameManager::InitializeContext()
@@ -71,6 +84,11 @@ namespace Beer::System
     void GameManager::InitializeGalaxy()
     {
         contextHandler->LoadContext(ContextType::Galaxy);
+    }
+
+    void GameManager::InitializePaintTool()
+    {
+        contextHandler->LoadContext(ContextType::PaintTool);
     }
 
     void GameManager::UpdateBase()

@@ -82,11 +82,14 @@ namespace Beer::Rendering
                     vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
                     vk::PipelineStageFlagBits::eComputeShader};
 
-            default:
-                return {
-                    vk::ImageLayout::eUndefined,
-                    vk::AccessFlags(0),
-                    vk::PipelineStageFlagBits::eTopOfPipe};
+            case ResourceAction::TransferRead:
+                return {vk::ImageLayout::eTransferSrcOptimal,
+                    vk::AccessFlagBits::eTransferRead,
+                    vk::PipelineStageFlagBits::eTransfer};
+
+            default: return {vk::ImageLayout::eUndefined,
+                vk::AccessFlags(0),
+                vk::PipelineStageFlagBits::eTopOfPipe};
             }
         }
     };

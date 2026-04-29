@@ -29,7 +29,11 @@ namespace Beer::Rendering
     {
         const ShaderProperty* prop = properties->GetShaderProperty(name);
 
-        if (!prop || !(prop->Type == PropertyType::Texture2D || prop->Type == PropertyType::RWTexture2D))
+        if (!prop
+            || !(prop->Type == PropertyType::Texture2D
+                || prop->Type == PropertyType::RWTexture2D
+                || prop->Type == PropertyType::Texture2DArray
+                || prop->Type == PropertyType::RWTexture2DArray))
             return;
 
         textures[name] = texture;

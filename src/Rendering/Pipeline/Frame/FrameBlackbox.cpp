@@ -1,7 +1,9 @@
 #include "Rendering/Pipeline/Frame/FrameBlackbox.hpp"
+#include "Core/Application/Jobs/ImageClearJob.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "FrameBlackbox.hpp"
 #include "ReallocData.hpp"
+#include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Buffer/SSBOType.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
@@ -29,7 +31,8 @@ namespace Beer::Rendering
         TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
-        glm::vec4 clearColor)
+        glm::vec4 clearColor,
+        uint32_t layerCount)
     {
         if (blackbox.contains(name))
         {
@@ -40,7 +43,8 @@ namespace Beer::Rendering
             height,
             format,
             access,
-            clearColor);
+            clearColor,
+            layerCount);
 
         blackbox[name] = std::make_unique<RenderTexture>(name,
             std::move(image),
@@ -74,17 +78,18 @@ namespace Beer::Rendering
         TextureAccess access,
         vk::Filter filter,
         vk::SamplerAddressMode tiling,
-        glm::vec4 clearColor)
+        glm::vec4 clearColor,
+        uint32_t layerCount)
     {
         RenderTexture* renderTexture = GetResource<RenderTexture>(name);
 
         if (renderTexture == nullptr)
         {
-            renderTexture = CreateRenderTexture2D(name, width, height, format, access, filter, tiling, clearColor);
+            renderTexture = CreateRenderTexture2D(name, width, height, format, access, filter, tiling, clearColor, layerCount);
             return {renderTexture, true};
         }
 
-        ReallocationMask mask = renderTexture->GetAllocationMask(width, height, format, filter, tiling);
+        ReallocationMask mask = renderTexture->GetAllocationMask(width, height, format, filter, tiling, layerCount);
 
         if (mask.Has(ReallocationFlag::Image))
         {
@@ -92,7 +97,8 @@ namespace Beer::Rendering
                 height,
                 format,
                 access,
-                clearColor);
+                clearColor,
+                layerCount);
 
             renderTexture->SetImage(std::move(image));
             return {renderTexture, true};
@@ -133,7 +139,8 @@ namespace Beer::Rendering
         uint32_t height,
         VkFormat format,
         TextureAccess access,
-        glm::vec4 clearColor)
+        glm::vec4 clearColor,
+        uint32_t layerCount)
     {
         bool isDepth = Core::ImageUtilities::IsDepthFormat(static_cast<vk::Format>(format));
         VkImageUsageFlags usageFlags = isDepth ? DEPTH_TEX_FLAGS : COLOR_TEX_FLAGS;
@@ -143,13 +150,22 @@ namespace Beer::Rendering
 
         vk::ImageAspectFlagBits aspectFlags = isDepth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
 
-        return std::make_shared<Rendering::Image>(
+        std::shared_ptr<Rendering::Image> renderTexImage = std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(width,
                 height,
                 format,
                 usageFlags,
                 aspectFlags,
+                layerCount,
                 *device));
+
+        if (!isDepth)
+        {
+            std::unique_ptr<Core::ImageClearJob> imageClearJob = std::make_unique<Core::ImageClearJob>(renderTexImage, clearColor);
+            uploadManager->AddJob(std::move(imageClearJob));
+        }
+
+        return renderTexImage;
     }
 
     std::shared_ptr<Buffer> FrameBlackbox::CreateSSBOHandle(VkDeviceSize size, SSBOType type)

@@ -3,6 +3,7 @@
 #include "Core/Application/Managers/FontAssetManager.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
+#include "Core/Application/Managers/ReadbackManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
@@ -24,6 +25,7 @@
 #include "Screen.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Light/ILight.hpp"
+#include "System/Readback/IAsyncReadback.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
@@ -98,8 +100,8 @@ namespace Beer::Core
         Rendering::Material::UpdateDirty();
         Rendering::FontMaterial::UpdateDirty();
         renderRegister->Cleanup();
-        uploadManager->FlushQueue(frameResources[frameIndex]);
         renderPipeline->InitializeFrame();
+        uploadManager->FlushQueue(frameResources[frameIndex]);
     }
 
     void Renderer::Draw()
@@ -112,14 +114,14 @@ namespace Beer::Core
         if (!resize)
             return;
 
-        if (System::Camera::Main() == nullptr)
-            return;
-
         frameResource.Reset();
 
         UpdateGlobals();
         renderPipeline->ExecuteFrame(frameResource.GetCommandBuffer());
         renderPipeline->FinalBlit(frameResource.GetCommandBuffer(), swapchain->GetImage(imageIndex), swapchain->GetExtent());
+
+        readbackManager->Update(frameResource);
+
         Present(imageIndex);
     }
 
@@ -239,6 +241,9 @@ namespace Beer::Core
         Rendering::UniformDescriptor::SetDescriptorAllocator(descriptorAllocator.get());
         Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
         Rendering::PhaseBuffer::InitializeFallbackBuffer();
+
+        readbackManager = std::make_unique<ReadbackManager>(device);
+        System::IAsyncReadback::SetReadbackManager(readbackManager.get());
     }
 
     void Renderer::InitializeAssetManagers(vk::Format depthFormat)
@@ -291,6 +296,7 @@ namespace Beer::Core
                 VkFormat(depthFormat),
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                 vk::ImageAspectFlagBits::eDepth,
+                1,
                 device));
     }
 
@@ -326,10 +332,19 @@ namespace Beer::Core
     void Renderer::UpdateGlobals()
     {
         Rendering::Shader::Globals()->SetScreen(static_cast<float>(Screen::Width()), static_cast<float>(Screen::Height()));
-        System::Camera::Main()->BindToShaders();
+
+        System::Camera* mainCamera = System::Camera::Main();
+        if (mainCamera != nullptr)
+        {
+            mainCamera->BindToShaders();
+        }
+
         System::ILight* light = System::ILight::Main();
-        Rendering::Shader::Globals()->SetMainLight(light->GetPosition(), light->GetDirectColor());
-        Rendering::Shader::Globals()->SetAmbientLight(light->GetShadowColor(), light->GetAmbientColor());
+        if (light != nullptr)
+        {
+            Rendering::Shader::Globals()->SetMainLight(light->GetPosition(), light->GetDirectColor());
+            Rendering::Shader::Globals()->SetAmbientLight(light->GetShadowColor(), light->GetAmbientColor());
+        }
 
         Rendering::Shader::Globals()->Update();
     }

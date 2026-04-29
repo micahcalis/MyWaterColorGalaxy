@@ -13,17 +13,17 @@ namespace Beer::Rendering
 {
     void DrawOpaquePass::OnRenderSetup(const RenderContext& context)
     {
-        context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_ALBEDO),
+        context.BlackBox->ReallocateIfNeeded(GBUFFER_ALBEDO,
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::ColorFormat());
 
-        context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_NORMAL),
+        context.BlackBox->ReallocateIfNeeded(GBUFFER_NORMAL,
             Core::Screen::Width(),
             Core::Screen::Height(),
             GBUFFER_NORMAL_FORMAT);
 
-        context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_MAT),
+        context.BlackBox->ReallocateIfNeeded(GBUFFER_MAT,
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::ColorFormat());
@@ -46,7 +46,7 @@ namespace Beer::Rendering
         PassDependencyList dependencies = PassDependencyList(name);
         dependencies.AddDependencies(RenderGlobalUtilities::GetGBufferDependencies(true));
 
-        dependencies.AddDependency(PassDependency(std::string(MAIN_DEPTH),
+        dependencies.AddDependency(PassDependency(MAIN_DEPTH,
             ResourceAction::DepthWrite,
             ResetOperator::ClearDepth()));
 

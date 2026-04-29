@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
+#include <cstdint>
 
 namespace Beer::Rendering
 {
@@ -15,6 +15,8 @@ namespace Beer::Rendering
         Matrix4x4,
         Texture2D,
         RWTexture2D,
+        Texture2DArray,
+        RWTexture2DArray,
         StructuredBuffer,
         RWStructuredBuffer
     };

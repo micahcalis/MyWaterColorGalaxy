@@ -47,7 +47,7 @@ namespace Beer::Rendering
         vk::PipelineLayout GetPipelineLayout() const { return *pipelineLayout; }
         MaterialProperties* GetProperties() const { return materialProperties.get(); }
 
-        void PrintConfig();
+        void PrintConfig() const;
 
     private:
         void CreateMaterialSetLayout(const Core::Device& device);
