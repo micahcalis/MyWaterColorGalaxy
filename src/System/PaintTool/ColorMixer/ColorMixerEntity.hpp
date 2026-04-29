@@ -1,10 +1,12 @@
 #pragma once
 
 #include "ColorMixerManager.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
+#include "System/Delegates/Delegate.hpp"
 #include <print>
 
 namespace Beer::System
@@ -13,14 +15,22 @@ namespace Beer::System
     {
     private:
         std::shared_ptr<Rendering::Material> colorMixerDisplayMat;
-        std::vector<UISubEntity> pigmentEntities;
+
+        std::vector<std::unique_ptr<UISubEntity>> pigmentEntities;
         std::vector<std::shared_ptr<Rendering::Material>> pigmentMaterials;
-        std::shared_ptr<Rendering::Texture2D> pigmentTexture;
+        std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
+
+        std::unique_ptr<UISubEntity> clearButtonIcon = nullptr;
+        std::shared_ptr<Rendering::Material> clearIconMaterial = nullptr;
+        std::unique_ptr<UISubEntity> clearButtonBg = nullptr;
+        std::shared_ptr<Rendering::Material> clearBgMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> clearIconTexture = nullptr;
 
     public:
         ColorMixerEntity();
         Rendering::Material* GetColorMixerMat() const { return colorMixerDisplayMat.get(); }
         ColorMixerManager* GetMixerManager() const { return static_cast<ColorMixerManager*>(manager.get()); }
+        void InitializeClearButton(Function<void> markCanvasClear);
 
     protected:
         void InitializeManager() override
@@ -40,10 +50,13 @@ namespace Beer::System
                 if (i >= pigmentMaterials.size())
                     break;
 
-                UISubEntity& subEntity = pigmentEntities[i];
+                auto& subEntity = pigmentEntities[i];
                 auto& material = pigmentMaterials[i];
-                renderItems.push_back(UIRenderItem(subEntity.GetTransform(), material.get()));
+                renderItems.push_back(UIRenderItem(subEntity->GetTransform(), material.get()));
             }
+
+            renderItems.push_back(UIRenderItem(clearButtonIcon->GetTransform(), clearIconMaterial.get()));
+            renderItems.push_back(UIRenderItem(clearButtonBg->GetTransform(), clearBgMaterial.get()));
 
             return renderItems;
         }

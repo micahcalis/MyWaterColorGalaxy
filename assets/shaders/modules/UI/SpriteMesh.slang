@@ -60,6 +60,7 @@ namespace Sprite
             float2 coord = (uv * scale) + offset;
             float4 sample = spriteTex.Sample(coord);
             sample = saturate(float4(sample.rgb + buttonColor, sample.a));
+            sample.rgb += buttonColor;
             return sample * tint;
         }
     }

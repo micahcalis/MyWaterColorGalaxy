@@ -25,6 +25,10 @@ namespace Beer::System
         paintSimSubPipeline->GetInjectPaintPass()->SetGetCurrentPigment([this]() -> PigmentType {
             return colorMixerEntity->GetMixerManager()->GetCurrentPigment();
         });
+
+        colorMixerEntity->InitializeClearButton([this]() -> void {
+            paintSimSubPipeline->MarkClear();
+        });
     }
 
     void PaintToolContext::Update()
@@ -45,5 +49,4 @@ namespace Beer::System
 
         return passes;
     }
-
 } // namespace Beer::System

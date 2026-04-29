@@ -1,5 +1,7 @@
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
+#include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
@@ -80,6 +82,7 @@ namespace Beer::Rendering
     PassDependencyList InjectPaintPass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
+
         dependencies.AddDependency(PassDependency(SHALLOW_WATER,
             ResourceAction::ComputeReadWrite));
 
@@ -95,7 +98,7 @@ namespace Beer::Rendering
     void InjectPaintPass::SetMouseInput() const
     {
         System::MouseInput mouseInput = getMouseInput();
-        simulationBuffers->SimulationContext->SetVector("_MousePos", glm::vec4(mouseInput.PixelPos, 0, 0));
+        simulationBuffers->SimulationContext->SetVector("_MousePos", glm::vec4(mouseInput.PixelPos.x, Core::Screen::Height() - mouseInput.PixelPos.y, 0, 0));
         simulationBuffers->SimulationContext->SetInt("_MouseClick", mouseInput.LeftClickHold ? 1 : 0);
     }
 

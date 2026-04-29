@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
+#include "Rendering/RenderPasses/Painting/ClearLiquidsPass.hpp"
 #include "Rendering/RenderPasses/Painting/EvaporateWaterPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
 #include "Rendering/RenderPasses/Painting/RenderPigmentPass.hpp"
@@ -26,6 +27,9 @@ namespace Beer::System
         Rendering::TransferPigmentPass* transferPigmentPass;
         Rendering::RenderPigmentPass* renderPigmentPass;
         Rendering::EvaporateWaterPass* evaporateWaterPass;
+        Rendering::ClearLiquidsPass* clearLiquidsPass;
+
+        bool clearMarker = false;
 
     public:
         PaintSimSubPipeline(Rendering::Material* debugMaterial,
@@ -33,7 +37,12 @@ namespace Beer::System
             System::Function<System::UITransform*> getCanvasTransform,
             System::Function<System::ButtonInput> getDebugButtonInput);
 
-        std::vector<Rendering::IRenderPass*> GetRenderPasses() const override;
+        std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
         [[nodiscard]] Rendering::InjectPaintPass* GetInjectPaintPass() const { return injectPaintPass; }
+
+        void MarkClear()
+        {
+            clearMarker = true;
+        }
     };
 } // namespace Beer::System

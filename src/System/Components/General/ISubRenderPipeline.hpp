@@ -9,6 +9,6 @@ namespace Beer::System
     {
     public:
         virtual ~ISubRenderPipeline() = default;
-        virtual std::vector<Rendering::IRenderPass*> GetRenderPasses() const = 0;
+        virtual std::vector<Rendering::IRenderPass*> GetRenderPasses() = 0;
     };
 } // namespace Beer::System
