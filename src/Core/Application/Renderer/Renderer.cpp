@@ -3,6 +3,7 @@
 #include "Core/Application/Managers/FontAssetManager.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 #include "Core/Application/Managers/MeshManager.hpp"
+#include "Core/Application/Managers/ReadbackManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/FrameResource.hpp"
 #include "Core/Application/Renderer/Swapchain.hpp"
@@ -24,6 +25,7 @@
 #include "Screen.hpp"
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Light/ILight.hpp"
+#include "System/Readback/IAsyncReadback.hpp"
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <memory>
@@ -117,6 +119,9 @@ namespace Beer::Core
         UpdateGlobals();
         renderPipeline->ExecuteFrame(frameResource.GetCommandBuffer());
         renderPipeline->FinalBlit(frameResource.GetCommandBuffer(), swapchain->GetImage(imageIndex), swapchain->GetExtent());
+
+        readbackManager->Update(frameResource);
+
         Present(imageIndex);
     }
 
@@ -236,6 +241,9 @@ namespace Beer::Core
         Rendering::UniformDescriptor::SetDescriptorAllocator(descriptorAllocator.get());
         Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
         Rendering::PhaseBuffer::InitializeFallbackBuffer();
+
+        readbackManager = std::make_unique<ReadbackManager>(device);
+        System::IAsyncReadback::SetReadbackManager(readbackManager.get());
     }
 
     void Renderer::InitializeAssetManagers(vk::Format depthFormat)

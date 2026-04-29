@@ -342,6 +342,7 @@ namespace Beer::Rendering
 
     void CommandBuffer::CopyImgToBuffer(Rendering::RenderTexture* texture, Rendering::Buffer* buffer)
     {
+        ResourceAction previousAction = texture->GetCurrentAction();
         std::unique_ptr<ISyncBarrier> barrier = texture->GetBarrier(ResourceAction::TransferRead);
         barrier->RecordBarrier(this);
 
@@ -363,5 +364,8 @@ namespace Beer::Rendering
             vk::ImageLayout::eTransferSrcOptimal,
             buffer->GetHandle(),
             copyRegion);
+
+        std::unique_ptr<ISyncBarrier> resetBarrier = texture->GetBarrier(previousAction);
+        resetBarrier->RecordBarrier(this);
     }
 } // namespace Beer::Rendering

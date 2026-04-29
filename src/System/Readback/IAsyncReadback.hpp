@@ -28,6 +28,7 @@ namespace Beer::System
 
     protected:
         std::shared_ptr<Rendering::Buffer> readbackBuffer;
+        std::shared_ptr<Rendering::CommandBuffer> commandBuffer = nullptr;
         RequestState state = RequestState::Uninitialized;
         uint64_t ticket = 0;
         void* mappedData = nullptr;
@@ -66,17 +67,22 @@ namespace Beer::System
             this->ticket = ticket;
         }
 
+        void SetCommandBuffer(std::shared_ptr<Rendering::CommandBuffer> commandBuffer)
+        {
+            this->commandBuffer = commandBuffer;
+        }
+
         virtual void Invoke() = 0;
 
     private:
         inline static Core::ReadbackManager* readbackManager = nullptr;
 
     public:
-        void SetReadbackManager(Core::ReadbackManager* readbackManager)
+        static void SetReadbackManager(Core::ReadbackManager* readbackManager)
         {
             IAsyncReadback::readbackManager = readbackManager;
         }
 
-        IAsyncReadback* Get(std::unique_ptr<IReadbackRequest> request);
+        static IAsyncReadback* Get(std::unique_ptr<IReadbackRequest> request);
     };
 } // namespace Beer::System

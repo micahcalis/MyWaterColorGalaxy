@@ -4,9 +4,16 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
+#include "Rendering/Texture/RenderTexture.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/Readback/IAsyncReadback.hpp"
+#include "System/Readback/ImagePixelData.hpp"
+#include "System/Readback/ImageReadback.hpp"
+#include "System/Readback/ImageReadbackRequest.hpp"
+#include <memory>
+#include <print>
 
 namespace Beer::Rendering
 {
@@ -24,6 +31,18 @@ namespace Beer::Rendering
         if (buttonInput.ButtonStart)
         {
             brushIndex = (brushIndex + 1) % 12;
+
+            std::unique_ptr<System::ImageReadbackRequest> readbackRequest = std::make_unique<System::ImageReadbackRequest>(
+                context.BlackBox->GetResource<RenderTexture>(PIGMENT_RENDER));
+
+            System::ImageReadback* readback = static_cast<System::ImageReadback*>(System::IAsyncReadback::Get(std::move(readbackRequest)));
+            readback->Subscribe([this](System::ImagePixelData data) -> void {
+                System::Pixel pixel = data.GetPixel(10, 10);
+                std::println("Pixel R: {}", pixel.Red);
+                std::println("Pixel G: {}", pixel.Green);
+                std::println("Pixel B: {}", pixel.Blue);
+                std::println("Pixel A: {}", pixel.Alpha);
+            });
         }
 
         simulationBuffers->ReallocateWater(context);

@@ -26,7 +26,9 @@ namespace Beer::Core
         if (!HasNewWork())
             return;
 
-        Rendering::CommandBuffer commandBuffer = Rendering::CommandBuffer(CommandBufferUtilities::BeginSingleTimeCommands(frameResource, device));
+        std::shared_ptr<Rendering::CommandBuffer> commandBuffer = std::make_shared<Rendering::CommandBuffer>((
+            CommandBufferUtilities::BeginSingleTimeCommands(frameResource, device)));
+
         uint64_t batchTicket = timelineSemaphore->AssignTicket();
 
         for (auto& readback : readbackQueue)
@@ -35,13 +37,14 @@ namespace Beer::Core
 
             if (state == System::RequestState::Uninitialized)
             {
-                readback->Execute(&commandBuffer);
+                readback->Execute(commandBuffer.get());
                 readback->SetTicket(batchTicket);
                 readback->SetState(System::RequestState::Waiting);
+                readback->SetCommandBuffer(commandBuffer);
             }
         }
 
-        commandBuffer.EndAsync(device, timelineSemaphore.get());
+        commandBuffer->EndAsync(device, timelineSemaphore.get());
     }
 
     void ReadbackManager::CheckWaiting() const

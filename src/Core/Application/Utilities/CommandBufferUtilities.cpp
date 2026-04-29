@@ -179,6 +179,7 @@ namespace Beer::Core
         submitInfo.pCommandBuffers = &*commandBuffer;
 
         device.GetGraphicsQueue().submit(submitInfo, nullptr);
+        device.GetGraphicsQueue().waitIdle();
     }
 
     void CommandBufferUtilities::CopyBufferToImage(const Rendering::Buffer& buffer,

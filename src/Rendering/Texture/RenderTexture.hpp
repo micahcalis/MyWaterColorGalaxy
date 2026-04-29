@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/ImageSyncState.hpp"
 #include "Rendering/Texture/ReallocationFlags.hpp"
 #include "Rendering/Pipeline/Frame//Resource/IRenderResource.hpp"
@@ -38,6 +39,7 @@ namespace Beer::Rendering
         std::string Name() const { return name; }
         [[nodiscard]] Image* GetImage() const { return image.get(); }
         std::unique_ptr<ISyncBarrier> GetBarrier(const ResourceAction action) override;
+        ResourceAction GetCurrentAction() const { return syncState->CurrentAction; }
 
     private:
         void SetImage(std::shared_ptr<Image> image);

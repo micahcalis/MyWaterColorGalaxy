@@ -25,6 +25,7 @@ namespace Beer::Rendering
 
         state->CurrentAccess = targetState.Access;
         state->CurrentStage = targetState.Stage;
+        state->CurrentAction = action;
     }
 
     void BufferSyncBarrier::RecordBarrier(CommandBuffer* commandBuffer)
