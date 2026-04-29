@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Core/Application/Renderer/FrameResource.hpp"
+#include "Core/Application/Renderer/TimelineSemaphore.hpp"
+#include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
 #include "Rendering/Mesh/MeshBufferOrder.hpp"
@@ -8,6 +10,7 @@
 #include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Text/TextBuffer.hpp"
+#include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
@@ -37,6 +40,7 @@ namespace Beer::Rendering
         void BeginRendering(const RenderingBeginData& beginData);
         void EndRendering(const bool isDrawPass);
         void End();
+        void EndAsync(const Core::Device& device, Core::TimelineSemaphore* timelineSemaphore);
         void Reset();
 
         void RecordImageBarrier(vk::PipelineStageFlags srcStage,
@@ -89,5 +93,7 @@ namespace Beer::Rendering
             Material* material,
             const ShaderPassType pass,
             const FragmentOutput& output);
+
+        void CopyImgToBuffer(Rendering::RenderTexture* texture, Rendering::Buffer* buffer);
     };
 } // namespace Beer::Rendering

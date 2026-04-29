@@ -37,8 +37,10 @@ namespace Beer::Rendering
         static Buffer CreateDynamic(VkDeviceSize size, VkBufferUsageFlags usage);
         static Buffer CreatePersistent(VkDeviceSize size, VkBufferUsageFlags usage = 0);
         static Buffer CreateSSBO(VkDeviceSize size, SSBOType type);
+        static Buffer CreateReadback(VkDeviceSize size);
 
         void Upload(const void* data, size_t size, size_t offset = 0) const;
+        void Invalidate();
 
         void CopyToCmd(Buffer& dstBuffer,
             const Core::Device& device,

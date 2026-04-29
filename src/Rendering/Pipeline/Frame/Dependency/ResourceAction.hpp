@@ -20,6 +20,7 @@ namespace Beer::Rendering
         ComputeBufferRead = 1 << 10,
         ComputeBufferWrite = 1 << 11,
         ComputeBufferReadWrite = 1 << 12,
+        TransferRead = 1 << 13,
         All = ~0u
     };
 
@@ -47,5 +48,6 @@ namespace Beer::Rendering
     constexpr uint32_t RACTION_COMPBUFREAD_BITS = static_cast<uint32_t>(ResourceAction::ComputeBufferRead);
     constexpr uint32_t RACTION_COMPBUFWRITE_BITS = static_cast<uint32_t>(ResourceAction::ComputeWrite);
     constexpr uint32_t RACTION_COMPBUFREADWRITE_BITS = static_cast<uint32_t>(ResourceAction::ComputeBufferReadWrite);
+    constexpr uint32_t RACTION_TRANSFERREAD_BITS = static_cast<uint32_t>(ResourceAction::TransferRead);
     constexpr uint32_t RACTION_ALL_BITS = static_cast<uint32_t>(ResourceAction::All);
 } // namespace Beer::Rendering

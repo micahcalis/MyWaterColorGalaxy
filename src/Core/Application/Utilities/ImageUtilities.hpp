@@ -2,10 +2,19 @@
 
 #include <vulkan/vulkan_raii.hpp>
 #include "Core/Application/Renderer/Device.hpp"
+#include "Core/Application/Utilities/ImageFormatDef.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
+    struct ImageFormatData
+    {
+    public:
+        std::array<Channel, 4> Channels;
+        size_t PixelSize;
+        ChannelType ChannelType;
+    };
+
     class ImageUtilities
     {
     public:
@@ -36,9 +45,12 @@ namespace Beer::Core
             const Device& device);
 
         static vk::Format FindDepthFormat(const Device& device);
-
         static bool HasStencilComponent(vk::Format format);
-
         static bool IsDepthFormat(vk::Format format);
+
+        constexpr static ImageFormatData GetFormatData(vk::Format format)
+        {
+            return {GetChannelOrder(format), GetBytesPerPixel(format), GetChannelType(format)};
+        }
     };
 } // namespace Beer::Core

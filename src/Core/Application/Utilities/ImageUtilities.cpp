@@ -1,5 +1,6 @@
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "Core/Application/Utilities/RendererUtilities.hpp"
+#include "ImageFormatDef.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Core

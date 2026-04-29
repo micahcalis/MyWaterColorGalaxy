@@ -1,14 +1,20 @@
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
+#include "Core/Application/Renderer/Device.hpp"
+#include "Core/Application/Renderer/TimelineSemaphore.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
+#include "Rendering/Pipeline/Frame/Synchronization/ISyncBarrier.hpp"
+#include "Rendering/Pipeline/Frame/Synchronization/ImageSyncBarrier.hpp"
 #include "Rendering/Shader/FragmentOutput.hpp"
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "Rendering/Shader/ModelPush.hpp"
 #include "Rendering/Shader/ShaderPass.hpp"
 #include "Rendering/Text/FontMaterial.hpp"
+#include "Rendering/Texture/RenderTexture.hpp"
 #include "System/Components/General/Transform.hpp"
 #include "vulkan/vulkan.hpp"
 #include <stdexcept>
@@ -67,6 +73,23 @@ namespace Beer::Rendering
     void CommandBuffer::End()
     {
         commandBuffer.end();
+    }
+
+    void CommandBuffer::EndAsync(const Core::Device& device, Core::TimelineSemaphore* timelineSemaphore)
+    {
+        commandBuffer.end();
+
+        vk::TimelineSemaphoreSubmitInfo timelineInfo = timelineSemaphore->GetSubmitInfo();
+        vk::Semaphore signalSemaphore = timelineSemaphore->GetHandle();
+
+        vk::SubmitInfo submitInfo{};
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &*commandBuffer;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &signalSemaphore;
+        submitInfo.pNext = &timelineInfo;
+
+        device.GetGraphicsQueue().submit(submitInfo, nullptr);
     }
 
     void CommandBuffer::Reset()
@@ -315,5 +338,30 @@ namespace Beer::Rendering
         BindMaterial(material);
 
         commandBuffer.draw(3, 1, 0, 0);
+    }
+
+    void CommandBuffer::CopyImgToBuffer(Rendering::RenderTexture* texture, Rendering::Buffer* buffer)
+    {
+        std::unique_ptr<ISyncBarrier> barrier = texture->GetBarrier(ResourceAction::TransferRead);
+        barrier->RecordBarrier(this);
+
+        vk::BufferImageCopy copyRegion{};
+        copyRegion.bufferOffset = 0;
+        copyRegion.bufferRowLength = 0;
+        copyRegion.bufferImageHeight = 0;
+
+        ImageData data = texture->GetImage()->GetData();
+
+        copyRegion.imageSubresource.aspectMask = data.AspectMask;
+        copyRegion.imageSubresource.mipLevel = data.BaseMipLevel;
+        copyRegion.imageSubresource.baseArrayLayer = data.BaseArrayLayer;
+        copyRegion.imageSubresource.layerCount = data.ArrayLayers;
+        copyRegion.imageOffset = vk::Offset3D{0, 0, 0};
+        copyRegion.imageExtent = data.Extent;
+
+        commandBuffer.copyImageToBuffer(texture->GetImage()->GetHandle(),
+            vk::ImageLayout::eTransferSrcOptimal,
+            buffer->GetHandle(),
+            copyRegion);
     }
 } // namespace Beer::Rendering

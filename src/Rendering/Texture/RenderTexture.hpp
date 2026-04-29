@@ -37,6 +37,7 @@ namespace Beer::Rendering
         uint32_t Height() const { return image->GetData().Extent.height; }
         std::string Name() const { return name; }
         [[nodiscard]] Image* GetImage() const { return image.get(); }
+        std::unique_ptr<ISyncBarrier> GetBarrier(const ResourceAction action) override;
 
     private:
         void SetImage(std::shared_ptr<Image> image);
@@ -48,8 +49,6 @@ namespace Beer::Rendering
             vk::Filter filter,
             vk::SamplerAddressMode tiling,
             uint32_t layerCount);
-
-        std::unique_ptr<ISyncBarrier> GetBarrier(const ResourceAction action) override;
 
         ImageSyncState* GetSyncState()
         {
