@@ -34,6 +34,13 @@ namespace Beer::System
             }
         }
 
+        void SetTreeEnabled(bool enabled)
+        {
+            this->enabled = enabled;
+            rootTransform.SetEnabled(enabled);
+            MarkDirty();
+        }
+
     protected:
         [[nodiscard]] QuadTreeRenderComponent*
         GetTreeRenderComp() const

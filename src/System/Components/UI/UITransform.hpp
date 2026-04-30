@@ -2,14 +2,13 @@
 
 #include "glm/glm.hpp"
 #include "Rendering/Shader/RectPush.hpp"
+#include "glm/trigonometric.hpp"
 #include <stdexcept>
 
 namespace Beer::System
 {
     struct PixelRect
     {
-        constexpr static float DEG2RAD = 57.2957795131f;
-
     public:
         glm::vec2 TopRight = glm::vec2(0.5f, 0.5f);
         glm::vec2 BotRight = glm::vec2(0.5f, -0.5f);
@@ -56,7 +55,7 @@ namespace Beer::System
     private:
         static glm::vec2 Rotate2D(glm::vec2 in, float degrees)
         {
-            float radians = degrees * DEG2RAD;
+            float radians = glm::radians(degrees);
             float s = glm::sin(radians);
             float c = glm::cos(radians);
             glm::mat2x2 rotMat = glm::mat2x2(c, -s, s, c);
@@ -88,6 +87,10 @@ namespace Beer::System
         float Rotation = 0;
         glm::vec2 Scale = glm::vec2(1);
         PixelRect Rect{};
+
+    private:
+        bool enabled = true;
+        bool enabledInHierarchy = true;
 
     private:
         std::vector<UITransform*> children;
@@ -131,12 +134,18 @@ namespace Beer::System
 
             for (auto& child : children)
             {
+                child->enabledInHierarchy = this->GetEnabled();
                 child->HierarchalUpdate();
             }
         }
 
+        bool GetEnabled() const { return enabled && enabledInHierarchy; }
+        void SetEnabled(bool enabled) { this->enabled = enabled; }
+        void SetEnabledInHierarchy(bool enabled) { enabledInHierarchy = enabled; }
+
     private:
-        static glm::vec2 GetPivotOffset(AnchorMode pivot);
+        static glm::vec2
+        GetPivotOffset(AnchorMode pivot);
         bool IsDescendantOf(UITransform* potentialParent) const;
     };
 } // namespace Beer::System

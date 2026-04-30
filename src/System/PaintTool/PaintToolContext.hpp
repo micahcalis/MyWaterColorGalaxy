@@ -18,6 +18,7 @@ namespace Beer::System
         Rendering::DrawUIPass* drawUIPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
         Function<ButtonInput> getDebugKeyInput = nullptr;
+        bool toggle = false;
 
     public:
         PaintToolContext(Function<MouseInput> getMouseInput, Function<ButtonInput> getDebugKeyInput)

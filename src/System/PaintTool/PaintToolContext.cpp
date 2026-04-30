@@ -21,6 +21,13 @@ namespace Beer::System
     void PaintToolContext::Update()
     {
         IContext::Update();
+        ButtonInput input = getDebugKeyInput();
+
+        if (input.ButtonStart)
+        {
+            colorMixerEntity->SetTreeEnabled(toggle);
+            toggle = !toggle;
+        }
 
         if (colorMixerEntity != nullptr)
         {

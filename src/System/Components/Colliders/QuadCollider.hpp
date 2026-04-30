@@ -73,7 +73,7 @@ namespace Beer::System
 
         bool Hit(glm::vec2 pixelPosition) const
         {
-            if (!enabled)
+            if (!enabled || !transform->GetEnabled())
             {
                 return false;
             }

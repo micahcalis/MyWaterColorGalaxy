@@ -1,5 +1,6 @@
 #pragma once
 
+#include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 
 namespace Beer::Rendering
@@ -23,6 +24,7 @@ namespace Beer::System
         QuadType Type;
         float Depth;
         UITransform* Transform;
+        bool Enabled;
 
         union
         {
@@ -42,17 +44,35 @@ namespace Beer::System
 
         UIRenderItem(UITransform* transform,
             Rendering::Material* spriteMaterial)
-            : Type(QuadType::Sprite), Transform(transform), SpriteMat(spriteMaterial)
+            : Type(QuadType::Sprite), Transform(transform), SpriteMat(spriteMaterial), Enabled(Transform->GetEnabled())
         {
             Depth = transform ? transform->Depth : 0.0f;
+        }
+
+        UIRenderItem(UISubEntity* subEntity,
+            Rendering::Material* spriteMaterial)
+            : Type(QuadType::Sprite), Transform(subEntity->GetTransform()), SpriteMat(spriteMaterial), Enabled(Transform->GetEnabled())
+        {
+            Depth = Transform ? Transform->Depth : 0.0f;
         }
 
         UIRenderItem(UITransform* transform,
             Rendering::FontMaterial* fontMat,
             Rendering::TextBuffer* textBuffer)
-            : Type(QuadType::Text), Transform(transform)
+            : Type(QuadType::Text), Transform(transform), Enabled(Transform->GetEnabled())
         {
-            Depth = transform ? transform->Depth : 0.0f;
+            Depth = Transform ? Transform->Depth : 0.0f;
+
+            Text.FontMat = fontMat;
+            Text.TextBuffer = textBuffer;
+        }
+
+        UIRenderItem(UISubEntity* subEntity,
+            Rendering::FontMaterial* fontMat,
+            Rendering::TextBuffer* textBuffer)
+            : Type(QuadType::Text), Transform(subEntity->GetTransform()), Enabled(Transform->GetEnabled())
+        {
+            Depth = Transform ? Transform->Depth : 0.0f;
 
             Text.FontMat = fontMat;
             Text.TextBuffer = textBuffer;

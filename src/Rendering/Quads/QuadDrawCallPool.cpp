@@ -17,6 +17,10 @@ namespace Beer::Rendering
             [](const System::UIRenderItem& a, const System::UIRenderItem& b) {
                 return a.Depth < b.Depth;
             });
+
+        std::erase_if(renderItems, [](auto& item) -> bool {
+            return !item.Enabled;
+        });
     }
 
     void QuadDrawCallPool::BuildDrawCalls(std::vector<System::UIRenderItem>& renderItems)

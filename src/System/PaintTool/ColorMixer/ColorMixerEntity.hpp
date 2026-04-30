@@ -73,20 +73,20 @@ namespace Beer::System
 
                 auto& subEntity = pigmentEntities[i];
                 auto& material = pigmentMaterials[i];
-                renderItems.push_back(UIRenderItem(subEntity->GetTransform(), material.get()));
+                renderItems.push_back(UIRenderItem(subEntity.get(), material.get()));
             }
 
             if (GetMixerManager()->ClearButtonInitialized())
             {
-                renderItems.push_back(UIRenderItem(clearButtonIcon->GetTransform(), clearIconMaterial.get()));
-                renderItems.push_back(UIRenderItem(clearButtonBg->GetTransform(), clearBgMaterial.get()));
+                renderItems.push_back(UIRenderItem(clearButtonIcon.get(), clearIconMaterial.get()));
+                renderItems.push_back(UIRenderItem(clearButtonBg.get(), clearBgMaterial.get()));
             }
 
             if (GetMixerManager()->ColorPickerInitialized())
             {
-                renderItems.push_back(UIRenderItem(colorPickerIcon->GetTransform(), colorPickerIconMaterial.get()));
-                renderItems.push_back(UIRenderItem(colorPickerBg->GetTransform(), colorPickerBgMaterial.get()));
-                renderItems.push_back(UIRenderItem(colorDisplay->GetTransform(), colorDisplayMaterial.get()));
+                renderItems.push_back(UIRenderItem(colorPickerIcon.get(), colorPickerIconMaterial.get()));
+                renderItems.push_back(UIRenderItem(colorPickerBg.get(), colorPickerBgMaterial.get()));
+                renderItems.push_back(UIRenderItem(colorDisplay.get(), colorDisplayMaterial.get()));
             }
 
             return renderItems;
