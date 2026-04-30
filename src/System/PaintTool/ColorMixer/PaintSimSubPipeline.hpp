@@ -12,6 +12,8 @@
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include "System/Components/General/ISubRenderPipeline.hpp"
+#include "System/PaintTool/ColorMixer/ColorPicker.hpp"
+#include "System/Readback/ImagePixelData.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -29,6 +31,7 @@ namespace Beer::System
         Rendering::EvaporateWaterPass* evaporateWaterPass;
         Rendering::ClearLiquidsPass* clearLiquidsPass;
 
+        Function<ColorPickingState> getColorPickerState = nullptr;
         bool clearMarker = false;
 
     public:
@@ -39,6 +42,12 @@ namespace Beer::System
 
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
         [[nodiscard]] Rendering::InjectPaintPass* GetInjectPaintPass() const { return injectPaintPass; }
+        void SubscribeToNewCanvasReadback(Function<void, ImagePixelData> readbackFunc);
+
+        void SetGetColorPickerState(Function<ColorPickingState> getColorPickerState)
+        {
+            this->getColorPickerState = getColorPickerState;
+        }
 
         void MarkClear()
         {

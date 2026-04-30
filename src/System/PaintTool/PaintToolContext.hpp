@@ -29,5 +29,8 @@ namespace Beer::System
         void Load() override;
         void Update() override;
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
+
+    private:
+        void InitializeColorPicker();
     };
 } // namespace Beer::System

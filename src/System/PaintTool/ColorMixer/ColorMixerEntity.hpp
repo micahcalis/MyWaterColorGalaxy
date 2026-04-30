@@ -2,6 +2,8 @@
 
 #include "ColorMixerManager.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Base/Input/MouseInput.hpp"
+#include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -19,6 +21,7 @@ namespace Beer::System
         std::vector<std::unique_ptr<UISubEntity>> pigmentEntities;
         std::vector<std::shared_ptr<Rendering::Material>> pigmentMaterials;
         std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
+        std::shared_ptr<Rendering::Texture2D> circleTexture = nullptr;
 
         std::unique_ptr<UISubEntity> clearButtonIcon = nullptr;
         std::shared_ptr<Rendering::Material> clearIconMaterial = nullptr;
@@ -26,11 +29,29 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> clearBgMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> clearIconTexture = nullptr;
 
+        std::unique_ptr<UISubEntity> colorPickerIcon = nullptr;
+        std::shared_ptr<Rendering::Material> colorPickerIconMaterial = nullptr;
+        std::unique_ptr<UISubEntity> colorPickerBg = nullptr;
+        std::shared_ptr<Rendering::Material> colorPickerBgMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> colorPickerIconTexture = nullptr;
+
+        std::unique_ptr<UISubEntity> colorDisplay = nullptr;
+        std::shared_ptr<Rendering::Material> colorDisplayMaterial = nullptr;
+
     public:
         ColorMixerEntity();
         Rendering::Material* GetColorMixerMat() const { return colorMixerDisplayMat.get(); }
         ColorMixerManager* GetMixerManager() const { return static_cast<ColorMixerManager*>(manager.get()); }
         void InitializeClearButton(Function<void> markCanvasClear);
+
+        void InitializeColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
+            Function<MouseInput> getMouseInput);
+
+        void Update() override
+        {
+            QuadTreeEntity::Update();
+            manager->Update();
+        }
 
     protected:
         void InitializeManager() override
@@ -55,8 +76,18 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(subEntity->GetTransform(), material.get()));
             }
 
-            renderItems.push_back(UIRenderItem(clearButtonIcon->GetTransform(), clearIconMaterial.get()));
-            renderItems.push_back(UIRenderItem(clearButtonBg->GetTransform(), clearBgMaterial.get()));
+            if (GetMixerManager()->ClearButtonInitialized())
+            {
+                renderItems.push_back(UIRenderItem(clearButtonIcon->GetTransform(), clearIconMaterial.get()));
+                renderItems.push_back(UIRenderItem(clearButtonBg->GetTransform(), clearBgMaterial.get()));
+            }
+
+            if (GetMixerManager()->ColorPickerInitialized())
+            {
+                renderItems.push_back(UIRenderItem(colorPickerIcon->GetTransform(), colorPickerIconMaterial.get()));
+                renderItems.push_back(UIRenderItem(colorPickerBg->GetTransform(), colorPickerBgMaterial.get()));
+                renderItems.push_back(UIRenderItem(colorDisplay->GetTransform(), colorDisplayMaterial.get()));
+            }
 
             return renderItems;
         }

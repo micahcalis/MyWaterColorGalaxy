@@ -7,6 +7,10 @@ namespace Beer::System
 {
     void ColorMixerManager::Update()
     {
+        if (colorPicker != nullptr)
+        {
+            colorPicker->Update();
+        }
     }
 
     void ColorMixerManager::AddPigmentButton(UITransform* transform,
@@ -36,6 +40,19 @@ namespace Beer::System
 
         clearButton = std::make_unique<Button>(clearTransform, clearMaterial);
         clearButton->SetOnClick([this]() -> void { ClearColorMixer(); });
+    }
+
+    void ColorMixerManager::SetColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
+        Function<MouseInput> getMouseInput,
+        UITransform* buttonTransform,
+        Rendering::Material* buttonMaterial,
+        UITransform* canvasTransform)
+    {
+        colorPicker = std::make_unique<ColorPicker>(subscribeToReadback,
+            getMouseInput,
+            buttonTransform,
+            buttonMaterial,
+            canvasTransform);
     }
 
     void ColorMixerManager::ClearColorMixer()

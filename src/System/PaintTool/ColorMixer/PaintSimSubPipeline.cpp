@@ -9,6 +9,11 @@
 #include "Rendering/RenderPasses/Painting/TransferPigmentPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
+#include "System/PaintTool/ColorMixer/ColorPicker.hpp"
+#include "System/Readback/ImageReadback.hpp"
+#include "System/Readback/ImageReadbackRequest.hpp"
+#include <memory>
+#include <stdexcept>
 
 namespace Beer::System
 {
@@ -56,13 +61,21 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> PaintSimSubPipeline::GetRenderPasses()
     {
-        std::vector<Rendering::IRenderPass*> renderPasses{injectPaintPass,
+        std::vector<Rendering::IRenderPass*> renderPasses{
             calculateFluidFluxPass,
             resolvePigmentFluxPass,
             resolveFluidFluxPass,
             transferPigmentPass,
             renderPigmentPass,
             evaporateWaterPass};
+
+        if (getColorPickerState != nullptr)
+        {
+            if (getColorPickerState() == ColorPickingState::Idle)
+            {
+                renderPasses.push_back(injectPaintPass);
+            }
+        }
 
         if (clearMarker)
         {
@@ -71,5 +84,24 @@ namespace Beer::System
         }
 
         return renderPasses;
+    }
+
+    void PaintSimSubPipeline::SubscribeToNewCanvasReadback(Function<void, ImagePixelData> readbackFunc)
+    {
+        if (simulationBuffers->PigmentRender == nullptr)
+        {
+            throw std::runtime_error("Trying to Readback Mixing Canvas with null RenderTexture!");
+        }
+
+        if (readbackFunc == nullptr)
+        {
+            throw std::runtime_error("Trying to Readback Mixing Canvas with null Readback Function!");
+        }
+
+        std::unique_ptr<ImageReadbackRequest> readbackRequest = std::make_unique<ImageReadbackRequest>(
+            simulationBuffers->PigmentRender);
+
+        System::ImageReadback* readback = static_cast<System::ImageReadback*>(System::IAsyncReadback::Get(std::move(readbackRequest)));
+        readback->Subscribe(readbackFunc);
     }
 } // namespace Beer::System
