@@ -1,4 +1,5 @@
 #include "ColorMixerEntity.hpp"
+#include "ColorMixerManager.hpp"
 #include "PigmentButton.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/General/Transform.hpp"
@@ -17,6 +18,7 @@ namespace Beer::System
     const static float CLEAR_BUTTON_SCALE = 0.25f;
     const static float PICKER_BUTTON_SCALE = 0.25f;
     const static float COLOR_DISPLAY_SCALE = 0.25f;
+    const static float CLOSE_BUTTON_SCALE = 0.1f;
 
     ColorMixerEntity::ColorMixerEntity()
         : QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
@@ -63,6 +65,8 @@ namespace Beer::System
                 pigmentMaterials[i].get(),
                 static_cast<PigmentType>(i));
         }
+
+        MarkDirty();
     }
 
     void ColorMixerEntity::InitializeClearButton(Function<void> markCanvasClear)
@@ -100,6 +104,8 @@ namespace Beer::System
         mixerManager->SetClearButton(markCanvasClear,
             clearButtonIcon->GetTransform(),
             clearIconMaterial.get());
+
+        MarkDirty();
     }
 
     void ColorMixerEntity::InitializeColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
@@ -158,5 +164,29 @@ namespace Beer::System
         mixerManager->GetColorPicker()->OnColorPicked.Subscribe([this](glm::vec4 color) -> void {
             colorDisplayMaterial->SetColor("_TintColor", color);
         });
+
+        MarkDirty();
+    }
+
+    void ColorMixerEntity::InitializeCloseButton()
+    {
+        ColorMixerManager* mixerManager = GetMixerManager();
+        UITransform closeButtonTransform{};
+        closeButtonTransform.Anchor = AnchorMode::TopRight;
+        closeButtonTransform.Pivot = AnchorMode::BottomLeft;
+        closeButtonTransform.Scale = glm::vec2(CLOSE_BUTTON_SCALE, CLOSE_BUTTON_SCALE);
+
+        closeButton = std::make_unique<UISubEntity>(closeButtonTransform);
+        rootTransform.BindChild(closeButton->GetTransform());
+
+        closeButtonTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_CloseButton");
+        closeButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        closeButtonMaterial->SetColor("_TintColor", glm::vec4(1));
+        closeButtonMaterial->SetTexture("_SpriteTex", closeButtonTexture.get());
+        closeButtonMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+
+        mixerManager->SetCloseButton([this]() -> void { Close(); },
+            closeButton->GetTransform(),
+            closeButtonMaterial.get());
     }
 } // namespace Beer::System

@@ -4,6 +4,7 @@
 #include "Rendering/RenderPasses/DrawUIPass.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/PaintTool/ColorMixer/ColorMixerEntity.hpp"
+#include "System/PaintTool/ColorBar/ColorBarEntity.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include <memory>
@@ -14,6 +15,7 @@ namespace Beer::System
     {
     private:
         ColorMixerEntity* colorMixerEntity = nullptr;
+        ColorBarEntity* colorBarEntity = nullptr;
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
@@ -33,5 +35,6 @@ namespace Beer::System
 
     private:
         void InitializeColorPicker();
+        void InitializeColorBar();
     };
 } // namespace Beer::System

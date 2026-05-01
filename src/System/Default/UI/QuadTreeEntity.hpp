@@ -42,8 +42,7 @@ namespace Beer::System
         }
 
     protected:
-        [[nodiscard]] QuadTreeRenderComponent*
-        GetTreeRenderComp() const
+        [[nodiscard]] QuadTreeRenderComponent* GetTreeRenderComp() const
         {
             return static_cast<QuadTreeRenderComponent*>(renderComponent.get());
         }

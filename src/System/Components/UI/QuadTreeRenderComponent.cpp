@@ -1,6 +1,7 @@
 #include "System/Components/UI/QuadTreeRenderComponent.hpp"
 #include "Rendering/Quads/QuadDrawCallPool.hpp"
 #include <memory>
+#include <print>
 #include <stdexcept>
 
 namespace Beer::System

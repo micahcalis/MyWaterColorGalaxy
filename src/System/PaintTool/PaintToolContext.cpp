@@ -1,4 +1,5 @@
 #include "System/PaintTool/PaintToolContext.hpp"
+#include "ColorBar/ColorBarEntity.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
@@ -7,6 +8,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include <memory>
+#include <stdexcept>
 
 namespace Beer::System
 {
@@ -16,22 +18,21 @@ namespace Beer::System
             std::string(Rendering::UI_PASS));
 
         InitializeColorPicker();
+        InitializeColorBar();
     }
 
     void PaintToolContext::Update()
     {
         IContext::Update();
-        ButtonInput input = getDebugKeyInput();
-
-        if (input.ButtonStart)
-        {
-            colorMixerEntity->SetTreeEnabled(toggle);
-            toggle = !toggle;
-        }
 
         if (colorMixerEntity != nullptr)
         {
             colorMixerEntity->Update();
+        }
+
+        if (colorBarEntity != nullptr)
+        {
+            colorBarEntity->Update();
         }
     }
 
@@ -39,7 +40,12 @@ namespace Beer::System
     {
         std::vector<Rendering::IRenderPass*> passes;
         passes.push_back(drawUIPass);
-        passes.append_range(paintSimSubPipeline->GetRenderPasses());
+
+        if (colorMixerEntity != nullptr)
+        {
+            if (colorMixerEntity->GetEnabled())
+                passes.append_range(paintSimSubPipeline->GetRenderPasses());
+        }
 
         return passes;
     }
@@ -71,5 +77,25 @@ namespace Beer::System
         paintSimSubPipeline->SetGetColorPickerState([this]() -> ColorPickingState {
             return colorMixerEntity->GetMixerManager()->GetColorPicker()->GetState();
         });
+
+        colorMixerEntity->InitializeCloseButton();
+        colorMixerEntity->Close();
+    }
+
+    void PaintToolContext::InitializeColorBar()
+    {
+        if (colorMixerEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Initialize Color Bar when Color Mixer is null!");
+        }
+
+        Function<void> openColorPicker = [this]() -> void { colorMixerEntity->Open(); };
+
+        colorBarEntity = registry.CreateEntity<ColorBarEntity>(getMouseInput,
+            openColorPicker,
+            &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
+            &colorMixerEntity->OnColorMixerClosed);
+
+        colorBarEntity->InitializeColorLayers();
     }
 } // namespace Beer::System

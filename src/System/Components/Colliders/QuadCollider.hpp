@@ -90,5 +90,20 @@ namespace Beer::System
         {
             return transform->Depth;
         }
+
+        static bool Hit(const UITransform* transform, glm::vec2 pixelPosition)
+        {
+            if (!transform->GetEnabled())
+            {
+                return false;
+            }
+
+            const PixelRect& rect = transform->Rect;
+
+            return pixelPosition.x >= rect.BotLeft.x
+                && pixelPosition.y >= rect.BotLeft.y
+                && pixelPosition.x < rect.TopRight.x
+                && pixelPosition.y < rect.TopRight.y;
+        }
     };
 } // namespace Beer::System

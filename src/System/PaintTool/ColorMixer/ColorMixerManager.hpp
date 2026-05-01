@@ -17,6 +17,8 @@ namespace Beer::System
         std::unique_ptr<Button> clearButton = nullptr;
         Function<void> clearColorMixer = nullptr;
         std::unique_ptr<ColorPicker> colorPicker = nullptr;
+        std::unique_ptr<Button> closeButton = nullptr;
+        Function<void> closeColorMixer = nullptr;
 
     public:
         void Update() override;
@@ -38,6 +40,10 @@ namespace Beer::System
             Rendering::Material* buttonMaterial,
             UITransform* canvasTransform);
 
+        void SetCloseButton(Function<void> closeColorMixer,
+            UITransform* closeTransform,
+            Rendering::Material* closeMaterial);
+
         bool ClearButtonInitialized() const
         {
             return clearButton != nullptr;
@@ -46,6 +52,11 @@ namespace Beer::System
         bool ColorPickerInitialized() const
         {
             return colorPicker != nullptr;
+        }
+
+        bool CloseButtonInitialized() const
+        {
+            return closeButton != nullptr;
         }
 
         [[nodiscard]] ColorPicker* GetColorPicker() const
@@ -58,5 +69,6 @@ namespace Beer::System
 
     private:
         void ClearColorMixer();
+        void CloseColorMixer();
     };
 } // namespace Beer::System
