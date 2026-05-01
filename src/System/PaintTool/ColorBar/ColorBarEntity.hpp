@@ -20,17 +20,25 @@ namespace Beer::System
         Function<MouseInput> getMouseInput = nullptr;
         Function<void> markQuadTreeDirty = nullptr;
         Function<void> openColorPicker = nullptr;
+        Function<void, glm::vec4> setColorDisplayColor = nullptr;
         BeerEvent<void(glm::vec4)>* onColorPicked = nullptr;
         BeerEvent<void()>* onColorPickerClosed = nullptr;
 
     public:
         ColorBarEntity(Function<MouseInput> getMouseInput,
             Function<void> openColorPicker,
+            Function<void, glm::vec4> setColorDisplayColor,
             BeerEvent<void(glm::vec4)>* onColorPicked,
             BeerEvent<void()>* onColorPickerClosed);
 
         void InitializeColorLayers();
         ColorBarManager* GetColorBarManager() const { return static_cast<ColorBarManager*>(manager.get()); }
+
+        void Update() override
+        {
+            manager->Update();
+            QuadTreeEntity::Update();
+        }
 
     protected:
         void InitializeManager() override
@@ -41,6 +49,7 @@ namespace Beer::System
                 getMouseInput,
                 markQuadTreeDirty,
                 openColorPicker,
+                setColorDisplayColor,
                 onColorPicked,
                 onColorPickerClosed);
         }

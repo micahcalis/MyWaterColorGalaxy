@@ -22,9 +22,10 @@ namespace Beer::System
 
     ColorBarEntity::ColorBarEntity(Function<MouseInput> getMouseInput,
         Function<void> openColorPicker,
+        Function<void, glm::vec4> setColorDisplayColor,
         BeerEvent<void(glm::vec4)>* onColorPicked,
         BeerEvent<void()>* onColorPickerClosed)
-        : getMouseInput(getMouseInput), openColorPicker(openColorPicker), onColorPicked(onColorPicked), onColorPickerClosed(onColorPickerClosed), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+        : getMouseInput(getMouseInput), openColorPicker(openColorPicker), setColorDisplayColor(setColorDisplayColor), onColorPicked(onColorPicked), onColorPickerClosed(onColorPickerClosed), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         markQuadTreeDirty = [this]() -> void { MarkDirty(); };
 
@@ -68,15 +69,18 @@ namespace Beer::System
             rootTransform.BindChild(colorLayers[i]->GetTransform());
         }
 
+        ColorBarManager* colorBarManager = GetColorBarManager();
+
         for (int i = static_cast<int>(colorLayers.size()) - 1; i >= 0; i--)
         {
             ColorBarLevel level = static_cast<ColorBarLevel>(i);
-            ColorBarManager* colorBarManager = GetColorBarManager();
 
             colorBarManager->CreateColorBarController(level,
                 colorLayers[i]->GetTransform(),
                 colorLayerMaterials[i].get(),
                 LAYER_COLORS[i]);
         }
+
+        colorBarManager->CreateAnimator();
     }
 } // namespace Beer::System

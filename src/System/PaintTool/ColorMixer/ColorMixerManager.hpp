@@ -36,8 +36,10 @@ namespace Beer::System
 
         void SetColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
             Function<MouseInput> getMouseInput,
-            UITransform* buttonTransform,
-            Rendering::Material* buttonMaterial,
+            UITransform* colorPickerTransform,
+            Rendering::Material* colorPickerMaterial,
+            UITransform* paintPigmentTransform,
+            Rendering::Material* paintPigmentMaterial,
             UITransform* canvasTransform);
 
         void SetCloseButton(Function<void> closeColorMixer,

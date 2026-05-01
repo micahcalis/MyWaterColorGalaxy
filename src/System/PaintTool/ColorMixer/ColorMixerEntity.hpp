@@ -28,15 +28,15 @@ namespace Beer::System
 
         std::unique_ptr<UISubEntity> clearButtonIcon = nullptr;
         std::shared_ptr<Rendering::Material> clearIconMaterial = nullptr;
-        std::unique_ptr<UISubEntity> clearButtonBg = nullptr;
-        std::shared_ptr<Rendering::Material> clearBgMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> clearIconTexture = nullptr;
 
         std::unique_ptr<UISubEntity> colorPickerIcon = nullptr;
         std::shared_ptr<Rendering::Material> colorPickerIconMaterial = nullptr;
-        std::unique_ptr<UISubEntity> colorPickerBg = nullptr;
-        std::shared_ptr<Rendering::Material> colorPickerBgMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> colorPickerIconTexture = nullptr;
+
+        std::unique_ptr<UISubEntity> paintPigmentIcon = nullptr;
+        std::shared_ptr<Rendering::Material> paintPigmentIconMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> paintPigmentIconTexture = nullptr;
 
         std::unique_ptr<UISubEntity> colorDisplay = nullptr;
         std::shared_ptr<Rendering::Material> colorDisplayMaterial = nullptr;
@@ -64,7 +64,10 @@ namespace Beer::System
 
         void Open()
         {
-            SetTreeEnabled(true);
+            if (!GetEnabled())
+            {
+                SetTreeEnabled(true);
+            }
         }
 
         void Close()
@@ -74,6 +77,14 @@ namespace Beer::System
                 SetTreeEnabled(false);
                 OnColorMixerClosed.Invoke();
             }
+        }
+
+        void SetColorDisplayColor(glm::vec4 displayColor)
+        {
+            if (!GetMixerManager()->ColorPickerInitialized())
+                return;
+
+            colorDisplayMaterial->SetColor("_TintColor", displayColor);
         }
 
     protected:
@@ -102,13 +113,12 @@ namespace Beer::System
             if (GetMixerManager()->ClearButtonInitialized())
             {
                 renderItems.push_back(UIRenderItem(clearButtonIcon.get(), clearIconMaterial.get()));
-                renderItems.push_back(UIRenderItem(clearButtonBg.get(), clearBgMaterial.get()));
             }
 
             if (GetMixerManager()->ColorPickerInitialized())
             {
                 renderItems.push_back(UIRenderItem(colorPickerIcon.get(), colorPickerIconMaterial.get()));
-                renderItems.push_back(UIRenderItem(colorPickerBg.get(), colorPickerBgMaterial.get()));
+                renderItems.push_back(UIRenderItem(paintPigmentIcon.get(), paintPigmentIconMaterial.get()));
                 renderItems.push_back(UIRenderItem(colorDisplay.get(), colorDisplayMaterial.get()));
             }
 

@@ -42,6 +42,8 @@ namespace Beer::System
             collider->SetEnabled(enabled);
         }
 
+        [[nodiscard]] UITransform* GetTransform() const { return collider->GetTransform(); }
+
     private:
         void OnHover(MouseInput mouseInput);
         void OnHoverExit();

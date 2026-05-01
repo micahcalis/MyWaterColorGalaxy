@@ -90,9 +90,11 @@ namespace Beer::System
         }
 
         Function<void> openColorPicker = [this]() -> void { colorMixerEntity->Open(); };
+        Function<void, glm::vec4> setColorDisplayColor = [this](glm::vec4 color) -> void { colorMixerEntity->SetColorDisplayColor(color); };
 
         colorBarEntity = registry.CreateEntity<ColorBarEntity>(getMouseInput,
             openColorPicker,
+            setColorDisplayColor,
             &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
             &colorMixerEntity->OnColorMixerClosed);
 

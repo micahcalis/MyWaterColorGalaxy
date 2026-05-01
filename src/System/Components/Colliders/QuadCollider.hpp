@@ -91,6 +91,8 @@ namespace Beer::System
             return transform->Depth;
         }
 
+        [[nodiscard]] UITransform* GetTransform() const { return transform; }
+
         static bool Hit(const UITransform* transform, glm::vec2 pixelPosition)
         {
             if (!transform->GetEnabled())

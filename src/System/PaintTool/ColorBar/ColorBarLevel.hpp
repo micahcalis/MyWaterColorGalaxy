@@ -58,6 +58,8 @@ namespace Beer::System
             this->unsubscribeToColorPicker = unsubscribeToColorPicker;
         }
 
+        [[nodiscard]] UITransform* GetTransform() const { return button->GetTransform(); }
+
     private:
         void ButtonClicked()
         {

@@ -2,6 +2,7 @@
 
 #include "ColorBarLevel.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "StackAnimator.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
@@ -19,7 +20,9 @@ namespace Beer::System
         Function<MouseInput> getMouseInput = nullptr;
         Function<void> markQuadTreeDirty = nullptr;
         Function<void> openColorPicker = nullptr;
+        Function<void, glm::vec4> setColorDisplayColor = nullptr;
         ColorBarController* currentController = nullptr;
+        std::unique_ptr<StackAnimator> colorLayersAnimator = nullptr;
 
         BeerEvent<void(glm::vec4)>* onColorPicked;
         BeerEvent<void()>* onColorPickerClosed;
@@ -29,6 +32,7 @@ namespace Beer::System
             Function<MouseInput> getMouseInput,
             Function<void> markQuadTreeDirty,
             Function<void> openColorPicker,
+            Function<void, glm::vec4> setColorDisplayColor,
             BeerEvent<void(glm::vec4)>* onColorPicked,
             BeerEvent<void()>* onColorPickerClosed);
 
@@ -38,6 +42,8 @@ namespace Beer::System
             UITransform* transform,
             Rendering::Material* material,
             glm::vec4 initialColor);
+
+        void CreateAnimator();
 
         glm::vec4 GetBarColor(ColorBarLevel level) const;
 

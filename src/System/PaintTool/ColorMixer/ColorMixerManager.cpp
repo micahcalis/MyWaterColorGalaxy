@@ -1,6 +1,5 @@
 #include "System/PaintTool/ColorMixer/ColorMixerManager.hpp"
 #include "PigmentButton.hpp"
-#include "Vendor/magic_enum/magic_enum.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -54,15 +53,19 @@ namespace Beer::System
 
     void ColorMixerManager::SetColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
         Function<MouseInput> getMouseInput,
-        UITransform* buttonTransform,
-        Rendering::Material* buttonMaterial,
+        UITransform* colorPickerTransform,
+        Rendering::Material* colorPickerMaterial,
+        UITransform* paintPigmentTransform,
+        Rendering::Material* paintPigmentMaterial,
         UITransform* canvasTransform)
     {
         colorPicker = std::make_unique<ColorPicker>(subscribeToReadback,
             getMouseInput,
-            buttonTransform,
-            buttonMaterial,
-            canvasTransform);
+            colorPickerTransform,
+            colorPickerMaterial,
+            canvasTransform,
+            paintPigmentTransform,
+            paintPigmentMaterial);
     }
 
     void ColorMixerManager::ClearColorMixer()

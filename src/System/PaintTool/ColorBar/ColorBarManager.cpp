@@ -2,18 +2,24 @@
 #include "ColorBarLevel.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/BeerEvent.hpp"
+#include <cstdlib>
 #include <stdexcept>
 
 namespace Beer::System
 {
+    static const float ANIMATION_SPEED = 3.0f;
+    static const float OFFSET_SCALE = 0.05f;
+
     ColorBarManager::ColorBarManager(UITransform* colorBarTransform,
         Function<MouseInput> getMouseInput,
         Function<void> markQuadTreeDirty,
         Function<void> openColorPicker,
+        Function<void, glm::vec4> setColorDisplayColor,
         BeerEvent<void(glm::vec4)>* onColorPicked,
         BeerEvent<void()>* onColorPickerClosed)
-        : colorBarTransform(colorBarTransform), getMouseInput(getMouseInput), markQuadTreeDirty(markQuadTreeDirty), openColorPicker(openColorPicker), onColorPicked(onColorPicked), onColorPickerClosed(onColorPickerClosed)
+        : colorBarTransform(colorBarTransform), getMouseInput(getMouseInput), markQuadTreeDirty(markQuadTreeDirty), openColorPicker(openColorPicker), setColorDisplayColor(setColorDisplayColor), onColorPicked(onColorPicked), onColorPickerClosed(onColorPickerClosed)
     {
         onColorPickerClosed->Subscribe([this]() {
             currentController->Unsubscribe();
@@ -23,13 +29,7 @@ namespace Beer::System
 
     void ColorBarManager::Update()
     {
-        MouseInput input = getMouseInput();
-
-        if (MouseInContainer(input.PixelPos))
-        {
-            AnimateColorLevels();
-            markQuadTreeDirty();
-        }
+        AnimateColorLevels();
     }
 
     void ColorBarManager::CreateColorBarController(ColorBarLevel level,
@@ -62,6 +62,23 @@ namespace Beer::System
         colorBarLevels[level] = std::move(controller);
     }
 
+    void ColorBarManager::CreateAnimator()
+    {
+        std::vector<UITransform*> transforms;
+        transforms.reserve(colorBarLevels.size());
+
+        for (int i = 0; i < colorBarLevels.size(); i++)
+        {
+            ColorBarLevel level = static_cast<ColorBarLevel>(i);
+            transforms.push_back(colorBarLevels.at(level)->GetTransform());
+        }
+
+        colorLayersAnimator = std::make_unique<StackAnimator>(colorBarTransform,
+            transforms,
+            ANIMATION_SPEED,
+            OFFSET_SCALE);
+    }
+
     glm::vec4 ColorBarManager::GetBarColor(ColorBarLevel level) const
     {
         if (!colorBarLevels.contains(level))
@@ -79,7 +96,33 @@ namespace Beer::System
 
     void ColorBarManager::AnimateColorLevels()
     {
-        // TODO: cool animation yur
+        if (colorLayersAnimator == nullptr)
+            return;
+
+        MouseInput input = getMouseInput();
+        int selectedLayer = -1;
+
+        if (MouseInContainer(input.PixelPos))
+        {
+            for (int i = static_cast<int>(colorBarLevels.size()) - 1; i >= 0; i--)
+            {
+                ColorBarLevel levelToCheck = static_cast<ColorBarLevel>(i);
+                const auto& controller = colorBarLevels.at(levelToCheck);
+
+                if (QuadCollider::Hit(controller->GetTransform(), input.PixelPos))
+                {
+                    selectedLayer = i;
+                    break;
+                }
+            }
+        }
+
+        colorLayersAnimator->SetSelectedLayer(selectedLayer);
+        bool layersDirty;
+        colorLayersAnimator->Update(layersDirty);
+
+        if (layersDirty)
+            markQuadTreeDirty();
     }
 
     void ColorBarManager::TryOpenColorPicker(ColorBarController* controller)
@@ -91,6 +134,7 @@ namespace Beer::System
 
         currentController = controller;
         openColorPicker();
+        setColorDisplayColor(currentController->GetColor());
     }
 } // namespace Beer::System
 

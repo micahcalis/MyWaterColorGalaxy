@@ -26,27 +26,27 @@ namespace Beer::System
         switch (pigment)
         {
         case PigmentType::QuinacridoneRose:
-            return glm::vec4(0.761f, 0.220f, 0.451f, 1.0f);
+            return glm::vec4(0.922f, 0.149f, 0.588f, 1.0f);
         case PigmentType::IndianRed:
-            return glm::vec4(0.804f, 0.361f, 0.361f, 1.0f);
+            return glm::vec4(0.5f, 0.12f, 0.07f, 1.0f);
         case PigmentType::CadmiumYellow:
             return glm::vec4(1.000f, 0.890f, 0.012f, 1.0f);
         case PigmentType::HookersGreen:
-            return glm::vec4(0.286f, 0.475f, 0.420f, 1.0f);
+            return glm::vec4(0.02, 0.5f, 0.035f, 1.0f);
         case PigmentType::CeruleanBlue:
-            return glm::vec4(0.000f, 0.482f, 0.655f, 1.0f);
+            return glm::vec4(0.1f, 0.7f, 0.95f, 1.0f);
         case PigmentType::BurntUmber:
-            return glm::vec4(0.541f, 0.200f, 0.141f, 1.0f);
+            return glm::vec4(0.3f, 0.07f, 0.000f, 1.0f);
         case PigmentType::CadmiumRed:
-            return glm::vec4(0.890f, 0.000f, 0.133f, 1.0f);
+            return glm::vec4(1.0f, 0.2f, 0.082f, 1.0f);
         case PigmentType::BrilliantOrange:
-            return glm::vec4(1.000f, 0.404f, 0.000f, 1.0f);
+            return glm::vec4(0.82f, 0.45f, 0.0f, 1.0f);
         case PigmentType::HansaYellow:
-            return glm::vec4(0.988f, 0.827f, 0.000f, 1.0f);
+            return glm::vec4(1.0f, 1.0f, 0.04f, 1.0f);
         case PigmentType::PhthaloGreen:
-            return glm::vec4(0.000f, 0.451f, 0.251f, 1.0f);
+            return glm::vec4(0.1f, 0.75f, 0.5f, 1.0f);
         case PigmentType::FrenchUltramarine:
-            return glm::vec4(0.071f, 0.039f, 0.561f, 1.0f);
+            return glm::vec4(0.1f, 0.05f, 1.0f, 1.0f);
         case PigmentType::InterferenceLilac:
             return glm::vec4(0.690f, 0.624f, 0.792f, 1.0f);
         default:

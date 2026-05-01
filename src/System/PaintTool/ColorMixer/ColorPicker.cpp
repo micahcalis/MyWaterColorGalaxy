@@ -2,7 +2,6 @@
 #include "ColorPicker.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "System/Base/Input/MouseInput.hpp"
-#include <print>
 
 namespace Beer::System
 {
@@ -10,19 +9,31 @@ namespace Beer::System
     {
         switch (state)
         {
-        case ColorPickingState::Idle: return;
-        case ColorPickingState::Waiting: return;
+        case ColorPickingState::Idle: break;
+        case ColorPickingState::Waiting: break;
         case ColorPickingState::Picking: TryPickColor(); break;
         }
+
+        UpdateButtonMaterials();
     }
 
-    void ColorPicker::ClickButton()
+    void ColorPicker::ClickSelectColorButton()
     {
         switch (state)
         {
         case ColorPickingState::Idle:
             state = ColorPickingState::Picking;
             break;
+        case ColorPickingState::Waiting: return;
+        case ColorPickingState::Picking: return;
+        }
+    }
+
+    void ColorPicker::ClickPaintPigmentButton()
+    {
+        switch (state)
+        {
+        case ColorPickingState::Idle: return;
         case ColorPickingState::Waiting: return;
         case ColorPickingState::Picking:
             state = ColorPickingState::Idle;
@@ -75,7 +86,7 @@ namespace Beer::System
         colorSum /= 9.0f;
 
         pickedColor = glm::vec4(colorSum);
-        state = ColorPickingState::Idle;
+        state = ColorPickingState::Picking;
         OnColorPicked.Invoke(pickedColor);
     }
 
@@ -84,5 +95,14 @@ namespace Beer::System
         float x = (mousePos.x - rect.BotLeft.x) / (rect.BotRight.x - rect.BotLeft.x);
         float y = (mousePos.y - rect.BotLeft.y) / (rect.TopLeft.y - rect.BotLeft.y);
         return glm::vec2(x, y);
+    }
+
+    void ColorPicker::UpdateButtonMaterials()
+    {
+        bool isSelectActive = state == ColorPickingState::Picking || state == ColorPickingState::Waiting;
+        colorPickerButtonMaterial->SetColor("_TintColor", isSelectActive ? glm::vec4(0.5f, 0.5f, 0.5f, 1) : glm::vec4(1));
+
+        bool isPaintActive = state == ColorPickingState::Idle;
+        paintPigmentButtonMaterial->SetColor("_TintColor", isPaintActive ? glm::vec4(0.5f, 0.5f, 0.5f, 1) : glm::vec4(1));
     }
 } // namespace Beer::System
