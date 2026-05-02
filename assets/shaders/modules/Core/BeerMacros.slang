@@ -39,5 +39,7 @@
 #define TAU 6.28318530717f
 #define RAD2DEG 57.2957795131f
 #define DEG2RAD 0.01745329251f
+
+#define GENERATION_TARGET _GenerationTarget
  
 #endif

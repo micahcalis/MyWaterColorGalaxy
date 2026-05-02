@@ -6,11 +6,17 @@
 #include "Rendering/Buffer/ImageAllocation.hpp"
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Utilities/macros.hpp"
+#include "Rendering/Compute/Threads.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Core
 {
     class ImageAssetManager;
+}
+
+namespace Beer::Rendering
+{
+    class ComputeContext;
 }
 
 namespace Beer::Rendering
@@ -50,6 +56,14 @@ namespace Beer::Rendering
 
         static std::shared_ptr<Image> GetAsset(const std::string& name);
 
+        static std::shared_ptr<Image> Generate(uint32_t width,
+            uint32_t height,
+            VkFormat format,
+            uint32_t layerCount,
+            ComputeContext* computeContext,
+            Threads threads,
+            uint32_t kernelIndex);
+
         [[nodiscard]] VkImage GetHandle() const { return allocation.Image; }
         VkImageView GetDefaultView() const { return defaultView; }
         vk::Extent3D GetExtent() const { return data.Extent; }
@@ -67,6 +81,11 @@ namespace Beer::Rendering
 
         void QueueDepthClear(vk::raii::CommandBuffer& commandBuffer,
             vk::ClearDepthStencilValue clearValue);
+
+        void QueueImageGenerate(vk::raii::CommandBuffer& commandBuffer,
+            Rendering::ComputeContext* computeContext,
+            Rendering::Threads threads,
+            uint32_t kernelIndex);
 
         NO_COPY(Image);
         DEFAULT_MOVE(Image);

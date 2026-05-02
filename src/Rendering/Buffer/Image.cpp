@@ -1,6 +1,9 @@
 #include "Rendering/Buffer/Image.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "ImageData.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Compute/ComputeKernel.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "vulkan/vulkan.hpp"
 #include "Core/Application/Managers/ImageAssetManager.hpp"
 
@@ -58,6 +61,27 @@ namespace Beer::Rendering
         return imageAssetManager->Get(name);
     }
 
+    std::shared_ptr<Image> Image::Generate(uint32_t width,
+        uint32_t height,
+        VkFormat format,
+        uint32_t layerCount,
+        ComputeContext* computeContext,
+        Threads threads,
+        uint32_t kernelIndex)
+    {
+        std::shared_ptr<Rendering::Image> image = imageAssetManager->CreateEmpty(width,
+            height,
+            format,
+            layerCount);
+
+        imageAssetManager->GenerateFromEmpty(image,
+            computeContext,
+            threads,
+            kernelIndex);
+
+        return image;
+    }
+
     void Image::QueueTransitionLayout(const vk::Image image,
         const ImageData& imageData,
         const vk::raii::CommandBuffer& commandBuffer,
@@ -102,6 +126,21 @@ namespace Beer::Rendering
 
             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
             destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
+        } else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eGeneral)
+        {
+            barrier.srcAccessMask = {};
+            barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
+
+            sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+            destinationStage = vk::PipelineStageFlagBits::eComputeShader;
+        } else if (oldLayout == vk::ImageLayout::eGeneral && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            barrier.srcAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
+            barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+            sourceStage = vk::PipelineStageFlagBits::eComputeShader;
+            destinationStage = vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader;
+
         } else
         {
             throw std::invalid_argument("unsupported layout transition!");
@@ -174,4 +213,39 @@ namespace Beer::Rendering
             vk::ImageLayout::eTransferDstOptimal,
             vk::ImageLayout::eShaderReadOnlyOptimal);
     }
+
+    void Image::QueueImageGenerate(vk::raii::CommandBuffer& commandBuffer,
+        Rendering::ComputeContext* computeContext,
+        Rendering::Threads threads,
+        uint32_t kernelIndex)
+    {
+        ImageData data = GetData();
+
+        QueueTransitionLayout(GetHandle(),
+            data,
+            commandBuffer,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eGeneral);
+
+        const ComputeKernel* kernel = computeContext->GetCompute()->GetKernel(kernelIndex);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, kernel->Pipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
+            computeContext->GetCompute()->GetPipelineLayout(),
+            MaterialData::SET,
+            {computeContext->GetDescriptorSet()},
+            nullptr);
+
+        if (threads.X == 0 || threads.Y == 0 || threads.Z == 0)
+            throw std::runtime_error("Can't Dispatch Compute With 0 Thread Groups");
+
+        commandBuffer.dispatch(threads.X, threads.Y, threads.Z);
+
+        QueueTransitionLayout(GetHandle(),
+            data,
+            commandBuffer,
+            vk::ImageLayout::eGeneral,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+
 } // namespace Beer::Rendering

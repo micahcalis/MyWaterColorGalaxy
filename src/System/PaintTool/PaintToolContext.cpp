@@ -3,6 +3,7 @@
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
+#include "GalaxyMap/GalaxyMapEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -19,6 +20,7 @@ namespace Beer::System
 
         InitializeColorPicker();
         InitializeColorBar();
+        InitializeGalaxyMap();
     }
 
     void PaintToolContext::Update()
@@ -33,6 +35,11 @@ namespace Beer::System
         if (colorBarEntity != nullptr)
         {
             colorBarEntity->Update();
+        }
+
+        if (galaxyMapEntity != nullptr)
+        {
+            galaxyMapEntity->Update();
         }
     }
 
@@ -99,5 +106,10 @@ namespace Beer::System
             &colorMixerEntity->OnColorMixerClosed);
 
         colorBarEntity->InitializeColorLayers();
+    }
+
+    void PaintToolContext::InitializeGalaxyMap()
+    {
+        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>();
     }
 } // namespace Beer::System

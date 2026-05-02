@@ -1,13 +1,16 @@
 #pragma once
 
 #include "System/Delegates/Delegate.hpp"
+#include <cstdint>
 #include <unordered_map>
 #include <functional>
 #include <utility>
 
 namespace Beer::System
 {
-    using SubscriptionToken = size_t;
+    static const int32_t INVALID_TOKEN = -1;
+
+    using SubscriptionToken = int32_t;
 
     template<typename Signature>
     class BeerEvent;

@@ -25,7 +25,7 @@ namespace Beer::System
         Rendering::Material* material = nullptr;
         glm::vec4 color;
         ColorBarLevel level;
-        SubscriptionToken token = 1000000;
+        SubscriptionToken token = INVALID_TOKEN;
 
         Function<SubscriptionToken, Function<void, glm::vec4>> subscribeToColorPicker = nullptr;
         Function<void, SubscriptionToken> unsubscribeToColorPicker = nullptr;
@@ -46,6 +46,7 @@ namespace Beer::System
             if (unsubscribeToColorPicker != nullptr)
             {
                 unsubscribeToColorPicker(token);
+                token = INVALID_TOKEN;
             }
         }
 
@@ -63,7 +64,7 @@ namespace Beer::System
     private:
         void ButtonClicked()
         {
-            if (subscribeToColorPicker != nullptr)
+            if (subscribeToColorPicker != nullptr && token == INVALID_TOKEN)
             {
                 token = subscribeToColorPicker([this](glm::vec4 newColor) -> void { ColorPickerCallback(newColor); });
             }

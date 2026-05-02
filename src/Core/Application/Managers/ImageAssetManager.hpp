@@ -5,6 +5,8 @@
 #include "Core/Application/Renderer/Device.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Image.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Compute/Threads.hpp"
 #include <memory>
 
 namespace Beer::Core
@@ -30,6 +32,16 @@ namespace Beer::Core
         }
 
         std::shared_ptr<Rendering::Image> Load(const std::filesystem::path& path) override;
+
+        std::shared_ptr<Rendering::Image> CreateEmpty(uint32_t width,
+            uint32_t height,
+            VkFormat format,
+            uint32_t layerCount);
+
+        void GenerateFromEmpty(std::shared_ptr<Rendering::Image> image,
+            Rendering::ComputeContext* context,
+            Rendering::Threads threads,
+            uint32_t kernelIndex);
 
     private:
         void InitializeTextureFallback();
