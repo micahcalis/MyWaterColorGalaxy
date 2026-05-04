@@ -25,6 +25,14 @@ namespace Beer::System
 
         generatePerlinWorleyContext = std::make_shared<Rendering::ComputeContext>("Texture/ComputeNoise");
         generatePerlinWorleyContext->SetColor("_TestColor", glm::vec4(1, 0, 1, 1));
+        generatePerlinWorleyContext->SetInt("_Depth", 8);
+        generatePerlinWorleyContext->SetInt("_Seed", 5);
+        generatePerlinWorleyContext->SetFloat("_Frequency", 3.0f);
+        generatePerlinWorleyContext->SetFloat("_FrequencyMultiplier", 2.0f);
+        generatePerlinWorleyContext->SetFloat("_AmplitudeMultiplier", 0.9f);
+        generatePerlinWorleyContext->SetFloat("_NoiseBalance", 0.3f);
+        generatePerlinWorleyContext->SetFloat("_Exponent", 2.0f);
+        generatePerlinWorleyContext->SetFloat("_Edge", 0.5f);
         generatePerlinWorleyContext->Update();
 
         perlinWorleyTexture = std::make_shared<Rendering::Texture2D>(Rendering::Texture2D::Make(

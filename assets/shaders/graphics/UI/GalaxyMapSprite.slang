@@ -33,5 +33,7 @@ VERT Sprite.VertData GalaxyMapVert(Sprite.MeshData input)
 
 FRAG float4 GalaxyMapFrag(Sprite.VertData input) : SV_Target
 {
-    return _NoiseTexture.Sample(input.uv);
+   // return _NoiseTexture.Sample(input.uv * 2.0f).r;
+    float threshold = sin(_Time) * 0.5 + 0.5;
+    return step(threshold, (_NoiseTexture.Sample(input.uv).r));
 }

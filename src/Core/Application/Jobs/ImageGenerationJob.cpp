@@ -11,6 +11,7 @@ namespace Beer::Core
     {
         Rendering::Texture2D tempTexture = Rendering::Texture2D(image);
         computeContext->SetTexture(GENERATION_TARGET, &tempTexture);
+        computeContext->SetVector("_Resolution", glm::vec4(tempTexture.GetWidth(), tempTexture.GetHeight(), 0, 0));
         computeContext->Update();
 
         image->QueueImageGenerate(commandBuffer,
