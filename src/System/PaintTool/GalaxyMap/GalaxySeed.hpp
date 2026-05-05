@@ -20,8 +20,8 @@ namespace Beer::System
         }
     };
 
-    static const float MIN_STAR_SIZE = 0.3f;
-    static const float MAX_STAR_SIZE = 0.5f;
+    static const float MIN_STAR_SIZE = 0.25f;
+    static const float MAX_STAR_SIZE = 0.35f;
     static const glm::vec2 STAR_BOUNDS_MIN = glm::vec2(0.4f, 0.4f);
     static const glm::vec2 STAR_BOUNDS_MAX = glm::vec2(0.6f, 0.6f);
 

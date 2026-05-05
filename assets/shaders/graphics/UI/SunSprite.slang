@@ -52,5 +52,17 @@ FRAG float4 SunFrag(Sprite.VertData input) : SV_Target
         _EdgeRingIntensity,
         _GradientSteps);
 
-    return sun.Get();
+    Map.Flares flares = Map.Flares(input.uv,
+        _StarSeed,
+        _StarColor.rgb,
+        _StarSize,
+        40,
+        _GradientIntensity);
+
+    float4 sunVal = sun.Get();
+    float4 flaresVal = flares.Get();
+
+    float4 blendCol = lerp(flaresVal, sunVal, sunVal.a);
+
+    return blendCol;
 }

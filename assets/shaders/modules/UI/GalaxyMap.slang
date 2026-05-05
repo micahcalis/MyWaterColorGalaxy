@@ -7,6 +7,7 @@ import SDF;
 import ColorSpace;
 import Math.BeerMath;
 import Math.Effects;
+import Math.Easings;
 
 module GalaxyMap;
 
@@ -268,6 +269,86 @@ namespace Map
             float edgeRing = smoothstep(0.9f, 0.98f, sizeGrad);
 
             return posterizeNoise + edgeRing * edgeIntensity;
+        }
+
+        private float3 GetMixColor(float gradient)
+        {
+            float inkThickness = (gradient * gradientIntensity) + 1.0f; 
+            return pow(color.rgb, inkThickness);
+        }
+    }
+
+    static const float AA_FLARES_EPS = 0.08f;
+
+    public struct Flares
+    {
+        private float2 uv;
+        private int seed;
+        private float3 color;
+        private float size;
+        private int flaresPerUnit;
+        private float gradientIntensity;
+
+        public __init(float2 _uv,
+            int _seed,
+            float3 _color,
+            float _size,
+            int _flaresPerUnit,
+            float _gradientIntensity)
+        {
+            uv = _uv;
+            seed = _seed;
+            color = _color;
+            size = _size;
+            flaresPerUnit = _flaresPerUnit;
+            gradientIntensity = _gradientIntensity;
+        }
+
+        public float4 Get()
+        {
+            int id;
+            float circularGradient = GetCircularGradient(id);
+            float mask;
+            float distanceGradient = GetDistanceGradient(id, mask);
+
+            float2 coord = float2(circularGradient, distanceGradient);
+            float leafDist = length(coord);
+            float leafMask = smoothstep(0.51f, 0.51f + AA_FLARES_EPS, leafDist);
+            float leafGradient = pow(smoothstep(1.0f, 0.51, leafDist), 5.0f);
+
+            return float4(GetMixColor(leafGradient), leafMask * mask);
+        }
+
+        private float GetCircularGradient(out int id)
+        {
+            float2 centerUv = uv - 0.5f;
+            float angle = atan2(centerUv.x, centerUv.y);
+            angle += PI;
+            angle /= TAU;
+
+            int flares = (int)((float)flaresPerUnit * size);
+            float rawGrad = angle * (float)flares;
+            float fracFlares = frac(rawGrad);
+            id = (int)(rawGrad);
+
+            Noise.Perlin perlin = Noise.Perlin(seed, float2(rawGrad, 0));
+            float noise = perlin.Compute(10.0f) * 0.1f;
+
+            return fracFlares - 0.5f + noise;
+        }
+
+        private float GetDistanceGradient(int id, out float mask)
+        {
+            float2 centerUv = uv - 0.5f;
+            float rawDist = length(centerUv);
+            rawDist += Noise.Functions.IntegerHash(seed + id) * 0.04f;
+    
+            float scaledDist = rawDist * 1.88f * rcp(size);
+
+            mask = step(scaledDist, PI);
+
+            float trigDist = cos(scaledDist) * 0.5f + 0.5f;
+            return pow(trigDist, 0.42f);
         }
 
         private float3 GetMixColor(float gradient)
