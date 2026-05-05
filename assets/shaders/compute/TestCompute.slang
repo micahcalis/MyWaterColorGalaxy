@@ -29,9 +29,9 @@ COMP
 [numthreads(8, 8, 1)]
 void PerlinCompute(uint3 id : SV_DispatchThreadID)
 {
-    float2 uv = float2(id.xy) / float(_ThreadGroups) + _Time * 0.1;
-    Noise.Perlin perlin = Noise.Perlin(_Seed, _Tiling, _NoiseExponent, uv);
-    _NoiseTex[id.xy] = (perlin.Compute(_NoiseIntensity) + 0.5);
+    // float2 uv = float2(id.xy) / float(_ThreadGroups) + _Time * 0.1;
+    // Noise.Perlin perlin = Noise.Perlin(_Seed, _Tiling, _NoiseExponent, uv);
+    // _NoiseTex[id.xy] = (perlin.Compute(_NoiseIntensity) + 0.5);
 }
 
 //$ Kernel FunnyBallCompute

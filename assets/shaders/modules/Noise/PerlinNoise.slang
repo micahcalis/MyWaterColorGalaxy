@@ -5,21 +5,17 @@ namespace Noise
     public struct Perlin
     {
         private int seed;
-        private float scale;
-        private float exponent;
         private float2 uv;
 
-        public __init(int _seed, float _scale, float _exponent, float2 _uv)
+        public __init(int _seed, float2 _uv)
         {
             seed = _seed;
-            scale = _scale;
-            exponent = _exponent;
             uv = _uv;
         }
 
-        public float Compute(float intensity)
+        public float Compute(float2 frequency = 1)
         {
-            float2 coord = uv * scale;
+            float2 coord = uv * frequency;
             float2 floorCoord = floor(coord);
             float2 fracCoord = frac(coord);
             float d00 = dot(Functions.RandomVec2D(floorCoord, seed), fracCoord);
@@ -28,7 +24,7 @@ namespace Noise
             float d11 = dot(Functions.RandomVec2D(floorCoord + float2(1, 1), seed), fracCoord - float2(1, 1));
             fracCoord = fracCoord * fracCoord * fracCoord * (fracCoord * (fracCoord * 6 - 15) + 10);
             float perlin = lerp(lerp(d00, d01, fracCoord.y), lerp(d10, d11, fracCoord.y), fracCoord.x);
-            return perlin * intensity;
+            return perlin;
         }
     };
 

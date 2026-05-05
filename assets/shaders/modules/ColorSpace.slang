@@ -97,5 +97,10 @@ namespace Color
 
             return clamp(float4(cmy, k), 0.0, 1.0);
         }
+
+        public float Luminance(float3 rgb)
+        {
+            return dot(float3(0.2126, 0.7152, 0.0722), rgb);
+        }
     }
 }

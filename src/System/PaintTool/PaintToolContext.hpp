@@ -1,6 +1,8 @@
 #pragma once
 
-#include "GalaxyMap/GalaxyMapEntity.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyMapEntity.hpp"
+#include "System/PaintTool/MenuBar/MenuBarEntity.hpp"
 #include "System/PaintTool/ColorMixer/PaintSimSubPipeline.hpp"
 #include "Rendering/RenderPasses/DrawUIPass.hpp"
 #include "System/Base/Input/MouseInput.hpp"
@@ -15,9 +17,11 @@ namespace Beer::System
     class PaintToolContext : public IContext
     {
     private:
+        std::unique_ptr<GalaxyMapBuffer> galaxyMapBuffer = nullptr;
         ColorMixerEntity* colorMixerEntity = nullptr;
         ColorBarEntity* colorBarEntity = nullptr;
         GalaxyMapEntity* galaxyMapEntity = nullptr;
+        MenuBarEntity* menuBarEntity = nullptr;
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
@@ -38,6 +42,7 @@ namespace Beer::System
     private:
         void InitializeColorPicker();
         void InitializeColorBar();
+        void InitializeMenuBar();
         void InitializeGalaxyMap();
     };
 } // namespace Beer::System

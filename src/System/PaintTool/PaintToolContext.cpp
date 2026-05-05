@@ -4,6 +4,8 @@
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
 #include "GalaxyMap/GalaxyMapEntity.hpp"
+#include "GalaxyMap/GalaxySeed.hpp"
+#include "MenuBar/MenuBarEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -20,6 +22,7 @@ namespace Beer::System
 
         InitializeColorPicker();
         InitializeColorBar();
+        InitializeMenuBar();
         InitializeGalaxyMap();
     }
 
@@ -35,6 +38,11 @@ namespace Beer::System
         if (colorBarEntity != nullptr)
         {
             colorBarEntity->Update();
+        }
+
+        if (menuBarEntity != nullptr)
+        {
+            menuBarEntity->Update();
         }
 
         if (galaxyMapEntity != nullptr)
@@ -108,8 +116,21 @@ namespace Beer::System
         colorBarEntity->InitializeColorLayers();
     }
 
+    void PaintToolContext::InitializeMenuBar()
+    {
+        galaxyMapBuffer = std::make_unique<GalaxyMapBuffer>(GalaxySeed());
+
+        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get());
+        menuBarEntity->InitializeButtonEntities();
+    }
+
     void PaintToolContext::InitializeGalaxyMap()
     {
-        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>();
+        if (menuBarEntity == nullptr || galaxyMapBuffer == nullptr)
+        {
+            throw std::runtime_error("Trying to Initialize Galaxy Map when Menu Bar is null!");
+        }
+
+        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get());
     }
 } // namespace Beer::System
