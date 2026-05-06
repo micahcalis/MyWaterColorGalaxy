@@ -5,6 +5,7 @@
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 
 namespace Beer::System
 {
@@ -25,8 +26,9 @@ namespace Beer::System
     static const float EDGE_RING_INTENSITY = 0.5f;
     static const int CENTER_STAR_GRAD_STEPS = 6;
 
-    GalaxyMapEntity::GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer)
-        : galaxyMapBuffer(galaxyMapBuffer), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+    GalaxyMapEntity::GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
+        Function<MouseInput> getMouseInput)
+        : galaxyMapBuffer(galaxyMapBuffer), getMouseInput(getMouseInput), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         galaxyMaterial = std::make_shared<Rendering::Material>("UI/GalaxyMapSprite");
         galaxyMapBuffer->SetMapMaterial(galaxyMaterial);
@@ -126,5 +128,12 @@ namespace Beer::System
         glm::vec2 scaledPosition = position * rootTransform.Scale;
         starEntity->GetTransform()->Position = scaledPosition;
         MarkDirty();
+    }
+
+    void GalaxyMapEntity::InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor)
+    {
+        GalaxyMapManager* mapManager = GetMapManager();
+        mapManager->InitializeCursor(getColor);
+        mapManager->GetCursor()->OnComponentPlaced.Subscribe([this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

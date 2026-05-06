@@ -2,10 +2,12 @@
 
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 
 namespace Beer::System
 {
@@ -22,17 +24,27 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> starMaterial = nullptr;
         std::unique_ptr<UISubEntity> starEntity = nullptr;
 
+        Function<MouseInput> getMouseInput = nullptr;
+
     public:
-        GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer);
+        GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
+            Function<MouseInput> getMouseInput);
 
         void Update() override
         {
             QuadTreeEntity::Update();
+            manager->Update();
         }
+
+        GalaxyMapManager* GetMapManager() const { return static_cast<GalaxyMapManager*>(manager.get()); }
+        void InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor);
 
     protected:
         void InitializeManager() override
         {
+            manager = std::make_unique<GalaxyMapManager>(galaxyMapBuffer,
+                &rootTransform,
+                getMouseInput);
         }
 
         std::vector<UIRenderItem> GetRenderItems() override
@@ -44,6 +56,8 @@ namespace Beer::System
             {
                 renderItems.push_back(UIRenderItem(starEntity->GetTransform(), starMaterial.get()));
             }
+
+            renderItems.append_range(galaxyMapBuffer->GetRenderItems());
 
             return renderItems;
         }

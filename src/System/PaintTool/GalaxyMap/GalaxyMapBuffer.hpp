@@ -1,13 +1,26 @@
 #pragma once
 
+#include "GalaxyComponent.hpp"
+#include "System/Components/UI/UIRenderItem.hpp"
+#include "System/Components/UI/UISubEntity.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxySeed.hpp"
 #include <cstdint>
+#include <unordered_map>
 
 namespace Beer::System
 {
+    struct GalaxyComponentHitInfo
+    {
+    public:
+        bool Hit = false;
+        UITransform* Transform = nullptr;
+        uint32_t Index = 0;
+    };
+
     class GalaxyMapBuffer
     {
     private:
@@ -16,6 +29,9 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> mapMaterial = nullptr;
         std::shared_ptr<Rendering::Material> starMaterial = nullptr;
         Function<void, glm::vec2> updateStarPosition = nullptr;
+
+        std::unordered_map<uint32_t, GalaxyComponent> componentMap;
+        uint32_t nextComponentId = 0;
 
     public:
         GalaxyMapBuffer(GalaxySeed seed)
@@ -45,6 +61,12 @@ namespace Beer::System
             this->updateStarPosition = updateStarPosition;
             UpdateMaterials();
         }
+
+        void AddComponent(GalaxyComponent component);
+        void RemoveComponent(uint32_t id);
+        GalaxyComponentHitInfo CollisionCheck(const PixelRect& rect);
+
+        std::vector<UIRenderItem> GetRenderItems() const;
 
     private:
         void UpdateMaterials()

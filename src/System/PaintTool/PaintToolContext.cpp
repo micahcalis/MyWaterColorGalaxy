@@ -1,5 +1,6 @@
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "ColorBar/ColorBarEntity.hpp"
+#include "ColorBar/ColorBarLevel.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
@@ -131,6 +132,10 @@ namespace Beer::System
             throw std::runtime_error("Trying to Initialize Galaxy Map when Menu Bar is null!");
         }
 
-        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get());
+        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get(), getMouseInput);
+
+        galaxyMapEntity->InitializeCursor(
+            [this](ColorBarLevel level)
+                -> glm::vec4 { return colorBarEntity->GetColorBarManager()->GetBarColor(level); });
     }
 } // namespace Beer::System

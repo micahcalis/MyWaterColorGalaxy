@@ -47,6 +47,29 @@ namespace Beer::System
             BotLeft += offset;
         }
 
+        [[nodiscard]] bool Intersects(const PixelRect& other) const
+        {
+            const glm::vec2 axes[4] = {
+                TopRight - TopLeft,
+                TopRight - BotRight,
+                other.TopRight - other.TopLeft,
+                other.TopRight - other.BotRight};
+
+            for (int i = 0; i < 4; ++i)
+            {
+                float minA, maxA, minB, maxB;
+                ProjectOntoAxis(*this, axes[i], minA, maxA);
+                ProjectOntoAxis(other, axes[i], minB, maxB);
+
+                if (maxA < minB || maxB < minA)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         [[nodiscard]] Rendering::RectPush GetRectPush()
         {
             return Rendering::RectPush();
@@ -60,6 +83,17 @@ namespace Beer::System
             float c = glm::cos(radians);
             glm::mat2x2 rotMat = glm::mat2x2(c, -s, s, c);
             return rotMat * in;
+        }
+
+        static void ProjectOntoAxis(const PixelRect& rect, const glm::vec2& axis, float& outMin, float& outMax)
+        {
+            float p1 = glm::dot(rect.TopLeft, axis);
+            float p2 = glm::dot(rect.TopRight, axis);
+            float p3 = glm::dot(rect.BotLeft, axis);
+            float p4 = glm::dot(rect.BotRight, axis);
+
+            outMin = std::min({p1, p2, p3, p4});
+            outMax = std::max({p1, p2, p3, p4});
         }
     };
 
