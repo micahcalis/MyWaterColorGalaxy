@@ -31,4 +31,12 @@ namespace Beer::System
             }
         }
     }
+
+    void GalaxyMapManager::SetBrushType(GalaxyBrushType type)
+    {
+        if (cursor == nullptr)
+            return;
+
+        cursor->Brush = type;
+    }
 } // namespace Beer::System

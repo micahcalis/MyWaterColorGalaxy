@@ -10,6 +10,7 @@
 #include "System/PaintTool/ColorBar/ColorBarEntity.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
+#include "ToolBar/ToolBarEntity.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -22,6 +23,7 @@ namespace Beer::System
         ColorBarEntity* colorBarEntity = nullptr;
         GalaxyMapEntity* galaxyMapEntity = nullptr;
         MenuBarEntity* menuBarEntity = nullptr;
+        ToolBarEntity* toolBarEntity = nullptr;
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
@@ -44,5 +46,6 @@ namespace Beer::System
         void InitializeColorBar();
         void InitializeMenuBar();
         void InitializeGalaxyMap();
+        void InitializeToolBar();
     };
 } // namespace Beer::System

@@ -11,11 +11,12 @@ namespace Beer::System
 {
     class ColorBarEntity : public QuadTreeEntity
     {
-        std::shared_ptr<Rendering::Material> backgroundMat;
-        std::shared_ptr<Rendering::Texture2D> squareTexture;
+    private:
+        std::shared_ptr<Rendering::Material> backgroundMat = nullptr;
+        std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
         std::vector<std::unique_ptr<UISubEntity>> colorLayers;
         std::vector<std::shared_ptr<Rendering::Material>> colorLayerMaterials;
-        std::shared_ptr<Rendering::Texture2D> colorLayerSprite;
+        std::shared_ptr<Rendering::Texture2D> colorLayerSprite = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
         Function<void> markQuadTreeDirty = nullptr;

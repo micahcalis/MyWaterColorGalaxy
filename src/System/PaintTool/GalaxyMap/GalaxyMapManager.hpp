@@ -1,5 +1,6 @@
 #pragma once
 
+#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
 #include "System/Base/Input/MouseInput.hpp"
@@ -24,5 +25,6 @@ namespace Beer::System
         void Update() override;
 
         GalaxyMapCursor* GetCursor() const { return cursor.get(); }
+        void SetBrushType(GalaxyBrushType type);
     };
 } // namespace Beer::System

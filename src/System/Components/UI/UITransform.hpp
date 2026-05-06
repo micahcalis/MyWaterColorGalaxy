@@ -130,6 +130,22 @@ namespace Beer::System
         std::vector<UITransform*> children;
 
     public:
+        ~UITransform()
+        {
+            if (Parent != nullptr)
+            {
+                Parent->UnbindChild(this);
+            }
+
+            for (auto& child : children)
+            {
+                if (child != nullptr)
+                {
+                    UnbindChild(child);
+                }
+            }
+        }
+
         glm::vec2 GetPixelAnchor(const AnchorMode mode) const;
         void CalculatePixelRect();
 

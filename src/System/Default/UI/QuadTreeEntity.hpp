@@ -11,8 +11,7 @@ namespace Beer::System
     class QuadTreeEntity : public UIEntity
     {
     public:
-        virtual ~QuadTreeEntity()
-            = default;
+        virtual ~QuadTreeEntity() = default;
         QuadTreeEntity(UITransform rootTransform,
             std::unique_ptr<QuadTreeRenderComponent> quadTreeRenderComp)
             : UIEntity(rootTransform, std::move(quadTreeRenderComp))

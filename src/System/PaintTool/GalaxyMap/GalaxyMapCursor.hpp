@@ -14,13 +14,15 @@ namespace Beer::System
     {
     public:
         BeerEvent<void()> OnComponentPlaced;
+        BeerEvent<void()> OnComponentErased;
+
         GalaxyBrushType Brush = GalaxyBrushType::Planet;
         float Size = 0;
 
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;
         UITransform* mapTransform = nullptr;
-        bool canPlace;
+        bool hit;
         std::unique_ptr<GalaxySpriteFactory> factory = nullptr;
 
     public:
@@ -30,11 +32,9 @@ namespace Beer::System
 
         void Update(MouseInput input);
 
-    public:
-        [[nodiscard]] bool GetCanPlace() const { return canPlace; }
-
     private:
         void Place(const glm::vec2 mousePos);
+        void Erase(uint32_t index, UITransform* transform);
         PixelRect GetCursorRect(glm::vec2 mousePos) const;
         glm::vec2 ToMapSpace(glm::vec2 pixelPoint) const;
         glm::vec2 ToPixelSpace(glm::vec2 mapPoint) const;

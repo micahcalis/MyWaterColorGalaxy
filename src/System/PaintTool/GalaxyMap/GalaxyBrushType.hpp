@@ -11,6 +11,6 @@ namespace Beer::System
         SpaceGoo = 2,
         BlackHole = 3,
         StarDust = 4,
-        Eraser
+        Eraser = 5
     };
 }

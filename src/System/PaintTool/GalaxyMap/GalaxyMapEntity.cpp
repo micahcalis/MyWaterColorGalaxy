@@ -5,6 +5,7 @@
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
+#include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 
 namespace Beer::System
@@ -135,5 +136,6 @@ namespace Beer::System
         GalaxyMapManager* mapManager = GetMapManager();
         mapManager->InitializeCursor(getColor);
         mapManager->GetCursor()->OnComponentPlaced.Subscribe([this]() -> void { MarkDirty(); });
+        mapManager->GetCursor()->OnComponentErased.Subscribe([this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

@@ -165,6 +165,7 @@ namespace Beer::Core
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
         Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
+        Rendering::UniformDescriptor::FlushDeletionQueue();
     }
 
     const vk::raii::Context& Renderer::GetContext() const { return context; }

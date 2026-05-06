@@ -11,6 +11,8 @@
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
+#include "ToolBar/ToolBarEntity.hpp"
 #include <memory>
 #include <stdexcept>
 
@@ -25,6 +27,7 @@ namespace Beer::System
         InitializeColorBar();
         InitializeMenuBar();
         InitializeGalaxyMap();
+        InitializeToolBar();
     }
 
     void PaintToolContext::Update()
@@ -49,6 +52,11 @@ namespace Beer::System
         if (galaxyMapEntity != nullptr)
         {
             galaxyMapEntity->Update();
+        }
+
+        if (toolBarEntity != nullptr)
+        {
+            toolBarEntity->Update();
         }
     }
 
@@ -137,5 +145,20 @@ namespace Beer::System
         galaxyMapEntity->InitializeCursor(
             [this](ColorBarLevel level)
                 -> glm::vec4 { return colorBarEntity->GetColorBarManager()->GetBarColor(level); });
+    }
+
+    void PaintToolContext::InitializeToolBar()
+    {
+        if (galaxyMapEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Initialize Tool Bar when Galaxy Map is null!");
+        }
+
+        Function<void, GalaxyBrushType> setBrushType = [this](GalaxyBrushType brushType) -> void {
+            galaxyMapEntity->GetMapManager()->SetBrushType(brushType);
+        };
+
+        toolBarEntity = registry.CreateEntity<ToolBarEntity>(setBrushType);
+        toolBarEntity->InitializeButtons();
     }
 } // namespace Beer::System

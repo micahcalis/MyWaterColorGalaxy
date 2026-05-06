@@ -19,6 +19,9 @@ namespace Beer::Rendering
         const RenderContext& context,
         const ShaderPassType pass) const
     {
+        if (spriteMaterial == nullptr)
+            return;
+
         const Shader* shader = spriteMaterial->GetShader();
         const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
 
@@ -31,6 +34,9 @@ namespace Beer::Rendering
         const RenderContext& context,
         const ShaderPassType pass) const
     {
+        if (fontMaterial == nullptr)
+            return;
+
         const Rendering::Shader* shader = fontMaterial->GetShader();
         const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
 

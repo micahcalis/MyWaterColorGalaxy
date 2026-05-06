@@ -5,6 +5,7 @@
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxySpriteFactory.hpp"
 #include <memory>
 
@@ -24,11 +25,21 @@ namespace Beer::System
     {
         PixelRect cursorRect = GetCursorRect(input.PixelPos);
         GalaxyComponentHitInfo hitInfo = galaxyMapBuffer->CollisionCheck(cursorRect);
-        canPlace = !hitInfo.Hit;
 
-        if (canPlace && input.leftClickStart)
+        hit = hitInfo.Hit;
+
+        if (Brush != GalaxyBrushType::Eraser)
         {
-            Place(input.PixelPos);
+            if (!hit && input.leftClickStart)
+            {
+                Place(input.PixelPos);
+            }
+        } else
+        {
+            if (hit && input.leftClickStart)
+            {
+                Erase(hitInfo.Index, hitInfo.Transform);
+            }
         }
     }
 
@@ -59,6 +70,17 @@ namespace Beer::System
             data));
 
         OnComponentPlaced.Invoke();
+    }
+
+    void GalaxyMapCursor::Erase(uint32_t index, UITransform* transform)
+    {
+        if (transform != nullptr)
+        {
+            mapTransform->UnbindChild(transform);
+        }
+
+        galaxyMapBuffer->RemoveComponent(index);
+        OnComponentErased.Invoke();
     }
 
     PixelRect GalaxyMapCursor::GetCursorRect(glm::vec2 mousePos) const

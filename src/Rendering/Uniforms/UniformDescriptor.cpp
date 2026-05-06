@@ -20,6 +20,15 @@ namespace Beer::Rendering
         }
     }
 
+    UniformDescriptor::~UniformDescriptor()
+    {
+        if (!descriptorSets.empty())
+        {
+            deletionQueues[frameIndex].push_back({std::move(layout),
+                std::move(descriptorSets)});
+        }
+    }
+
     void UniformDescriptor::UpdateBufferInfo(uint32_t frameIndex,
         uint32_t binding,
         const Rendering::Buffer& buffer,

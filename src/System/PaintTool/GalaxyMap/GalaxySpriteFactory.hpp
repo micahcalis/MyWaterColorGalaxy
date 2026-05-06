@@ -16,11 +16,11 @@ namespace Beer::System
     static const uint32_t BRUSH_TYPES = 5;
 
     static const std::array<std::string, BRUSH_TYPES> SPRITE_PATHS = {
-        "UI/General/Tex_SquareSprite",
-        "UI/General/Tex_SquareSprite",
-        "UI/General/Tex_SquareSprite",
-        "UI/General/Tex_SquareSprite",
-        "UI/General/Tex_SquareSprite"};
+        "UI/ToolBar/Tex_PlanetButton",
+        "UI/ToolBar/Tex_AsteroidsButton",
+        "UI/ToolBar/Tex_SpacegooButton",
+        "UI/ToolBar/Tex_BlackholeButton",
+        "UI/ToolBar/Tex_StardustButton"};
 
     static const std::array<std::string, BRUSH_TYPES> SHADER_PATHS = {
         "UI/GalaxyComponentSprite",

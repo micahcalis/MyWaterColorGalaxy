@@ -32,8 +32,8 @@ namespace Beer::System
 
         void Update() override
         {
-            QuadTreeEntity::Update();
             manager->Update();
+            QuadTreeEntity::Update();
         }
 
         GalaxyMapManager* GetMapManager() const { return static_cast<GalaxyMapManager*>(manager.get()); }
