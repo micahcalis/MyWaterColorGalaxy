@@ -11,18 +11,11 @@
 
 namespace Beer::Rendering
 {
-    struct DeadDescriptor
-    {
-        vk::raii::DescriptorSetLayout layout = nullptr;
-        std::vector<vk::raii::DescriptorSet> descriptorSets;
-    };
-
     class UniformDescriptor
     {
     private:
         inline static DescriptorAllocator* descriptorAllocator = nullptr;
         inline static uint32_t frameIndex = 0;
-        inline static std::vector<std::vector<DeadDescriptor>> deletionQueues;
 
         vk::raii::DescriptorSetLayout layout = nullptr;
         std::vector<vk::raii::DescriptorSet> descriptorSets;
@@ -31,7 +24,6 @@ namespace Beer::Rendering
         static void SetDescriptorAllocator(DescriptorAllocator* descriptorAllocator)
         {
             UniformDescriptor::descriptorAllocator = descriptorAllocator;
-            deletionQueues.resize(descriptorAllocator->FramesInFlight);
         }
 
         static void SetFrameIndex(uint32_t frameIndex)
@@ -42,14 +34,6 @@ namespace Beer::Rendering
         static size_t GetMinAlignment()
         {
             return descriptorAllocator->Device->GetMinUniformBufferOffset();
-        }
-
-        static void FlushDeletionQueue()
-        {
-            if (frameIndex < deletionQueues.size())
-            {
-                deletionQueues[frameIndex].clear();
-            }
         }
 
         UniformDescriptor(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);

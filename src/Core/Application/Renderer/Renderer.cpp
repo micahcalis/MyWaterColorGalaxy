@@ -11,6 +11,7 @@
 #include "Core/Application/Utilities/SDLUtilities.hpp"
 #include "Core/Application/Utilities/RendererUtilities.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
+#include "RenderGarbageCollector.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
@@ -18,6 +19,7 @@
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"
+#include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Text/FontAsset.hpp"
 #include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
@@ -56,8 +58,21 @@ namespace Beer::Core
 
         Rendering::Texture2D::ResetFallbackTexture();
         Rendering::PhaseBuffer::DestroyFallbackBuffer();
+
+        renderPipeline.reset();
+        meshManager.reset();
+        imageAssetManager.reset();
+        fontAssetManager.reset();
+        computeManager.reset();
+        shaderManager.reset();
+        uploadManager.reset();
+        readbackManager.reset();
+        depthImage.reset();
+
+        RenderGarbageCollector::DestroyAll();
         Rendering::Buffer::SetAllocator(nullptr);
         Rendering::Image::SetAllocator(nullptr);
+        bufferAllocator.reset();
     }
 
     void Renderer::InitializeVulkanInstances(SDL_Window* window)
@@ -165,7 +180,8 @@ namespace Beer::Core
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
         Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
-        Rendering::UniformDescriptor::FlushDeletionQueue();
+        RenderGarbageCollector::SetFrameIndex(frameIndex);
+        RenderGarbageCollector::FlushCurrentFrame();
     }
 
     const vk::raii::Context& Renderer::GetContext() const { return context; }
@@ -230,6 +246,8 @@ namespace Beer::Core
 
     void Renderer::InitializeBuffers()
     {
+        RenderGarbageCollector::Initialize(MAX_FRAMES_IN_FLIGHT);
+
         bufferAllocator = std::make_shared<Rendering::BufferAllocator>(device, instance);
         Rendering::Buffer::SetAllocator(bufferAllocator);
         Rendering::Image::SetAllocator(bufferAllocator);
@@ -241,6 +259,7 @@ namespace Beer::Core
 
         Rendering::UniformDescriptor::SetDescriptorAllocator(descriptorAllocator.get());
         Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
+        RenderGarbageCollector::SetFrameIndex(frameIndex);
         Rendering::PhaseBuffer::InitializeFallbackBuffer();
 
         readbackManager = std::make_unique<ReadbackManager>(device);

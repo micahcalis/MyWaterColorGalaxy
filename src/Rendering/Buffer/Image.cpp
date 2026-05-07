@@ -1,4 +1,5 @@
 #include "Rendering/Buffer/Image.hpp"
+#include "Core/Application/Renderer/RenderGarbageCollector.hpp"
 #include "Core/Application/Utilities/ImageUtilities.hpp"
 #include "ImageData.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
@@ -13,8 +14,13 @@ namespace Beer::Rendering
     {
         if (allocator)
         {
-            allocator->DestroyImage(allocation);
-            allocator->DestroyImageView(defaultView);
+            Core::RenderGarbageCollector::Push(
+                [savedAllocator = this->allocator,
+                    savedAllocation = this->allocation,
+                    savedImageView = this->defaultView]() mutable {
+                    savedAllocator->DestroyImage(savedAllocation);
+                    savedAllocator->DestroyImageView(savedImageView);
+                });
         }
     }
 

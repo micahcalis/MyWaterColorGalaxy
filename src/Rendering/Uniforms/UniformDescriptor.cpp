@@ -1,4 +1,5 @@
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "Core/Application/Renderer/RenderGarbageCollector.hpp"
 #include "DescriptorAllocator.hpp"
 #include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
@@ -24,8 +25,9 @@ namespace Beer::Rendering
     {
         if (!descriptorSets.empty())
         {
-            deletionQueues[frameIndex].push_back({std::move(layout),
-                std::move(descriptorSets)});
+            Core::RenderGarbageCollector::Push(
+                [deadLayout = std::move(layout),
+                    deadSets = std::move(descriptorSets)]() {});
         }
     }
 

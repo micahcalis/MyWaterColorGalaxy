@@ -1,5 +1,6 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "BufferAllocation.hpp"
+#include "Core/Application/Renderer/RenderGarbageCollector.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Rendering/Buffer/SSBOType.hpp"
@@ -21,7 +22,11 @@ namespace Beer::Rendering
     {
         if (allocator)
         {
-            allocator->DestroyBuffer(allocation);
+            Core::RenderGarbageCollector::Push(
+                [savedAllocator = this->allocator,
+                    savedAllocation = this->allocation]() mutable {
+                    savedAllocator->DestroyBuffer(savedAllocation);
+                });
         }
     }
 
