@@ -7,20 +7,23 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxySeed.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxySpriteFactory.hpp"
 #include <memory>
 #include <print>
 
 namespace Beer::System
 {
-    static const float DEFAULT_CURSOR_SIZE = 0.02f;
+    static const float CURSOR_MIN = 0.02f;
+    static const float CURSOR_MAX = 0.15f;
 
     GalaxyMapCursor::GalaxyMapCursor(GalaxyMapBuffer* galaxyMapBuffer,
         UITransform* mapTransform,
         Function<glm::vec4, ColorBarLevel> getColor)
-        : galaxyMapBuffer(galaxyMapBuffer), mapTransform(mapTransform), Size(DEFAULT_CURSOR_SIZE), getColor(getColor)
+        : galaxyMapBuffer(galaxyMapBuffer), mapTransform(mapTransform), getColor(getColor)
     {
         factory = std::make_unique<GalaxySpriteFactory>();
+        SetSize(0.5f);
     }
 
     void GalaxyMapCursor::Update(MouseInput input)
@@ -78,6 +81,12 @@ namespace Beer::System
         GalaxyComponentData data = galaxyMapBuffer->GetComponentData(index);
         galaxyMapBuffer->RemoveComponent(index);
         OnComponentErased.Invoke(index, data, fromHistory);
+    }
+
+    void GalaxyMapCursor::SetSize(float normalizedVal)
+    {
+        Size = glm::mix(CURSOR_MIN, CURSOR_MAX, normalizedVal);
+        std::println("Size: {}", Size);
     }
 
     PixelRect GalaxyMapCursor::GetCursorRect(glm::vec2 mousePos) const

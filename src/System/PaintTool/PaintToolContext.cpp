@@ -1,4 +1,5 @@
 #include "System/PaintTool/PaintToolContext.hpp"
+#include "BrushSizeBar/BrushSizeBarEntity.hpp"
 #include "ColorBar/ColorBarEntity.hpp"
 #include "ColorBar/ColorBarLevel.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
@@ -14,6 +15,7 @@
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 
@@ -29,6 +31,7 @@ namespace Beer::System
         InitializeMenuBar();
         InitializeGalaxyMap();
         InitializeToolBar();
+        InitializeBrushSizeBar();
     }
 
     void PaintToolContext::Update()
@@ -58,6 +61,11 @@ namespace Beer::System
         if (toolBarEntity != nullptr)
         {
             toolBarEntity->Update();
+        }
+
+        if (brushSizeBarEntity != nullptr)
+        {
+            brushSizeBarEntity->Update();
         }
     }
 
@@ -176,5 +184,20 @@ namespace Beer::System
         toolBarEntity->BindHistoryActions(
             &galaxyMapEntity->GetMapManager()->GetCursor()->OnComponentPlaced,
             &galaxyMapEntity->GetMapManager()->GetCursor()->OnComponentErased);
+    }
+
+    void PaintToolContext::InitializeBrushSizeBar()
+    {
+        if (galaxyMapEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Initialize Brush Size Bar when Galaxy Map is null!");
+        }
+
+        Function<void, float> setBrushSize = [this](float size) -> void {
+            galaxyMapEntity->GetMapManager()->GetCursor()->SetSize(size);
+        };
+
+        brushSizeBarEntity = registry.CreateEntity<BrushSizeBarEntity>(setBrushSize);
+        brushSizeBarEntity->InitializeSlider();
     }
 } // namespace Beer::System

@@ -35,6 +35,7 @@ namespace Beer::System
         void Update(MouseInput input);
         uint32_t Place(const GalaxyComponentData& data, bool fromHistory = false);
         void Erase(uint32_t index, bool fromHistory = false);
+        void SetSize(float normalizedVal);
 
     private:
         PixelRect GetCursorRect(glm::vec2 mousePos) const;
