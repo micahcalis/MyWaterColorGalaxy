@@ -5,11 +5,12 @@
 
 namespace Beer::System
 {
-    void GalaxyMapBuffer::AddComponent(GalaxyComponent component)
+    uint32_t GalaxyMapBuffer::AddComponent(GalaxyComponent component)
     {
         nextComponentId++;
         component.SetId(nextComponentId);
         componentMap.emplace(nextComponentId, std::move(component));
+        return nextComponentId;
     }
 
     void GalaxyMapBuffer::RemoveComponent(uint32_t id)
@@ -23,6 +24,18 @@ namespace Beer::System
         }
 
         throw std::runtime_error("Trying to remove non-existent Galaxy Component!");
+    }
+
+    GalaxyComponentData GalaxyMapBuffer::GetComponentData(uint32_t id) const
+    {
+        auto it = componentMap.find(id);
+
+        if (it != componentMap.end())
+        {
+            return componentMap.at(id).Data;
+        }
+
+        throw std::runtime_error("Trying to get component data from non-existent Galaxy Component!");
     }
 
     GalaxyComponentHitInfo GalaxyMapBuffer::CollisionCheck(const PixelRect& rect)

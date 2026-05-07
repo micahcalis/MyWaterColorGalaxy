@@ -41,6 +41,7 @@ namespace Beer::System
 
         rootTransform.Anchor = AnchorMode::Center;
         rootTransform.Pivot = AnchorMode::Center;
+        rootTransform.Depth = 0.1f;
         MarkDirty();
     }
 

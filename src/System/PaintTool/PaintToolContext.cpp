@@ -4,6 +4,7 @@
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
+#include "GalaxyMap/GalaxyComponent.hpp"
 #include "GalaxyMap/GalaxyMapEntity.hpp"
 #include "GalaxyMap/GalaxySeed.hpp"
 #include "MenuBar/MenuBarEntity.hpp"
@@ -140,7 +141,9 @@ namespace Beer::System
             throw std::runtime_error("Trying to Initialize Galaxy Map when Menu Bar is null!");
         }
 
-        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get(), getMouseInput);
+        Function<bool> isColorMixerOpen = [this]() -> bool { return colorMixerEntity->GetEnabled(); };
+
+        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get(), getMouseInput, isColorMixerOpen);
 
         galaxyMapEntity->InitializeCursor(
             [this](ColorBarLevel level)
@@ -159,6 +162,19 @@ namespace Beer::System
         };
 
         toolBarEntity = registry.CreateEntity<ToolBarEntity>(setBrushType);
-        toolBarEntity->InitializeButtons();
+
+        Function<uint32_t, const GalaxyComponentData&> addComponent = [this](const GalaxyComponentData& data) -> uint32_t {
+            return galaxyMapEntity->GetMapManager()->GetCursor()->Place(data, true);
+        };
+
+        Function<void, uint32_t> eraseComponent = [this](uint32_t index) -> void {
+            galaxyMapEntity->GetMapManager()->GetCursor()->Erase(index, true);
+        };
+
+        toolBarEntity->InitializeButtons(addComponent, eraseComponent);
+
+        toolBarEntity->BindHistoryActions(
+            &galaxyMapEntity->GetMapManager()->GetCursor()->OnComponentPlaced,
+            &galaxyMapEntity->GetMapManager()->GetCursor()->OnComponentErased);
     }
 } // namespace Beer::System

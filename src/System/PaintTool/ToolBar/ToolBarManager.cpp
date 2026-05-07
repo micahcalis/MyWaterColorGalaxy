@@ -1,5 +1,6 @@
 #include "System/PaintTool/ToolBar/ToolBarManager.hpp"
 #include "GalaxyBrushController.hpp"
+#include "MapHistoryController.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 
 namespace Beer::System
@@ -34,5 +35,20 @@ namespace Beer::System
 
         currentBrushController = brushControllers.at(newType).get();
         currentBrushController->SetActive(true);
+    }
+
+    void ToolBarManager::CreateHistoryButtons(UITransform* undoTransform,
+        Rendering::Material* undoMaterial,
+        UITransform* redoTransform,
+        Rendering::Material* redoMaterial,
+        Function<uint32_t, const GalaxyComponentData&> addComponent,
+        Function<void, uint32_t> eraseComponent)
+    {
+        mapHistoryController = std::make_unique<MapHistoryController>(undoTransform,
+            undoMaterial,
+            redoTransform,
+            redoMaterial,
+            addComponent,
+            eraseComponent);
     }
 } // namespace Beer::System

@@ -40,7 +40,6 @@ namespace Beer::System
         {
             // TODO: Add Guard clauses prob
             OnBrushClicked.Invoke(brushType);
-            std::println("Brush Button clicked: {}", magic_enum::enum_name(brushType));
         }
     };
 } // namespace Beer::System

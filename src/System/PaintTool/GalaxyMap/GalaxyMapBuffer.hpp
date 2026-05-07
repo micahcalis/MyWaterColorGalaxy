@@ -39,6 +39,7 @@ namespace Beer::System
             this->seed = seed;
             settings.UpdateSettings(seed);
             UpdateMaterials();
+            ClearComponents();
         }
 
         void SetNewSeed(GalaxySeed seed)
@@ -62,8 +63,15 @@ namespace Beer::System
             UpdateMaterials();
         }
 
-        void AddComponent(GalaxyComponent component);
+        [[nodiscard]] bool HasComponent(uint32_t id) const
+        {
+            auto it = componentMap.find(id);
+            return it != componentMap.end();
+        }
+
+        uint32_t AddComponent(GalaxyComponent component);
         void RemoveComponent(uint32_t id);
+        GalaxyComponentData GetComponentData(uint32_t id) const;
         GalaxyComponentHitInfo CollisionCheck(const PixelRect& rect);
 
         std::vector<UIRenderItem> GetRenderItems() const;
@@ -87,6 +95,11 @@ namespace Beer::System
                 starMaterial->SetFloat("_StarSize", settings.StarSize);
                 updateStarPosition(settings.StarPosition);
             }
+        }
+
+        void ClearComponents()
+        {
+            componentMap.clear();
         }
     };
 } // namespace Beer::System

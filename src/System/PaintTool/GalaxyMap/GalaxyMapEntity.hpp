@@ -25,14 +25,18 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> starEntity = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
+        Function<bool> isColorMixerOpen = nullptr;
 
     public:
         GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
-            Function<MouseInput> getMouseInput);
+            Function<MouseInput> getMouseInput,
+            Function<bool> isColorPickerOpen);
 
         void Update() override
         {
-            manager->Update();
+            if (!isColorMixerOpen())
+                manager->Update();
+
             QuadTreeEntity::Update();
         }
 

@@ -30,7 +30,18 @@ VERT Sprite.VertData GalaxyCompVert(Sprite.MeshData input)
     return output;
 }
 
+float4 Get4ColorGradient(float gradient)
+{
+    float scaledT = saturate(gradient) * 3.0f;
+    float4 color = lerp(_PrimaryColor, _SecondaryColor, saturate(scaledT));
+    color = lerp(color, _TertiaryColor, saturate(scaledT - 1.0f));
+    color = lerp(color, _QuaternaryColor, saturate(scaledT - 2.0f));
+
+    return color;
+}
+
 FRAG float4 GalaxyCompFrag(Sprite.VertData input)
 {
-    return _SpriteTex.Sample(input.uv);
+    float gradient = _SpriteTex.Sample(input.uv).r;
+    return Get4ColorGradient(1.0 - gradient);
 }

@@ -1,8 +1,10 @@
 #include "System/PaintTool/ToolBar/ToolBarEntity.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "ToolBarManager.hpp"
 
 namespace Beer::System
@@ -20,8 +22,13 @@ namespace Beer::System
         "UI/ToolBar/Tex_StardustButton",
         "UI/ToolBar/Tex_EraserButton"};
 
+    static const std::array<std::string, 2> HISTORY_BUTTON_TEXTURE_PATHS = {
+        "UI/ToolBar/Tex_UndoButton",
+        "UI/ToolBar/Tex_RedoButton"};
+
     ToolBarEntity::ToolBarEntity(Function<void, GalaxyBrushType> setBrushType)
-        : setBrushType(setBrushType), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+        : setBrushType(setBrushType)
+        , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         squareTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
 
@@ -77,9 +84,54 @@ namespace Beer::System
         }
 
         toolBarManager->SetCurrentBrush(GalaxyBrushType::Planet);
+        MarkDirty();
     }
 
-    void ToolBarEntity::InitializeHistoryButtons()
+    void ToolBarEntity::InitializeHistoryButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
+        Function<void, uint32_t> eraseComponent)
     {
+        UITransform historyTransform{};
+        historyTransform.Anchor = AnchorMode::TopMiddle;
+        historyTransform.Scale = BUTTON_SIZE;
+        historyTransform.Position = glm::vec2(0, -0.1f) + glm::vec2(-BUTTON_SIZE.y - BUTTON_PADDING) * static_cast<float>(BRUSH_COUNT / 2);
+
+        historyButtons.reserve(2);
+        historyMaterials.reserve(2);
+        historyTextures.reserve(2);
+
+        historyTextures.emplace_back(std::make_shared<Rendering::Texture2D>(HISTORY_BUTTON_TEXTURE_PATHS[0]));
+        historyMaterials.emplace_back(std::make_shared<Rendering::Material>("UI/SpriteDefault"));
+        historyMaterials[0]->SetColor("_TintColor", glm::vec4(1, 1, 1, 1));
+        historyMaterials[0]->SetTexture("_SpriteTex", historyTextures[0].get());
+        historyMaterials[0]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+
+        historyTransform.Pivot = AnchorMode::TopRight;
+        historyTransform.Position.x = -BUTTON_PADDING;
+
+        historyButtons.emplace_back(std::make_unique<UISubEntity>(historyTransform));
+        rootTransform.BindChild(historyButtons[0]->GetTransform());
+
+        historyTextures.emplace_back(std::make_shared<Rendering::Texture2D>(HISTORY_BUTTON_TEXTURE_PATHS[1]));
+        historyMaterials.emplace_back(std::make_shared<Rendering::Material>("UI/SpriteDefault"));
+        historyMaterials[1]->SetColor("_TintColor", glm::vec4(1, 1, 1, 1));
+        historyMaterials[1]->SetTexture("_SpriteTex", historyTextures[1].get());
+        historyMaterials[1]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+
+        historyTransform.Pivot = AnchorMode::TopLeft;
+        historyTransform.Position.x = BUTTON_PADDING;
+
+        historyButtons.emplace_back(std::make_unique<UISubEntity>(historyTransform));
+        rootTransform.BindChild(historyButtons[1]->GetTransform());
+
+        ToolBarManager* toolBarManager = GetToolBarManager();
+
+        toolBarManager->CreateHistoryButtons(historyButtons[0]->GetTransform(),
+            historyMaterials[0].get(),
+            historyButtons[1]->GetTransform(),
+            historyMaterials[1].get(),
+            addComponent,
+            eraseComponent);
+
+        MarkDirty();
     }
 } // namespace Beer::System

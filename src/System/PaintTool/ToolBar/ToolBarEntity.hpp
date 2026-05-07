@@ -5,8 +5,11 @@
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "ToolBarManager.hpp"
 #include <memory>
+#include <print>
+#include <stdexcept>
 
 namespace Beer::System
 {
@@ -34,14 +37,43 @@ namespace Beer::System
             QuadTreeEntity::Update();
         }
 
-        void InitializeButtons()
+        void InitializeButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
+            Function<void, uint32_t> eraseComponent)
         {
             InitializeBrushes();
-            InitializeHistoryButtons();
+            InitializeHistoryButtons(addComponent, eraseComponent);
             MarkDirty();
         }
 
-        [[nodiscard]] ToolBarManager* GetToolBarManager() const { return static_cast<ToolBarManager*>(manager.get()); }
+        void BindHistoryActions(BeerEvent<void(uint32_t, const GalaxyComponentData&, bool fromHistory)>* placeEvent,
+            BeerEvent<void(uint32_t, const GalaxyComponentData&, bool fromHistory)>* eraseEvent)
+        {
+            MapHistoryController* historyController = GetToolBarManager()->GetHistoryController();
+
+            if (GetToolBarManager()->GetHistoryController() == nullptr)
+            {
+                throw std::runtime_error("Trying to bind History Actions but History Controller is null!");
+            }
+
+            placeEvent->Subscribe([this](int32_t index, const GalaxyComponentData& data, bool fromHistory) -> void {
+                if (fromHistory)
+                    return;
+
+                GetToolBarManager()->GetHistoryController()->AddPlaceAction(index, data);
+            });
+
+            eraseEvent->Subscribe([this](int32_t index, const GalaxyComponentData& data, bool fromHistory) -> void {
+                if (fromHistory)
+                    return;
+
+                GetToolBarManager()->GetHistoryController()->AddEraseAction(index, data);
+            });
+        }
+
+        [[nodiscard]] ToolBarManager* GetToolBarManager() const
+        {
+            return static_cast<ToolBarManager*>(manager.get());
+        }
 
     protected:
         void InitializeManager() override
@@ -60,10 +92,16 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(brushes[i]->GetTransform(), brushMaterials[i].get()));
             }
 
+            for (int i = 0; i < historyButtons.size(); i++)
+            {
+                renderItems.push_back(UIRenderItem(historyButtons[i]->GetTransform(), historyMaterials[i].get()));
+            }
+
             return renderItems;
         }
 
         void InitializeBrushes();
-        void InitializeHistoryButtons();
+        void InitializeHistoryButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
+            Function<void, uint32_t> eraseComponent);
     };
 } // namespace Beer::System

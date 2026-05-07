@@ -1,5 +1,6 @@
 #pragma once
 
+#include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
@@ -8,6 +9,7 @@
 #include <array>
 #include <format>
 #include <memory>
+#include <print>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -40,47 +42,33 @@ namespace Beer::System
     private:
         std::unordered_map<GalaxyBrushType, std::shared_ptr<Rendering::Texture2D>> spriteMap;
         std::unordered_map<GalaxyBrushType, std::shared_ptr<Rendering::Shader>> shaderMap;
-        Function<glm::vec4, ColorBarLevel> getColor = nullptr;
 
     public:
-        GalaxySpriteFactory(Function<glm::vec4, ColorBarLevel> getColor)
-            : getColor(getColor)
+        GalaxySpriteFactory()
         {
             InitializeSpriteMap();
             InitializeShaderMap();
         }
 
-        std::shared_ptr<Rendering::Material> GetMaterial(const GalaxyBrushType type) const
+        std::shared_ptr<Rendering::Material> GetMaterial(const GalaxyComponentData& data) const
         {
-            auto it1 = spriteMap.find(type);
-            auto it2 = shaderMap.find(type);
+            auto it1 = spriteMap.find(data.Brush);
+            auto it2 = shaderMap.find(data.Brush);
 
             if (it1 == spriteMap.end() || it2 == shaderMap.end())
             {
-                throw std::runtime_error(std::format("Brush Type Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(type)));
+                throw std::runtime_error(std::format("Brush Type Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(data.Brush)));
             }
 
-            std::shared_ptr<Rendering::Material> newMaterial = std::make_shared<Rendering::Material>(shaderMap.at(type));
-            newMaterial->SetTexture("_SpriteTex", spriteMap.at(type).get());
+            std::shared_ptr<Rendering::Material> newMaterial = std::make_shared<Rendering::Material>(shaderMap.at(data.Brush));
+            newMaterial->SetTexture("_SpriteTex", spriteMap.at(data.Brush).get());
 
             for (uint32_t i = 0; i < 4; i++)
             {
-                newMaterial->SetColor(COLOR_PROPERTIES[i], getColor(static_cast<ColorBarLevel>(i)));
+                newMaterial->SetColor(COLOR_PROPERTIES[i], data.Colors[i]);
             }
 
             return newMaterial;
-        }
-
-        std::vector<glm::vec4> GetColors() const
-        {
-            std::vector<glm::vec4> colors;
-
-            for (uint32_t i = 0; i < 4; i++)
-            {
-                colors.push_back(getColor(static_cast<ColorBarLevel>(i)));
-            }
-
-            return colors;
         }
 
     private:

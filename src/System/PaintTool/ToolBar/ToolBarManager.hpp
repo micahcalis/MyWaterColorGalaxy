@@ -1,7 +1,9 @@
 #pragma once
 
 #include "GalaxyBrushController.hpp"
+#include "MapHistoryController.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include <memory>
 #include <unordered_map>
@@ -16,6 +18,8 @@ namespace Beer::System
         Function<void, GalaxyBrushType> setBrushType = nullptr;
 
         GalaxyBrushController* currentBrushController = nullptr;
+
+        std::unique_ptr<MapHistoryController> mapHistoryController = nullptr;
 
     public:
         ToolBarManager(Function<void, GalaxyBrushType> setBrushType)
@@ -32,8 +36,25 @@ namespace Beer::System
             HandleNewBrushType(type);
         }
 
+        void CreateHistoryButtons(UITransform* undoTransform,
+            Rendering::Material* undoMaterial,
+            UITransform* redoTransform,
+            Rendering::Material* redoMaterial,
+            Function<uint32_t, const GalaxyComponentData&> addComponent,
+            Function<void, uint32_t> eraseComponent);
+
         void Update() override
         {
+        }
+
+        [[nodiscard]] MapHistoryController* GetHistoryController() const
+        {
+            if (mapHistoryController == nullptr)
+            {
+                return nullptr;
+            }
+
+            return mapHistoryController.get();
         }
 
     private:

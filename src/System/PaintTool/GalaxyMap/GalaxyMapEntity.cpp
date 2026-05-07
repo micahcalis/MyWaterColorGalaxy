@@ -1,5 +1,6 @@
 #include "System/PaintTool/GalaxyMap/GalaxyMapEntity.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
+#include "GalaxyComponent.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
@@ -28,8 +29,9 @@ namespace Beer::System
     static const int CENTER_STAR_GRAD_STEPS = 6;
 
     GalaxyMapEntity::GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
-        Function<MouseInput> getMouseInput)
-        : galaxyMapBuffer(galaxyMapBuffer), getMouseInput(getMouseInput), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+        Function<MouseInput> getMouseInput,
+        Function<bool> isColorMixerOpen)
+        : galaxyMapBuffer(galaxyMapBuffer), getMouseInput(getMouseInput), isColorMixerOpen(isColorMixerOpen), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         galaxyMaterial = std::make_shared<Rendering::Material>("UI/GalaxyMapSprite");
         galaxyMapBuffer->SetMapMaterial(galaxyMaterial);
@@ -135,7 +137,7 @@ namespace Beer::System
     {
         GalaxyMapManager* mapManager = GetMapManager();
         mapManager->InitializeCursor(getColor);
-        mapManager->GetCursor()->OnComponentPlaced.Subscribe([this]() -> void { MarkDirty(); });
-        mapManager->GetCursor()->OnComponentErased.Subscribe([this]() -> void { MarkDirty(); });
+        mapManager->GetCursor()->OnComponentPlaced.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
+        mapManager->GetCursor()->OnComponentErased.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
     }
 } // namespace Beer::System

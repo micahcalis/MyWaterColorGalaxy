@@ -5,9 +5,11 @@
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxySpriteFactory.hpp"
 #include <memory>
+#include <print>
 
 namespace Beer::System
 {
@@ -16,9 +18,9 @@ namespace Beer::System
     GalaxyMapCursor::GalaxyMapCursor(GalaxyMapBuffer* galaxyMapBuffer,
         UITransform* mapTransform,
         Function<glm::vec4, ColorBarLevel> getColor)
-        : galaxyMapBuffer(galaxyMapBuffer), mapTransform(mapTransform), Size(DEFAULT_CURSOR_SIZE)
+        : galaxyMapBuffer(galaxyMapBuffer), mapTransform(mapTransform), Size(DEFAULT_CURSOR_SIZE), getColor(getColor)
     {
-        factory = std::make_unique<GalaxySpriteFactory>(getColor);
+        factory = std::make_unique<GalaxySpriteFactory>();
     }
 
     void GalaxyMapCursor::Update(MouseInput input)
@@ -32,21 +34,21 @@ namespace Beer::System
         {
             if (!hit && input.leftClickStart)
             {
-                Place(input.PixelPos);
+                glm::vec2 mapSpacePosition = ToMapSpace(input.PixelPos);
+                Place(GetNewData(mapSpacePosition));
             }
         } else
         {
             if (hit && input.leftClickStart)
             {
-                Erase(hitInfo.Index, hitInfo.Transform);
+                Erase(hitInfo.Index);
             }
         }
     }
 
-    void GalaxyMapCursor::Place(const glm::vec2 mousePos)
+    uint32_t GalaxyMapCursor::Place(const GalaxyComponentData& data, bool fromHistory)
     {
-        glm::vec2 mapSpacePosition = ToMapSpace(mousePos);
-        glm::vec2 screenSpacePosition = mapTransform->Scale * mapSpacePosition;
+        glm::vec2 screenSpacePosition = mapTransform->Scale * data.Position;
         glm::vec2 screenSpaceScale = mapTransform->Scale * Size;
 
         UITransform componentTransform{};
@@ -58,29 +60,24 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> componentEntity = std::make_unique<UISubEntity>(componentTransform);
         mapTransform->BindChild(componentEntity->GetTransform());
 
-        std::shared_ptr<Rendering::Material> componentMaterial = factory->GetMaterial(Brush);
+        std::shared_ptr<Rendering::Material> componentMaterial = factory->GetMaterial(data);
 
-        GalaxyComponentData data{};
-        data.Colors = factory->GetColors();
-        data.Position = mapSpacePosition;
-        data.Scale = Size;
-
-        galaxyMapBuffer->AddComponent(GalaxyComponent(std::move(componentEntity),
+        uint32_t index = galaxyMapBuffer->AddComponent(GalaxyComponent(std::move(componentEntity),
             componentMaterial,
             data));
 
-        OnComponentPlaced.Invoke();
+        OnComponentPlaced.Invoke(index, data, fromHistory);
+        return index;
     }
 
-    void GalaxyMapCursor::Erase(uint32_t index, UITransform* transform)
+    void GalaxyMapCursor::Erase(uint32_t index, bool fromHistory)
     {
-        if (transform != nullptr)
-        {
-            mapTransform->UnbindChild(transform);
-        }
+        if (!galaxyMapBuffer->HasComponent(index))
+            return;
 
+        GalaxyComponentData data = galaxyMapBuffer->GetComponentData(index);
         galaxyMapBuffer->RemoveComponent(index);
-        OnComponentErased.Invoke();
+        OnComponentErased.Invoke(index, data, fromHistory);
     }
 
     PixelRect GalaxyMapCursor::GetCursorRect(glm::vec2 mousePos) const
@@ -133,5 +130,20 @@ namespace Beer::System
         float heightPixels = glm::length(mapRect.TopLeft - mapRect.BotLeft);
 
         return glm::vec2(mapVec.x * widthPixels, mapVec.y * heightPixels);
+    }
+
+    GalaxyComponentData GalaxyMapCursor::GetNewData(glm::vec2 mapSpacePosition) const
+    {
+        GalaxyComponentData data{};
+        data.Brush = Brush;
+
+        data.Colors = {getColor(ColorBarLevel::Primary),
+            getColor(ColorBarLevel::Secondary),
+            getColor(ColorBarLevel::Tertiary),
+            getColor(ColorBarLevel::Quaternary)};
+
+        data.Position = mapSpacePosition;
+        data.Scale = Size;
+        return data;
     }
 } // namespace Beer::System

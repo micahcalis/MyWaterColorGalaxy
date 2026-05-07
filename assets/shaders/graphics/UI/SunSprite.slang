@@ -56,7 +56,7 @@ FRAG float4 SunFrag(Sprite.VertData input) : SV_Target
         _StarSeed,
         _StarColor.rgb,
         _StarSize,
-        40,
+        50,
         _GradientIntensity);
 
     float4 sunVal = sun.Get();

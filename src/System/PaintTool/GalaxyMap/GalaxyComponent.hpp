@@ -2,11 +2,15 @@
 
 #include "Rendering/Material/Material.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
+#include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include <memory>
+
 namespace Beer::System
 {
     struct GalaxyComponentData
     {
+        GalaxyBrushType Brush = GalaxyBrushType::Planet;
         std::vector<glm::vec4> Colors;
         float Scale = 0;
         glm::vec2 Position = glm::vec2(0);

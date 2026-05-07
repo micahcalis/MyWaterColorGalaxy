@@ -34,6 +34,7 @@ namespace Beer::System
             }
 
             newSeedButton = std::make_unique<Button>(newSeedTransform, newSeedMaterial);
+
             newSeedButton->SetOnClick([this]() -> void { OnNewSeed.Invoke(); });
             OnNewSeed.Subscribe([this]() -> void { galaxyMapBuffer->SetNewSeed(GalaxySeed()); });
         }
