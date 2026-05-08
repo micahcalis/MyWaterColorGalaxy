@@ -72,4 +72,24 @@ namespace Beer::System
         return renderItems;
     }
 
+    void GalaxyMapBuffer::SetColorByLevel(glm::vec4 newColor, ColorBarLevel level)
+    {
+        switch (level)
+        {
+        case ColorBarLevel::Primary:
+            settings.StarColor = newColor;
+            break;
+        case ColorBarLevel::Secondary:
+            settings.ColorA = newColor;
+            break;
+        case ColorBarLevel::Tertiary:
+            settings.ColorB = newColor;
+            break;
+        case ColorBarLevel::Quaternary:
+            settings.ColorC = newColor;
+            break;
+        }
+
+        UpdateMaterials();
+    }
 } // namespace Beer::System

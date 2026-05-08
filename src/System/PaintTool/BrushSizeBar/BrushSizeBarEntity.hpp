@@ -1,9 +1,11 @@
 #pragma once
 
 #include "BrushSizeBarManager.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -17,6 +19,13 @@ namespace Beer::System
 
         std::shared_ptr<Rendering::Material> sliderButtonMaterial = nullptr;
         std::unique_ptr<UISubEntity> sliderButtonEntity = nullptr;
+        std::shared_ptr<Rendering::Material> sliderBarMaterial = nullptr;
+        std::unique_ptr<UISubEntity> sliderBarEntity = nullptr;
+
+        std::shared_ptr<Rendering::Texture2D> brushSizeTexture = nullptr;
+        std::shared_ptr<Rendering::Material> sizeIconMaterial = nullptr;
+        std::unique_ptr<UISubEntity> smallSizeEntity = nullptr;
+        std::unique_ptr<UISubEntity> bigSizeEntity = nullptr;
 
         Function<void, float> setBrushSize = nullptr;
 
@@ -51,6 +60,9 @@ namespace Beer::System
             if (GetBrushSizeBarManager()->SliderInitialized())
             {
                 renderItems.push_back(UIRenderItem(sliderButtonEntity->GetTransform(), sliderButtonMaterial.get()));
+                renderItems.push_back(UIRenderItem(sliderBarEntity->GetTransform(), sliderBarMaterial.get()));
+                renderItems.push_back(UIRenderItem(smallSizeEntity->GetTransform(), sizeIconMaterial.get()));
+                renderItems.push_back(UIRenderItem(bigSizeEntity->GetTransform(), sizeIconMaterial.get()));
             }
 
             return renderItems;

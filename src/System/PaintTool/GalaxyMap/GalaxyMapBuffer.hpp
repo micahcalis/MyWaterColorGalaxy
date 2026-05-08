@@ -3,6 +3,7 @@
 #include "GalaxyComponent.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
+#include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -69,12 +70,20 @@ namespace Beer::System
             return it != componentMap.end();
         }
 
+        std::array<glm::vec4, 4> GetGalaxyColors()
+        {
+            return {settings.StarColor,
+                settings.ColorA,
+                settings.ColorB,
+                settings.ColorC};
+        }
+
         uint32_t AddComponent(GalaxyComponent component);
         void RemoveComponent(uint32_t id);
         GalaxyComponentData GetComponentData(uint32_t id) const;
         GalaxyComponentHitInfo CollisionCheck(const PixelRect& rect);
-
         std::vector<UIRenderItem> GetRenderItems() const;
+        void SetColorByLevel(glm::vec4 newColor, ColorBarLevel level);
 
     private:
         void UpdateMaterials()

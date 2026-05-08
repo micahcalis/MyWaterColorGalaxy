@@ -86,7 +86,6 @@ namespace Beer::System
     void GalaxyMapCursor::SetSize(float normalizedVal)
     {
         Size = glm::mix(CURSOR_MIN, CURSOR_MAX, normalizedVal);
-        std::println("Size: {}", Size);
     }
 
     PixelRect GalaxyMapCursor::GetCursorRect(glm::vec2 mousePos) const

@@ -22,15 +22,21 @@ namespace Beer::System
         Function<void> markQuadTreeDirty = nullptr;
         Function<void> openColorPicker = nullptr;
         Function<void, glm::vec4> setColorDisplayColor = nullptr;
+        Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = nullptr;
+        Function<std::array<glm::vec4, 4>> getGalaxyColors = nullptr;
         BeerEvent<void(glm::vec4)>* onColorPicked = nullptr;
         BeerEvent<void()>* onColorPickerClosed = nullptr;
+        BeerEvent<void()>* onNewSeed = nullptr;
 
     public:
         ColorBarEntity(Function<MouseInput> getMouseInput,
             Function<void> openColorPicker,
             Function<void, glm::vec4> setColorDisplayColor,
+            Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
+            Function<std::array<glm::vec4, 4>> getGalaxyColors,
             BeerEvent<void(glm::vec4)>* onColorPicked,
-            BeerEvent<void()>* onColorPickerClosed);
+            BeerEvent<void()>* onColorPickerClosed,
+            BeerEvent<void()>* onNewSeed);
 
         void InitializeColorLayers();
         ColorBarManager* GetColorBarManager() const { return static_cast<ColorBarManager*>(manager.get()); }
@@ -51,8 +57,11 @@ namespace Beer::System
                 markQuadTreeDirty,
                 openColorPicker,
                 setColorDisplayColor,
+                setGalaxyBufferColor,
+                getGalaxyColors,
                 onColorPicked,
-                onColorPickerClosed);
+                onColorPickerClosed,
+                onNewSeed);
         }
 
         std::vector<UIRenderItem> GetRenderItems() override

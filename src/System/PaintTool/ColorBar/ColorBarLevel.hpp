@@ -19,6 +19,7 @@ namespace Beer::System
     {
     public:
         BeerEvent<void(ColorBarController*)> OnButtonClicked;
+        BeerEvent<void(glm::vec4, ColorBarLevel)> OnNewColor;
 
     private:
         std::unique_ptr<Button> button = nullptr;
@@ -52,6 +53,12 @@ namespace Beer::System
 
         glm::vec4 GetColor() const { return color; }
 
+        void SetColor(glm::vec4 color)
+        {
+            this->color = color;
+            material->SetColor("_TintColor", color);
+        }
+
         void SetSubscriptions(Function<SubscriptionToken, Function<void, glm::vec4>> subscribeToColorPicker,
             Function<void, SubscriptionToken> unsubscribeToColorPicker)
         {
@@ -76,6 +83,7 @@ namespace Beer::System
         {
             color = newColor;
             material->SetColor("_TintColor", newColor);
+            OnNewColor.Invoke(newColor, level);
         }
     };
 } // namespace Beer::System

@@ -2,6 +2,7 @@
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
 #include "ColorBar/ColorBarEntity.hpp"
 #include "ColorBar/ColorBarLevel.hpp"
+#include "ColorBar/ColorBarManager.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
@@ -27,8 +28,8 @@ namespace Beer::System
             std::string(Rendering::UI_PASS));
 
         InitializeColorPicker();
-        InitializeColorBar();
         InitializeMenuBar();
+        InitializeColorBar();
         InitializeGalaxyMap();
         InitializeToolBar();
         InitializeBrushSizeBar();
@@ -117,19 +118,24 @@ namespace Beer::System
 
     void PaintToolContext::InitializeColorBar()
     {
-        if (colorMixerEntity == nullptr)
+        if (colorMixerEntity == nullptr || menuBarEntity == nullptr)
         {
-            throw std::runtime_error("Trying to Initialize Color Bar when Color Mixer is null!");
+            throw std::runtime_error("Trying to Initialize Color Bar when Color Mixer or Menu Bar is null!");
         }
 
         Function<void> openColorPicker = [this]() -> void { colorMixerEntity->Open(); };
         Function<void, glm::vec4> setColorDisplayColor = [this](glm::vec4 color) -> void { colorMixerEntity->SetColorDisplayColor(color); };
+        Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = [this](glm::vec4 newColor, ColorBarLevel level) -> void { galaxyMapBuffer->SetColorByLevel(newColor, level); };
+        Function<std::array<glm::vec4, 4>> getGalaxyColors = [this]() -> std::array<glm::vec4, 4> { return galaxyMapBuffer->GetGalaxyColors(); };
 
         colorBarEntity = registry.CreateEntity<ColorBarEntity>(getMouseInput,
             openColorPicker,
             setColorDisplayColor,
+            setGalaxyBufferColor,
+            getGalaxyColors,
             &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
-            &colorMixerEntity->OnColorMixerClosed);
+            &colorMixerEntity->OnColorMixerClosed,
+            &menuBarEntity->GetMenuBarManager()->OnNewSeed);
 
         colorBarEntity->InitializeColorLayers();
     }
@@ -155,7 +161,7 @@ namespace Beer::System
 
         galaxyMapEntity->InitializeCursor(
             [this](ColorBarLevel level)
-                -> glm::vec4 { return colorBarEntity->GetColorBarManager()->GetBarColor(level); });
+                -> glm::vec4 { return colorBarEntity->GetColorBarManager()->GetBarColor(level, ColorBarType::Planet); });
     }
 
     void PaintToolContext::InitializeToolBar()
