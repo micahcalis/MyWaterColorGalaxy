@@ -17,12 +17,13 @@ namespace Beer::System
 {
     static const uint32_t BRUSH_TYPES = 5;
 
-    static const std::array<std::string, BRUSH_TYPES> SPRITE_PATHS = {
+    static const std::array<std::string, BRUSH_TYPES + 1> SPRITE_PATHS = {
         "UI/ToolBar/Tex_PlanetButton",
         "UI/ToolBar/Tex_AsteroidsButton",
         "UI/ToolBar/Tex_SpacegooButton",
         "UI/ToolBar/Tex_BlackholeButton",
-        "UI/ToolBar/Tex_StardustButton"};
+        "UI/ToolBar/Tex_StardustButton",
+        "UI/ToolBar/Tex_EraserButton"};
 
     static const std::array<std::string, BRUSH_TYPES> SHADER_PATHS = {
         "UI/GalaxyComponentSprite",
@@ -71,10 +72,22 @@ namespace Beer::System
             return newMaterial;
         }
 
+        Rendering::Texture2D* GetTexture(const GalaxyBrushType type) const
+        {
+            auto it = spriteMap.find(type);
+
+            if (it == spriteMap.end())
+            {
+                throw std::runtime_error(std::format("Brush Type Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(type)));
+            }
+
+            return spriteMap.at(type).get();
+        }
+
     private:
         void InitializeSpriteMap()
         {
-            for (uint32_t i = 0; i < BRUSH_TYPES; i++)
+            for (uint32_t i = 0; i < BRUSH_TYPES + 1; i++)
             {
                 GalaxyBrushType type = static_cast<GalaxyBrushType>(i);
                 spriteMap[type] = std::make_shared<Rendering::Texture2D>(SPRITE_PATHS[i]);

@@ -28,8 +28,15 @@ namespace Beer::System
             if (QuadCollider::Hit(mapTransform, mouseInput.PixelPos))
             {
                 cursor->Update(mouseInput);
+                isActive = true;
+            } else
+            {
+                isActive = false;
             }
+            return;
         }
+
+        isActive = false;
     }
 
     void GalaxyMapManager::SetBrushType(GalaxyBrushType type)

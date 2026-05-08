@@ -66,9 +66,9 @@ namespace Beer::Rendering
         MarkDirty();
     }
 
-    void Material::SetTexture(const std::string& name, ITexture* val)
+    void Material::SetTexture(const std::string& name, ITexture* val, bool immediate)
     {
-        IReflectedContext::SetTexture(name, val);
+        IReflectedContext::SetTexture(name, val, immediate);
         MarkTextureDirty(name);
     }
 

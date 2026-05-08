@@ -31,7 +31,7 @@ namespace Beer::System
         PixelRect cursorRect = GetCursorRect(input.PixelPos);
         GalaxyComponentHitInfo hitInfo = galaxyMapBuffer->CollisionCheck(cursorRect);
 
-        hit = hitInfo.Hit;
+        bool hit = hitInfo.Hit;
 
         if (Brush != GalaxyBrushType::Eraser)
         {
@@ -40,12 +40,14 @@ namespace Beer::System
                 glm::vec2 mapSpacePosition = ToMapSpace(input.PixelPos);
                 Place(GetNewData(mapSpacePosition));
             }
+            CanUseCursor = !hit;
         } else
         {
             if (hit && input.leftClickStart)
             {
                 Erase(hitInfo.Index);
             }
+            CanUseCursor = hit;
         }
     }
 

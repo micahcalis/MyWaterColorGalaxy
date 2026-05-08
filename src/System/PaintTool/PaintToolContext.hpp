@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
+#include "HologramCursor/HologramCursorEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapEntity.hpp"
 #include "System/PaintTool/MenuBar/MenuBarEntity.hpp"
@@ -26,6 +27,7 @@ namespace Beer::System
         MenuBarEntity* menuBarEntity = nullptr;
         ToolBarEntity* toolBarEntity = nullptr;
         BrushSizeBarEntity* brushSizeBarEntity = nullptr;
+        HologramCursorEntity* hologramCursorEntity = nullptr;
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
@@ -50,5 +52,6 @@ namespace Beer::System
         void InitializeGalaxyMap();
         void InitializeToolBar();
         void InitializeBrushSizeBar();
+        void InitializeHoloCursor();
     };
 } // namespace Beer::System

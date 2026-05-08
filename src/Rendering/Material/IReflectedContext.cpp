@@ -70,7 +70,7 @@ namespace Beer::Rendering
         materialData->SetProperty(name, val);
     }
 
-    void IReflectedContext::SetTexture(const std::string& name, ITexture* val)
+    void IReflectedContext::SetTexture(const std::string& name, ITexture* val, bool immediate)
     {
         PropertyType typeFetch = materialData->GetTypeByName(name);
 
@@ -80,7 +80,7 @@ namespace Beer::Rendering
             && typeFetch != PropertyType::RWTexture2DArray)
             return;
 
-        buffer->SetTexture(name, val);
+        buffer->SetTexture(name, val, immediate);
     }
 
     void IReflectedContext::SetStructuredBuffer(const std::string& name, PhaseBuffer* val)

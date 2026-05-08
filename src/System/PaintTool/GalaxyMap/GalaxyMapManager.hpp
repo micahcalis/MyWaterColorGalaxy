@@ -8,6 +8,15 @@
 #include "System/Components/UI/UITransform.hpp"
 namespace Beer::System
 {
+    struct CursorState
+    {
+    public:
+        bool IsActive = false;
+        bool CanUseCursor = false;
+        GalaxyBrushType Brush = GalaxyBrushType::Planet;
+        float BrushCanvasSize = 0.05f;
+    };
+
     class GalaxyMapManager : public IEntityManager
     {
     private:
@@ -15,6 +24,7 @@ namespace Beer::System
         UITransform* mapTransform = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
         std::unique_ptr<GalaxyMapCursor> cursor = nullptr;
+        bool isActive = false;
 
     public:
         GalaxyMapManager(GalaxyMapBuffer* galaxyMapBuffer,
@@ -26,5 +36,13 @@ namespace Beer::System
 
         GalaxyMapCursor* GetCursor() const { return cursor.get(); }
         void SetBrushType(GalaxyBrushType type);
+
+        CursorState GetCursorState() const
+        {
+            return {isActive,
+                cursor->CanUseCursor,
+                cursor->Brush,
+                cursor->Size * mapTransform->Scale.x};
+        };
     };
 } // namespace Beer::System

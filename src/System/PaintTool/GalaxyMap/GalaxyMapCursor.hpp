@@ -19,11 +19,11 @@ namespace Beer::System
 
         GalaxyBrushType Brush = GalaxyBrushType::Planet;
         float Size = 0;
+        bool CanUseCursor = false;
 
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;
         UITransform* mapTransform = nullptr;
-        bool hit;
         std::unique_ptr<GalaxySpriteFactory> factory = nullptr;
         Function<glm::vec4, ColorBarLevel> getColor = nullptr;
 
@@ -36,6 +36,8 @@ namespace Beer::System
         uint32_t Place(const GalaxyComponentData& data, bool fromHistory = false);
         void Erase(uint32_t index, bool fromHistory = false);
         void SetSize(float normalizedVal);
+
+        GalaxySpriteFactory* GetFactory() const { return factory.get(); };
 
     private:
         PixelRect GetCursorRect(glm::vec2 mousePos) const;

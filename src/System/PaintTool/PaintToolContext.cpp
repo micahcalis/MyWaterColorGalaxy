@@ -9,12 +9,15 @@
 #include "GalaxyMap/GalaxyComponent.hpp"
 #include "GalaxyMap/GalaxyMapEntity.hpp"
 #include "GalaxyMap/GalaxySeed.hpp"
+#include "HologramCursor/HologramCursorEntity.hpp"
 #include "MenuBar/MenuBarEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
 #include <filesystem>
 #include <memory>
@@ -33,16 +36,12 @@ namespace Beer::System
         InitializeGalaxyMap();
         InitializeToolBar();
         InitializeBrushSizeBar();
+        InitializeHoloCursor();
     }
 
     void PaintToolContext::Update()
     {
         IContext::Update();
-
-        if (colorMixerEntity != nullptr)
-        {
-            colorMixerEntity->Update();
-        }
 
         if (colorBarEntity != nullptr)
         {
@@ -59,6 +58,11 @@ namespace Beer::System
             galaxyMapEntity->Update();
         }
 
+        if (colorMixerEntity != nullptr)
+        {
+            colorMixerEntity->Update();
+        }
+
         if (toolBarEntity != nullptr)
         {
             toolBarEntity->Update();
@@ -67,6 +71,11 @@ namespace Beer::System
         if (brushSizeBarEntity != nullptr)
         {
             brushSizeBarEntity->Update();
+        }
+
+        if (hologramCursorEntity != nullptr)
+        {
+            hologramCursorEntity->Update();
         }
     }
 
@@ -205,5 +214,26 @@ namespace Beer::System
 
         brushSizeBarEntity = registry.CreateEntity<BrushSizeBarEntity>(setBrushSize);
         brushSizeBarEntity->InitializeSlider();
+    }
+
+    void PaintToolContext::InitializeHoloCursor()
+    {
+        if (galaxyMapEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Initialize Holo Cursor when Galaxy Map is null!");
+        }
+
+        Function<CursorState> getCursorState = [this]() -> CursorState {
+            return galaxyMapEntity->GetMapManager()->GetCursorState();
+        };
+
+        Function<Rendering::Texture2D*, GalaxyBrushType> getBrushTexture =
+            [this](GalaxyBrushType type) -> Rendering::Texture2D* {
+            return galaxyMapEntity->GetMapManager()->GetCursor()->GetFactory()->GetTexture(type);
+        };
+
+        hologramCursorEntity = registry.CreateEntity<HologramCursorEntity>(getCursorState,
+            getMouseInput,
+            getBrushTexture);
     }
 } // namespace Beer::System

@@ -2,7 +2,6 @@
 
 #include "GalaxyComponent.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
-#include "System/Components/UI/UISubEntity.hpp"
 #include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "Rendering/Material/Material.hpp"
@@ -48,6 +47,7 @@ namespace Beer::System
             this->seed = seed;
             settings.UpdateSettings(seed);
             UpdateMaterials();
+            ClearComponents();
         }
 
         void SetMapMaterial(std::shared_ptr<Rendering::Material> mapMaterial)

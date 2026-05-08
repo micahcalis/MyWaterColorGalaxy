@@ -25,7 +25,7 @@ namespace Beer::Rendering
         }
     }
 
-    void MaterialBuffer::SetTexture(const std::string& name, ITexture* texture)
+    void MaterialBuffer::SetTexture(const std::string& name, ITexture* texture, bool immediate)
     {
         const ShaderProperty* prop = properties->GetShaderProperty(name);
 
@@ -38,11 +38,14 @@ namespace Beer::Rendering
 
         textures[name] = texture;
 
-        uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
-        descriptor->UpdateImageInfo(currentFrame, prop, texture);
+        if (immediate)
+        {
+            uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
+            descriptor->UpdateImageInfo(currentFrame, prop, texture);
+        }
     }
 
-    void MaterialBuffer::SetStructuredBuffer(const std::string& name, PhaseBuffer* buffer)
+    void MaterialBuffer::SetStructuredBuffer(const std::string& name, PhaseBuffer* buffer, bool immediate)
     {
         const ShaderProperty* prop = properties->GetShaderProperty(name);
 
@@ -51,8 +54,11 @@ namespace Beer::Rendering
 
         structuredBuffers[name] = buffer;
 
-        uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
-        descriptor->UpdateStructuredBufferInfo(currentFrame, prop->Binding, buffer);
+        if (immediate)
+        {
+            uint32_t currentFrame = UniformDescriptor::GetFrameIndex();
+            descriptor->UpdateStructuredBufferInfo(currentFrame, prop->Binding, buffer);
+        }
     }
 
     void MaterialBuffer::UpdateTextureDescriptor(const std::string& name)

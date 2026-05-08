@@ -20,8 +20,8 @@ namespace Beer::Rendering
     public:
         MaterialBuffer(MaterialProperties* properties);
         void Update(const MaterialData& materialData);
-        void SetTexture(const std::string& name, ITexture* texture);
-        void SetStructuredBuffer(const std::string& name, PhaseBuffer* buffer);
+        void SetTexture(const std::string& name, ITexture* texture, bool immediate = true);
+        void SetStructuredBuffer(const std::string& name, PhaseBuffer* buffer, bool immediate = true);
         void UpdateTextureDescriptor(const std::string& name);
         void UpdateStructuredBufferDescriptor(const std::string& name);
 
