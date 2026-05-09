@@ -1,5 +1,6 @@
 #include "Core/BeerMacros.slang"
 
+import Core.BeerCore;
 import Noise.VoronoiNoise;
 import Noise.Hash;
 import Noise.PerlinNoise;
@@ -33,12 +34,16 @@ namespace Map
         private float2 frequency;
         private float starScale;
         private float4 starColor;
+        private float glowIntensity;
+        private float flickerSpeed;
 
         public __init(int _seed,
             float2 _uv,
             float2 _frequency,
             float _starScale,
-            float4 _starColor)
+            float4 _starColor,
+            float _glowIntensity,
+            float _flickerSpeed)
         {
             voronoi = Noise.Voronoi(_uv, _seed);
             uv = _uv;
@@ -46,6 +51,8 @@ namespace Map
             frequency = _frequency;
             starScale = _starScale;
             starColor = _starColor;
+            glowIntensity = _glowIntensity;
+            flickerSpeed = _flickerSpeed;
         }
 
         public float4 Get()
@@ -61,9 +68,14 @@ namespace Map
             float2 safeLocalPoint = lerp(localPoint, float2(0.5f, 0.5f), PULL_TO_CENTER_AMOUNT);
             float2 safeCenter = noise.Id + safeLocalPoint;
             SDF.Star star = SDF.Star(safeCenter, starRadius, number, sharpness);
+            float starDistance = star.Evaluate(uv * frequency);
 
-            float starMask = smoothstep(0.01f, -starScale, star.Evaluate(uv * frequency));
-            return float4(starMask * starColor.rgb, starMask);
+            float starMask = smoothstep(0.01f, -starScale, starDistance);
+            float starGlow = GetGlow(starDistance, starRadius, Noise.Functions.HashInt21(noise.Id + seed));
+
+            float starResult = saturate(starMask * 10.0f + starGlow);
+
+            return float4(starResult * starColor.rgb, starResult);
         }
 
         private void GetStarProperties(float hash, out int number, out float sharpness)
@@ -71,6 +83,15 @@ namespace Map
             int rawNumber = (int)(hash * 12347.45f) % STAR_VAR_AMOUNT;
             number = rawNumber + MIN_STAR_NUMBER;
             sharpness = SHARPNESS_MAP[rawNumber];
+        }
+
+        private float GetGlow(float starDistance, float starRadius, int starSeed)
+        {
+            float glowGradient = smoothstep(starRadius * 0.5f, -1.0f, starDistance);
+            Noise.Perlin timePerlin = Noise.Perlin(starSeed, _Time);
+            float timeGradient = saturate(timePerlin.Compute(flickerSpeed) * 0.5f + 0.5f);
+            timeGradient = pow(timeGradient, 3);
+            return glowGradient * timeGradient * glowIntensity;
         }
     }   
 
@@ -116,7 +137,7 @@ namespace Map
 
         public float4 Get()
         {
-            float3 subtractiveHue = float3(1.0, 1.0, 1.0);
+        float3 accumulatedColor = float3(0.0, 0.0, 0.0); 
             float totalDensity = 0.0;
 
             [unroll(DUST_CLOUD_NUMBER)]
@@ -124,12 +145,13 @@ namespace Map
             {
                 float mask = CalculateDustMask(seed + i);
                 totalDensity += mask;
-                subtractiveHue *= lerp(float3(1.0, 1.0, 1.0), colors[i], mask);
+                
+                accumulatedColor += colors[i] * mask; 
             }
             
             float opacity = saturate(totalDensity);
 
-            return float4(subtractiveHue * opacity, opacity);
+            return float4(saturate(accumulatedColor), opacity);
         }
 
         private float CalculateDustMask(int index)

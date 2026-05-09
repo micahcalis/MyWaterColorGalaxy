@@ -15,6 +15,8 @@ namespace Beer::System
     static const float STARS_FREQUENCY = 10.0f;
     static const float STARS_SCALE = 0.2f;
     static const glm::vec4 STARS_COLOR = glm::vec4(0.97f, 0.97f, 0.7f, 1.0f);
+    static const float STARS_GLOW = 10.0f;
+    static const float STARS_FLICKER_SPEED = 1.0f;
     static const float DUST_FREQUENCY = 5.0f;
     static const float DUST_THRESHOLD = 0.5f;
     static const float DUST_EDGE_THICKNESS = 0.025f;
@@ -38,6 +40,8 @@ namespace Beer::System
         galaxyMaterial->SetFloat("_StarFrequency", STARS_FREQUENCY);
         galaxyMaterial->SetFloat("_StarScale", STARS_SCALE);
         galaxyMaterial->SetColor("_StarColor", STARS_COLOR);
+        galaxyMaterial->SetFloat("_StarGlowIntensity", STARS_GLOW);
+        galaxyMaterial->SetFloat("_StarFlickerSpeed", STARS_FLICKER_SPEED);
         galaxyMaterial->SetFloat("_DustFrequency", DUST_FREQUENCY);
         galaxyMaterial->SetFloat("_DustThreshold", DUST_THRESHOLD);
         galaxyMaterial->SetFloat("_DustEdgeThickness", DUST_EDGE_THICKNESS);
@@ -136,7 +140,7 @@ namespace Beer::System
     void GalaxyMapEntity::InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor)
     {
         GalaxyMapManager* mapManager = GetMapManager();
-        mapManager->InitializeCursor(getColor);
+        mapManager->InitializeCursor(getColor, starEntity->GetTransform());
         mapManager->GetCursor()->OnComponentPlaced.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
         mapManager->GetCursor()->OnComponentErased.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
     }

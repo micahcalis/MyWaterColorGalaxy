@@ -31,7 +31,9 @@ namespace Beer::System
             UITransform* mapTransform,
             Function<MouseInput> getMouseInput);
 
-        void InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor);
+        void InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor,
+            UITransform* sunTranform);
+
         void Update() override;
 
         GalaxyMapCursor* GetCursor() const { return cursor.get(); }

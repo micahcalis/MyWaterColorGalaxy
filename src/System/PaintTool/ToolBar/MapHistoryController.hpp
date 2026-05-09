@@ -52,6 +52,7 @@ namespace Beer::System
 
         void AddPlaceAction(uint32_t index, GalaxyComponentData data);
         void AddEraseAction(uint32_t index, GalaxyComponentData data);
+        void ClearHistory();
 
     private:
         void Undo();

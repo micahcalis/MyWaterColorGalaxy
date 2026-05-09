@@ -89,4 +89,10 @@ namespace Beer::System
             }
         }
     }
+
+    void MapHistoryController::ClearHistory()
+    {
+        mapHistory.clear();
+        redoHistory.clear();
+    }
 } // namespace Beer::System

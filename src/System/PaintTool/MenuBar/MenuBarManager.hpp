@@ -13,15 +13,17 @@ namespace Beer::System
     class MenuBarManager : public IEntityManager
     {
     public:
-        GalaxyMapBuffer* galaxyMapBuffer = nullptr;
         BeerEvent<void()> OnNewSeed;
 
     private:
+        GalaxyMapBuffer* galaxyMapBuffer = nullptr;
         std::unique_ptr<Button> newSeedButton = nullptr;
+        Function<void> clearHistory = nullptr;
 
     public:
-        MenuBarManager(GalaxyMapBuffer* galaxyMapBuffer)
-            : galaxyMapBuffer(galaxyMapBuffer)
+        MenuBarManager(GalaxyMapBuffer* galaxyMapBuffer,
+            Function<void> clearHistory)
+            : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory)
         {
         }
 
@@ -37,6 +39,7 @@ namespace Beer::System
 
             newSeedButton->SetOnClick([this]() -> void { OnNewSeed.Invoke(); });
             OnNewSeed.Subscribe([this]() -> void { galaxyMapBuffer->SetNewSeed(GalaxySeed()); });
+            OnNewSeed.Subscribe(clearHistory);
         }
 
         void Update() override

@@ -13,8 +13,8 @@ namespace Beer::System
     static const float SEED_BUTTON_SIZE = 0.2f;
     static const float BUTTON_PADDING = 0.05f;
 
-    MenuBarEntity::MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer)
-        : galaxyMapBuffer(galaxyMapBuffer), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+    MenuBarEntity::MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer, Function<void> clearHistory)
+        : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         rootTransform.Anchor = AnchorMode::BottomRight;
         rootTransform.Pivot = AnchorMode::BottomRight;

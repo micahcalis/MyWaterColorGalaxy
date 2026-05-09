@@ -19,7 +19,6 @@
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
-#include <filesystem>
 #include <memory>
 #include <stdexcept>
 
@@ -31,10 +30,10 @@ namespace Beer::System
             std::string(Rendering::UI_PASS));
 
         InitializeColorPicker();
-        InitializeMenuBar();
-        InitializeColorBar();
         InitializeGalaxyMap();
         InitializeToolBar();
+        InitializeMenuBar();
+        InitializeColorBar();
         InitializeBrushSizeBar();
         InitializeHoloCursor();
     }
@@ -151,18 +150,25 @@ namespace Beer::System
 
     void PaintToolContext::InitializeMenuBar()
     {
-        galaxyMapBuffer = std::make_unique<GalaxyMapBuffer>(GalaxySeed());
+        if (galaxyMapEntity == nullptr || toolBarEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Initialize Menu Bar when Galaxy Map or Tool Bar Entity is null!");
+        }
 
-        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get());
+        Function<void> clearHistory = [this]() -> void { toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory(); };
+
+        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(), clearHistory);
         menuBarEntity->InitializeButtonEntities();
     }
 
     void PaintToolContext::InitializeGalaxyMap()
     {
-        if (menuBarEntity == nullptr || galaxyMapBuffer == nullptr)
+        if (colorMixerEntity == nullptr)
         {
-            throw std::runtime_error("Trying to Initialize Galaxy Map when Menu Bar is null!");
+            throw std::runtime_error("Trying to Initialize Galaxy Map when Color Mixer is null!");
         }
+
+        galaxyMapBuffer = std::make_unique<GalaxyMapBuffer>(GalaxySeed());
 
         Function<bool> isColorMixerOpen = [this]() -> bool { return colorMixerEntity->GetEnabled(); };
 

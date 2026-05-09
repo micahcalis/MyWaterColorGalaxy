@@ -49,5 +49,15 @@ namespace Noise
             float2 uv = frac(sin(mul(id, m)) * (46839.32 + seed));
             return normalize(uv * 2.0 - 1.0);
         }
+
+        public int HashInt21(int2 seed)
+        {
+            uint n = uint(seed.x) * 1619U ^ uint(seed.y) * 31337U;
+
+            n = (n << 13U) ^ n;
+            n = n * (n * n * 15731U + 0x789221U) + 0x1376312589U;
+            
+            return int(n & uint(0x7fffffffU));
+        }
     }
 }

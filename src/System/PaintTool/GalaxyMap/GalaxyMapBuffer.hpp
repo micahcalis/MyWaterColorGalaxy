@@ -10,6 +10,7 @@
 #include "System/PaintTool/GalaxyMap/GalaxySeed.hpp"
 #include <cstdint>
 #include <unordered_map>
+#include <utility>
 
 namespace Beer::System
 {
@@ -76,6 +77,11 @@ namespace Beer::System
                 settings.ColorA,
                 settings.ColorB,
                 settings.ColorC};
+        }
+
+        std::pair<glm::vec2, float> GetSunStarTransformData() const
+        {
+            return {settings.StarPosition, settings.StarSize};
         }
 
         uint32_t AddComponent(GalaxyComponent component);

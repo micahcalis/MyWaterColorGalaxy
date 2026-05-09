@@ -13,6 +13,8 @@ cbuffer MaterialData
     float _StarFrequency;
     float _StarScale;
     float4 _StarColor;
+    float _StarGlowIntensity;
+    float _StarFlickerSpeed;
     float _DustFrequency;
     float _DustThreshold;
     float _DustEdgeThickness;
@@ -57,13 +59,17 @@ FRAG float4 GalaxyMapFrag(Sprite.VertData input) : SV_Target
         input.uv,
         _StarFrequency,
         _StarScale,
-        _StarColor);
+        _StarColor,
+        _StarGlowIntensity,
+        _StarFlickerSpeed);
 
     Map.Stars starsSmall = Map.Stars(_GalaxySeed + 1,
-    input.uv,
-    _StarFrequency * 2.0f,
-    _StarScale,
-    _StarColor);
+        input.uv,
+        _StarFrequency * 2.0f,
+        _StarScale,
+        _StarColor,
+        _StarGlowIntensity,
+        _StarFlickerSpeed);
 
     float3[3] dustColors = {
         _ColorA.rgb,
@@ -92,7 +98,8 @@ FRAG float4 GalaxyMapFrag(Sprite.VertData input) : SV_Target
     float4 starDustVal = starDust.Get();
     float4 ringsVal = rings.Get();
     
-    float3 blendCol =  starsVal.rgb * 10 + starDustVal.rgb;
+    
+    float3 blendCol =  starsVal.rgb + starDustVal.rgb;
     blendCol = lerp(blendCol, ringsVal.rgb, ringsVal.a);
 
     return float4(blendCol, 1);

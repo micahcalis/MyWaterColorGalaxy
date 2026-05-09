@@ -24,12 +24,14 @@ namespace Beer::System
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;
         UITransform* mapTransform = nullptr;
+        UITransform* sunTransform = nullptr;
         std::unique_ptr<GalaxySpriteFactory> factory = nullptr;
         Function<glm::vec4, ColorBarLevel> getColor = nullptr;
 
     public:
         GalaxyMapCursor(GalaxyMapBuffer* galaxyMapBuffer,
             UITransform* mapTransform,
+            UITransform* sunTransform,
             Function<glm::vec4, ColorBarLevel> getColor);
 
         void Update(MouseInput input);

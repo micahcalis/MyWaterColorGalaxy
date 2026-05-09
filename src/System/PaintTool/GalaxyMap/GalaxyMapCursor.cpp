@@ -1,4 +1,5 @@
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
+#include "Core/Application/Renderer/Screen.hpp"
 #include "GalaxyComponent.hpp"
 #include "GalaxyMapBuffer.hpp"
 #include "GalaxyMapCursor.hpp"
@@ -19,8 +20,9 @@ namespace Beer::System
 
     GalaxyMapCursor::GalaxyMapCursor(GalaxyMapBuffer* galaxyMapBuffer,
         UITransform* mapTransform,
+        UITransform* sunTransform,
         Function<glm::vec4, ColorBarLevel> getColor)
-        : galaxyMapBuffer(galaxyMapBuffer), mapTransform(mapTransform), getColor(getColor)
+        : galaxyMapBuffer(galaxyMapBuffer), mapTransform(mapTransform), sunTransform(sunTransform), getColor(getColor)
     {
         factory = std::make_unique<GalaxySpriteFactory>();
         SetSize(0.5f);
@@ -30,6 +32,12 @@ namespace Beer::System
     {
         PixelRect cursorRect = GetCursorRect(input.PixelPos);
         GalaxyComponentHitInfo hitInfo = galaxyMapBuffer->CollisionCheck(cursorRect);
+
+        if (cursorRect.Intersects(sunTransform->Rect))
+        {
+            CanUseCursor = false;
+            return;
+        }
 
         bool hit = hitInfo.Hit;
 
@@ -54,7 +62,7 @@ namespace Beer::System
     uint32_t GalaxyMapCursor::Place(const GalaxyComponentData& data, bool fromHistory)
     {
         glm::vec2 screenSpacePosition = mapTransform->Scale * data.Position;
-        glm::vec2 screenSpaceScale = mapTransform->Scale * Size;
+        glm::vec2 screenSpaceScale = mapTransform->Scale * data.Scale;
 
         UITransform componentTransform{};
         componentTransform.Position = screenSpacePosition;

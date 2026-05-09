@@ -1,6 +1,7 @@
 #include "System/PaintTool/GalaxyMap//GalaxyMapManager.hpp"
 #include "GalaxyMapBuffer.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
 
 namespace Beer::System
@@ -12,10 +13,12 @@ namespace Beer::System
     {
     }
 
-    void GalaxyMapManager::InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor)
+    void GalaxyMapManager::InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor,
+        UITransform* sunTranform)
     {
         cursor = std::make_unique<GalaxyMapCursor>(galaxyBuffer,
             mapTransform,
+            sunTranform,
             getColor);
     }
 

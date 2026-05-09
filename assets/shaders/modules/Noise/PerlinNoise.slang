@@ -93,6 +93,33 @@ namespace Noise
         }
     }
 
+    public struct Perlin1D
+    {
+        private int seed;
+        private float gradient;
+
+        public __init(int _seed,
+            float _gradient)
+        {
+            seed = _seed;
+            gradient = _gradient;
+        }
+
+        public float Compute(float frequency = 1)
+        {
+            float coord = gradient * frequency;
+            int floorCoord = (int)floor(coord);
+            float fracCoord = frac(coord);
+
+            float d0 = dot(Functions.RandomVec1D(floorCoord, seed), fracCoord);
+            float d1 = dot(Functions.RandomVec1D(floorCoord + 1, seed), fracCoord);
+
+            fracCoord = fracCoord * fracCoord * fracCoord * (fracCoord * (fracCoord * 6 - 15) + 10);
+            float perlin = lerp(d0, d1, fracCoord);
+            return perlin;
+        }
+    }
+
     namespace Functions
     {
         float2 Mod(float2 x, float2 y) {
@@ -133,6 +160,15 @@ namespace Noise
             x = frac(x / 41.0) * 2.0 - 1.0;
             
             return normalize(float2(x - floor(x + 0.5), abs(x) - 0.5));
+        }
+
+        float RandomVec1D(float p, int seed)
+        {
+            p = Mod289(p + (float)seed);
+            p = Mod289((34.0f * p + 1.0f) * p);
+
+            float fraction = p / 289.0f;
+            return (fraction * 2.0f) - 1.0f;
         }
     }
 }
