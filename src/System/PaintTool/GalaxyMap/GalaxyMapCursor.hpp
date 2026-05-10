@@ -34,7 +34,10 @@ namespace Beer::System
             UITransform* sunTransform,
             Function<glm::vec4, ColorBarLevel> getColor);
 
-        void Update(MouseInput input);
+        void Update(MouseInput input,
+            float zoomScale,
+            glm::vec2 panning);
+
         uint32_t Place(const GalaxyComponentData& data, bool fromHistory = false);
         void Erase(uint32_t index, bool fromHistory = false);
         void SetSize(float normalizedVal);
@@ -42,6 +45,10 @@ namespace Beer::System
         GalaxySpriteFactory* GetFactory() const { return factory.get(); };
 
     private:
+        glm::vec2 ApplyZoom(glm::vec2 rawMouse,
+            float zoomScale,
+            glm::vec2 panning) const;
+
         PixelRect GetCursorRect(glm::vec2 mousePos) const;
         glm::vec2 ToMapSpace(glm::vec2 pixelPoint) const;
         glm::vec2 ToPixelSpace(glm::vec2 mapPoint) const;

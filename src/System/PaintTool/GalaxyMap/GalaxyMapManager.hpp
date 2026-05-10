@@ -46,7 +46,7 @@ namespace Beer::System
             return {isActive,
                 cursor->CanUseCursor,
                 cursor->Brush,
-                cursor->Size * mapTransform->Scale.x};
+                cursor->Size * mapTransform->Scale.x * zoomer->Zoom};
         };
     };
 } // namespace Beer::System

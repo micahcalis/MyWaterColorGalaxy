@@ -34,7 +34,7 @@ namespace Beer::System
             if (QuadCollider::Hit(mapTransform, mouseInput.PixelPos))
             {
                 zoomer->Update();
-                cursor->Update(mouseInput);
+                cursor->Update(mouseInput, zoomer->Zoom, zoomer->Panning);
                 isActive = true;
             } else
             {
