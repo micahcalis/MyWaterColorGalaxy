@@ -24,7 +24,9 @@ namespace Beer::System
 
     public:
         void Initialize();
+        void PreUpdate();
         void Update();
+        void OnMouseScrolled(float scrollY);
 
     private:
         void InitializeBase();

@@ -6,6 +6,7 @@
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_scancode.h"
 #include "glm/glm.hpp"
+#include <print>
 
 namespace Beer::System
 {
@@ -13,6 +14,11 @@ namespace Beer::System
     {
         previousMouseState = currentMouseState;
         currentMouseState = SDL_GetMouseState(nullptr, nullptr);
+    }
+
+    void InputManager::SetScroll(float scrollY)
+    {
+        this->scrollY = scrollY;
     }
 
     glm::vec2 InputManager::GetMovementVector()
@@ -69,16 +75,21 @@ namespace Beer::System
     {
         bool isLeftDown = (currentMouseState & SDL_BUTTON_LMASK) != 0;
         bool isRightDown = (currentMouseState & SDL_BUTTON_RMASK) != 0;
+        bool isMiddleDown = (currentMouseState & SDL_BUTTON_MMASK) != 0;
 
         bool wasLeftDown = (previousMouseState & SDL_BUTTON_LMASK) != 0;
         bool wasRightDown = (previousMouseState & SDL_BUTTON_RMASK) != 0;
+        bool wasMiddleDown = (previousMouseState & SDL_BUTTON_MMASK) != 0;
 
         return MouseInput{
             GetMousePosition(),
             isLeftDown && !wasLeftDown,
             isLeftDown,
             isRightDown && !wasRightDown,
-            isRightDown};
+            isRightDown,
+            isMiddleDown && !wasMiddleDown,
+            isMiddleDown,
+            scrollY};
     }
 
     ButtonInput InputManager::GetDebugButtonInput()

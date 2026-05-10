@@ -12,5 +12,8 @@ namespace Beer::System
         bool LeftClickHold;
         bool RightClickStart;
         bool RightClickHold;
+        bool MiddleClickStart;
+        bool MiddleClickHold;
+        float ScrollVector;
     };
 } // namespace Beer::System

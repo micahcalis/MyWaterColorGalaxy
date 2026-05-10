@@ -1,8 +1,10 @@
 #include "System/PaintTool/GalaxyMap//GalaxyMapManager.hpp"
 #include "GalaxyMapBuffer.hpp"
+#include "GalaxyMapZoomer.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -16,6 +18,8 @@ namespace Beer::System
     void GalaxyMapManager::InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor,
         UITransform* sunTranform)
     {
+        zoomer = std::make_unique<GalaxyMapZoomer>(getMouseInput);
+
         cursor = std::make_unique<GalaxyMapCursor>(galaxyBuffer,
             mapTransform,
             sunTranform,
@@ -27,9 +31,9 @@ namespace Beer::System
         if (cursor != nullptr)
         {
             MouseInput mouseInput = getMouseInput();
-
             if (QuadCollider::Hit(mapTransform, mouseInput.PixelPos))
             {
+                zoomer->Update();
                 cursor->Update(mouseInput);
                 isActive = true;
             } else

@@ -28,11 +28,24 @@ namespace Beer::System
         InitializePaintTool();
     }
 
+    void GameManager::PreUpdate()
+    {
+        OnMouseScrolled(0);
+    }
+
     void GameManager::Update()
     {
         UpdateBase();
         quadColliderManager->Update();
         worldContainer->UpdateContexts();
+    }
+
+    void GameManager::OnMouseScrolled(float scrollY)
+    {
+        if (inputManager != nullptr)
+        {
+            inputManager->SetScroll(scrollY);
+        }
     }
 
     void GameManager::InitializeBase()

@@ -37,7 +37,14 @@ namespace Beer::System
             if (!isColorMixerOpen())
                 manager->Update();
 
-            QuadTreeEntity::Update();
+            if (NeedsUpdate())
+            {
+                rootTransform.HierarchalUpdate();
+                GetTreeRenderComp()->UpdateQuadDraw();
+                isDirty = false;
+                screenVersion = Core::Screen::Version();
+                Rendering::Shader::Globals()->SetGalaxyMapRect(rootTransform.Rect);
+            }
         }
 
         GalaxyMapManager* GetMapManager() const { return static_cast<GalaxyMapManager*>(manager.get()); }

@@ -1,6 +1,8 @@
 #include "Core/BeerMacros.slang"
 
 import UI.SpriteMesh;
+import Core.BeerCore;
+import Core.Beer2D;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -25,6 +27,7 @@ BIND_MATERIAL_TEX(1) Sampler2D _SpriteTex;
 VERT Sprite.VertData GalaxyCompVert(Sprite.MeshData input)
 {
     Sprite.VertData output;
+    ApplyMapZoom(input.position2DOS);
     output.positionCS = Sprite.GetPositionCS(input);
     output.uv = input.texCoord;
     return output;
@@ -42,6 +45,8 @@ float4 Get4ColorGradient(float gradient)
 
 FRAG float4 GalaxyCompFrag(Sprite.VertData input)
 {
+    ClipInMap(input.positionCS.xy);
+
     float gradient = _SpriteTex.Sample(input.uv).r;
     return Get4ColorGradient(1.0 - gradient);
 }

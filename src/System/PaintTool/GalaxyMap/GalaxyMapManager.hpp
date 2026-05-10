@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GalaxyMapZoomer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
@@ -24,6 +25,7 @@ namespace Beer::System
         UITransform* mapTransform = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
         std::unique_ptr<GalaxyMapCursor> cursor = nullptr;
+        std::unique_ptr<GalaxyMapZoomer> zoomer = nullptr;
         bool isActive = false;
 
     public:

@@ -30,6 +30,17 @@ public cbuffer LightingGlobals
     public float3 _MainLightPos;
 }
 
+BIND_GALAXY_GLOBALS
+public cbuffer GalaxyGlobals
+{
+    public float2 _MapBotLeft;
+    public float2 _MapBotRight;
+    public float2 _MapTopLeft;
+    public float2 _MapTopRight;
+    public float _MapZoomScale;
+    public float2 _MapZoomPanning;
+}
+
 public float3 GetViewDirectionWS(float3 positionWS)
 {
     return normalize(positionWS - _CameraPos);
@@ -74,4 +85,13 @@ public float LinearizeDepth(float hardwareDepth)
 public float GetAspect()
 {
     return _ScreenParams.x / _ScreenParams.y;
+}
+
+public void ClipInMap(float2 pixelPos)
+{
+    if (any(pixelPos < _MapBotLeft)
+        || any(pixelPos > _MapTopRight))
+    {
+        discard;
+    }
 }

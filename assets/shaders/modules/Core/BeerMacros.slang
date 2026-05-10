@@ -11,6 +11,7 @@
 // Buffer Slots
 #define BIND_ENGINE_GLOBALS       [[vk::binding(0, 0)]]
 #define BIND_LIGHTING_GLOBALS     [[vk::binding(1, 0)]]
+#define BIND_GALAXY_GLOBALS       [[vk::binding(2, 0)]]
 #define BIND_MATERIAL_DATA        [[vk::binding(0, 2)]]
 #define BIND_MATERIAL_TEX(idx)    [[vk::binding(idx, 2)]]
 #define BIND_MATERIAL_BUFFER(idx) [[vk::binding(idx, 2)]]

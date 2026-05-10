@@ -2,6 +2,8 @@
 
 import UI.SpriteMesh;
 import UI.GalaxyMap;
+import Core.BeerCore;
+import Core.Beer2D;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -28,6 +30,7 @@ BIND_MATERIAL_TEX(1) Sampler2D _NoiseTexture;
 VERT Sprite.VertData SunVert(Sprite.MeshData input)
 {
     Sprite.VertData output;
+    ApplyMapZoom(input.position2DOS);
     output.positionCS = Sprite.GetPositionCS(input);
     output.uv = input.texCoord;
     return output;
@@ -43,6 +46,8 @@ public struct NoiseSampler : Map.IStarDustNoiseSampler
 
 FRAG float4 SunFrag(Sprite.VertData input) : SV_Target
 {
+    ClipInMap(input.positionCS.xy);
+
     Map.Sun<NoiseSampler> sun = Map.Sun<NoiseSampler>(NoiseSampler(),
         input.uv,
         _StarSeed,

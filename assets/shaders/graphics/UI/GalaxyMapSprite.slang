@@ -2,6 +2,9 @@
 
 import UI.SpriteMesh;
 import UI.GalaxyMap;
+import Core.BeerCore;
+import Core.Beer2D;
+import Math.BeerMath;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -87,12 +90,21 @@ FRAG float4 GalaxyMapFrag(Sprite.VertData input) : SV_Target
         _DustGradientSteps,
         _DustOpacity);
 
-    Map.Rings rings = Map.Rings(float2(_GalaxyCenter.x, 1.0f - _GalaxyCenter.y),
-        input.uv,
-        _GalaxySeed,
-        _RingCount,
-        _RingThickness,
-        _RingColor.rgb);
+    float2 pixelPos = input.positionCS.xy;
+    pixelPos.y = _ScreenParams.y - pixelPos.y; 
+    float2 pixelPan = _MapZoomPanning * _ScreenParams.xy;
+    float2 virtualPixelPos = (pixelPos - pixelPan) / _MapZoomScale;
+    float u = Math.InverseLerp(_MapBotLeft.x, _MapTopRight.x, virtualPixelPos.x);
+    float v = Math.InverseLerp(_MapBotLeft.y, _MapTopRight.y, virtualPixelPos.y);
+
+    Map.Rings rings = Map.Rings(
+        _GalaxyCenter, 
+        float2(u, v),                                  
+        _GalaxySeed, 
+        _RingCount, 
+        _RingThickness, 
+        _RingColor.rgb
+    );
 
     float4 starsVal = starsBig.Get() + starsSmall.Get();
     float4 starDustVal = starDust.Get();
