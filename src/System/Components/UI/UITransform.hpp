@@ -2,14 +2,13 @@
 
 #include "glm/glm.hpp"
 #include "Rendering/Shader/RectPush.hpp"
+#include "glm/trigonometric.hpp"
 #include <stdexcept>
 
 namespace Beer::System
 {
     struct PixelRect
     {
-        constexpr static float DEG2RAD = 57.2957795131f;
-
     public:
         glm::vec2 TopRight = glm::vec2(0.5f, 0.5f);
         glm::vec2 BotRight = glm::vec2(0.5f, -0.5f);
@@ -48,6 +47,29 @@ namespace Beer::System
             BotLeft += offset;
         }
 
+        [[nodiscard]] bool Intersects(const PixelRect& other) const
+        {
+            const glm::vec2 axes[4] = {
+                TopRight - TopLeft,
+                TopRight - BotRight,
+                other.TopRight - other.TopLeft,
+                other.TopRight - other.BotRight};
+
+            for (int i = 0; i < 4; ++i)
+            {
+                float minA, maxA, minB, maxB;
+                ProjectOntoAxis(*this, axes[i], minA, maxA);
+                ProjectOntoAxis(other, axes[i], minB, maxB);
+
+                if (maxA < minB || maxB < minA)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         [[nodiscard]] Rendering::RectPush GetRectPush()
         {
             return Rendering::RectPush();
@@ -56,11 +78,22 @@ namespace Beer::System
     private:
         static glm::vec2 Rotate2D(glm::vec2 in, float degrees)
         {
-            float radians = degrees * DEG2RAD;
+            float radians = glm::radians(degrees);
             float s = glm::sin(radians);
             float c = glm::cos(radians);
             glm::mat2x2 rotMat = glm::mat2x2(c, -s, s, c);
             return rotMat * in;
+        }
+
+        static void ProjectOntoAxis(const PixelRect& rect, const glm::vec2& axis, float& outMin, float& outMax)
+        {
+            float p1 = glm::dot(rect.TopLeft, axis);
+            float p2 = glm::dot(rect.TopRight, axis);
+            float p3 = glm::dot(rect.BotLeft, axis);
+            float p4 = glm::dot(rect.BotRight, axis);
+
+            outMin = std::min({p1, p2, p3, p4});
+            outMax = std::max({p1, p2, p3, p4});
         }
     };
 
@@ -90,9 +123,29 @@ namespace Beer::System
         PixelRect Rect{};
 
     private:
+        bool enabled = true;
+        bool enabledInHierarchy = true;
+
+    private:
         std::vector<UITransform*> children;
 
     public:
+        ~UITransform()
+        {
+            if (Parent != nullptr)
+            {
+                Parent->UnbindChild(this);
+            }
+
+            for (auto& child : children)
+            {
+                if (child != nullptr)
+                {
+                    UnbindChild(child);
+                }
+            }
+        }
+
         glm::vec2 GetPixelAnchor(const AnchorMode mode) const;
         void CalculatePixelRect();
 
@@ -131,12 +184,18 @@ namespace Beer::System
 
             for (auto& child : children)
             {
+                child->enabledInHierarchy = this->GetEnabled();
                 child->HierarchalUpdate();
             }
         }
 
+        bool GetEnabled() const { return enabled && enabledInHierarchy; }
+        void SetEnabled(bool enabled) { this->enabled = enabled; }
+        void SetEnabledInHierarchy(bool enabled) { enabledInHierarchy = enabled; }
+
     private:
-        static glm::vec2 GetPivotOffset(AnchorMode pivot);
+        static glm::vec2
+        GetPivotOffset(AnchorMode pivot);
         bool IsDescendantOf(UITransform* potentialParent) const;
     };
 } // namespace Beer::System

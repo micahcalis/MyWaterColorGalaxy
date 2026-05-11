@@ -20,6 +20,11 @@ namespace SDF
         }
     };
 
+    public interface SDF2D
+    {
+        public float Evaluate(float2 position);
+    }
+
     namespace Functions
     {
         // All credits to: Inigo Quilez
@@ -46,6 +51,31 @@ namespace SDF
         {
             position = abs(position);
             return (position.x + position.y + position.z - scale) * 0.57735027;
+        }
+
+        float Star2D(float2 position, float radius, int number, float sharpness)
+        {
+            float an = 3.14159265359 / float(number);
+            float en = 3.14159265359 / sharpness;  // m is between 2 and n
+            float2 acs = float2(cos(an), sin(an));
+            float2 ecs = float2(cos(en), sin(en)); 
+
+            float angle = atan2(position.x, position.y);
+            
+            float wrappedAngle = angle - (2.0 * an) * floor(angle / (2.0 * an));
+            float bn = wrappedAngle - an;
+
+            position = length(position) * float2(cos(bn), abs(sin(bn)));
+            position -= radius * acs;
+            position += ecs * clamp(-dot(position, ecs), 0.0, radius * acs.y / ecs.y);
+            
+            return length(position) * sign(position.x);
+        }
+
+        float Ring2D(float2 position, float radius, float thickness)
+        {
+            float sphere = length(position) - radius;
+            return abs(sphere) - thickness;
         }
     }
 
@@ -116,6 +146,47 @@ namespace SDF
         public float Evaluate(float3 position)
         {
             return Functions.OctaHedron(position - center, scale);
+        }
+    }
+
+    public struct Star : SDF2D
+    {
+        private float2 center;
+        private float radius;
+        private int number;
+        private float sharpness;
+
+        public __init(float2 _center,
+            float _radius,
+            int _number,
+            float _sharpness)
+        {
+            center = _center;
+            radius = _radius;
+            number = _number;
+            sharpness = _sharpness;
+        }
+
+        public float Evaluate(float2 position)
+        {
+            return Functions.Star2D(position - center,
+                radius,
+                number,
+                sharpness);
+        }
+    }
+
+    public struct Ring : SDF2D
+    {
+        private float2 center;
+        private float radius;
+        private float thickness;
+
+        public float Evaluate(float2 position)
+        {
+            return Functions.Ring2D(position - center,
+                radius,
+                thickness);
         }
     }
 }

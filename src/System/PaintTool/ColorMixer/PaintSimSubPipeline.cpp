@@ -1,5 +1,6 @@
 #include "System/PaintTool/ColorMixer/PaintSimSubPipeline.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/Painting/ClearLiquidsPass.hpp"
 #include "Rendering/RenderPasses/Painting/EvaporateWaterPass.hpp"
 #include "Rendering/RenderPasses/Painting/InjectPaintPass.hpp"
 #include "Rendering/RenderPasses/Painting/RenderPigmentPass.hpp"
@@ -8,7 +9,11 @@
 #include "Rendering/RenderPasses/Painting/TransferPigmentPass.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/RenderPasses/Painting/CalculateFluidFluxPass.hpp"
-#include "System/Drawing/RenderRegister.hpp"
+#include "System/PaintTool/ColorMixer/ColorPicker.hpp"
+#include "System/Readback/ImageReadback.hpp"
+#include "System/Readback/ImageReadbackRequest.hpp"
+#include <memory>
+#include <stdexcept>
 
 namespace Beer::System
 {
@@ -23,8 +28,7 @@ namespace Beer::System
             "InjectPaintPass",
             simulationBuffers.get(),
             getMouseInput,
-            getCanvasTransform,
-            getDebugButtonInput);
+            getCanvasTransform);
 
         calculateFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::CalculateFluidFluxPass>(
             "CalculateFluidFluxPass",
@@ -49,16 +53,55 @@ namespace Beer::System
         evaporateWaterPass = Rendering::IRenderPass::FetchFromRegister<Rendering::EvaporateWaterPass>(
             "EvaporateWaterPass",
             simulationBuffers.get());
+
+        clearLiquidsPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ClearLiquidsPass>(
+            "ClearLiquidsPass",
+            simulationBuffers.get());
     }
 
-    std::vector<Rendering::IRenderPass*> PaintSimSubPipeline::GetRenderPasses() const
+    std::vector<Rendering::IRenderPass*> PaintSimSubPipeline::GetRenderPasses()
     {
-        return {injectPaintPass,
+        std::vector<Rendering::IRenderPass*> renderPasses{
             calculateFluidFluxPass,
             resolvePigmentFluxPass,
             resolveFluidFluxPass,
             transferPigmentPass,
             renderPigmentPass,
             evaporateWaterPass};
+
+        if (getColorPickerState != nullptr)
+        {
+            if (getColorPickerState() == ColorPickingState::Idle)
+            {
+                renderPasses.push_back(injectPaintPass);
+            }
+        }
+
+        if (clearMarker)
+        {
+            renderPasses.push_back(clearLiquidsPass);
+            clearMarker = false;
+        }
+
+        return renderPasses;
+    }
+
+    void PaintSimSubPipeline::SubscribeToNewCanvasReadback(Function<void, ImagePixelData> readbackFunc)
+    {
+        if (simulationBuffers->PigmentRender == nullptr)
+        {
+            throw std::runtime_error("Trying to Readback Mixing Canvas with null RenderTexture!");
+        }
+
+        if (readbackFunc == nullptr)
+        {
+            throw std::runtime_error("Trying to Readback Mixing Canvas with null Readback Function!");
+        }
+
+        std::unique_ptr<ImageReadbackRequest> readbackRequest = std::make_unique<ImageReadbackRequest>(
+            simulationBuffers->PigmentRender);
+
+        System::ImageReadback* readback = static_cast<System::ImageReadback*>(System::IAsyncReadback::Get(std::move(readbackRequest)));
+        readback->Subscribe(readbackFunc);
     }
 } // namespace Beer::System

@@ -1,4 +1,5 @@
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "Core/Application/Renderer/RenderGarbageCollector.hpp"
 #include "DescriptorAllocator.hpp"
 #include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
@@ -17,6 +18,16 @@ namespace Beer::Rendering
         for (int i = 0; i < descriptorAllocator->FramesInFlight; i++)
         {
             descriptorSets.emplace_back(descriptorAllocator->Allocate(*layout));
+        }
+    }
+
+    UniformDescriptor::~UniformDescriptor()
+    {
+        if (!descriptorSets.empty())
+        {
+            Core::RenderGarbageCollector::Push(
+                [deadLayout = std::move(layout),
+                    deadSets = std::move(descriptorSets)]() {});
         }
     }
 

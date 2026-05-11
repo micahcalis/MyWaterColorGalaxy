@@ -14,6 +14,7 @@ namespace Beer::System
         SDL_MouseButtonFlags previousMouseState = 0;
         SDL_MouseButtonFlags currentMouseState = 0;
         KeyButtonCache debugKeyCache;
+        float scrollY = 0;
 
     public:
         InputManager()
@@ -22,6 +23,7 @@ namespace Beer::System
         }
 
         void Update();
+        void SetScroll(float scrollY);
         glm::vec2 GetMovementVector();
         glm::vec2 GetMouseVector();
         glm::vec2 GetMousePosition();

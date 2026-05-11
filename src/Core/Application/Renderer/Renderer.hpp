@@ -13,6 +13,7 @@
 #include <memory>
 #include <vector>
 #include "Core/Application/Renderer/FrameResource.hpp"
+#include "RenderGarbageCollector.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Pipeline/RenderPipeline.hpp"

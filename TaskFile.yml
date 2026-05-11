@@ -6,7 +6,7 @@ vars:
   GAME_DIR: "bin"
   BUILD_TYPE: '{{.BUILD_TYPE | default "Debug"}}'
   # 1. Added a JOBS variable to limit Clang threads and save your RAM!
-  JOBS: '{{.JOBS | default "4"}}' 
+  JOBS: '{{.JOBS }}' 
 
 tasks:
   configure:

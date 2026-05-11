@@ -37,6 +37,7 @@ namespace Beer::Rendering
         }
 
         UniformDescriptor(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
+        ~UniformDescriptor();
         vk::DescriptorSet GetSet(uint32_t frameIndex) const { return *descriptorSets[frameIndex]; }
         vk::DescriptorSetLayout GetLayout() const { return *layout; }
         void UpdateBufferInfo(uint32_t frameIndex, uint32_t binding, const Buffer& buffer, size_t size, size_t offset = 0);

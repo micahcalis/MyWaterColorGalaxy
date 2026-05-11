@@ -38,6 +38,11 @@ namespace Beer::Core
 
         while (isRunning)
         {
+            if (isRunning)
+            {
+                gameManager.PreUpdate();
+            }
+
             while (SDL_PollEvent(&event))
             {
                 if (event.type == SDL_EVENT_QUIT)
@@ -48,6 +53,11 @@ namespace Beer::Core
                 if (event.type == SDL_EVENT_WINDOW_RESIZED)
                 {
                     isResized = true;
+                }
+
+                if (event.type == SDL_EVENT_MOUSE_WHEEL)
+                {
+                    gameManager.OnMouseScrolled(event.wheel.y);
                 }
             }
 

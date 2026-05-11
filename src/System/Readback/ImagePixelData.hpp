@@ -65,6 +65,8 @@ namespace Beer::System
                 z = std::min(z, extent.depth - 1);
             }
 
+            y = extent.height - y;
+
             const uint8_t* pixels = static_cast<uint8_t*>(mappedData);
             Pixel pixel{};
             size_t baseOffset = (x + (y * extent.width) + (z * extent.width * extent.height)) * formatData.PixelSize;

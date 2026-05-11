@@ -11,6 +11,7 @@
 // Buffer Slots
 #define BIND_ENGINE_GLOBALS       [[vk::binding(0, 0)]]
 #define BIND_LIGHTING_GLOBALS     [[vk::binding(1, 0)]]
+#define BIND_GALAXY_GLOBALS       [[vk::binding(2, 0)]]
 #define BIND_MATERIAL_DATA        [[vk::binding(0, 2)]]
 #define BIND_MATERIAL_TEX(idx)    [[vk::binding(idx, 2)]]
 #define BIND_MATERIAL_BUFFER(idx) [[vk::binding(idx, 2)]]
@@ -39,5 +40,7 @@
 #define TAU 6.28318530717f
 #define RAD2DEG 57.2957795131f
 #define DEG2RAD 0.01745329251f
+
+#define GENERATION_TARGET _GenerationTarget
  
 #endif

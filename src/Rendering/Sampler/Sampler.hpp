@@ -37,6 +37,8 @@ namespace Beer::Rendering
         {
         }
 
+        ~Sampler();
+
         vk::Sampler GetVk() const
         {
             return sampler;

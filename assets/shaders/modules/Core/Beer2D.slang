@@ -66,3 +66,9 @@ public float4 GetVertexScreenPos2D(uint vertexIndex)
 
     return float4(localPos.x, localPos.y, _RectDepth, 1);
 }
+
+public void ApplyMapZoom(inout float2 pixelPos)
+{
+    float2 pixelPan = _MapZoomPanning * _ScreenParams.xy;
+    pixelPos = (pixelPos * _MapZoomScale) + pixelPan;
+}

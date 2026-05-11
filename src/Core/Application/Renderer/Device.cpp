@@ -1,5 +1,6 @@
 #include "Core/Application/Renderer/Device.hpp"
 #include "Core/Application/Utilities/VulkanInitUtilities.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "vulkan/vulkan.hpp"
 #include <map>
 #include <iostream>

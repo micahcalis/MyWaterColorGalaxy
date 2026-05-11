@@ -11,8 +11,7 @@ namespace Beer::System
     class QuadTreeEntity : public UIEntity
     {
     public:
-        virtual ~QuadTreeEntity()
-            = default;
+        virtual ~QuadTreeEntity() = default;
         QuadTreeEntity(UITransform rootTransform,
             std::unique_ptr<QuadTreeRenderComponent> quadTreeRenderComp)
             : UIEntity(rootTransform, std::move(quadTreeRenderComp))
@@ -34,9 +33,15 @@ namespace Beer::System
             }
         }
 
+        void SetTreeEnabled(bool enabled)
+        {
+            this->enabled = enabled;
+            rootTransform.SetEnabled(enabled);
+            MarkDirty();
+        }
+
     protected:
-        [[nodiscard]] QuadTreeRenderComponent*
-        GetTreeRenderComp() const
+        [[nodiscard]] QuadTreeRenderComponent* GetTreeRenderComp() const
         {
             return static_cast<QuadTreeRenderComponent*>(renderComponent.get());
         }

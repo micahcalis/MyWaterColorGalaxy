@@ -74,7 +74,7 @@ namespace Beer::System
 
             for (size_t i = 0; i < diagonalChainEntities.size(); i++)
             {
-                renderItems.push_back(UIRenderItem(diagonalChainEntities[i].GetTransform(), quadMaterial.get()));
+                renderItems.push_back(UIRenderItem(&diagonalChainEntities[i], quadMaterial.get()));
             }
 
             return renderItems;

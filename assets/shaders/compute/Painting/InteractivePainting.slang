@@ -398,3 +398,20 @@ void EvaporateWater(uint3 id : SV_DispatchThreadID)
 
     _ShallowWater[id.xy] = evaporatedVolume;
 }
+
+//$ Kernel ClearLiquids
+
+COMP
+[numthreads(8, 8, 1)]
+void ClearLiquids(uint3 id : SV_DispatchThreadID)
+{
+    if (id.z == 0)
+    {
+        _ShallowWater[id.xy] = 0;
+        _FluxBuffer[id.xy] = 0;
+    }
+    
+    _SuspendedPigmentSource[id] = 0;
+    _SuspendedPigmentTarget[id] = 0;
+    _DepositedPigment[id] = 0;
+}

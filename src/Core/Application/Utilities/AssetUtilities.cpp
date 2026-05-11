@@ -1,4 +1,5 @@
 #include "Core/Application/Utilities/AssetUtilities.hpp"
+#include <filesystem>
 #include <fstream>
 #include <SDL3/SDL.h>
 
@@ -131,6 +132,22 @@ namespace Beer::Core
         std::filesystem::path jsonPath = pngPath;
         jsonPath.replace_extension(JSON_TAIL);
         return jsonPath;
+    }
+
+    static constexpr std::string_view MAP_HEAD = "assets/maps/";
+    static constexpr std::string_view MAP_TAIL = ".json";
+
+    std::filesystem::path AssetUtilities::GetMapAssetPath(const std::string& mapName)
+    {
+        std::filesystem::path mapDirectory = GetBasePath(std::string(MAP_HEAD));
+
+        if (!std::filesystem::exists(mapDirectory))
+        {
+            std::filesystem::create_directories(mapDirectory);
+        }
+
+        std::string subPath = std::string(MAP_HEAD) + mapName + std::string(MAP_TAIL);
+        return GetBasePath(subPath);
     }
 
     [[nodiscard]] vk::raii::ShaderModule AssetUtilities::CreateShaderModule(const std::vector<char>& code,

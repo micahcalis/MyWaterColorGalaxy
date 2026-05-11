@@ -23,4 +23,15 @@ namespace Math
     {
         return (t - a)/(b - a);
     }
+
+    public float Posterize(float x, int steps)
+    {
+        float s = rcp((float)steps);
+        return ((int)(x / s)) * s;
+    }
+
+    public float Remap(float x, float2 a, float2 b)
+    {
+        return b.x + (x - a.x) * (b.y - b.x) / (a.y - a.x);
+    }
 }

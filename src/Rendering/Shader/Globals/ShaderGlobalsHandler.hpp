@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Rendering/Buffer/PhaseBuffer.hpp"
+#include "Rendering/Shader/Globals/GalaxyGlobals.hpp"
 #include "Rendering/Shader/Globals/GlobalBuffer.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Uniforms/IShaderResource.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "vulkan/vulkan.hpp"
 #include <memory>
 
@@ -23,6 +25,7 @@ namespace Beer::Rendering
         std::unique_ptr<UniformDescriptor> transformDescriptor = nullptr;
         EngineGlobals engineGlobalsData;
         LightingGlobals lightingGlobalsData;
+        GalaxyGlobals galaxyGlobalsData;
         vk::raii::PipelineLayout globalLayout = nullptr;
 
     public:
@@ -43,6 +46,8 @@ namespace Beer::Rendering
         void SetMainLight(glm::vec3 position, glm::vec4 color);
         void SetAmbientLight(glm::vec4 shadowColor, glm::vec4 skyColor);
         void SetTransformBuffer(PhaseBuffer* transformBuffer);
+        void SetGalaxyMapRect(const System::PixelRect& rect);
+        void SetGalaxyZoom(float zoomScale, glm::vec2 panning);
         std::vector<vk::DescriptorSetLayout> GetGlobalsLayout() const;
         vk::DescriptorSetLayout GetTransformLayout() const;
 

@@ -25,7 +25,7 @@ namespace Beer::Rendering
         void SetVector(const std::string& name, glm::vec4 val) override;
         void SetColor(const std::string& name, glm::vec4 val) override;
         void SetMatrix(const std::string& name, glm::mat4 val) override;
-        void SetTexture(const std::string& name, ITexture* val) override;
+        void SetTexture(const std::string& name, ITexture* val, bool immediate = true) override;
 
         bool IsDirty() const override;
 

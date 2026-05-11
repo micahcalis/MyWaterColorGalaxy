@@ -3,6 +3,7 @@
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"
 #include "Rendering/Shader/Globals/EngineGlobals.hpp"
+#include "Rendering/Shader/Globals/GalaxyGlobals.hpp"
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
@@ -30,6 +31,10 @@ namespace Beer::Rendering
             LightingGlobals::BINDING,
             LightingGlobals::DESC_COUNT));
 
+        bufferBindings.emplace_back(BufferBinding(sizeof(GalaxyGlobals),
+            GalaxyGlobals::BINDING,
+            GalaxyGlobals::DESC_COUNT));
+
         globalsBuffer = std::make_unique<GlobalBuffer>(std::move(bufferBindings));
         InitializeTransformDescriptor(device);
 
@@ -54,6 +59,7 @@ namespace Beer::Rendering
     {
         globalsBuffer->Update(EngineGlobals::BINDING, &engineGlobalsData);
         globalsBuffer->Update(LightingGlobals::BINDING, &lightingGlobalsData);
+        globalsBuffer->Update(GalaxyGlobals::BINDING, &galaxyGlobalsData);
     }
 
     void ShaderGlobalsHandler::Bind(CommandBuffer* commandBuffer,
@@ -100,12 +106,7 @@ namespace Beer::Rendering
     void ShaderGlobalsHandler::SetScreen(float width, float height)
     {
         engineGlobalsData.ScreenParams = glm::vec4(width, height, 1.0f / width, 1.0f / height);
-
         engineGlobalsData.ScreenParams = glm::vec4(width, height, 1.0f / width, 1.0f / height);
-
-        // GLM Signature: glm::ortho(left, right, bottom, top, zNear, zFar)
-        // By passing 'height' to the 'bottom' parameter, we perfectly counteract
-        // Vulkan's upside-down clip space natively.
         glm::mat4 proj = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
 
         engineGlobalsData.UIOrthoProjMat = proj;
@@ -134,6 +135,20 @@ namespace Beer::Rendering
         {
             transformDescriptor->UpdateStructuredBufferInfo(i, 0, transformBuffer);
         }
+    }
+
+    void ShaderGlobalsHandler::SetGalaxyMapRect(const System::PixelRect& rect)
+    {
+        galaxyGlobalsData.MapBotLeft = rect.BotLeft;
+        galaxyGlobalsData.MapBotRight = rect.BotRight;
+        galaxyGlobalsData.MapTopLeft = rect.TopLeft;
+        galaxyGlobalsData.MapTopRight = rect.TopRight;
+    }
+
+    void ShaderGlobalsHandler::SetGalaxyZoom(float zoomScale, glm::vec2 panning)
+    {
+        galaxyGlobalsData.MapZoomScale = zoomScale;
+        galaxyGlobalsData.MapZoomPanning = panning;
     }
 
     std::vector<vk::DescriptorSetLayout> ShaderGlobalsHandler::GetGlobalsLayout() const

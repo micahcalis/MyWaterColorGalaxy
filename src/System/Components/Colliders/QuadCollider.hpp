@@ -73,7 +73,7 @@ namespace Beer::System
 
         bool Hit(glm::vec2 pixelPosition) const
         {
-            if (!enabled)
+            if (!enabled || !transform->GetEnabled())
             {
                 return false;
             }
@@ -89,6 +89,23 @@ namespace Beer::System
         float GetDepth() const
         {
             return transform->Depth;
+        }
+
+        [[nodiscard]] UITransform* GetTransform() const { return transform; }
+
+        static bool Hit(const UITransform* transform, glm::vec2 pixelPosition)
+        {
+            if (!transform->GetEnabled())
+            {
+                return false;
+            }
+
+            const PixelRect& rect = transform->Rect;
+
+            return pixelPosition.x >= rect.BotLeft.x
+                && pixelPosition.y >= rect.BotLeft.y
+                && pixelPosition.x < rect.TopRight.x
+                && pixelPosition.y < rect.TopRight.y;
         }
     };
 } // namespace Beer::System

@@ -7,6 +7,7 @@
 #include "System/Context/WorldContainer.hpp"
 #include "System/Camera/CameraManager.hpp"
 #include "System/Light/LightManager.hpp"
+#include "System/Serialization/MapSerializationManager.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -21,16 +22,20 @@ namespace Beer::System
         std::unique_ptr<InputManager> inputManager = nullptr;
         std::unique_ptr<CameraManager> cameraManager = nullptr;
         std::unique_ptr<LightManager> lightManager = nullptr;
+        std::unique_ptr<MapSerializationManager> mapSerializationManager = nullptr;
 
     public:
         void Initialize();
+        void PreUpdate();
         void Update();
+        void OnMouseScrolled(float scrollY);
 
     private:
         void InitializeBase();
         void InitializeContextFactory();
         void InitializeContext();
         void InitializeColliders();
+        void InitializeSerialization();
         void InitializeGalaxy();
         void InitializePaintTool();
 

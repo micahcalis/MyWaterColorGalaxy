@@ -58,4 +58,34 @@ namespace Beer::Core
 
         Rendering::Texture2D::SetFallbackTexture(image);
     }
+
+    std::shared_ptr<Rendering::Image> ImageAssetManager::CreateEmpty(uint32_t width,
+        uint32_t height,
+        VkFormat format,
+        uint32_t layerCount)
+    {
+        return std::make_shared<Rendering::Image>(
+            Rendering::Image::CreateImage2D(width,
+                height,
+                format,
+                VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT
+                    | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT,
+                vk::ImageAspectFlagBits::eColor,
+                layerCount,
+                *device));
+    }
+
+    void ImageAssetManager::GenerateFromEmpty(std::shared_ptr<Rendering::Image> image,
+        Rendering::ComputeContext* context,
+        Rendering::Threads threads,
+        uint32_t kernelIndex)
+    {
+        std::unique_ptr<Core::ImageGenerationJob> imageGenerationJob = std::make_unique<Core::ImageGenerationJob>(
+            image,
+            context,
+            threads,
+            kernelIndex);
+
+        uploadManager->AddJob(std::move(imageGenerationJob));
+    }
 } // namespace Beer::Core
