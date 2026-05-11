@@ -42,6 +42,14 @@ namespace Beer::System
         TryOpenMap();
     }
 
+    SerializablePaintSession PaintToolContext::GetSerializedData() const
+    {
+        SerializablePaintSession serializedData{};
+        serializedData.Galaxy = galaxyMapBuffer->GetSerializableGalaxy();
+        serializedData.ToolHistory = SerializePaintTool();
+        return serializedData;
+    }
+
     void PaintToolContext::Update()
     {
         IContext::Update();
@@ -162,8 +170,8 @@ namespace Beer::System
         Function<void> clearHistory = [this]() -> void { toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory(); };
 
         Function<void> saveMap = [this]() -> void {
-            SerializableGalaxy galaxyMap = galaxyMapBuffer->GetSerializableGalaxy();
-            mapHandler.Save(galaxyMap);
+            SerializablePaintSession paintSession = GetSerializedData();
+            mapHandler.Save(paintSession);
         };
 
         menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(), clearHistory, saveMap);
@@ -257,8 +265,28 @@ namespace Beer::System
         if (!mapHandler.IsSaved())
             return;
 
-        SerializableGalaxy serializedGalaxy = mapHandler.Load();
-        galaxyMapEntity->GetMapManager()->ReloadFromSerialized(serializedGalaxy);
+        SerializablePaintSession serializedData = mapHandler.Load();
+        galaxyMapEntity->GetMapManager()->ReloadFromSerialized(serializedData);
+        colorBarEntity->GetColorBarManager()->ReloadFromSerialized(serializedData.ToolHistory);
         toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory();
+        toolBarEntity->GetToolBarManager()->SetCurrentBrush(static_cast<GalaxyBrushType>(serializedData.ToolHistory.SelectedType));
+
+        float normalizedSize = galaxyMapEntity->GetMapManager()->GetCursor()->GetNormalizedSize();
+        brushSizeBarEntity->GetBrushSizeBarManager()->GetSlider()->ForceUpdate(normalizedSize);
+    }
+
+    SerializablePaintTool PaintToolContext::SerializePaintTool() const
+    {
+        SerializablePaintTool serializedTool{};
+        serializedTool.ComponentColors = colorBarEntity->GetColorBarManager()->GetColors(ColorBarType::Planet);
+        serializedTool.GalaxyColors = colorBarEntity->GetColorBarManager()->GetColors(ColorBarType::Galaxy);
+
+        serializedTool.BrushSize = galaxyMapEntity->GetMapManager()->GetCursor()->Size;
+        serializedTool.SelectedType = static_cast<uint32_t>(galaxyMapEntity->GetMapManager()->GetCursor()->Brush);
+
+        serializedTool.ZoomScale = galaxyMapEntity->GetMapManager()->GetZoomer()->Zoom;
+        serializedTool.ZoomPanning = galaxyMapEntity->GetMapManager()->GetZoomer()->Panning;
+
+        return serializedTool;
     }
 } // namespace Beer::System

@@ -40,8 +40,10 @@ namespace Beer::System
         void Update() override;
 
         GalaxyMapCursor* GetCursor() const { return cursor.get(); }
+        GalaxyMapZoomer* GetZoomer() const { return zoomer.get(); }
+
         void SetBrushType(GalaxyBrushType type);
-        void ReloadFromSerialized(const SerializableGalaxy& serializableGalaxy);
+        void ReloadFromSerialized(const SerializablePaintSession& serializedData);
 
         CursorState GetCursorState() const
         {

@@ -13,6 +13,7 @@
 #include "System/Context/IContext.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include "System/Serialization/MapHandler.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
 #include <memory>
 
@@ -46,6 +47,8 @@ namespace Beer::System
         {
         }
 
+        SerializablePaintSession GetSerializedData() const;
+
         void Load() override;
         void Update() override;
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
@@ -59,5 +62,6 @@ namespace Beer::System
         void InitializeBrushSizeBar();
         void InitializeHoloCursor();
         void TryOpenMap();
+        SerializablePaintTool SerializePaintTool() const;
     };
 } // namespace Beer::System

@@ -33,6 +33,8 @@ namespace Beer::System
             brushSizeSlider->OnSliderChanged.Subscribe(setBrushSize);
         }
 
+        Slider* GetSlider() const { return brushSizeSlider.get(); }
+
         bool SliderInitialized() const
         {
             return brushSizeSlider != nullptr;

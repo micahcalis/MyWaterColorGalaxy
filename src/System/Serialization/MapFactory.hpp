@@ -16,8 +16,8 @@ namespace Beer::System
 
     public:
         MapFactory();
-        SerializableGalaxy LoadMap(const std::string& name);
-        void SaveMap(const std::string& name, const SerializableGalaxy& galaxy);
+        SerializablePaintSession LoadMap(const std::string& name);
+        void SaveMap(const std::string& name, const SerializablePaintSession& galaxy);
         std::string GetMapNameByIndex(uint32_t index) const;
         bool Has(const std::string& name) const;
 

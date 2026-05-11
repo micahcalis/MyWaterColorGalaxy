@@ -7,6 +7,7 @@
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <unordered_map>
 
@@ -64,7 +65,10 @@ namespace Beer::System
         void CreateAnimator(ColorBarType type);
         void ForceSetColorsFromSeed();
 
+        void ReloadFromSerialized(const SerializablePaintTool& serializedPaintTool);
+
         glm::vec4 GetBarColor(ColorBarLevel level, ColorBarType type) const;
+        std::vector<glm::vec4> GetColors(ColorBarType type) const;
 
     private:
         bool MouseInContainer(glm::vec2 mousePos);

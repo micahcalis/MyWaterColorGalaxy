@@ -41,6 +41,7 @@ namespace Beer::System
         uint32_t Place(const GalaxyComponentData& data, bool fromHistory = false);
         void Erase(uint32_t index, bool fromHistory = false);
         void SetSize(float normalizedVal);
+        float GetNormalizedSize() const;
 
         GalaxySpriteFactory* GetFactory() const { return factory.get(); };
 

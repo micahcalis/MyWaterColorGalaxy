@@ -11,12 +11,12 @@ namespace Beer::System
 
     MapHandler MapSerializationManager::GetMapHandler(const std::string& name) const
     {
-        Function<SerializableGalaxy, const std::string&> load = [this](const std::string& name) -> SerializableGalaxy {
+        Function<SerializablePaintSession, const std::string&> load = [this](const std::string& name) -> SerializablePaintSession {
             return factory->LoadMap(name);
         };
 
-        Function<void, const std::string&, const SerializableGalaxy&> save =
-            [this](const std::string& name, const SerializableGalaxy& map) -> void {
+        Function<void, const std::string&, const SerializablePaintSession&> save =
+            [this](const std::string& name, const SerializablePaintSession& map) -> void {
             factory->SaveMap(name, map);
         };
 

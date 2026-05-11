@@ -56,13 +56,13 @@ namespace Beer::System
         cursor->Brush = type;
     }
 
-    void GalaxyMapManager::ReloadFromSerialized(const SerializableGalaxy& serializableGalaxy)
+    void GalaxyMapManager::ReloadFromSerialized(const SerializablePaintSession& serializedData)
     {
-        galaxyBuffer->ApplySerializableGalaxy(serializableGalaxy);
+        galaxyBuffer->ApplySerializableGalaxy(serializedData.Galaxy);
 
         GalaxyComponentData data{};
 
-        for (const auto& serializedComp : serializableGalaxy.Components)
+        for (const auto& serializedComp : serializedData.Galaxy.Components)
         {
             data.Brush = static_cast<GalaxyBrushType>(serializedComp.TypeIndex);
             data.Colors = serializedComp.Colors;
@@ -70,5 +70,11 @@ namespace Beer::System
             data.Scale = serializedComp.Scale;
             cursor->Place(data);
         }
+
+        cursor->Size = serializedData.ToolHistory.BrushSize;
+        cursor->Brush = static_cast<GalaxyBrushType>(serializedData.ToolHistory.SelectedType);
+
+        zoomer->Zoom = serializedData.ToolHistory.ZoomScale;
+        zoomer->Panning = serializedData.ToolHistory.ZoomPanning;
     }
 } // namespace Beer::System

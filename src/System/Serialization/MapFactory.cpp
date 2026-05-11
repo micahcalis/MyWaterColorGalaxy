@@ -19,7 +19,7 @@ namespace Beer::System
         CollectSavedGalaxyPaths();
     }
 
-    SerializableGalaxy MapFactory::LoadMap(const std::string& name)
+    SerializablePaintSession MapFactory::LoadMap(const std::string& name)
     {
         std::filesystem::path filepath = Core::AssetUtilities::GetMapAssetPath(name);
         std::ifstream file(filepath);
@@ -32,10 +32,10 @@ namespace Beer::System
         json j;
         file >> j;
 
-        return j.get<SerializableGalaxy>();
+        return j.get<SerializablePaintSession>();
     }
 
-    void MapFactory::SaveMap(const std::string& name, const SerializableGalaxy& galaxy)
+    void MapFactory::SaveMap(const std::string& name, const SerializablePaintSession& galaxy)
     {
         std::filesystem::path filepath = Core::AssetUtilities::GetMapAssetPath(name);
         std::ofstream file(filepath);

@@ -50,6 +50,8 @@ namespace Beer::System
             UpdateButtonPosition();
         }
 
+        void ForceUpdate(float value);
+
     private:
         void OnHover(MouseInput mouseInput);
         void OnHoverExit();

@@ -102,6 +102,31 @@ namespace Beer::System
         SetGalaxyColorsFromSeed();
     }
 
+    void ColorBarManager::ReloadFromSerialized(const SerializablePaintTool& serializedPaintTool)
+    {
+        const std::array<ColorBarType, 2> types = {
+            ColorBarType::Planet,
+            ColorBarType::Galaxy};
+
+        const std::array<ColorBarLevel, 4> levels = {
+            ColorBarLevel::Primary,
+            ColorBarLevel::Secondary,
+            ColorBarLevel::Tertiary,
+            ColorBarLevel::Quaternary};
+
+        for (int t = 0; t < 2; t++)
+        {
+            const auto& colors = types[t] == ColorBarType::Planet
+                ? serializedPaintTool.ComponentColors
+                : serializedPaintTool.GalaxyColors;
+
+            for (int l = 0; l < 4; l++)
+            {
+                galaxyColorControllers[levels[l]]->SetColor(colors[l]);
+            }
+        }
+    }
+
     glm::vec4 ColorBarManager::GetBarColor(ColorBarLevel level, ColorBarType type) const
     {
         auto& controllersMap = type == ColorBarType::Planet ? planetColorControllers : galaxyColorControllers;
@@ -112,6 +137,20 @@ namespace Beer::System
         }
 
         return controllersMap.at(level)->GetColor();
+    }
+
+    std::vector<glm::vec4> ColorBarManager::GetColors(ColorBarType type) const
+    {
+        std::vector<glm::vec4> colors;
+        uint32_t res = type == ColorBarType::Planet ? planetColorControllers.size() : galaxyColorControllers.size();
+        colors.reserve(res);
+
+        for (uint32_t i = 0; i < res; i++)
+        {
+            colors.push_back(GetBarColor(static_cast<ColorBarLevel>(i), type));
+        }
+
+        return colors;
     }
 
     bool ColorBarManager::MouseInContainer(glm::vec2 mousePos)

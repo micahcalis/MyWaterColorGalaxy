@@ -78,4 +78,10 @@ namespace Beer::System
             buttonTransform->Position.y = normalizedOffset * collider->GetTransform()->Scale.y;
         }
     }
+
+    void Slider::ForceUpdate(float value)
+    {
+        this->value = std::clamp(value, 0.0f, 1.0f);
+        UpdateButtonPosition();
+    }
 } // namespace Beer::System

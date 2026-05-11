@@ -102,6 +102,11 @@ namespace Beer::System
         Size = glm::mix(CURSOR_MIN, CURSOR_MAX, normalizedVal);
     }
 
+    float GalaxyMapCursor::GetNormalizedSize() const
+    {
+        return (Size - CURSOR_MIN) / (CURSOR_MAX - CURSOR_MIN);
+    }
+
     glm::vec2 GalaxyMapCursor::ApplyZoom(glm::vec2 rawMouse,
         float zoomScale,
         glm::vec2 panning) const

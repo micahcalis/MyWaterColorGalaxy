@@ -31,7 +31,6 @@ namespace glm
 
 namespace Beer::System
 {
-
     struct SerializableGalaxyComponent
     {
         uint32_t Id = 0;
@@ -41,7 +40,7 @@ namespace Beer::System
         glm::vec2 Position = glm::vec2(0);
     };
 
-    class SerializableGalaxy
+    struct SerializableGalaxy
     {
     public:
         uint32_t StarSeed = 0;
@@ -58,6 +57,28 @@ namespace Beer::System
         std::vector<SerializableGalaxyComponent> Components;
     };
 
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxyComponent, Id, TypeIndex, Colors, Scale, Position)
+    struct SerializablePaintTool
+    {
+    public:
+        std::vector<glm::vec4> ComponentColors;
+        std::vector<glm::vec4> GalaxyColors;
+
+        float BrushSize = 0;
+        uint32_t SelectedType = 0;
+
+        float ZoomScale = 1;
+        glm::vec2 ZoomPanning = glm::vec2(0);
+    };
+
+    struct SerializablePaintSession
+    {
+    public:
+        SerializableGalaxy Galaxy{};
+        SerializablePaintTool ToolHistory{};
+    };
+
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxyComponent, Id, TypeIndex, Colors, Scale, Position);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxy, StarSeed, ColorSeed, StarColor, StarPosition, StarSize, ColorA, ColorB, ColorC, Components)
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializablePaintTool, ComponentColors, GalaxyColors, BrushSize, SelectedType, ZoomScale, ZoomPanning);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializablePaintSession, Galaxy, ToolHistory);
 } // namespace Beer::System
