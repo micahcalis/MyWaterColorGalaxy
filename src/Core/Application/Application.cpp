@@ -1,4 +1,5 @@
 #include "Core/Application/Application.hpp"
+#include "System/Base/Input/CursorMode.hpp"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 #include <cassert>
@@ -13,7 +14,7 @@ namespace Beer::Core
     void Application::Run()
     {
         windowManager.InitializeWindow();
-        // SDL_SetWindowRelativeMouseMode(windowManager.GetWindow(), true);
+        System::Cursor::SetWindowManager(&windowManager);
         InitializeVulkan();
         InitializeGame();
         MainLoop();

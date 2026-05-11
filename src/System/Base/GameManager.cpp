@@ -28,7 +28,6 @@ namespace Beer::System
         InitializeContextFactory();
         InitializeColliders();
         // temporary, we dont start gaming immediately
-        // InitializeGalaxy();
         InitializePaintTool();
     }
 
@@ -40,6 +39,7 @@ namespace Beer::System
     void GameManager::Update()
     {
         UpdateBase();
+        contextHandler->Update();
         quadColliderManager->Update();
         worldContainer->UpdateContexts();
     }
@@ -111,6 +111,19 @@ namespace Beer::System
     void GameManager::InitializePaintTool()
     {
         contextHandler->LoadContext(ContextType::PaintTool);
+
+        PaintToolContext* context = contextHandler->GetContext<PaintToolContext>(ContextType::PaintTool);
+
+        Function<void> toGalaxy = [this]() -> void {
+            contextHandler->DestroyContext(ContextType::PaintTool);
+            contextHandler->LoadContext(ContextType::Galaxy);
+        };
+
+        Function<void> onGalaxyFly = [this, toGalaxy]() -> void {
+            contextHandler->QueueOperation(toGalaxy);
+        };
+
+        context->OnGalaxyFly.Subscribe(onGalaxyFly);
     }
 
     void GameManager::UpdateBase()

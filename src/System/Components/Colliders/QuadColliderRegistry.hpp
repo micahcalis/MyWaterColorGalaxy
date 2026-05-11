@@ -16,6 +16,7 @@ namespace Beer::System
         void RemoveFromRegister(QuadCollider* collider);
         void Cleanup();
         [[nodiscard]] std::vector<QuadCollider*>& GetColliders() { return colliders; }
+        bool InRegistry(QuadCollider* collider);
 
     private:
         inline static QuadColliderRegistry* quadColliderRegistry = nullptr;

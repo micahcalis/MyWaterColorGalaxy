@@ -2,6 +2,7 @@
 #include "System/Context/ContextType.hpp"
 #include "System/Context/IContext.hpp"
 #include <memory>
+#include <print>
 #include <stdexcept>
 
 namespace Beer::System
