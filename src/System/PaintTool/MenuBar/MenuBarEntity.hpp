@@ -22,6 +22,7 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> seedButtonEntity = nullptr;
 
         std::shared_ptr<Rendering::Material> flyButtonMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> flyButtonTexture = nullptr;
         std::unique_ptr<UISubEntity> flyButtonEntity = nullptr;
 
         Function<void> clearHistory = nullptr;

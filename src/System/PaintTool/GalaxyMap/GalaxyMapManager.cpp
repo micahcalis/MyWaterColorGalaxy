@@ -3,6 +3,7 @@
 #include "GalaxyMapBuffer.hpp"
 #include "GalaxyMapZoomer.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
+#include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
@@ -54,6 +55,7 @@ namespace Beer::System
             return;
 
         cursor->Brush = type;
+        OnNewBrush.Invoke(cursor->Brush);
     }
 
     void GalaxyMapManager::ReloadFromSerialized(const SerializablePaintSession& serializedData)

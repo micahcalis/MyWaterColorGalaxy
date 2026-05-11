@@ -21,6 +21,9 @@ namespace Beer::System
 
     class GalaxyMapManager : public IEntityManager
     {
+    public:
+        BeerEvent<void(GalaxyBrushType)> OnNewBrush;
+
     private:
         GalaxyMapBuffer* galaxyBuffer = nullptr;
         UITransform* mapTransform = nullptr;

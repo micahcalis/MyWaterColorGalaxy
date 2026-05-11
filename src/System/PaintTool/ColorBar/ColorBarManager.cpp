@@ -4,11 +4,22 @@
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/BeerEvent.hpp"
-#include <cstdlib>
 #include <stdexcept>
 
 namespace Beer::System
 {
+    static const std::array<std::string, 4> P_DISPLAY_PROP = {
+        "_PrimaryColor",
+        "_SecondaryColor",
+        "_TertiaryColor",
+        "_QuaternaryColor"};
+
+    static const std::array<std::string, 4> G_DISPLAY_PROP = {
+        "_ColorR",
+        "_ColorG",
+        "_ColorB",
+        "_ColorA"};
+
     static const float ANIMATION_SPEED = 3.0f;
     static const float OFFSET_SCALE = 0.05f;
 
@@ -19,10 +30,21 @@ namespace Beer::System
         Function<void, glm::vec4> setColorDisplayColor,
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
         Function<std::array<glm::vec4, 4>> getGalaxyColors,
+        Function<Rendering::Texture2D*> getBrushTexture,
         BeerEvent<void(glm::vec4)>* onColorPicked,
         BeerEvent<void()>* onColorPickerClosed,
         BeerEvent<void()>* onNewSeed)
-        : colorBarTransform(colorBarTransform), getMouseInput(getMouseInput), markQuadTreeDirty(markQuadTreeDirty), openColorPicker(openColorPicker), setColorDisplayColor(setColorDisplayColor), setGalaxyBufferColor(setGalaxyBufferColor), getGalaxyColors(getGalaxyColors), onColorPicked(onColorPicked), onColorPickerClosed(onColorPickerClosed), onNewSeed(onNewSeed)
+        : colorBarTransform(colorBarTransform)
+        , getMouseInput(getMouseInput)
+        , markQuadTreeDirty(markQuadTreeDirty)
+        , openColorPicker(openColorPicker)
+        , setColorDisplayColor(setColorDisplayColor)
+        , setGalaxyBufferColor(setGalaxyBufferColor)
+        , getGalaxyColors(getGalaxyColors)
+        , getBrushTexture(getBrushTexture)
+        , onColorPicked(onColorPicked)
+        , onColorPickerClosed(onColorPickerClosed)
+        , onNewSeed(onNewSeed)
     {
         onColorPickerClosed->Subscribe([this]() {
             currentController->Unsubscribe();
@@ -71,7 +93,16 @@ namespace Beer::System
         if (type == ColorBarType::Galaxy)
         {
             controller->OnNewColor.Subscribe(
-                [this](glm::vec4 color, ColorBarLevel level) -> void { setGalaxyBufferColor(color, level); });
+                [this](glm::vec4 color, ColorBarLevel level) -> void {
+                    setGalaxyBufferColor(color, level);
+                    UpdateDisplayMaterials();
+                });
+        } else
+        {
+            controller->OnNewColor.Subscribe(
+                [this](glm::vec4 color, ColorBarLevel level) -> void {
+                    UpdateDisplayMaterials();
+                });
         }
 
         controllersMap[level] = std::move(controller);
@@ -120,11 +151,17 @@ namespace Beer::System
                 ? serializedPaintTool.ComponentColors
                 : serializedPaintTool.GalaxyColors;
 
+            auto& controllers = types[t] == ColorBarType::Planet
+                ? planetColorControllers
+                : galaxyColorControllers;
+
             for (int l = 0; l < 4; l++)
             {
-                galaxyColorControllers[levels[l]]->SetColor(colors[l]);
+                controllers[levels[l]]->SetColor(colors[l]);
             }
         }
+
+        UpdateDisplayMaterials();
     }
 
     glm::vec4 ColorBarManager::GetBarColor(ColorBarLevel level, ColorBarType type) const
@@ -218,6 +255,31 @@ namespace Beer::System
         for (int i = 0; i < 4; i++)
         {
             galaxyColorControllers[levels[i]]->SetColor(colors[i]);
+        }
+    }
+
+    void ColorBarManager::UpdateDisplayMaterials()
+    {
+        if (planetDisplayMaterial != nullptr)
+        {
+            std::vector<glm::vec4> planetColors = GetColors(ColorBarType::Planet);
+
+            for (int i = 0; i < P_DISPLAY_PROP.size(); i++)
+            {
+                planetDisplayMaterial->SetColor(P_DISPLAY_PROP[i], planetColors[i]);
+            }
+
+            planetDisplayMaterial->SetTexture("_SpriteTex", getBrushTexture(), false);
+        }
+
+        if (galaxyDisplayMaterial != nullptr)
+        {
+            std::vector<glm::vec4> galaxyColors = GetColors(ColorBarType::Galaxy);
+
+            for (int i = 0; i < G_DISPLAY_PROP.size(); i++)
+            {
+                galaxyDisplayMaterial->SetColor(G_DISPLAY_PROP[i], galaxyColors[i]);
+            }
         }
     }
 } // namespace Beer::System

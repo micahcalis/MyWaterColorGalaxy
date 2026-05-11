@@ -4,6 +4,7 @@
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -37,9 +38,9 @@ namespace Beer::System
     {
         MenuBarManager* menuBarManager = GetMenuBarManager();
 
-        seedButtonTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
+        seedButtonTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_NewSeed");
         seedButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        seedButtonMaterial->SetColor("_TintColor", glm::vec4(0.1f, 0.25f, 0.8f, 1.0f));
+        seedButtonMaterial->SetColor("_TintColor", glm::vec4(1.0f));
         seedButtonMaterial->SetVector("_Scale", glm::vec4(1));
         seedButtonMaterial->SetTexture("_SpriteTex", seedButtonTexture.get());
 
@@ -58,10 +59,11 @@ namespace Beer::System
         flyTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
         flyTransform.Position = glm::vec2(0, -BUTTON_PADDING - SEED_BUTTON_SIZE);
 
+        flyButtonTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_Fly");
         flyButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        flyButtonMaterial->SetColor("_TintColor", glm::vec4(0.8f, 0.1f, 0.1f, 1.0f));
+        flyButtonMaterial->SetColor("_TintColor", glm::vec4(1.0f));
         flyButtonMaterial->SetVector("_Scale", glm::vec4(1));
-        flyButtonMaterial->SetTexture("_SpriteTex", backgroundTexture.get());
+        flyButtonMaterial->SetTexture("_SpriteTex", flyButtonTexture.get());
 
         flyButtonEntity = std::make_unique<UISubEntity>(flyTransform);
         rootTransform.BindChild(flyButtonEntity->GetTransform());

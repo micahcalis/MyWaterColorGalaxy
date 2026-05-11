@@ -2,11 +2,13 @@
 
 #include "ColorBarLevel.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "StackAnimator.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <unordered_map>
@@ -25,6 +27,8 @@ namespace Beer::System
         UITransform* colorBarTransform = nullptr;
         std::unordered_map<ColorBarLevel, std::unique_ptr<ColorBarController>> planetColorControllers;
         std::unordered_map<ColorBarLevel, std::unique_ptr<ColorBarController>> galaxyColorControllers;
+        Rendering::Material* planetDisplayMaterial = nullptr;
+        Rendering::Material* galaxyDisplayMaterial = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
         Function<void> markQuadTreeDirty = nullptr;
@@ -32,6 +36,7 @@ namespace Beer::System
         Function<void, glm::vec4> setColorDisplayColor = nullptr;
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = nullptr;
         Function<std::array<glm::vec4, 4>> getGalaxyColors = nullptr;
+        Function<Rendering::Texture2D*> getBrushTexture = nullptr;
 
         ColorBarController* currentController = nullptr;
 
@@ -50,11 +55,19 @@ namespace Beer::System
             Function<void, glm::vec4> setColorDisplayColor,
             Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
             Function<std::array<glm::vec4, 4>> getGalaxyColors,
+            Function<Rendering::Texture2D*> getBrushTexture,
             BeerEvent<void(glm::vec4)>* onColorPicked,
             BeerEvent<void()>* onColorPickerClosed,
             BeerEvent<void()>* onNewSeed);
 
         void Update() override;
+
+        void SetDisplayMaterials(Rendering::Material* planetDisplayMaterial,
+            Rendering::Material* galaxyDisplayMaterial)
+        {
+            this->planetDisplayMaterial = planetDisplayMaterial;
+            this->galaxyDisplayMaterial = galaxyDisplayMaterial;
+        }
 
         void CreateColorBarController(ColorBarLevel level,
             ColorBarType type,
@@ -66,6 +79,7 @@ namespace Beer::System
         void ForceSetColorsFromSeed();
 
         void ReloadFromSerialized(const SerializablePaintTool& serializedPaintTool);
+        void UpdateDisplayMaterials();
 
         glm::vec4 GetBarColor(ColorBarLevel level, ColorBarType type) const;
         std::vector<glm::vec4> GetColors(ColorBarType type) const;

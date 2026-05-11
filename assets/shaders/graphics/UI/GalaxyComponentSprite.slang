@@ -11,6 +11,7 @@ cbuffer MaterialData
     float4 _SecondaryColor;
     float4 _TertiaryColor;
     float4 _QuaternaryColor;
+    int _OverrideMapClip;
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _SpriteTex;
@@ -27,7 +28,12 @@ BIND_MATERIAL_TEX(1) Sampler2D _SpriteTex;
 VERT Sprite.VertData GalaxyCompVert(Sprite.MeshData input)
 {
     Sprite.VertData output;
-    ApplyMapZoom(input.position2DOS);
+
+    if (_OverrideMapClip == 0)
+    {
+        ApplyMapZoom(input.position2DOS);
+    }
+
     output.positionCS = Sprite.GetPositionCS(input);
     output.uv = input.texCoord;
     return output;
@@ -45,8 +51,12 @@ float4 Get4ColorGradient(float gradient)
 
 FRAG float4 GalaxyCompFrag(Sprite.VertData input)
 {
-    ClipInMap(input.positionCS.xy);
+    if (_OverrideMapClip == 0)
+    {
+        ClipInMap(input.positionCS.xy);
+    }
 
     float gradient = _SpriteTex.Sample(input.uv).r;
+
     return Get4ColorGradient(1.0 - gradient);
 }

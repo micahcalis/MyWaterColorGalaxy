@@ -21,7 +21,6 @@
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
 #include <memory>
-#include <print>
 #include <stdexcept>
 
 namespace Beer::System
@@ -148,16 +147,27 @@ namespace Beer::System
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = [this](glm::vec4 newColor, ColorBarLevel level) -> void { galaxyMapBuffer->SetColorByLevel(newColor, level); };
         Function<std::array<glm::vec4, 4>> getGalaxyColors = [this]() -> std::array<glm::vec4, 4> { return galaxyMapBuffer->GetGalaxyColors(); };
 
+        Function<Rendering::Texture2D*> getBrushTexture =
+            [this]() -> Rendering::Texture2D* {
+            GalaxyBrushType brushType = galaxyMapEntity->GetMapManager()->GetCursor()->Brush;
+            return galaxyMapEntity->GetMapManager()->GetCursor()->GetFactory()->GetTexture(brushType);
+        };
+
         colorBarEntity = registry.CreateEntity<ColorBarEntity>(getMouseInput,
             openColorPicker,
             setColorDisplayColor,
             setGalaxyBufferColor,
             getGalaxyColors,
+            getBrushTexture,
             &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
             &colorMixerEntity->OnColorMixerClosed,
             &menuBarEntity->GetMenuBarManager()->OnNewSeed);
 
         colorBarEntity->InitializeColorLayers();
+
+        galaxyMapEntity->GetMapManager()->OnNewBrush.Subscribe([this](GalaxyBrushType type) -> void {
+            colorBarEntity->GetColorBarManager()->UpdateDisplayMaterials();
+        });
     }
 
     void PaintToolContext::InitializeMenuBar()

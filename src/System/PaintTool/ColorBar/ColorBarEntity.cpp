@@ -7,6 +7,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "glm/fwd.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -14,6 +15,8 @@ namespace Beer::System
     static const uint32_t PLANET_LAYERS_COUNT = 4;
     static const uint32_t GALAXY_LAYERS_COUNT = 4;
     static const glm::vec2 COLOR_LAYER_SIZE = glm::vec2(0.3f, 0.1f);
+    static const glm::vec2 DISPLAY_SIZE = glm::vec2(0.15f, 0.15f);
+    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.08f, -0.075f);
 
     static const std::array<glm::vec4, PLANET_LAYERS_COUNT> PLANET_COLORS = {
         glm::vec4(0.8f, 0.2f, 0.1f, 1),
@@ -32,10 +35,20 @@ namespace Beer::System
         Function<void, glm::vec4> setColorDisplayColor,
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
         Function<std::array<glm::vec4, 4>> getGalaxyColors,
+        Function<Rendering::Texture2D*> getBrushTexture,
         BeerEvent<void(glm::vec4)>* onColorPicked,
         BeerEvent<void()>* onColorPickerClosed,
         BeerEvent<void()>* onNewSeed)
-        : getMouseInput(getMouseInput), openColorPicker(openColorPicker), setColorDisplayColor(setColorDisplayColor), setGalaxyBufferColor(setGalaxyBufferColor), getGalaxyColors(getGalaxyColors), onColorPicked(onColorPicked), onColorPickerClosed(onColorPickerClosed), onNewSeed(onNewSeed), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+        : getMouseInput(getMouseInput)
+        , openColorPicker(openColorPicker)
+        , setColorDisplayColor(setColorDisplayColor)
+        , setGalaxyBufferColor(setGalaxyBufferColor)
+        , getGalaxyColors(getGalaxyColors)
+        , getBrushTexture(getBrushTexture)
+        , onColorPicked(onColorPicked)
+        , onColorPickerClosed(onColorPickerClosed)
+        , onNewSeed(onNewSeed)
+        , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         markQuadTreeDirty = [this]() -> void { MarkDirty(); };
 
@@ -55,6 +68,8 @@ namespace Beer::System
 
     void ColorBarEntity::InitializeColorLayers()
     {
+        InitializeDisplays();
+
         colorLayerSprite = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_ColorLayer");
         glm::vec2 startPos = glm::vec2(0, 0.1f);
 
@@ -121,5 +136,36 @@ namespace Beer::System
         colorBarManager->CreateAnimator(ColorBarType::Planet);
         colorBarManager->CreateAnimator(ColorBarType::Galaxy);
         colorBarManager->ForceSetColorsFromSeed();
+        colorBarManager->UpdateDisplayMaterials();
+    }
+
+    void ColorBarEntity::InitializeDisplays()
+    {
+        UITransform displayTransform{};
+        displayTransform.Anchor = AnchorMode::TopMiddle;
+        displayTransform.Pivot = AnchorMode::TopRight;
+        displayTransform.Scale = DISPLAY_SIZE;
+        displayTransform.Position = glm::vec2(-DISPLAY_OFFSET.x, DISPLAY_OFFSET.y);
+
+        planetDisplayEntity = std::make_unique<UISubEntity>(displayTransform);
+        rootTransform.BindChild(planetDisplayEntity->GetTransform());
+
+        planetDisplayMaterial = std::make_shared<Rendering::Material>("UI/GalaxyComponentSprite");
+        planetDisplayMaterial->SetTexture("_SpriteTex", getBrushTexture());
+        planetDisplayMaterial->SetInt("_OverrideMapClip", 1);
+
+        displayTransform.Pivot = AnchorMode::TopLeft;
+        displayTransform.Position = glm::vec2(DISPLAY_OFFSET.x, DISPLAY_OFFSET.y);
+
+        galaxyDisplayEntity = std::make_unique<UISubEntity>(displayTransform);
+        rootTransform.BindChild(galaxyDisplayEntity->GetTransform());
+
+        galaxyDisplayTexture = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_GalaxyVisualizer");
+        galaxyDisplayMaterial = std::make_shared<Rendering::Material>("UI/ChannelMaskSprite");
+        galaxyDisplayMaterial->SetTexture("_SpriteTex", galaxyDisplayTexture.get());
+
+        ColorBarManager* colorBarManager = GetColorBarManager();
+        colorBarManager->SetDisplayMaterials(planetDisplayMaterial.get(),
+            galaxyDisplayMaterial.get());
     }
 } // namespace Beer::System
