@@ -1,10 +1,59 @@
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <stdexcept>
 
 namespace Beer::System
 {
+    void GalaxyMapBuffer::ApplySerializableGalaxy(const SerializableGalaxy& serializableGalaxy)
+    {
+        ClearComponents();
+
+        seed.StarSeed = serializableGalaxy.StarSeed;
+        seed.ColorSeed = serializableGalaxy.ColorSeed;
+
+        settings.StarColor = serializableGalaxy.StarColor;
+        settings.StarPosition = serializableGalaxy.StarPosition;
+        settings.StarSize = serializableGalaxy.StarSize;
+
+        settings.ColorA = serializableGalaxy.ColorA;
+        settings.ColorB = serializableGalaxy.ColorB;
+        settings.ColorC = serializableGalaxy.ColorC;
+
+        UpdateMaterials();
+    }
+
+    SerializableGalaxy GalaxyMapBuffer::GetSerializableGalaxy() const
+    {
+        SerializableGalaxy serializable{};
+        serializable.StarSeed = seed.StarSeed;
+        serializable.ColorSeed = seed.ColorSeed;
+
+        serializable.StarColor = settings.StarColor;
+        serializable.StarPosition = settings.StarPosition;
+        serializable.StarSize = settings.StarSize;
+
+        serializable.ColorA = settings.ColorA;
+        serializable.ColorB = settings.ColorB;
+        serializable.ColorC = settings.ColorC;
+
+        SerializableGalaxyComponent compSerializable{};
+
+        for (const auto& component : componentMap)
+        {
+            compSerializable.Id = component.first;
+            compSerializable.TypeIndex = static_cast<uint32_t>(component.second.Data.Brush);
+            compSerializable.Colors = component.second.Data.Colors;
+            compSerializable.Scale = component.second.Data.Scale;
+            compSerializable.Position = component.second.Data.Position;
+
+            serializable.Components.push_back(compSerializable);
+        }
+
+        return serializable;
+    }
+
     uint32_t GalaxyMapBuffer::AddComponent(GalaxyComponent component)
     {
         nextComponentId++;

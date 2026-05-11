@@ -8,6 +8,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxySeed.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <cstdint>
 #include <unordered_map>
 #include <utility>
@@ -25,7 +26,7 @@ namespace Beer::System
     class GalaxyMapBuffer
     {
     private:
-        GalaxySeed seed;
+        GalaxySeed seed{};
         GalaxySettings settings{};
         std::shared_ptr<Rendering::Material> mapMaterial = nullptr;
         std::shared_ptr<Rendering::Material> starMaterial = nullptr;
@@ -42,6 +43,8 @@ namespace Beer::System
             UpdateMaterials();
             ClearComponents();
         }
+
+        void ApplySerializableGalaxy(const SerializableGalaxy& serializableGalaxy);
 
         void SetNewSeed(GalaxySeed seed)
         {
@@ -84,6 +87,7 @@ namespace Beer::System
             return {settings.StarPosition, settings.StarSize};
         }
 
+        SerializableGalaxy GetSerializableGalaxy() const;
         uint32_t AddComponent(GalaxyComponent component);
         void RemoveComponent(uint32_t id);
         GalaxyComponentData GetComponentData(uint32_t id) const;

@@ -2,7 +2,6 @@
 
 #include "MenuBarManager.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
-#include "System/Components/Registry/IEntity.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
@@ -14,16 +13,24 @@ namespace Beer::System
     {
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;
+
         std::shared_ptr<Rendering::Material> backgroundMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> backgroundTexture = nullptr;
+
         std::shared_ptr<Rendering::Material> seedButtonMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> seedButtonTexture = nullptr;
         std::unique_ptr<UISubEntity> seedButtonEntity = nullptr;
+
+        std::shared_ptr<Rendering::Material> flyButtonMaterial = nullptr;
+        std::unique_ptr<UISubEntity> flyButtonEntity = nullptr;
+
         Function<void> clearHistory = nullptr;
+        Function<void> saveMap = nullptr;
 
     public:
         MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
-            Function<void> clearHistory);
+            Function<void> clearHistory,
+            Function<void> saveMap);
 
         void InitializeButtonEntities();
         MenuBarManager* GetMenuBarManager() const { return static_cast<MenuBarManager*>(manager.get()); };
@@ -31,7 +38,9 @@ namespace Beer::System
     protected:
         void InitializeManager() override
         {
-            manager = std::make_unique<MenuBarManager>(galaxyMapBuffer, clearHistory);
+            manager = std::make_unique<MenuBarManager>(galaxyMapBuffer,
+                clearHistory,
+                saveMap);
         }
 
         std::vector<UIRenderItem> GetRenderItems() override
@@ -39,6 +48,7 @@ namespace Beer::System
             std::vector<UIRenderItem> renderItems;
             renderItems.push_back(UIRenderItem(&rootTransform, backgroundMaterial.get()));
             renderItems.push_back(UIRenderItem(seedButtonEntity->GetTransform(), seedButtonMaterial.get()));
+            renderItems.push_back(UIRenderItem(flyButtonEntity->GetTransform(), flyButtonMaterial.get()));
             return renderItems;
         }
 

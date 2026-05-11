@@ -18,8 +18,10 @@
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
 #include <memory>
+#include <print>
 #include <stdexcept>
 
 namespace Beer::System
@@ -36,6 +38,8 @@ namespace Beer::System
         InitializeColorBar();
         InitializeBrushSizeBar();
         InitializeHoloCursor();
+
+        TryOpenMap();
     }
 
     void PaintToolContext::Update()
@@ -157,7 +161,12 @@ namespace Beer::System
 
         Function<void> clearHistory = [this]() -> void { toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory(); };
 
-        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(), clearHistory);
+        Function<void> saveMap = [this]() -> void {
+            SerializableGalaxy galaxyMap = galaxyMapBuffer->GetSerializableGalaxy();
+            mapHandler.Save(galaxyMap);
+        };
+
+        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(), clearHistory, saveMap);
         menuBarEntity->InitializeButtonEntities();
     }
 
@@ -241,5 +250,15 @@ namespace Beer::System
         hologramCursorEntity = registry.CreateEntity<HologramCursorEntity>(getCursorState,
             getMouseInput,
             getBrushTexture);
+    }
+
+    void PaintToolContext::TryOpenMap()
+    {
+        if (!mapHandler.IsSaved())
+            return;
+
+        SerializableGalaxy serializedGalaxy = mapHandler.Load();
+        galaxyMapEntity->GetMapManager()->ReloadFromSerialized(serializedGalaxy);
+        toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory();
     }
 } // namespace Beer::System

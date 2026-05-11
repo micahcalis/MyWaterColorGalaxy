@@ -13,13 +13,17 @@
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
+#include "System/Serialization/MapSerializationManager.hpp"
 #include <memory>
+
+static const std::string TEST_MAP = "TestMap";
 
 namespace Beer::System
 {
     void GameManager::Initialize()
     {
         InitializeBase();
+        InitializeSerialization();
         InitializeContext();
         InitializeContextFactory();
         InitializeColliders();
@@ -75,8 +79,8 @@ namespace Beer::System
             });
 
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
-            [getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
-                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput);
+            [this, getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
+                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, mapSerializationManager->GetMapHandler(TEST_MAP));
             });
     }
 
@@ -92,6 +96,11 @@ namespace Beer::System
         quadColliderManager = std::make_unique<QuadColliderManager>([this]() -> MouseInput {
             return inputManager->GetMouseInput();
         });
+    }
+
+    void GameManager::InitializeSerialization()
+    {
+        mapSerializationManager = std::make_unique<MapSerializationManager>();
     }
 
     void GameManager::InitializeGalaxy()

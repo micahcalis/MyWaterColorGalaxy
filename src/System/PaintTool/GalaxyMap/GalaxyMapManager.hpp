@@ -7,6 +7,7 @@
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 namespace Beer::System
 {
     struct CursorState
@@ -40,6 +41,7 @@ namespace Beer::System
 
         GalaxyMapCursor* GetCursor() const { return cursor.get(); }
         void SetBrushType(GalaxyBrushType type);
+        void ReloadFromSerialized(const SerializableGalaxy& serializableGalaxy);
 
         CursorState GetCursorState() const
         {

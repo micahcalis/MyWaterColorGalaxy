@@ -1,8 +1,10 @@
 #include "System/PaintTool/GalaxyMap//GalaxyMapManager.hpp"
+#include "GalaxyComponent.hpp"
 #include "GalaxyMapBuffer.hpp"
 #include "GalaxyMapZoomer.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
 #include <memory>
 
@@ -52,5 +54,21 @@ namespace Beer::System
             return;
 
         cursor->Brush = type;
+    }
+
+    void GalaxyMapManager::ReloadFromSerialized(const SerializableGalaxy& serializableGalaxy)
+    {
+        galaxyBuffer->ApplySerializableGalaxy(serializableGalaxy);
+
+        GalaxyComponentData data{};
+
+        for (const auto& serializedComp : serializableGalaxy.Components)
+        {
+            data.Brush = static_cast<GalaxyBrushType>(serializedComp.TypeIndex);
+            data.Colors = serializedComp.Colors;
+            data.Position = serializedComp.Position;
+            data.Scale = serializedComp.Scale;
+            cursor->Place(data);
+        }
     }
 } // namespace Beer::System

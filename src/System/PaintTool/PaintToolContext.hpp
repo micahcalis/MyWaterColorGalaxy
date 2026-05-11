@@ -12,6 +12,7 @@
 #include "System/PaintTool/ColorBar/ColorBarEntity.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
+#include "System/Serialization/MapHandler.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
 #include <memory>
 
@@ -33,11 +34,15 @@ namespace Beer::System
         Function<MouseInput> getMouseInput = nullptr;
         Function<ButtonInput> getDebugKeyInput = nullptr;
         bool toggle = false;
+        MapHandler mapHandler;
 
     public:
-        PaintToolContext(Function<MouseInput> getMouseInput, Function<ButtonInput> getDebugKeyInput)
+        PaintToolContext(Function<MouseInput> getMouseInput,
+            Function<ButtonInput> getDebugKeyInput,
+            MapHandler mapHandler)
             : getMouseInput(getMouseInput)
             , getDebugKeyInput(getDebugKeyInput)
+            , mapHandler(mapHandler)
         {
         }
 
@@ -53,5 +58,6 @@ namespace Beer::System
         void InitializeToolBar();
         void InitializeBrushSizeBar();
         void InitializeHoloCursor();
+        void TryOpenMap();
     };
 } // namespace Beer::System

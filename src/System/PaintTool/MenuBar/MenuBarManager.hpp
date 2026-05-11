@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Material/Material.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -20,30 +21,37 @@ namespace Beer::System
         std::unique_ptr<Button> newSeedButton = nullptr;
         Function<void> clearHistory = nullptr;
 
+        std::unique_ptr<Button> flyButton = nullptr;
+        Function<void> saveMap = nullptr;
+
     public:
         MenuBarManager(GalaxyMapBuffer* galaxyMapBuffer,
-            Function<void> clearHistory)
-            : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory)
+            Function<void> clearHistory,
+            Function<void> saveMap)
+            : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory), saveMap(saveMap)
         {
         }
 
         void InitializeButtons(UITransform* newSeedTransform,
-            Rendering::Material* newSeedMaterial)
+            Rendering::Material* newSeedMaterial,
+            UITransform* flyTransform,
+            Rendering::Material* flyMaterial)
         {
-            if (newSeedButton != nullptr)
-            {
-                return;
-            }
-
-            newSeedButton = std::make_unique<Button>(newSeedTransform, newSeedMaterial);
-
-            newSeedButton->SetOnClick([this]() -> void { OnNewSeed.Invoke(); });
-            OnNewSeed.Subscribe([this]() -> void { galaxyMapBuffer->SetNewSeed(GalaxySeed()); });
-            OnNewSeed.Subscribe(clearHistory);
+            InitializeNewSeed(newSeedTransform, newSeedMaterial);
+            InitializeFly(flyTransform, flyMaterial);
         }
 
         void Update() override
         {
         }
+
+    private:
+        void InitializeNewSeed(UITransform* newSeedTransform,
+            Rendering::Material* newSeedMaterial);
+
+        void InitializeFly(UITransform* flyTransform,
+            Rendering::Material* flyMaterial);
+
+        void InvokeFly();
     };
 } // namespace Beer::System

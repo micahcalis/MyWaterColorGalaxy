@@ -15,7 +15,7 @@ namespace Beer::System
     static const float STARS_FREQUENCY = 10.0f;
     static const float STARS_SCALE = 0.2f;
     static const glm::vec4 STARS_COLOR = glm::vec4(0.97f, 0.97f, 0.7f, 1.0f);
-    static const float STARS_GLOW = 10.0f;
+    static const float STARS_GLOW = 15.0f;
     static const float STARS_FLICKER_SPEED = 1.0f;
     static const float DUST_FREQUENCY = 5.0f;
     static const float DUST_THRESHOLD = 0.5f;

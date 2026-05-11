@@ -11,10 +11,13 @@ namespace Beer::System
     static const float MENU_WIDTH = 0.25f;
     static const float MENU_OFFSET = 0.05f;
     static const float SEED_BUTTON_SIZE = 0.2f;
+    static const float FLY_BUTTON_SIZE = 0.2f;
     static const float BUTTON_PADDING = 0.05f;
 
-    MenuBarEntity::MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer, Function<void> clearHistory)
-        : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+    MenuBarEntity::MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
+        Function<void> clearHistory,
+        Function<void> saveMap)
+        : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory), saveMap(saveMap), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         rootTransform.Anchor = AnchorMode::BottomRight;
         rootTransform.Pivot = AnchorMode::BottomRight;
@@ -49,7 +52,24 @@ namespace Beer::System
         seedButtonEntity = std::make_unique<UISubEntity>(seedTransform);
         rootTransform.BindChild(seedButtonEntity->GetTransform());
 
-        menuBarManager->InitializeButtons(seedButtonEntity->GetTransform(), seedButtonMaterial.get());
+        UITransform flyTransform{};
+        flyTransform.Anchor = AnchorMode::TopMiddle;
+        flyTransform.Pivot = AnchorMode::TopMiddle;
+        flyTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
+        flyTransform.Position = glm::vec2(0, -BUTTON_PADDING - SEED_BUTTON_SIZE);
+
+        flyButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        flyButtonMaterial->SetColor("_TintColor", glm::vec4(0.8f, 0.1f, 0.1f, 1.0f));
+        flyButtonMaterial->SetVector("_Scale", glm::vec4(1));
+        flyButtonMaterial->SetTexture("_SpriteTex", backgroundTexture.get());
+
+        flyButtonEntity = std::make_unique<UISubEntity>(flyTransform);
+        rootTransform.BindChild(flyButtonEntity->GetTransform());
+
+        menuBarManager->InitializeButtons(seedButtonEntity->GetTransform(),
+            seedButtonMaterial.get(),
+            flyButtonEntity->GetTransform(),
+            flyButtonMaterial.get());
 
         MarkDirty();
     }
