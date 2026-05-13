@@ -7,6 +7,7 @@
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/ComputePerlinPass.hpp"
+#include "Rendering/RenderPasses/DrawTransparentPass.hpp"
 #include "Rendering/RenderPasses/DrawUIPass.hpp"
 #include "Rendering/RenderPasses/RenderTornadoPass.hpp"
 #include "Rendering/Text/FontAsset.hpp"
@@ -16,6 +17,7 @@
 #include "System/Default/RotateEntitiesManager.hpp"
 #include "System/Default/SingleStaticEntity.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
+#include "System/Galaxy/Stars/StarsEntity.hpp"
 #include "System/Light/LightEntity.hpp"
 #include "System/Default/UI/TextDisplayEntity.hpp"
 #include "System/Default/UI/TestQuadTreeEntity.hpp"
@@ -30,12 +32,14 @@ namespace Beer::System
         PlayerEntity* playerEntity = nullptr;
         LightEntity* mainLightEntity = nullptr;
         GalaxyEntity* galaxyEntity = nullptr;
+        StarsEntity* starsEntity = nullptr;
 
         Function<PlayerInput> getPlayerInput;
 
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;
+        Rendering::DrawTransparentPass* transparentPass = nullptr;
 
         MapHandler mapHandler;
 
@@ -55,6 +59,7 @@ namespace Beer::System
         void InitializePlayer();
         void InitializeLight();
         void InitializeGalaxy();
+        void InitializeStars();
         void TryLoadMap();
     };
 } // namespace Beer::System

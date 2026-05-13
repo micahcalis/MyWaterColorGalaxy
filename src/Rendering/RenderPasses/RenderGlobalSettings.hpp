@@ -19,6 +19,7 @@ namespace Beer::Rendering
     const std::string OPAQUE_PASS = "Opaque";
     const std::string SKYBOX_PASS = "Skybox";
     const std::string DEFERRED_SHADE_PASS = "DeferredShade";
+    const std::string TRANSPARENT_PASS = "Transparent";
     const std::string UI_PASS = "UserInterface";
     const std::string INTERACTIVE_PAINT_PASS = "InteractivePaint";
 

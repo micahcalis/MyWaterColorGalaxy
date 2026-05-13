@@ -31,7 +31,7 @@ namespace Beer::System
         return projMat;
     }
 
-    const Transform* Camera::GetTransform()
+    const Transform* Camera::GetTransform() const
     {
         return transform;
     }

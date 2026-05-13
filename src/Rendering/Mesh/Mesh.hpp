@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Assets/MeshAsset.hpp"
 #include "MeshDrawInfo.hpp"
 #include "Rendering/Mesh/MeshBuffers.hpp"
 
@@ -31,6 +32,7 @@ namespace Beer::Rendering
         }
 
         static std::shared_ptr<Mesh> Get(const std::string& name);
+        static std::shared_ptr<Mesh> Create(const Core::MeshAsset& asset);
 
         const MeshBuffers& GetBuffers() const { return buffers; }
         MeshDrawInfo GetDrawInfo() const;

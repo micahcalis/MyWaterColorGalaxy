@@ -2,6 +2,7 @@
 
 #include "Core/Application/Managers/IAssetManager.hpp"
 #include "Core/Application/Managers/UploadManager.hpp"
+#include "Core/Assets/MeshAsset.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
 #include <memory>
 
@@ -25,6 +26,7 @@ namespace Beer::Core
 
     public:
         std::shared_ptr<Rendering::Mesh> Load(const std::filesystem::path& path) override;
+        std::shared_ptr<Rendering::Mesh> CreateProcedural(const Core::MeshAsset meshAsset);
 
     private:
         const std::filesystem::path GetPath(const std::string& name) override;

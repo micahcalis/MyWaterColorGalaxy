@@ -28,6 +28,11 @@ namespace Beer::Rendering
         static constexpr std::string_view POLY_EDGE = "Line";
         static constexpr std::string_view POLY_POINT = "Point";
 
+        static constexpr std::string_view TOPO_MODE = "Topology";
+        static constexpr std::string_view TOPO_TRI = "Triangle";
+        static constexpr std::string_view TOPO_LINE = "Line";
+        static constexpr std::string_view TOPO_POINT = "Point";
+
         static constexpr std::string_view CULL_MODE = "Cull";
         static constexpr std::string_view CULL_BACK = "Back";
         static constexpr std::string_view CULL_FRONT = "Front";
@@ -71,6 +76,7 @@ namespace Beer::Rendering
         static std::string GetFragmentEntryPoint(const nlohmann::basic_json<>& passData);
         static vk::PolygonMode GetPolygonMode(const nlohmann::basic_json<>& passData);
         static vk::CullModeFlags GetCullMode(const nlohmann::basic_json<>& passData);
+        static vk::PrimitiveTopology GetTopologyMode(const nlohmann::basic_json<>& passData);
 
         static void GetBlendMode(const nlohmann::basic_json<>& passData,
             bool& blendOn,

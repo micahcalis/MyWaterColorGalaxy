@@ -26,6 +26,23 @@ namespace Beer::Core
         return mesh;
     }
 
+    std::shared_ptr<Rendering::Mesh> MeshManager::CreateProcedural(const Core::MeshAsset meshAsset)
+    {
+        Rendering::MeshBuffers meshBuffers = Rendering::MeshBuffers(meshAsset);
+
+        std::shared_ptr<Rendering::Mesh> mesh = std::make_shared<Rendering::Mesh>(
+            std::move(meshBuffers),
+            meshAsset.GetVertexCount(),
+            meshAsset.GetIndexCount());
+
+        std::unique_ptr<MeshUploadJob> uploadJob = std::make_unique<MeshUploadJob>(
+            mesh, meshAsset);
+
+        uploadManager->AddJob(std::move(uploadJob));
+
+        return mesh;
+    }
+
     const std::filesystem::path MeshManager::GetPath(const std::string& name)
     {
         return AssetUtilities::GetModelPath(name);

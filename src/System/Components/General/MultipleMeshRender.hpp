@@ -4,21 +4,24 @@
 #include "Rendering/Shader/Globals/ModelTransformData.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "System/Delegates/Delegate.hpp"
+#include "Transform.hpp"
 
 namespace Beer::System
 {
     class MultipleMeshRender : public MeshRenderComponent
     {
+        Transform* rootTransform;
         std::shared_ptr<Rendering::Material> material;
         std::shared_ptr<Rendering::Mesh> mesh;
         Function<std::vector<Rendering::ModelTransformData>> getModelTransformData;
         Layer* layer;
 
     public:
-        MultipleMeshRender(std::shared_ptr<Rendering::Material> material,
+        MultipleMeshRender(Transform* rootTransform,
+            std::shared_ptr<Rendering::Material> material,
             std::shared_ptr<Rendering::Mesh> mesh,
             Layer* layer)
-            : material(material), mesh(mesh), layer(layer)
+            : rootTransform(rootTransform), material(material), mesh(mesh), layer(layer)
         {
         }
 
@@ -39,5 +42,10 @@ namespace Beer::System
         const Rendering::Shader* GetPrimaryShader() const override { return material->GetShader(); }
         const Rendering::Material* GetPrimaryMaterial() const override { return material.get(); }
         const Rendering::Mesh* GetPrimaryMesh() const override { return mesh.get(); }
+
+        float GetPlanarDist(const glm::vec3 cameraPos, const glm::vec3 cameraForward) const override
+        {
+            return glm::dot(rootTransform->Position - cameraPos, cameraForward);
+        }
     };
 } // namespace Beer::System

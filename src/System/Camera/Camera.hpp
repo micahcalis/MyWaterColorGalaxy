@@ -27,7 +27,7 @@ namespace Beer::System
         uint32_t GetPriority() const;
         glm::mat4 GetViewMatrix() const;
         glm::mat4 GetProjectionMatrix() const;
-        const Transform* GetTransform();
+        const Transform* GetTransform() const;
         void SetPosition(glm::vec3 position);
         void SetOrientation(glm::quat rotation);
         void SetOrientation(glm::vec3 up, glm::vec3 forward);

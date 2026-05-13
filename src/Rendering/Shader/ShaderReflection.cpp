@@ -90,6 +90,7 @@ namespace Beer::Rendering
             passSettings.Vertex = ShaderParseDef::GetVertexEntryPoint(passData);
             passSettings.Fragment = ShaderParseDef::GetFragmentEntryPoint(passData);
             passSettings.PolygonMode = ShaderParseDef::GetPolygonMode(passData);
+            passSettings.TopologyMode = ShaderParseDef::GetTopologyMode(passData);
             passSettings.CullMode = ShaderParseDef::GetCullMode(passData);
 
             ShaderParseDef::GetBlendMode(passData,

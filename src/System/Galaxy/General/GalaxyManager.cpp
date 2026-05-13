@@ -71,8 +71,6 @@ namespace Beer::System
 
     void GalaxyManager::UpdateOrbits()
     {
-        return;
-
         for (uint32_t i = 0; i < NUM_GALAXY_OBJ_TYPES; i++)
         {
             GalaxyObjectPool* pool = container->GetPool(static_cast<GalaxyObjectType>(i));

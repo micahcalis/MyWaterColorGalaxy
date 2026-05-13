@@ -4,9 +4,11 @@
 #include "Core/Application/Renderer/DrawCallPool.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
+#include "System/Components/General/MeshRenderComponent.hpp"
 #include "System/Components/UI/UIRenderComponent.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
+#include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 
 namespace Beer::System
 {
@@ -64,6 +66,11 @@ namespace Beer::System
             validatedComponents = SortUIComponents(validatedComponents);
         }
 
+        if (request.GetPass() == Rendering::ShaderPassType::Transparent)
+        {
+            validatedComponents = SortTransparents(validatedComponents, request.GetContext().Camera);
+        }
+
         return Core::DrawCallPool(request.GetCommandBuffer(),
             request.GetContext(),
             request.GetPass(),
@@ -99,6 +106,36 @@ namespace Beer::System
             });
 
         return uiComponents;
+    }
+
+    std::vector<IRenderComponent*> RenderRegister::SortTransparents(const std::vector<IRenderComponent*>& validatedComponents,
+        const Camera* camera)
+    {
+        std::vector<IRenderComponent*> transparentComps;
+        transparentComps.reserve(validatedComponents.size());
+
+        for (auto& component : validatedComponents)
+        {
+            if (component->GetType() == RenderCompType::Mesh)
+            {
+                transparentComps.push_back(component);
+            }
+        }
+
+        glm::vec3 position = camera->GetTransform()->Position;
+        glm::vec3 forward = camera->GetTransform()->GetForward();
+
+        std::sort(transparentComps.begin(),
+            transparentComps.end(),
+            [position, forward](const IRenderComponent* a, const IRenderComponent* b) -> bool {
+                const MeshRenderComponent* meshCompA = static_cast<const MeshRenderComponent*>(a);
+                const MeshRenderComponent* meshCompB = static_cast<const MeshRenderComponent*>(b);
+
+                return meshCompA->GetPlanarDist(position, forward)
+                    > meshCompB->GetPlanarDist(position, forward);
+            });
+
+        return transparentComps;
     }
 
 } // namespace Beer::System

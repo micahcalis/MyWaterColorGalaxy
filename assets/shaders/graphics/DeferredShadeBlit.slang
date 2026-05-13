@@ -60,12 +60,23 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
 
     Deferred.DeferredShadeData data = reader.Read(positionWS);
 
-    Lit.BRDF brdf = Lit.BRDF(GetMainLight(positionWS),
-        GetViewDirectionWS(positionWS),
-        data.normalWS,
-        data.albedo,
-        data.smoothness,
-        data.metallic);
+    float3 color = float3(1, 0, 1);
 
-    return float4(brdf.Shade(), 1);
+    if (data.materialIndex == 0)
+    {
+        Lit.BRDF brdf = Lit.BRDF(GetMainLight(positionWS),
+            GetViewDirectionWS(positionWS),
+            data.normalWS,
+            data.albedo,
+            data.smoothness,
+            data.metallic);
+
+        color = brdf.Shade();
+    }
+    if (data.materialIndex == 1)
+    {
+        color = data.albedo;
+    }
+
+    return float4(color, 1);
 }

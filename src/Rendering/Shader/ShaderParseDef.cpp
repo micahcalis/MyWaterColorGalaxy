@@ -1,5 +1,6 @@
 #include "Rendering/Shader/ShaderParseDef.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
 {
@@ -36,6 +37,19 @@ namespace Beer::Rendering
         case Hash(CULL_NONE): return vk::CullModeFlagBits::eNone;
         case Hash(CULL_BACK):
         default: return vk::CullModeFlagBits::eBack;
+        }
+    }
+
+    vk::PrimitiveTopology ShaderParseDef::GetTopologyMode(const nlohmann::basic_json<>& passData)
+    {
+        std::string mode = passData.value(std::string(TOPO_MODE), std::string(TOPO_TRI));
+
+        switch (Hash(mode))
+        {
+        case Hash(TOPO_TRI): return vk::PrimitiveTopology::eTriangleList;
+        case Hash(TOPO_LINE): return vk::PrimitiveTopology::eLineList;
+        case Hash(TOPO_POINT): return vk::PrimitiveTopology::ePointList;
+        default: return vk::PrimitiveTopology::eTriangleList;
         }
     }
 

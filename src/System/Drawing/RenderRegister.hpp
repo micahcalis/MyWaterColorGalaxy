@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Application/Renderer/DrawCallPool.hpp"
+#include "System/Camera/Camera.hpp"
 #include "System/Components/General/IRenderComponent.hpp"
 #include "System/Components/UI/UIRenderComponent.hpp"
 #include "System/Context/ContextType.hpp"
@@ -28,6 +29,9 @@ namespace Beer::System
     private:
         bool IsRenderComponentValid(const DrawRequest& request, IRenderComponent* component);
         std::vector<IRenderComponent*> SortUIComponents(const std::vector<IRenderComponent*>& validatedComponents);
+
+        std::vector<IRenderComponent*> SortTransparents(const std::vector<IRenderComponent*>& validatedComponents,
+            const Camera* camera);
 
     private:
         inline static RenderRegister* renderRegister = nullptr;

@@ -6,6 +6,7 @@
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
+#include "Rendering/RenderPasses/DrawTransparentPass.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
@@ -16,10 +17,11 @@
 
 namespace Beer::System
 {
+    static const uint32_t STAR_COUNT = 15'000;
+    static const float STAR_BOX_SIZE = 100.0f;
+
     void GalaxyContext::Load()
     {
-        this->getPlayerInput = getPlayerInput;
-
         opaquePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawOpaquePass>(
             std::string(Rendering::OPAQUE_PASS));
 
@@ -29,9 +31,13 @@ namespace Beer::System
         deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
             std::string(Rendering::DEFERRED_SHADE_PASS));
 
+        transparentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawTransparentPass>(
+            std::string(Rendering::TRANSPARENT_PASS));
+
         InitializeLight();
         InitializePlayer();
         InitializeGalaxy();
+        InitializeStars();
         TryLoadMap();
 
         Cursor::SetCursorMode(CursorMode::Locked);
@@ -54,7 +60,7 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, deferredShadePass, skyboxPass};
+        return {opaquePass, deferredShadePass, skyboxPass, transparentPass};
     }
 
     void GalaxyContext::InitializePlayer()
@@ -82,6 +88,11 @@ namespace Beer::System
     void GalaxyContext::InitializeGalaxy()
     {
         galaxyEntity = registry.CreateEntity<GalaxyEntity>();
+    }
+
+    void GalaxyContext::InitializeStars()
+    {
+        starsEntity = registry.CreateEntity<StarsEntity>(STAR_COUNT, STAR_BOX_SIZE);
     }
 
     void GalaxyContext::TryLoadMap()

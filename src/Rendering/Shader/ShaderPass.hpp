@@ -15,6 +15,7 @@ namespace Beer::Rendering
         std::string Fragment;
 
         vk::PolygonMode PolygonMode = vk::PolygonMode::eFill;
+        vk::PrimitiveTopology TopologyMode = vk::PrimitiveTopology::eTriangleList;
         vk::CullModeFlags CullMode = vk::CullModeFlagBits::eBack;
 
         bool Blend = false;

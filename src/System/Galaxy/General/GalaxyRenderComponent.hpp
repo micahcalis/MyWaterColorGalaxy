@@ -30,5 +30,11 @@ namespace Beer::System
         const Rendering::Shader* GetPrimaryShader() const override { return nullptr; }
         const Rendering::Material* GetPrimaryMaterial() const override { return nullptr; }
         const Rendering::Mesh* GetPrimaryMesh() const override { return nullptr; }
+
+        float GetPlanarDist(const glm::vec3 cameraPos, const glm::vec3 cameraForward) const override
+        {
+            // TODO: sort within galaxy itself
+            return glm::dot(glm::vec3(0) - cameraPos, cameraForward);
+        }
     };
 } // namespace Beer::System
