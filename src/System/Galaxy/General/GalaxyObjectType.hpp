@@ -4,6 +4,8 @@
 
 namespace Beer::System
 {
+    static const uint32_t NUM_GALAXY_OBJ_TYPES = 5;
+
     enum class GalaxyObjectType : uint32_t
     {
         Planet = 0,
@@ -12,4 +14,4 @@ namespace Beer::System
         BlackHole = 3,
         StarDust = 4
     };
-}
+} // namespace Beer::System

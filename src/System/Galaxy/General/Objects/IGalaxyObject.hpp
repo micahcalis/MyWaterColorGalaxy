@@ -28,13 +28,15 @@ namespace Beer::System
             const char* shaderPath)
         {
             Transform transform{};
-            transform.Scale = glm::vec3(serializedData.Scale);
+            transform.Scale = glm::vec3(serializedData.Scale * settings.SizeScale);
+            glm::vec2 posXZ = serializedData.Position * settings.PositionScale;
+            transform.Position = glm::vec3(posXZ.x, 0, posXZ.y);
             subEntity = std::make_unique<GameSubEntity>(transform);
 
             material = std::make_unique<Rendering::Material>(shaderPath);
 
             orbitComponent = std::make_unique<OrbitComponent>(subEntity->GetTransform(),
-                1.0f,                      // TEMPORARILY HARDCODED, NEED FIX
+                0.1f,                      // TEMPORARILY HARDCODED, NEED FIX
                 OrbitDirection::ClockWise, // TEMPORARILY HARDCODED, NEED FIX
                 settings.SunCenter,
                 glm::vec2(1.0f),       // TEMPORARILY HARDCODED, NEED FIX

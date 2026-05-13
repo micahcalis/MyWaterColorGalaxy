@@ -19,6 +19,7 @@
 #include "System/Light/LightEntity.hpp"
 #include "System/Default/UI/TextDisplayEntity.hpp"
 #include "System/Default/UI/TestQuadTreeEntity.hpp"
+#include "System/Serialization/MapHandler.hpp"
 #include <vector>
 
 namespace Beer::System
@@ -36,8 +37,16 @@ namespace Beer::System
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;
 
+        MapHandler mapHandler;
+
     public:
-        GalaxyContext(Function<PlayerInput> getPlayerInput);
+        GalaxyContext(Function<PlayerInput> getPlayerInput,
+            MapHandler mapHandler)
+            : getPlayerInput(getPlayerInput)
+            , mapHandler(mapHandler)
+        {
+        }
+
         void Load() override;
         void Update() override;
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
@@ -46,5 +55,6 @@ namespace Beer::System
         void InitializePlayer();
         void InitializeLight();
         void InitializeGalaxy();
+        void TryLoadMap();
     };
 } // namespace Beer::System

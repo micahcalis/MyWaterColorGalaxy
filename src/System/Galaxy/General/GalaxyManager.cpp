@@ -4,13 +4,16 @@
 #include "GalaxyTransformSettings.hpp"
 #include "Objects/PlanetObject.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "System/Galaxy/General/GalaxyContainer.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include "Vendor/magic_enum/magic_enum.hpp"
 #include <memory>
+#include <print>
 
 namespace Beer::System
 {
-    static const float GALAXY_POS_SCALE = 100.0f;
-    static const float GALAXY_SIZE_SCALE = 10.0f;
+    static const float GALAXY_POS_SCALE = 1000.0f;
+    static const float GALAXY_SIZE_SCALE = 200.0f;
     static const float GALAXY_TILT = 0.5f;
 
     void GalaxyManager::DefineTypes()
@@ -47,6 +50,7 @@ namespace Beer::System
                 continue;
 
             it->second.CreateObject(component);
+            // std::println("Object Created of type: {}", magic_enum::enum_name(type));
         }
     }
 
@@ -59,7 +63,7 @@ namespace Beer::System
     {
         settings.ColorSeed = serializedGalaxy.ColorSeed;
         settings.StarSeed = serializedGalaxy.StarSeed;
-        settings.SunCenter = glm::vec3(serializedGalaxy.StarPosition.x, 0, serializedGalaxy.StarPosition.y);
+        settings.SunCenter = glm::vec3(serializedGalaxy.StarPosition.x, 0, serializedGalaxy.StarPosition.y) * GALAXY_POS_SCALE;
         settings.PositionScale = GALAXY_POS_SCALE;
         settings.SizeScale = GALAXY_SIZE_SCALE;
         settings.TiltIntensity = GALAXY_TILT;
@@ -67,7 +71,20 @@ namespace Beer::System
 
     void GalaxyManager::UpdateOrbits()
     {
-        throw std::runtime_error("Galaxy Manager not implemented!");
+        return;
+
+        for (uint32_t i = 0; i < NUM_GALAXY_OBJ_TYPES; i++)
+        {
+            GalaxyObjectPool* pool = container->GetPool(static_cast<GalaxyObjectType>(i));
+
+            if (pool != nullptr)
+            {
+                for (const auto& object : pool->Objects)
+                {
+                    object->Update();
+                }
+            }
+        }
     }
 
 } // namespace Beer::System

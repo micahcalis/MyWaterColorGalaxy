@@ -55,6 +55,7 @@ public float3 ClipToWorld(float4 positionCS)
     float4 worldPos = mul(_InvViewProjMat, positionCS);
     return worldPos.xyz / worldPos.w; 
 }
+
 public float3 WorldToView(float3 positionWS)
 {
     return mul(_ViewMat, float4(positionWS, 1)).xyz;
@@ -80,4 +81,16 @@ public float3 UVDepthToWorld(float2 uv, float depth)
     float2 ndcXY = uv * 2.0 - 1.0; 
     float4 clipPos = float4(ndcXY, depth, 1.0);
     return ClipToWorld(clipPos);
+}
+
+public float3 GetTransformCenter(float4x4 objToWorldMat)
+{
+    return float3(objToWorldMat._m03, objToWorldMat._m13, objToWorldMat._m23);
+}
+
+public float3 GetTransformScale(float4x4 objToWorldMat)
+{
+    return float3(length(float3(objToWorldMat._m00, objToWorldMat._m10, objToWorldMat._m20)),
+        length(float3(objToWorldMat._m01, objToWorldMat._m11, objToWorldMat._m21)),
+        length(float3(objToWorldMat._m02, objToWorldMat._m12, objToWorldMat._m22)));
 }

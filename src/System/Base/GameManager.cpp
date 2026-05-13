@@ -13,6 +13,7 @@
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
+#include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/MapSerializationManager.hpp"
 #include <memory>
 
@@ -74,13 +75,15 @@ namespace Beer::System
         Function<ButtonInput> getDebugKeyInput = [this]() -> ButtonInput { return inputManager->GetDebugButtonInput(); };
 
         contextHandler->RegisterContextFactory(ContextType::Galaxy,
-            [getPlayerInput]() -> std::shared_ptr<IContext> {
-                return std::make_shared<GalaxyContext>(getPlayerInput);
+            [this, getPlayerInput]() -> std::shared_ptr<IContext> {
+                MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
+                return std::make_shared<GalaxyContext>(getPlayerInput, handler);
             });
 
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
             [this, getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
-                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, mapSerializationManager->GetMapHandler(TEST_MAP));
+                MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
+                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, handler);
             });
     }
 

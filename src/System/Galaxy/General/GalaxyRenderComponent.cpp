@@ -2,6 +2,7 @@
 #include "System/Galaxy/General/GalaxyContainer.hpp"
 #include "System/Galaxy/General/GalaxyObjectType.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include <print>
 #include <stdexcept>
 
 namespace Beer::System

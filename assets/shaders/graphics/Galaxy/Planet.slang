@@ -25,7 +25,7 @@ struct VertexData
 {
     float4 positionCS : SV_Position;
     float3 positionWS;
-    float3 transformCenter;
+    nointerpolation uint instanceID;
 }
 
 //$ Pass Opaque
@@ -42,14 +42,18 @@ VERT VertexData PlanetVert(MeshData input, INSTANCEID)
     float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
     output.positionWS = positionWS.xyz;
-    output.transformCenter = mul(transform.objToWorldMat, float4(0, 0, 0, 1)).xyz;
+    output.instanceID = instanceID;
     return output;
 }
 
 FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
-    SphereTracing.AABB boundingbox = SphereTracing.AABB(input.transformCenter, float3(2));
+    TransformData transform = GetModelTransform(input.instanceID);
+    float3 transformCenter = GetTransformCenter(transform.objToWorldMat);
+    float3 transformScale = GetTransformScale(transform.objToWorldMat);
+
+    SphereTracing.AABB boundingbox = SphereTracing.AABB(transformCenter, transformScale * 2);
 
     if (!boundingbox.ShouldMarch(_CameraPos, isFrontFace, _ZBufferParams.x))
     {
@@ -59,7 +63,7 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
     ray = boundingbox.AlignWithBox(ray);
 
-    SDF.Sphere planetSDF = SDF.Sphere(input.transformCenter, _Radius);
+    SDF.Sphere planetSDF = SDF.Sphere(transformCenter, _Radius);
 
     SphereTracing.SphereTracer<SDF.Sphere> tracer = SphereTracing.SphereTracer<SDF.Sphere>(
         planetSDF,

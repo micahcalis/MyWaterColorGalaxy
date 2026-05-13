@@ -14,5 +14,5 @@ namespace Beer::System
     static const PlayerSettings PLAYER_SETTINGS = {
         5.0f,
         0.3f,
-        glm::vec3(0)};
+        glm::vec3(500, 0, 500)};
 } // namespace Beer::System

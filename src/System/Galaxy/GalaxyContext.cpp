@@ -1,18 +1,22 @@
 #pragma once
 
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "General/GalaxyEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
+#include "System/Base/Input/CursorMode.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
+#include <stdexcept>
 
 namespace Beer::System
 {
-    GalaxyContext::GalaxyContext(Function<PlayerInput> getPlayerInput)
+    void GalaxyContext::Load()
     {
         this->getPlayerInput = getPlayerInput;
 
@@ -24,6 +28,13 @@ namespace Beer::System
 
         deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
             std::string(Rendering::DEFERRED_SHADE_PASS));
+
+        InitializeLight();
+        InitializePlayer();
+        InitializeGalaxy();
+        TryLoadMap();
+
+        Cursor::SetCursorMode(CursorMode::Locked);
     }
 
     void GalaxyContext::Update()
@@ -34,12 +45,11 @@ namespace Beer::System
         {
             playerEntity->Update();
         }
-    }
 
-    void GalaxyContext::Load()
-    {
-        InitializeLight();
-        InitializePlayer();
+        if (galaxyEntity != nullptr)
+        {
+            galaxyEntity->Update();
+        }
     }
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
@@ -71,5 +81,22 @@ namespace Beer::System
 
     void GalaxyContext::InitializeGalaxy()
     {
+        galaxyEntity = registry.CreateEntity<GalaxyEntity>();
+    }
+
+    void GalaxyContext::TryLoadMap()
+    {
+        if (galaxyEntity == nullptr)
+        {
+            throw std::runtime_error("Trying To Load Map when Galaxy Entity is null!");
+        }
+
+        if (!mapHandler.IsSaved())
+        {
+            throw std::runtime_error("Trying to Load Map that doesn't exist!");
+        }
+
+        SerializablePaintSession serializedPaintSession = mapHandler.Load();
+        galaxyEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
     }
 } // namespace Beer::System

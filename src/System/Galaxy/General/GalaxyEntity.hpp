@@ -5,6 +5,8 @@
 #include "GalaxyRenderComponent.hpp"
 #include "System/Components/Registry/GameEntity.hpp"
 #include "System/Components/Registry/IEntity.hpp"
+#include "System/Drawing/ContextMask.hpp"
+#include "System/Drawing/RenderRegister.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <unordered_map>
@@ -21,7 +23,7 @@ namespace Beer::System
             : GameEntity(Transform(), nullptr)
         {
             container = std::make_unique<GalaxyContainer>();
-            renderComponent = std::make_unique<GalaxyRenderComponent>(container.get());
+            renderComponent = RenderRegister::CreateRenderComponent<GalaxyRenderComponent>(ContextType::Galaxy, container.get());
         }
 
         void Update() override

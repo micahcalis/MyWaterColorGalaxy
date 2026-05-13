@@ -22,7 +22,9 @@ namespace Beer::System
             material->SetColor("_ColorB", serializedData.Colors[1]);
             material->SetColor("_ColorC", serializedData.Colors[2]);
             material->SetColor("_ColorD", serializedData.Colors[3]);
-            material->SetFloat("_Radius", 0.5f); // TEMPORARILY HARDCODED, NEED FIX
+
+            float radius = serializedData.Scale * settings.SizeScale * 0.8f;
+            material->SetFloat("_Radius", radius); // TEMPORARILY HARDCODED, NEED FIX
         }
 
         void Draw(Rendering::CommandBuffer* commandBuffer,
@@ -30,6 +32,7 @@ namespace Beer::System
             const Rendering::MeshDrawInfo& drawInfo)
             override
         {
+            commandBuffer->BindModelPush(subEntity->GetTransform()->GetShaderTransform(), material->GetShader());
             commandBuffer->BindMaterial(material.get());
             commandBuffer->DrawMeshSingle(drawInfo);
         }
