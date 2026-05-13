@@ -1,5 +1,6 @@
 #pragma once
 
+#include "General/GalaxyEntity.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/RenderPasses/ComputeTornadoParticlesPass.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
@@ -27,31 +28,23 @@ namespace Beer::System
     private:
         PlayerEntity* playerEntity = nullptr;
         LightEntity* mainLightEntity = nullptr;
-        std::vector<SingleStaticEntity*> staticEntities;
-        MultipleContainerEntity<System::RotateEntitiesManager>* testRotationEntity = nullptr;
-        TextDisplayEntity* textEntity = nullptr;
-        // TestQuadTreeEntity* testQuadTreeEntity = nullptr;
+        GalaxyEntity* galaxyEntity = nullptr;
 
         Function<PlayerInput> getPlayerInput;
 
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
-        Rendering::ComputePerlinPass* computePerlinPass = nullptr;
-        Rendering::ComputeTornadoParticlesPass* tornadoPass = nullptr;
-        Rendering::RenderTornadoPass* tornadoRenderPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;
-        Rendering::DrawUIPass* drawUIPass = nullptr;
-
-        std::shared_ptr<Rendering::Material> defaultLitMaterial;
-        std::shared_ptr<Rendering::Texture2D> catTexture;
-        std::shared_ptr<Rendering::Material> catLitMaterial;
-        std::shared_ptr<Rendering::FontAsset> mirandaSansFont;
-        std::shared_ptr<Rendering::FontMaterial> fontMaterial;
 
     public:
         GalaxyContext(Function<PlayerInput> getPlayerInput);
         void Load() override;
         void Update() override;
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
+
+    private:
+        void InitializePlayer();
+        void InitializeLight();
+        void InitializeGalaxy();
     };
 } // namespace Beer::System

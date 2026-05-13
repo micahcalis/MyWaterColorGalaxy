@@ -38,15 +38,17 @@ namespace Beer::System
 
     void GalaxyContext::Load()
     {
-        Transform lightTransform{};
-        lightTransform.Position = glm::vec3(0, 1000, 100);
+        InitializeLight();
+        InitializePlayer();
+    }
 
-        mainLightEntity = registry.CreateEntity<LightEntity>(std::move(lightTransform),
-            10,
-            glm::vec4(1, 1, 0.8, 1),
-            glm::vec4(0.2, 0.23, 0.35, 1),
-            glm::vec4(0.86, 0.98, 1, 1));
+    std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
+    {
+        return {opaquePass, deferredShadePass, skyboxPass};
+    }
 
+    void GalaxyContext::InitializePlayer()
+    {
         Transform playerTransform{};
         playerTransform.Position = PLAYER_SETTINGS.StartPos;
 
@@ -55,8 +57,19 @@ namespace Beer::System
             getPlayerInput);
     }
 
-    std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
+    void GalaxyContext::InitializeLight()
     {
-        return {opaquePass, deferredShadePass, skyboxPass};
+        Transform lightTransform{};
+        lightTransform.Position = glm::vec3(0, 1000, 100);
+
+        mainLightEntity = registry.CreateEntity<LightEntity>(std::move(lightTransform),
+            10,
+            glm::vec4(1, 1, 0.8, 1),
+            glm::vec4(0.2, 0.23, 0.35, 1),
+            glm::vec4(0.86, 0.98, 1, 1));
+    }
+
+    void GalaxyContext::InitializeGalaxy()
+    {
     }
 } // namespace Beer::System
