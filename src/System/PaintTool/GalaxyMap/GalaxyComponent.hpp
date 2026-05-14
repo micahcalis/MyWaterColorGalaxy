@@ -14,6 +14,7 @@ namespace Beer::System
         std::vector<glm::vec4> Colors;
         float Scale = 0;
         glm::vec2 Position = glm::vec2(0);
+        glm::vec2 Tilt = glm::vec2(0);
     };
 
     class GalaxyComponent

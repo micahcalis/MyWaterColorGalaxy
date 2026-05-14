@@ -17,6 +17,7 @@ namespace Beer::System
 {
     static const float CURSOR_MIN = 0.02f;
     static const float CURSOR_MAX = 0.15f;
+    static const float TILT_SCALE = glm::radians(50.0f);
 
     GalaxyMapCursor::GalaxyMapCursor(GalaxyMapBuffer* galaxyMapBuffer,
         UITransform* mapTransform,
@@ -179,6 +180,13 @@ namespace Beer::System
 
         data.Position = mapSpacePosition;
         data.Scale = Size;
+
+        data.Tilt = glm::vec2(static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
+                        static_cast<float>(rand()) / static_cast<float>(RAND_MAX))
+            - 0.5f;
+
+        data.Tilt *= TILT_SCALE;
+
         return data;
     }
 } // namespace Beer::System

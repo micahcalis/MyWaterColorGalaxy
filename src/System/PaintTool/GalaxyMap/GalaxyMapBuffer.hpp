@@ -105,6 +105,7 @@ namespace Beer::System
                 mapMaterial->SetColor("_ColorB", settings.ColorB);
                 mapMaterial->SetColor("_ColorC", settings.ColorC);
                 mapMaterial->SetVector("_GalaxyCenter", glm::vec4(settings.StarPosition, 0, 0));
+                mapMaterial->SetVector("_RingShear", glm::vec4(settings.OrbitShear, 0, 0));
             }
 
             if (starMaterial != nullptr && updateStarPosition != nullptr)

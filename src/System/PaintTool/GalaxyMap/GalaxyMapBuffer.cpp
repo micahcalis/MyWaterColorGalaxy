@@ -21,6 +21,8 @@ namespace Beer::System
         settings.ColorB = serializableGalaxy.ColorB;
         settings.ColorC = serializableGalaxy.ColorC;
 
+        settings.OrbitShear = serializableGalaxy.OrbitShear;
+
         UpdateMaterials();
     }
 
@@ -38,6 +40,8 @@ namespace Beer::System
         serializable.ColorB = settings.ColorB;
         serializable.ColorC = settings.ColorC;
 
+        serializable.OrbitShear = settings.OrbitShear;
+
         SerializableGalaxyComponent compSerializable{};
 
         for (const auto& component : componentMap)
@@ -47,6 +51,7 @@ namespace Beer::System
             compSerializable.Colors = component.second.Data.Colors;
             compSerializable.Scale = component.second.Data.Scale;
             compSerializable.Position = component.second.Data.Position;
+            compSerializable.Tilt = component.second.Data.Tilt;
 
             serializable.Components.push_back(compSerializable);
         }

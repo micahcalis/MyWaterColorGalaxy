@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include <cstdint>
 #include <print>
@@ -66,6 +67,9 @@ namespace Beer::System
     static const float MIN_STAR_VALUE = 0.85f;
     static const float MAX_STAR_VALUE = 0.95f;
 
+    static const float SHEAR_MIN = 0.8f;
+    static const float SHEAR_MAX = 1.2f;
+
     static constexpr float Remap(float x, glm::vec2 a, glm::vec2 b)
     {
         return b.x + (x - a.x) * (b.y - b.x) / (a.y - a.x);
@@ -97,6 +101,8 @@ namespace Beer::System
         glm::vec4 ColorA{};
         glm::vec4 ColorB{};
         glm::vec4 ColorC{};
+
+        glm::vec2 OrbitShear{};
 
     public:
         void UpdateSettings(const GalaxySeed seed)
@@ -132,6 +138,11 @@ namespace Beer::System
             ColorA = nextColor(colorState, false);
             ColorB = nextColor(colorState, false);
             ColorC = nextColor(colorState, false);
+
+            OrbitShear = glm::vec2(nextFloat(starState),
+                nextFloat(starState));
+
+            OrbitShear = glm::mix(glm::vec2(SHEAR_MIN), glm::vec2(SHEAR_MAX), OrbitShear);
         }
     };
 } // namespace Beer::System

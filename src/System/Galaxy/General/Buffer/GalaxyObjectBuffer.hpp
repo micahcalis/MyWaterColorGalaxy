@@ -47,5 +47,7 @@ namespace Beer::System
             std::vector<SerializableGalaxyComponent>& components);
 
         void InitializeMaterialData(const SerializableGalaxy& serializedData);
+
+        float CalculateOrbitSpeed(const glm::vec2 normSunPos, const glm::vec2 normCompPos);
     };
 } // namespace Beer::System

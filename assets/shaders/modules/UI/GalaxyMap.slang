@@ -182,13 +182,15 @@ namespace Map
         private int numRings;
         private float thickness;
         private float3 color;
+        private float2 shear;
 
         public __init(float2 _center,
             float2 _uv,
             int _seed,
             int _numRings,
             float _thickness,
-            float3 _color)
+            float3 _color,
+            float2 _shear)
         {
             center = _center;
             uv = _uv;
@@ -196,6 +198,7 @@ namespace Map
             numRings = _numRings;
             thickness = _thickness;
             color = _color;
+            shear = _shear;
         }
 
         public float4 Get()
@@ -204,10 +207,7 @@ namespace Map
             float2 stretch = float2(Noise.Functions.IntegerHash(seed + 9), 
                 Noise.Functions.IntegerHash(seed - 5));
 
-            stretch = float2(Math.Remap(stretch.x, float2(0.0f, 1.0f), float2(STRETCH_MIN, STRETCH_MAX)),
-                Math.Remap(stretch.y, float2(0.0f, 1.0f), float2(STRETCH_MIN, STRETCH_MAX)));
-
-            float2 scaledUv = centerUv * stretch * (float)numRings * 2.3f;
+            float2 scaledUv = centerUv * shear * (float)numRings * 2.3f;
 
             Noise.Perlin perlin = Noise.Perlin(seed, uv * 80.0f);
             float2 uvOffset = perlin.Compute();
