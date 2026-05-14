@@ -33,6 +33,7 @@ namespace Beer::Core
         [[nodiscard]] std::vector<vk::SurfaceFormatKHR> GetAvailableFormats(const vk::raii::SurfaceKHR& surface) const;
         [[nodiscard]] std::vector<vk::PresentModeKHR> GetAvailablePresentModes(const vk::raii::SurfaceKHR& surface) const;
         [[nodiscard]] size_t GetMinUniformBufferOffset() const;
+        [[nodiscard]] size_t GetMinStorageBufferOffset() const;
 
     private:
         void PickPhysicalDevice(const vk::raii::Instance& instance);

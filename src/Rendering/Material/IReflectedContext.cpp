@@ -83,13 +83,18 @@ namespace Beer::Rendering
         buffer->SetTexture(name, val, immediate);
     }
 
-    void IReflectedContext::SetStructuredBuffer(const std::string& name, PhaseBuffer* val)
+    void IReflectedContext::SetStructuredBuffer(const std::string& name, PhaseBuffer* val, bool immediate)
     {
         PropertyType typeFetch = materialData->GetTypeByName(name);
 
         if (typeFetch != PropertyType::StructuredBuffer && typeFetch != PropertyType::RWStructuredBuffer)
             return;
 
-        buffer->SetStructuredBuffer(name, val);
+        buffer->SetStructuredBuffer(name, val, immediate);
+    }
+
+    ShaderProperty IReflectedContext::GetProperty(const std::string& name)
+    {
+        return materialData->GetProperty(name);
     }
 } // namespace Beer::Rendering

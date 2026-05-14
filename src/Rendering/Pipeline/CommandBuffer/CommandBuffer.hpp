@@ -54,7 +54,8 @@ namespace Beer::Rendering
         void BindDescriptorSets(const vk::PipelineBindPoint bindPoint,
             const vk::PipelineLayout layout,
             const uint32_t setIndex,
-            std::vector<vk::DescriptorSet> sets);
+            std::vector<vk::DescriptorSet> sets,
+            const std::vector<uint32_t>& dynamicOffsets = {});
 
         void BindModelPush(Rendering::ModelPush modelPush,
             const Rendering::Shader* shader);
@@ -76,7 +77,9 @@ namespace Beer::Rendering
             const ShaderPass* shaderPass,
             const FragmentOutput& output);
 
-        void BindMaterial(const Material* material);
+        void BindMaterial(const Material* material,
+            const std::vector<uint32_t>& dynamicOffsets = {});
+
         void BindFontMaterial(const FontMaterial* fontMaterial);
         void BindMesh(const Mesh* mesh, const MeshBufferOrder* order);
         void BindTextBuffer(const TextBuffer* textBuffer);

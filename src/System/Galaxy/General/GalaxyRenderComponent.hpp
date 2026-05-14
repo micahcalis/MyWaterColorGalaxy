@@ -33,7 +33,6 @@ namespace Beer::System
 
         float GetPlanarDist(const glm::vec3 cameraPos, const glm::vec3 cameraForward) const override
         {
-            // TODO: sort within galaxy itself
             return glm::dot(glm::vec3(0) - cameraPos, cameraForward);
         }
     };

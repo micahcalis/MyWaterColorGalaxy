@@ -150,7 +150,7 @@ namespace Beer::Rendering
         {
             if (prop.Type == PropertyType::StructuredBuffer || prop.Type == PropertyType::RWStructuredBuffer)
             {
-                PhaseBuffer* bufferToBind = PhaseBuffer::GetFallbackBuffer();
+                PhaseBuffer* bufferToBind = PhaseBuffer::GetFallbackBuffer(prop.Dynamic);
 
                 auto it = structuredBuffers.find(name);
                 if (it != structuredBuffers.end())

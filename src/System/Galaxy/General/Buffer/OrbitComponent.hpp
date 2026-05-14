@@ -4,6 +4,7 @@
 #include "System/Components/General/Transform.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "glm/fwd.hpp"
 #include <cstdint>
 
 namespace Beer::System
@@ -17,7 +18,7 @@ namespace Beer::System
     class OrbitComponent
     {
     private:
-        Transform* transform = nullptr;
+        GameSubEntity subEntity;
         float speed = 0;
         float radius = 0;
         OrbitDirection direction = OrbitDirection::ClockWise;
@@ -29,28 +30,28 @@ namespace Beer::System
         float initialAngle = 0.0f;
 
     public:
-        OrbitComponent(Transform* transform,
-            float speed,
+        OrbitComponent(float speed,
             OrbitDirection direction,
             glm::vec3 center,
             glm::vec2 shear,
             glm::vec2 tilt,
             glm::vec3 startPos)
-            : transform(transform)
+            : subEntity(Transform())
             , speed(speed)
             , direction(direction)
             , center(center)
             , shear(shear)
             , tilt(tilt)
+            , startPos(startPos)
         {
-            startPos = transform->Position;
+            subEntity.GetTransform()->Position = startPos;
             float dx = startPos.x - center.x;
             float dz = startPos.z - center.z;
             radius = std::sqrt(dx * dx + dz * dz);
             initialAngle = std::atan2(dz, dx);
         }
 
-        void Update()
+        void Update(glm::vec4& outPosition)
         {
             float timeAngle = speed * Clock::Time() * static_cast<int32_t>(direction);
             float currentAngle = initialAngle + timeAngle;
@@ -63,9 +64,11 @@ namespace Beer::System
             float finalX = flatX * std::cos(tilt.y);
             float finalZ = flatZ * std::cos(tilt.x);
 
-            transform->Position.x = center.x + finalX;
-            transform->Position.y = center.y + offsetY;
-            transform->Position.z = center.z + finalZ;
+            outPosition.x = center.x + finalX;
+            outPosition.y = center.y + offsetY;
+            outPosition.z = center.z + finalZ;
+
+            subEntity.GetTransform()->Position = outPosition;
         }
     };
 } // namespace Beer::System

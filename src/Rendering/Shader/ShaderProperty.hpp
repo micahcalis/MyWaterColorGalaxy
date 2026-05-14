@@ -24,9 +24,10 @@ namespace Beer::Rendering
     struct ShaderProperty
     {
     public:
-        PropertyType Type;
-        uint32_t Offset;
-        uint32_t Size;
-        uint32_t Binding;
+        PropertyType Type = PropertyType::Unknown;
+        uint32_t Offset = 0;
+        uint32_t Size = 0;
+        uint32_t Binding = 0;
+        bool Dynamic = false;
     };
 } // namespace Beer::Rendering

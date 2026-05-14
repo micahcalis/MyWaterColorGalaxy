@@ -1,87 +1,48 @@
 #pragma once
 
+#include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
 #include "GalaxyObjectType.hpp"
-#include "System/Galaxy/General/Objects/IGalaxyObject.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
 
 namespace Beer::System
 {
-    struct GalaxyObjectPool
+    struct GalaxyBufferDefinition
     {
     public:
-        std::vector<std::unique_ptr<IGalaxyObject>> Objects;
-        std::shared_ptr<Rendering::Shader> ObjectShader = nullptr;
-        std::shared_ptr<Rendering::Mesh> ObjectMesh = nullptr;
+        const GalaxyObjectType Type;
+        const char* ShaderPath;
+        const char* MeshPath;
+
+    public:
+        GalaxyBufferDefinition(const GalaxyObjectType type,
+            const char* shaderPath,
+            const char* meshPath)
+            : Type(type), ShaderPath(shaderPath), MeshPath(meshPath)
+        {
+        }
     };
 
     class GalaxyContainer
     {
     private:
-        std::unordered_map<GalaxyObjectType, std::unique_ptr<GalaxyObjectPool>> objectMap;
+        std::unordered_map<GalaxyObjectType, std::unique_ptr<GalaxyObjectBuffer>> bufferMap;
 
     public:
-        template<typename T, typename... Args>
-        T* CreateObject(const GalaxyObjectType type, Args&&... args)
-        {
-            static_assert(std::is_base_of<IGalaxyObject, T>::value,
-                "Create Galaxy Object Type does not inherit from IGalaxyObject!");
+        void CreateBuffers(const SerializableGalaxy& serializedData);
+        void Update();
 
-            std::unique_ptr<T> object = std::make_unique<T>(std::forward<Args>(args)...);
-            T* objectP = object.get();
-
-            auto& poolPtr = objectMap[type];
-
-            if (!poolPtr)
-            {
-                poolPtr = std::make_unique<GalaxyObjectPool>();
-            }
-
-            poolPtr->Objects.push_back(std::move(object));
-
-            return objectP;
-        }
-
-        void SetPoolShader(const GalaxyObjectType type, std::shared_ptr<Rendering::Shader> shader)
-        {
-            auto& poolPtr = objectMap[type];
-
-            if (!poolPtr)
-            {
-                poolPtr = std::make_unique<GalaxyObjectPool>();
-            }
-
-            poolPtr->ObjectShader = std::move(shader);
-        }
-
-        void SetPoolMesh(const GalaxyObjectType type, std::shared_ptr<Rendering::Mesh> mesh)
-        {
-            auto& poolPtr = objectMap[type];
-
-            if (!poolPtr)
-            {
-                poolPtr = std::make_unique<GalaxyObjectPool>();
-            }
-
-            poolPtr->ObjectMesh = std::move(mesh);
-        }
-
-        [[nodiscard]] GalaxyObjectPool* GetPool(const GalaxyObjectType type) const
-        {
-            auto it = objectMap.find(type);
-
-            if (it == objectMap.end())
-                return nullptr;
-
-            return it->second.get();
-        }
+        void Draw(Rendering::CommandBuffer* commandBuffer,
+            const Rendering::RenderContext& renderContext,
+            const Rendering::ShaderPassType pass);
 
         void Clear()
         {
-            objectMap.clear();
+            bufferMap.clear();
         }
     };
 } // namespace Beer::System

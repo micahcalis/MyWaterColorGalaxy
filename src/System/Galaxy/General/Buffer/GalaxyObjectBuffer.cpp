@@ -1,0 +1,143 @@
+#include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
+#include "GalaxyDataObject.hpp"
+#include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Buffer/PhaseBuffer.hpp"
+#include "Rendering/Buffer/SSBOType.hpp"
+#include "Rendering/Material/Material.hpp"
+#include "Rendering/Shader/ShaderPassType.hpp"
+#include "Rendering/Shader/ShaderProperty.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
+#include "System/Galaxy/General/GalaxyObjectType.hpp"
+#include "System/Galaxy/General/Buffer/OrbitComponent.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
+#include <print>
+#include <stdexcept>
+
+namespace Beer::System
+{
+    static const float GALAXY_POS_SCALE = 1000.0f;
+    static const float GALAXY_SIZE_SCALE = 200.0f;
+
+    GalaxyObjectBuffer::GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
+        GalaxyObjectType type,
+        const char* shaderPath,
+        const char* meshPath)
+    {
+        material = std::make_shared<Rendering::Material>(shaderPath);
+
+        material->GetShader()->PrintConfig();
+        mesh = Rendering::Mesh::Get(meshPath);
+
+        std::vector<SerializableGalaxyComponent> components;
+        serializedObjects.reserve(serializedData.Components.size());
+        components.reserve(serializedData.Components.size());
+
+        for (const auto& component : serializedData.Components)
+        {
+            bool isType = type == static_cast<GalaxyObjectType>(component.TypeIndex);
+
+            if (isType)
+            {
+                serializedObjects.push_back({component.Colors[0],
+                    component.Colors[1],
+                    component.Colors[2],
+                    component.Colors[3],
+                    component.Scale * GALAXY_SIZE_SCALE,
+                    component.Id});
+
+                components.push_back(component);
+            }
+        }
+
+        instanceCount = serializedObjects.size();
+
+        InitializeDataBuffer();
+        InitializeDynamicPositions(serializedData, components);
+        InitializeMaterialData(serializedData);
+    }
+
+    void GalaxyObjectBuffer::Update()
+    {
+        for (size_t i = 0; i < orbitComponents.size(); i++)
+        {
+            orbitComponents[i].Update(objectPositions[i]);
+        }
+
+        size_t frameIndex = Rendering::UniformDescriptor::GetFrameIndex();
+        size_t rawSize = sizeof(glm::vec4) * objectPositions.size();
+        size_t alignedChunkSize = (rawSize + minAligment - 1) & ~(minAligment - 1);
+        size_t offset = alignedChunkSize * frameIndex;
+
+        positionBuffer->GetHandle()->Upload(objectPositions.data(), rawSize, offset);
+    }
+
+    void GalaxyObjectBuffer::Draw(Rendering::CommandBuffer* commandBuffer,
+        const Rendering::RenderContext& context,
+        const Rendering::ShaderPassType pass)
+    {
+        const Rendering::Shader* shader = material->GetShader();
+
+        if (!shader->HasPass(pass))
+            return;
+
+        const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
+
+        commandBuffer->BindShaderPass(shader, shaderPass, context.Output);
+
+        size_t frameIndex = Rendering::UniformDescriptor::GetFrameIndex();
+        size_t rawSize = sizeof(glm::vec4) * objectPositions.size();
+        size_t alignedChunkSize = (rawSize + minAligment - 1) & ~(minAligment - 1);
+        uint32_t offset = static_cast<uint32_t>(alignedChunkSize * frameIndex);
+
+        commandBuffer->BindMaterial(material.get(), {offset});
+        commandBuffer->BindMesh(mesh.get(), &shaderPass->Input.BufferOrder);
+
+        Rendering::MeshDrawInfo drawInfo = mesh->GetDrawInfo();
+        commandBuffer->DrawMeshMultiple(drawInfo, instanceCount);
+    }
+
+    void GalaxyObjectBuffer::InitializeDataBuffer()
+    {
+        size_t size = sizeof(GalaxyDataObject) * serializedObjects.size();
+
+        dataBuffer = std::make_shared<Rendering::PhaseBuffer>("_",
+            std::make_shared<Rendering::Buffer>(Rendering::Buffer::CreateSSBO(size, Rendering::SSBOType::Consistent)));
+
+        dataBuffer->UploadAsync(serializedObjects.data(), size);
+    }
+
+    void GalaxyObjectBuffer::InitializeDynamicPositions(const SerializableGalaxy& serializedData,
+        std::vector<SerializableGalaxyComponent>& components)
+    {
+        minAligment = Rendering::UniformDescriptor::GetMinAlignment(Rendering::BufferDescriptorType::Storage);
+
+        size_t rawSize = sizeof(glm::vec4) * instanceCount;
+        size_t alignedChunkSize = (rawSize + minAligment - 1) & ~(minAligment - 1);
+        size_t totalBufferSize = alignedChunkSize * Rendering::UniformDescriptor::GetFramesInFlight();
+
+        positionBuffer = std::make_shared<Rendering::PhaseBuffer>("_",
+            std::make_shared<Rendering::Buffer>(Rendering::Buffer::CreateDynamic(totalBufferSize,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)));
+
+        orbitComponents.reserve(components.size());
+        objectPositions.resize(instanceCount);
+        glm::vec3 sunCenter = glm::vec3(serializedData.StarPosition.x, 0, serializedData.StarPosition.y) * GALAXY_POS_SCALE;
+
+        for (const auto& component : components)
+        {
+            // HARDCODED: NEEDS FIXING
+            orbitComponents.push_back(OrbitComponent(0.1f,
+                OrbitDirection::ClockWise,
+                sunCenter,
+                glm::vec2(1),
+                glm::vec2(0),
+                glm::vec3(component.Position.x, 0, component.Position.y) * GALAXY_POS_SCALE));
+        }
+    }
+
+    void GalaxyObjectBuffer::InitializeMaterialData(const SerializableGalaxy& serializedData)
+    {
+        material->SetStructuredBuffer("_GalaxyObjectData", dataBuffer.get());
+        material->SetStructuredBuffer("_DynamicGalaxyObjectPositions", positionBuffer.get());
+    }
+} // namespace Beer::System

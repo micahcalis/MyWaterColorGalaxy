@@ -24,6 +24,7 @@ namespace Beer::Rendering
         std::string Name() const { return name; }
         [[nodiscard]] Buffer* GetHandle() const { return bufferHandle.get(); }
         void* GetMappedPointer() const { return bufferHandle->GetAllocInfo().pMappedData; }
+        void UploadAsync(void* data, size_t size, size_t offset = 0);
 
     private:
         void SetBuffer(std::shared_ptr<Buffer> buffer);
@@ -35,12 +36,13 @@ namespace Beer::Rendering
         }
 
     private:
-        inline static std::shared_ptr<PhaseBuffer> bufferFallback;
+        inline static std::shared_ptr<PhaseBuffer> bufferFallbackStandard;
+        inline static std::shared_ptr<PhaseBuffer> bufferFallbackDynamic;
 
     public:
         static void InitializeFallbackBuffer();
         static void DestroyFallbackBuffer();
-        static PhaseBuffer* GetFallbackBuffer() { return bufferFallback.get(); }
+        static PhaseBuffer* GetFallbackBuffer(bool isDynamic) { return isDynamic ? bufferFallbackDynamic.get() : bufferFallbackStandard.get(); }
         static VkDeviceSize CalculateSize(uint32_t count, size_t size);
     };
 } // namespace Beer::Rendering

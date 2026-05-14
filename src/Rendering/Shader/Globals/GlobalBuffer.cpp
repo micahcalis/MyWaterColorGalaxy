@@ -9,7 +9,7 @@ namespace Beer::Rendering
         : bufferBindings(std::move(bufferBindings))
     {
         auto bindings = GetBindings();
-        minAlignment = UniformDescriptor::GetMinAlignment();
+        minAlignment = UniformDescriptor::GetMinAlignment(BufferDescriptorType::Uniform);
 
         descriptor = std::make_unique<UniformDescriptor>(bindings);
         size_t totalSize = GetTotalSize();

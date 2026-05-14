@@ -261,6 +261,7 @@ namespace Beer::Core
         Rendering::UniformDescriptor::SetFrameIndex(frameIndex);
         RenderGarbageCollector::SetFrameIndex(frameIndex);
         Rendering::PhaseBuffer::InitializeFallbackBuffer();
+        Rendering::Buffer::SetUploadManager(uploadManager.get());
 
         readbackManager = std::make_unique<ReadbackManager>(device);
         System::IAsyncReadback::SetReadbackManager(readbackManager.get());

@@ -47,5 +47,17 @@ namespace Beer::Rendering
 
             return prop->Type;
         }
+
+        ShaderProperty GetProperty(const std::string& name)
+        {
+            const ShaderProperty* property = properties->GetShaderProperty(name);
+
+            if (property == nullptr)
+            {
+                return ShaderProperty();
+            }
+
+            return *property;
+        }
     };
 } // namespace Beer::Rendering

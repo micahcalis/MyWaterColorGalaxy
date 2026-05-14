@@ -14,6 +14,8 @@
 
 namespace Beer::Rendering
 {
+    static constexpr std::string_view DYNAMIC_KEYWORD = "Dynamic";
+
     class ShaderReflection
     {
     public:

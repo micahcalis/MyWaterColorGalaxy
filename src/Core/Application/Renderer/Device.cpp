@@ -40,6 +40,11 @@ namespace Beer::Core
         return physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment;
     }
 
+    [[nodiscard]] size_t Device::GetMinStorageBufferOffset() const
+    {
+        return physicalDevice.getProperties().limits.minStorageBufferOffsetAlignment;
+    }
+
     void Device::PickPhysicalDevice(const vk::raii::Instance& instance)
     {
         auto devices = instance.enumeratePhysicalDevices();

@@ -1,11 +1,15 @@
 #include "Rendering/Buffer/Buffer.hpp"
 #include "BufferAllocation.hpp"
+#include "Core/Application/Jobs/BufferUploadJob.hpp"
+#include "Core/Application/Managers/UploadManager.hpp"
 #include "Core/Application/Renderer/RenderGarbageCollector.hpp"
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "Core/Application/Utilities/CommandBufferUtilities.hpp"
 #include "Rendering/Buffer/SSBOType.hpp"
 #include "vulkan/vulkan.hpp"
 #include <iostream>
+#include <memory>
+#include <stdexcept>
 
 namespace Beer::Rendering
 {
@@ -60,6 +64,7 @@ namespace Beer::Rendering
     Buffer Buffer::CreateUniform(VkDeviceSize size)
     {
         constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
         constexpr VmaAllocationCreateFlags flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
             | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
@@ -86,6 +91,7 @@ namespace Beer::Rendering
 
         BufferData data{};
         data.Size = size;
+        data.IsDynamic = true;
 
         return {allocation, data};
     }
@@ -95,6 +101,9 @@ namespace Beer::Rendering
         constexpr VkBufferUsageFlags hybridUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT
             | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
+        constexpr VkBufferUsageFlags consistentUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
         VkBufferUsageFlags usage = 0;
 
         if (type == SSBOType::Hybrid)
@@ -102,7 +111,18 @@ namespace Beer::Rendering
             usage = hybridUsage;
         }
 
-        return CreatePersistent(size, usage);
+        if (type == SSBOType::Consistent)
+        {
+            usage = consistentUsage;
+        }
+
+        if (type != SSBOType::Consistent)
+        {
+            return CreatePersistent(size, usage);
+        } else
+        {
+            return CreateDeviceLocal(size, usage);
+        }
     }
 
     Buffer Buffer::CreateReadback(VkDeviceSize size)
@@ -216,4 +236,31 @@ namespace Beer::Rendering
         : allocator(sharedAllocator), allocation(allocation), data(data)
     {
     }
+
+    void Buffer::UploadAsync(std::shared_ptr<Buffer> buffer, void* data, size_t size, size_t offset)
+    {
+        if (size + offset > buffer->data.Size)
+        {
+            std::cerr << "Buffer Overflow, can't allocate" << '\n';
+            return;
+        }
+
+        if (buffer->allocation.Info.pMappedData != nullptr)
+        {
+            throw std::runtime_error("Cannot async upload to unmapped GPU memory!");
+        }
+
+        if (uploadManager == nullptr)
+        {
+            throw std::runtime_error("Cannot async upload because upload manager is null!");
+        }
+
+        std::unique_ptr<Core::BufferUploadJob> uploadJob = std::make_unique<Core::BufferUploadJob>(
+            buffer,
+            data,
+            size);
+
+        uploadManager->AddJob(std::move(uploadJob));
+    }
 } // namespace Beer::Rendering
+

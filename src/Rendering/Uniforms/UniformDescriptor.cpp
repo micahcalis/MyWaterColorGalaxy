@@ -5,6 +5,7 @@
 #include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 #include "vulkan/vulkan.hpp"
+#include <print>
 #include <stdexcept>
 
 namespace Beer::Rendering
@@ -121,13 +122,24 @@ namespace Beer::Rendering
         vk::DescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = buffer->GetHandle()->GetHandle();
         bufferInfo.offset = 0;
-        bufferInfo.range = buffer->Size();
+
+        const bool isDynamic = buffer->GetHandle()->GetData().IsDynamic;
+
+        if (isDynamic)
+        {
+            uint32_t framesInFlight = UniformDescriptor::GetFramesInFlight();
+            bufferInfo.range = buffer->Size() / framesInFlight;
+        } else
+        {
+            bufferInfo.range = vk::WholeSize;
+        }
 
         vk::WriteDescriptorSet descriptorWrite{};
         descriptorWrite.dstSet = *descriptorSets[frameIndex];
         descriptorWrite.dstBinding = binding;
         descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+
+        descriptorWrite.descriptorType = isDynamic ? vk::DescriptorType::eStorageBufferDynamic : vk::DescriptorType::eStorageBuffer;
         descriptorWrite.descriptorCount = 1;
         descriptorWrite.pBufferInfo = &bufferInfo;
 
