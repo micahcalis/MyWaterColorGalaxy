@@ -18,7 +18,7 @@ namespace Beer::System
         float starBoxSize)
         : starCount(starCount)
         , starBoxSize(starBoxSize)
-        , GameEntity(Transform(), nullptr)
+        , GameEntity()
     {
         starsMaterial = std::make_shared<Rendering::Material>("Galaxy/Stars");
         starsMaterial->SetFloat("_StarSize", STAR_SIZE);

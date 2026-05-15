@@ -12,8 +12,10 @@ namespace Beer::System
         SingleStaticEntity(Transform transform,
             std::unique_ptr<SingleMeshRender> singleMeshRender,
             Layer layer = Layer::Default)
-            : GameEntity(transform, nullptr, layer)
+            : GameEntity(layer)
         {
+            this->transform = std::move(transform);
+
             singleMeshRender->SetTransform(&this->transform);
             singleMeshRender->SetLayer(&this->layer);
             this->renderComponent = (std::move(singleMeshRender));

@@ -14,18 +14,23 @@ namespace Beer::System
         const glm::vec3 WORLD_UP = glm::vec3(0, 1, 0);
 
     private:
-        PlayerEntity* player;
-        GameSubEntity* cameraEntity;
+        PlayerEntity* player = nullptr;
+        GameSubEntity* cameraEntity = nullptr;
+        Function<float> getPlayerNormSpeed = nullptr;
         std::unique_ptr<Camera> camera = nullptr;
-        float yaw = -90.0f;
-        float pitch = 0.0f;
+        float currentYawOffset = 0.0f;
+        float currentPitchOffset = 0.0f;
 
     public:
-        PlayerCamera(PlayerEntity* player, GameSubEntity* cameraEntity);
+        PlayerCamera(PlayerEntity* player,
+            GameSubEntity* cameraEntity,
+            Function<float> getPlayerNormSpeed);
+
         void Update(PlayerInput input);
 
     private:
         void FollowPlayer();
         void RotateCamera(glm::vec2 mouseVec);
+        bool ShouldSpringBack(glm::vec2 mouseVec) const;
     };
 } // namespace Beer::System

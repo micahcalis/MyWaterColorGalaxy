@@ -18,7 +18,7 @@ namespace Beer::System
         friend class Registry;
 
     protected:
-        Transform transform;
+        Transform transform{};
 
     public:
         virtual ~GameEntity() = default;
@@ -27,10 +27,8 @@ namespace Beer::System
         [[nodiscard]] Transform* GetTransform() { return &transform; }
 
     protected:
-        GameEntity(Transform transform,
-            std::unique_ptr<IRenderComponent> renderComponent,
-            Layer layer = Layer::Default)
-            : transform(transform), IEntity(std::move(renderComponent), layer)
+        GameEntity(Layer layer = Layer::Default)
+            : IEntity(nullptr, layer)
         {
         }
 

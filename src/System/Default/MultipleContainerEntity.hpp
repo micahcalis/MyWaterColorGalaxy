@@ -26,8 +26,10 @@ namespace Beer::System
             uint32_t subEntityCount,
             Layer layer,
             Args&&... args)
-            : GameEntity(transform, nullptr, layer)
+            : GameEntity(layer)
         {
+            this->transform = std::move(transform);
+
             subEntities.reserve(subEntityCount);
 
             for (uint32_t i = 0; i < subEntityCount; i++)

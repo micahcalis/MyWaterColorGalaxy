@@ -10,6 +10,7 @@
 #include "System/Context/WorldContainer.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "System/Galaxy/Player/PlayerInput.hpp"
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
@@ -67,10 +68,7 @@ namespace Beer::System
 
     void GameManager::InitializeContextFactory()
     {
-        InputManager* inputManagerP = inputManager.get();
-        auto getPlayerInput =
-            [inputManagerP]() -> PlayerInput { return PlayerInput(inputManagerP->GetMovementVector(), inputManagerP->GetMouseVector()); };
-
+        Function<PlayerInput> getPlayerInput = [this]() -> PlayerInput { return GetPlayerInput(); };
         Function<MouseInput> getMouseInput = [this]() -> MouseInput { return inputManager->GetMouseInput(); };
         Function<ButtonInput> getDebugKeyInput = [this]() -> ButtonInput { return inputManager->GetDebugButtonInput(); };
 
@@ -135,5 +133,14 @@ namespace Beer::System
         inputManager->Update();
         cameraManager->Update();
         lightManager->Update();
+    }
+
+    PlayerInput GameManager::GetPlayerInput()
+    {
+        PlayerInput input{};
+        input.MovementVec = inputManager->GetMovementVector();
+        input.MouseVec = inputManager->GetMouseVector();
+        input.IsBoosting = inputManager->GetSpaceButtonInput().ButtonHold;
+        return input;
     }
 } // namespace Beer::System

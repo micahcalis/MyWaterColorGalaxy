@@ -6,13 +6,46 @@ namespace Beer::System
     struct PlayerSettings
     {
     public:
-        float MovementSpeed{};
+        float Acceleration{};
+        float MaxSpeed{};
+        float Drag{};
         float Sensitivity{};
         glm::vec3 StartPos{};
+        float TurnSpeed{};
+        float RollSpeed{};
     };
 
     static const PlayerSettings PLAYER_SETTINGS = {
-        5.0f,
+        0.03f,
+        0.03f,
+        0.65f,
         0.3f,
-        glm::vec3(500, 0, 500)};
+        glm::vec3(500, 0, 500),
+        2.5f,
+        4.0f};
+
+    struct PlayerCameraSettings
+    {
+    public:
+        float Sensitivity{};
+        float MinFollowDistance{};
+        float MaxFollowDistance{};
+        float FollowHeight{};
+        float PosSmoothSpeed{};
+        float RotSmoothSpeed{};
+        float SpringBackSpeed{};
+        float MaxLookAngle{};
+        float SpringDeadzone{};
+    };
+
+    static const PlayerCameraSettings PLAYER_CAM_SETTINGS{
+        0.005f,
+        15.0f,
+        26.0f,
+        2.5f,
+        5.0f,
+        5.0f,
+        1.5f,
+        90.0f,
+        45.0f};
 } // namespace Beer::System

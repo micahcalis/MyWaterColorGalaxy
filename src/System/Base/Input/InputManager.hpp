@@ -14,11 +14,13 @@ namespace Beer::System
         SDL_MouseButtonFlags previousMouseState = 0;
         SDL_MouseButtonFlags currentMouseState = 0;
         KeyButtonCache debugKeyCache;
+        KeyButtonCache spaceKeyCache;
         float scrollY = 0;
 
     public:
         InputManager()
             : debugKeyCache(SDL_SCANCODE_O)
+            , spaceKeyCache(SDL_SCANCODE_SPACE)
         {
         }
 
@@ -29,5 +31,6 @@ namespace Beer::System
         glm::vec2 GetMousePosition();
         MouseInput GetMouseInput();
         ButtonInput GetDebugButtonInput();
+        ButtonInput GetSpaceButtonInput();
     };
 } // namespace Beer::System

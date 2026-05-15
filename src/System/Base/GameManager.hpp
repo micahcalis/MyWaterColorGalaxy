@@ -6,6 +6,7 @@
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/WorldContainer.hpp"
 #include "System/Camera/CameraManager.hpp"
+#include "System/Galaxy/Player/PlayerInput.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/Serialization/MapSerializationManager.hpp"
 #include <memory>
@@ -41,5 +42,6 @@ namespace Beer::System
 
         void UpdateBase();
         void UpdateColliders();
+        PlayerInput GetPlayerInput();
     };
 } // namespace Beer::System

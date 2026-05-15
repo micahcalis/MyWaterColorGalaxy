@@ -1,5 +1,3 @@
-#pragma once
-
 #include "System/Galaxy/GalaxyContext.hpp"
 #include "General/GalaxyEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
@@ -65,12 +63,7 @@ namespace Beer::System
 
     void GalaxyContext::InitializePlayer()
     {
-        Transform playerTransform{};
-        playerTransform.Position = PLAYER_SETTINGS.StartPos;
-
-        playerEntity = registry.CreateEntity<PlayerEntity>(std::move(playerTransform),
-            nullptr,
-            getPlayerInput);
+        playerEntity = registry.CreateEntity<PlayerEntity>(getPlayerInput);
     }
 
     void GalaxyContext::InitializeLight()

@@ -12,7 +12,8 @@ namespace Beer::System
     {
         playerController = std::make_unique<PlayerController>(player);
         cameraEntity = std::make_unique<GameSubEntity>(Transform());
-        playerCamera = std::make_unique<PlayerCamera>(player, cameraEntity.get());
+        Function<float> getNormPlayerSpeed = [this]() -> float { return playerController->GetNormalizedSpeed(); };
+        playerCamera = std::make_unique<PlayerCamera>(player, cameraEntity.get(), getNormPlayerSpeed);
         movementEnabled = true;
     }
 

@@ -96,4 +96,9 @@ namespace Beer::System
     {
         return debugKeyCache.UpdateInput();
     }
+
+    ButtonInput InputManager::GetSpaceButtonInput()
+    {
+        return spaceKeyCache.UpdateInput();
+    }
 } // namespace Beer::System

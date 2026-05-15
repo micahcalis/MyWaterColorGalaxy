@@ -45,7 +45,7 @@ FRAG float4 SkyboxFrag(VertexData input) : SV_Target
 {
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
     Skybox.Sky sky = Skybox.Sky(viewDirWS, _GradientExponentTop,  _GradientExponentBot); 
-    Skybox.Sun sun = Skybox.Sun(viewDirWS, _SunSize);    
+    Skybox.Sun sun = Skybox.Sun(viewDirWS, _SunSize);   
     
     return float4(sky.GetColor() + sun.GetColor(), 1);
 }

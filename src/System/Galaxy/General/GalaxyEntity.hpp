@@ -20,7 +20,7 @@ namespace Beer::System
 
     public:
         GalaxyEntity()
-            : GameEntity(Transform(), nullptr)
+            : GameEntity()
         {
             container = std::make_unique<GalaxyContainer>();
             renderComponent = RenderRegister::CreateRenderComponent<GalaxyRenderComponent>(ContextType::Galaxy, container.get());
