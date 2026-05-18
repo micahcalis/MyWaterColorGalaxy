@@ -5,7 +5,6 @@
 #include "Rendering/Buffer/SSBOType.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
-#include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "System/Galaxy/General/GalaxyObjectType.hpp"
 #include "System/Galaxy/General/Buffer/OrbitComponent.hpp"
@@ -13,8 +12,6 @@
 
 namespace Beer::System
 {
-    static const float GALAXY_POS_SCALE = 1000.0f;
-    static const float GALAXY_SIZE_SCALE = 200.0f;
     static const float SPEED_MULTIPLIER = 0.02f;
 
     GalaxyObjectBuffer::GalaxyObjectBuffer(const SerializableGalaxy& serializedData,

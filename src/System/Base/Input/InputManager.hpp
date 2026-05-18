@@ -17,7 +17,7 @@ namespace Beer::System
         KeyButtonCache debugKeyCache;
         KeyButtonCache spaceKeyCache;
         KeyButtonCache tabKeyCache;
-        KeyButtonCache ctrlKeyCache;
+        KeyButtonCache pKeyCache;
 
         float scrollY = 0;
 
@@ -26,7 +26,7 @@ namespace Beer::System
             : debugKeyCache(SDL_SCANCODE_O)
             , spaceKeyCache(SDL_SCANCODE_SPACE)
             , tabKeyCache(SDL_SCANCODE_TAB)
-            , ctrlKeyCache(SDL_SCANCODE_LCTRL)
+            , pKeyCache(SDL_SCANCODE_P)
         {
         }
 
@@ -39,6 +39,6 @@ namespace Beer::System
         ButtonInput GetDebugButtonInput();
         ButtonInput GetSpaceButtonInput();
         ButtonInput GetTabButtonInput();
-        ButtonInput GetCtrlButtonInput();
+        ButtonInput GetPButtonInput();
     };
 } // namespace Beer::System

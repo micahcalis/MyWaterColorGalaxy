@@ -1,6 +1,7 @@
 #pragma once
 
-#include "General/GalaxyEntity.hpp"
+#include "System/Galaxy/General/GalaxyEntity.hpp"
+#include "System/Galaxy/General/SunEntity.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
@@ -19,11 +20,13 @@ namespace Beer::System
     {
     public:
         BeerEvent<void()> OnReturnToPainting;
+        BeerEvent<void(bool)> OnSetPhotoMode;
 
     private:
         PlayerEntity* playerEntity = nullptr;
         LightEntity* mainLightEntity = nullptr;
         GalaxyEntity* galaxyEntity = nullptr;
+        SunEntity* sunEntity = nullptr;
         StarsEntity* starsEntity = nullptr;
 
         Function<PlayerInput> getPlayerInput = nullptr;

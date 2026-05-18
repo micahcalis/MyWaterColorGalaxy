@@ -11,6 +11,7 @@
 #include "System/Delegates/Delegate.hpp"
 #include "System/Galaxy/GalaxyContext.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
+#include "System/Galaxy/UI/GalaxyUserIntContext.hpp"
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
@@ -85,6 +86,11 @@ namespace Beer::System
                 return std::make_shared<GalaxyContext>(getPlayerInput, getReturnPressed, handler);
             });
 
+        contextHandler->RegisterContextFactory(ContextType::GalaxyUserInt,
+            [this]() -> std::shared_ptr<IContext> {
+                return std::make_shared<GalaxyUserIntContext>();
+            });
+
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
             [this, getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
                 MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
@@ -113,12 +119,14 @@ namespace Beer::System
 
     void GameManager::InitializeGalaxy()
     {
+        contextHandler->LoadContext(ContextType::GalaxyUserInt);
         contextHandler->LoadContext(ContextType::Galaxy);
 
         GalaxyContext* context = contextHandler->GetContext<GalaxyContext>(ContextType::Galaxy);
 
         Function<void> toPaintTool = [this]() -> void {
             contextHandler->DestroyContext(ContextType::Galaxy);
+            contextHandler->DestroyContext(ContextType::GalaxyUserInt);
             InitializePaintTool();
         };
 
@@ -161,7 +169,7 @@ namespace Beer::System
         input.MovementVec = inputManager->GetMovementVector();
         input.MouseVec = inputManager->GetMouseVector();
         input.IsBoosting = inputManager->GetSpaceButtonInput().ButtonHold;
-        input.PhotoTogglePressed = inputManager->GetCtrlButtonInput().ButtonExit;
+        input.PhotoTogglePressed = inputManager->GetPButtonInput().ButtonExit;
         return input;
     }
 } // namespace Beer::System

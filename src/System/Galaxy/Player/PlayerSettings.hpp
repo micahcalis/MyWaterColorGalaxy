@@ -17,14 +17,14 @@ namespace Beer::System
     };
 
     static const PlayerSettings PLAYER_SETTINGS = {
-        0.03f,
-        0.03f,
+        30.0f,
+        200.0f,
         0.65f,
         0.3f,
         glm::vec3(500, 0, 500),
-        2.5f,
-        4.0f,
-        2.0f};
+        10.0f,
+        16.0f,
+        8.0f};
 
     struct PlayerCameraSettings
     {

@@ -5,6 +5,7 @@
 #include "SDL3/SDL_keyboard.h"
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_scancode.h"
+#include "System/Base/Input/ButtonInput.hpp"
 #include "glm/glm.hpp"
 
 namespace Beer::System
@@ -106,8 +107,9 @@ namespace Beer::System
         return tabKeyCache.UpdateInput();
     }
 
-    ButtonInput InputManager::GetCtrlButtonInput()
+    ButtonInput InputManager::GetPButtonInput()
     {
-        return ctrlKeyCache.UpdateInput();
+        return pKeyCache.UpdateInput();
     }
+
 } // namespace Beer::System

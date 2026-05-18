@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GalaxyDataObject.hpp"
-#include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Mesh/Mesh.hpp"
@@ -16,6 +15,10 @@ namespace Beer::System
 {
     class GalaxyObjectBuffer
     {
+    public:
+        static constexpr float GALAXY_POS_SCALE = 1000.0f;
+        static constexpr float GALAXY_SIZE_SCALE = 200.0f;
+
     private:
         std::shared_ptr<Rendering::PhaseBuffer> dataBuffer = nullptr;
         std::shared_ptr<Rendering::PhaseBuffer> positionBuffer;

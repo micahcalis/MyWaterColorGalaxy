@@ -83,6 +83,7 @@ namespace Beer::System
     void GalaxyContext::InitializeGalaxy()
     {
         galaxyEntity = registry.CreateEntity<GalaxyEntity>();
+        sunEntity = registry.CreateEntity<SunEntity>();
     }
 
     void GalaxyContext::InitializeStars()
@@ -104,6 +105,7 @@ namespace Beer::System
 
         SerializablePaintSession serializedPaintSession = mapHandler.Load();
         galaxyEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
+        sunEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
     }
 
     void GalaxyContext::HandleReturn()

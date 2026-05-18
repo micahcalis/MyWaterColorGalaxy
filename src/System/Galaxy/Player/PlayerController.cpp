@@ -33,7 +33,7 @@ namespace Beer::System
 
         HandleSpeed(input.IsBoosting);
 
-        transform->Position += transform->GetForward() * speed;
+        transform->Position += transform->GetForward() * speed * (float)Clock::DeltaTime();
     }
 
     void PlayerController::HandleSpeed(bool isBoosting)
