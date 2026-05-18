@@ -43,6 +43,7 @@ VERT VertexData SkyboxVert(MeshData input, INSTANCEID)
 
 FRAG float4 SkyboxFrag(VertexData input) : SV_Target
 {
+    return 0;
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
     Skybox.Sky sky = Skybox.Sky(viewDirWS, _GradientExponentTop,  _GradientExponentBot); 
     Skybox.Sun sun = Skybox.Sun(viewDirWS, _SunSize);   

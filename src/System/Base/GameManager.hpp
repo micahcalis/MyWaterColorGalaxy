@@ -26,6 +26,7 @@ namespace Beer::System
         std::unique_ptr<MapSerializationManager> mapSerializationManager = nullptr;
 
     public:
+        ~GameManager();
         void Initialize();
         void PreUpdate();
         void Update();

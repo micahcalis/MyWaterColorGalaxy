@@ -8,16 +8,29 @@ namespace SphereTracing
     static float DST_EPS = 0.01f;
     static float AABB_MARCH_PADDING = 0.05f;
     static float SHOULD_MARCH_SCALAR = 3.0f;
+    static float BASE_MAX_LENGTH = 100.0f;
+    static float MAX_LENGTH_BIAS = 1e-3f;
 
     public struct Ray
     {
         private float3 origin;
         private float3 direction;
+        private float maxLength;
 
-        public __init(float3 _origin, float3 _direction, float nearPlane = 0)
+        public __init(float3 _origin,
+            float3 _direction, 
+            float _maxLength = BASE_MAX_LENGTH,
+            float nearPlane = 0)
         {
             direction = normalize(_direction);
             origin = _origin + direction * nearPlane;
+            maxLength = _maxLength;
+        }
+
+        [mutating]
+        public void SetMaxLength(float _maxLength)
+        {
+            maxLength = _maxLength;
         }
 
         public float3 GetOrigin()
@@ -28,6 +41,11 @@ namespace SphereTracing
         public float3 GetDirection()
         {
             return direction;
+        }
+
+        public float GetMaxLength()
+        {
+            return maxLength;
         }
     };
 
@@ -50,11 +68,6 @@ namespace SphereTracing
 
         public Ray AlignWithBox(Ray ray)
         {
-            if (IsInside(ray.GetOrigin()))
-            {
-                return ray;
-            }
-
             float3 directionRcp = rcp(ray.GetDirection());
             float3 minPoint = center - extents;
             float3 maxPoint = center + extents; 
@@ -67,9 +80,73 @@ namespace SphereTracing
 
             float tNear = max(max(tMin.x, tMin.y), tMin.z);
             tNear = max(0.0f, tNear);
+            float tFar = min(min(tMax.x, tMax.y), tMax.z);
 
             float3 intersect = ray.GetOrigin() + ray.GetDirection() * (tNear + 0.001f);
-            return Ray(intersect, ray.GetDirection());
+
+            float maxLength = max(0.0f, (tFar - tNear) - MAX_LENGTH_BIAS);
+
+            return Ray(intersect, ray.GetDirection(), maxLength);
+        }
+
+        public bool ShouldMarch(float3 position, bool isFrontFace, float nearPlane)
+        {
+            bool isCameraInside = IsInside(position, nearPlane * SHOULD_MARCH_SCALAR);
+            return isCameraInside != isFrontFace;
+        }
+    };
+
+    public struct SphereVolume
+    {
+        private float3 center;
+        private float radius;
+
+        public __init(float3 _center,
+            float _radius)
+        {
+            center = _center;
+            radius = _radius;
+        }
+
+        public bool IsInside(float3 position,
+            float padding = 0)
+        {
+            float3 diff = position - center;
+            float rPad = radius + padding;
+            return dot(diff, diff) <= (rPad * rPad);
+        }
+
+        public Ray AlignWithSphere(Ray ray)
+        {
+            float3 L = center - ray.GetOrigin();
+            float tca = dot(L, ray.GetDirection());
+
+            float d2 = dot(L, L) - (tca * tca);
+            float r2 = radius * radius;
+
+            if (d2 > r2)
+            {
+                return Ray(ray.GetOrigin(), ray.GetDirection(), 0.0f);
+            }
+
+            float thc = sqrt(r2 - d2);
+
+            float t0 = tca - thc;
+            float t1 = tca + thc;
+
+            if (t1 < 0.0f)
+            {
+                return Ray(ray.GetOrigin(), ray.GetDirection(), 0.0f);
+            }
+
+            float tNear = max(0.0f, t0);
+            float tFar = t1;
+
+            float3 intersect = ray.GetOrigin() + ray.GetDirection() * (tNear + 0.001f);
+
+            float maxLength = max(0.0f, (tFar - tNear) - MAX_LENGTH_BIAS);
+
+            return Ray(intersect, ray.GetDirection(), maxLength);
         }
 
         public bool ShouldMarch(float3 position, bool isFrontFace, float nearPlane)
@@ -101,13 +178,11 @@ namespace SphereTracing
     {
         private T sdf;
         private Ray ray;
-        private AABB boundingBox;
 
-        public __init(T _sdf, Ray _ray, AABB _boundingBox)
+        public __init(T _sdf, Ray _ray)
         {
             sdf = _sdf;
             ray = _ray;
-            boundingBox = _boundingBox;
         }
 
         public TraceResult Trace()
@@ -129,7 +204,7 @@ namespace SphereTracing
                 result.Position += dist * ray.GetDirection();
                 result.TotalDistance += dist;
 
-                if (!boundingBox.IsInside(result.Position, AABB_MARCH_PADDING))
+                if (result.TotalDistance > ray.GetMaxLength())
                 {
                     break;
                 }

@@ -9,5 +9,6 @@ namespace Beer::System
         glm::vec2 MovementVec{};
         glm::vec2 MouseVec{};
         bool IsBoosting{};
+        bool PhotoTogglePressed{};
     };
 } // namespace Beer::System

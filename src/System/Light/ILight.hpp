@@ -13,7 +13,7 @@ namespace Beer::System
     class ILight
     {
     public:
-        virtual ~ILight() = default;
+        virtual ~ILight();
         virtual glm::vec3 GetPosition() const = 0;
         virtual glm::vec4 GetDirectColor() const = 0;
         virtual glm::vec4 GetShadowColor() const = 0;

@@ -30,30 +30,30 @@ namespace SDF
         // All credits to: Inigo Quilez
         // https://iquilezles.org/articles/distfunctions/
 
-        float Sphere(float3 pos, float radius)
+        public float Sphere(float3 pos, float radius)
         {
             return length(pos) - radius;
         }
 
-        float Box(float3 position, float3 size)
+        public float Box(float3 position, float3 size)
         {
             float3 q = abs(position) - size;
             return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
         }
 
-        float Torus(float3 position, float major, float minor)
+        public float Torus(float3 position, float major, float minor)
         {
             float2 q = float2(length(position.xz) - major, position.y);
             return length(q) - minor;
         }
 
-        float OctaHedron(float3 position, float scale)
+        public float OctaHedron(float3 position, float scale)
         {
             position = abs(position);
             return (position.x + position.y + position.z - scale) * 0.57735027;
         }
 
-        float Star2D(float2 position, float radius, int number, float sharpness)
+        public float Star2D(float2 position, float radius, int number, float sharpness)
         {
             float an = 3.14159265359 / float(number);
             float en = 3.14159265359 / sharpness;  // m is between 2 and n
@@ -72,16 +72,43 @@ namespace SDF
             return length(position) * sign(position.x);
         }
 
-        float Ring2D(float2 position, float radius, float thickness)
+        public float Ring2D(float2 position, float radius, float thickness)
         {
             float sphere = length(position) - radius;
             return abs(sphere) - thickness;
+        }
+
+        public float Union(float a, float b)
+        {
+            return min(a, b);
+        }
+
+        public float Subtraction(float a, float b)
+        {
+            return max(-a, b);
+        }
+
+        public float Intersection(float a, float b)
+        {
+            return max(a, b);
+        }
+
+        public float Xor(float a, float b)
+        {
+            return max(min(a, b), -max(a, b));
+        }
+
+        public float SmoothMin(float a, float b, float k) 
+        {
+            k *= 4.0f;
+            float h = max(k - abs(a - b), 0.0f);
+            return min(a, b) - h * h * 0.25 / k;
         }
     }
 
     public struct Sphere : SDF
     {
-        private float3 center;
+        private float3 center; 
         private float radius;
 
         public __init(float3 _center, float _radius)

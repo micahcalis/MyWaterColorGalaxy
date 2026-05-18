@@ -71,18 +71,15 @@ namespace Beer::Rendering
         return barrier;
     }
 
-    vk::RenderingAttachmentInfo RenderTexture::GetAttachmentInfo(const ResetOperator& resetOperator,
+    vk::RenderingAttachmentInfo RenderTexture::GetAttachmentInfo(vk::ImageLayout expectedLayout,
+        const ResetOperator& resetOperator,
         bool& isDepth)
     {
         isDepth = Core::ImageUtilities::IsDepthFormat(static_cast<vk::Format>(image->GetData().Format));
 
         vk::RenderingAttachmentInfo attachmentInfo{};
         attachmentInfo.imageView = image->GetDefaultView();
-
-        attachmentInfo.imageLayout = isDepth
-            ? vk::ImageLayout::eDepthStencilAttachmentOptimal
-            : vk::ImageLayout::eColorAttachmentOptimal;
-
+        attachmentInfo.imageLayout = expectedLayout;
         attachmentInfo.loadOp = resetOperator.LoadOp;
         attachmentInfo.storeOp = resetOperator.StoreOp;
         attachmentInfo.clearValue = resetOperator.ClearValue;

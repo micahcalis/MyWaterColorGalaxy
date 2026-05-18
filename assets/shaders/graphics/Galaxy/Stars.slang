@@ -33,7 +33,8 @@ struct VertexData
 //$ Blend On
 //$ SrcOp One
 //$ DstOp Alpha
-//$ Zwrite Off
+//$ ZWrite Off
+//$ ZTest On
 
 VERT VertexData StarsVert(MeshData input, out float pointSize : SV_PointSize)
 {
@@ -63,16 +64,6 @@ FRAG float4 StarsFrag(VertexData input, float2 pointCoord : SV_PointCoord) : SV_
     {
         discard;
     }
-    
-    // Deferred.DeferredShadeData data = Deferred.DeferredShadeData(_StarColor.rgb,
-    // 1,
-    // input.positionWS,
-    // 1,
-    // 0,
-    // 0,
-    // 0);
-
-    // Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
 
     float nearMask = 1.0f - smoothstep(0.08f, 0.02f, input.normalizedDistance);
     float alpha = pow(1.0f - input.normalizedDistance, 2) * nearMask;

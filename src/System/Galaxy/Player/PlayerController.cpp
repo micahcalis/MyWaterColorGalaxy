@@ -3,8 +3,7 @@
 #include "System/Base/Clock/Clock.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
-#include "glm/gtc/quaternion.hpp" // Required for angleAxis and normalize
-#include <print>
+#include "glm/gtc/quaternion.hpp"
 
 namespace Beer::System
 {
@@ -17,14 +16,14 @@ namespace Beer::System
     {
         Transform* transform = player->GetTransform();
 
-        float pitchInput = input.MovementVec.x;
-        float rollInput = input.MovementVec.y;
+        float horizontalInput = input.MovementVec.x;
+        float verticalInput = input.MovementVec.y;
 
         float normalizedSpeed = GetNormalizedSpeed();
         float normalizedDt = normalizedSpeed * Clock::DeltaTime();
 
-        float pitchAngle = -pitchInput * PLAYER_SETTINGS.TurnSpeed * normalizedDt;
-        float rollAngle = -rollInput * PLAYER_SETTINGS.RollSpeed * normalizedDt;
+        float pitchAngle = -verticalInput * PLAYER_SETTINGS.TurnSpeed * normalizedDt;
+        float rollAngle = -horizontalInput * PLAYER_SETTINGS.RollSpeed * normalizedDt;
 
         glm::quat pitchQuat = glm::angleAxis(pitchAngle, glm::vec3(1.0f, 0.0f, 0.0f));
         glm::quat rollQuat = glm::angleAxis(rollAngle, glm::vec3(0.0f, 0.0f, 1.0f));

@@ -57,6 +57,14 @@ namespace Beer::System
         Rendering::Shader::Globals()->SetZBuffer(nearMin, farMax);
     }
 
+    Camera::~Camera()
+    {
+        if (cameraManager != nullptr)
+        {
+            cameraManager->RemoveCamera(this);
+        }
+    }
+
     std::unique_ptr<Camera> Camera::CreateCamera(const CameraSettings settings,
         Transform* transform)
     {

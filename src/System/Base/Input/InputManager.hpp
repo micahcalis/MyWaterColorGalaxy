@@ -2,6 +2,7 @@
 
 #include "ButtonInput.hpp"
 #include "SDL3/SDL_scancode.h"
+#include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "glm/fwd.hpp"
 #include "SDL3/SDL_mouse.h"
@@ -15,12 +16,17 @@ namespace Beer::System
         SDL_MouseButtonFlags currentMouseState = 0;
         KeyButtonCache debugKeyCache;
         KeyButtonCache spaceKeyCache;
+        KeyButtonCache tabKeyCache;
+        KeyButtonCache ctrlKeyCache;
+
         float scrollY = 0;
 
     public:
         InputManager()
             : debugKeyCache(SDL_SCANCODE_O)
             , spaceKeyCache(SDL_SCANCODE_SPACE)
+            , tabKeyCache(SDL_SCANCODE_TAB)
+            , ctrlKeyCache(SDL_SCANCODE_LCTRL)
         {
         }
 
@@ -32,5 +38,7 @@ namespace Beer::System
         MouseInput GetMouseInput();
         ButtonInput GetDebugButtonInput();
         ButtonInput GetSpaceButtonInput();
+        ButtonInput GetTabButtonInput();
+        ButtonInput GetCtrlButtonInput();
     };
 } // namespace Beer::System

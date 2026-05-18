@@ -21,15 +21,15 @@ namespace Beer::System
     class PaintSimSubPipeline : public ISubRenderPipeline
     {
     private:
-        std::unique_ptr<Rendering::WaterColorSimBuffers> simulationBuffers;
-        Rendering::InjectPaintPass* injectPaintPass;
-        Rendering::CalculateFluidFluxPass* calculateFluidFluxPass;
-        Rendering::ResolvePigmentFluxPass* resolvePigmentFluxPass;
-        Rendering::ResolveFluidFluxPass* resolveFluidFluxPass;
-        Rendering::TransferPigmentPass* transferPigmentPass;
-        Rendering::RenderPigmentPass* renderPigmentPass;
-        Rendering::EvaporateWaterPass* evaporateWaterPass;
-        Rendering::ClearLiquidsPass* clearLiquidsPass;
+        std::unique_ptr<Rendering::WaterColorSimBuffers> simulationBuffers = nullptr;
+        std::unique_ptr<Rendering::InjectPaintPass> injectPaintPass = nullptr;
+        std::unique_ptr<Rendering::CalculateFluidFluxPass> calculateFluidFluxPass = nullptr;
+        std::unique_ptr<Rendering::ResolvePigmentFluxPass> resolvePigmentFluxPass = nullptr;
+        std::unique_ptr<Rendering::ResolveFluidFluxPass> resolveFluidFluxPass = nullptr;
+        std::unique_ptr<Rendering::TransferPigmentPass> transferPigmentPass = nullptr;
+        std::unique_ptr<Rendering::RenderPigmentPass> renderPigmentPass = nullptr;
+        std::unique_ptr<Rendering::EvaporateWaterPass> evaporateWaterPass = nullptr;
+        std::unique_ptr<Rendering::ClearLiquidsPass> clearLiquidsPass = nullptr;
 
         Function<ColorPickingState> getColorPickerState = nullptr;
         bool clearMarker = false;
@@ -41,7 +41,7 @@ namespace Beer::System
             System::Function<System::ButtonInput> getDebugButtonInput);
 
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
-        [[nodiscard]] Rendering::InjectPaintPass* GetInjectPaintPass() const { return injectPaintPass; }
+        [[nodiscard]] Rendering::InjectPaintPass* GetInjectPaintPass() const { return injectPaintPass.get(); }
         void SubscribeToNewCanvasReadback(Function<void, ImagePixelData> readbackFunc);
 
         void SetGetColorPickerState(Function<ColorPickingState> getColorPickerState)

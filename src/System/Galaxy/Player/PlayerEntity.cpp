@@ -5,16 +5,28 @@
 
 namespace Beer::System
 {
-    static const glm::vec4 PLAYER_COLOR = glm::vec4(1, 0, 0, 1);
+    static const glm::vec4 SAUCER_COLOR = glm::vec4(0.75f, 0.0f, 0.0f, 1);
+    static const float SAUCER_METALLIC = 1.0f;
+    static const float SAUCER_SMOOTH = 0.8f;
+    static const glm::vec4 COCKPIT_COLOR = glm::vec4(1.0f, 1.0f, 0.6f, 0.5f);
+    static const float COCKPIT_METALLIC = 0.0f;
+    static const float COCKPIT_SMOOTH = 0.6f;
+    static const float PLAYER_SCALE = 1.5f;
 
     PlayerEntity::PlayerEntity(Function<PlayerInput> getPlayerInput,
         Layer layer)
         : getPlayerInput(getPlayerInput), GameEntity(layer)
     {
         transform.Position = PLAYER_SETTINGS.StartPos;
+        transform.Scale = glm::vec3(PLAYER_SCALE);
 
-        playerMaterial = std::make_shared<Rendering::Material>("DefaultLit");
-        playerMaterial->SetColor("_BaseColor", PLAYER_COLOR);
+        playerMaterial = std::make_shared<Rendering::Material>("Galaxy/UFO");
+        playerMaterial->SetColor("_SaucerColor", SAUCER_COLOR);
+        playerMaterial->SetFloat("_SaucerMetallic", SAUCER_METALLIC);
+        playerMaterial->SetFloat("_SaucerSmoothness", SAUCER_SMOOTH);
+        playerMaterial->SetColor("_CockPitColor", COCKPIT_COLOR);
+        playerMaterial->SetFloat("_CockPitMetallic", COCKPIT_METALLIC);
+        playerMaterial->SetFloat("_CockPitSmoothness", COCKPIT_SMOOTH);
 
         playerMesh = Rendering::Mesh::Get("MDL_Cube");
 

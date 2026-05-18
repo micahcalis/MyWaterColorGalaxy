@@ -1,4 +1,8 @@
 #include "Rendering/RenderPasses/DrawTransparentPass.hpp"
+#include "Core/Application/Renderer/Screen.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/Drawing/Layer.hpp"
@@ -28,6 +32,10 @@ namespace Beer::Rendering
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
+
+        dependencies.AddDependency(PassDependency(std::string(MAIN_DEPTH),
+            ResourceAction::DephTestOnly,
+            ResetOperator::ClearDepth()));
 
         return dependencies;
     }

@@ -8,6 +8,7 @@ module DeferredUtils;
 #define NORMAL_TARGET     float2 normal: SV_Target1
 #define MAT_TARGET        float4 material: SV_Target2
 #define DEPTH_TARGET      float depth : SV_Depth
+#define COLOR_TARGET      float4 color: SV_Target0
 
 namespace Deferred
 {
@@ -18,6 +19,12 @@ namespace Deferred
         public MAT_TARGET;
         public DEPTH_TARGET;
     };
+
+    public struct TransparentFragData
+    {
+        public COLOR_TARGET;
+        public DEPTH_TARGET;
+    }
 
     static int MAT_COUNT = 2;
 

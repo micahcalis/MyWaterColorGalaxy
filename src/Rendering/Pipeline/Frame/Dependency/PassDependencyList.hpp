@@ -52,9 +52,9 @@ namespace Beer::Rendering
                     output.ColorFormats.push_back(dependency.GetFormat());
                 }
 
-                if (dependency.GetAction() == ResourceAction::DepthWrite)
+                if (dependency.GetAction() == ResourceAction::DepthWrite || dependency.GetAction() == ResourceAction::DephTestOnly)
                 {
-                    output.WritesDepth = true;
+                    output.TestsDepth = true;
                 }
             }
 

@@ -44,10 +44,13 @@ namespace Beer::Rendering
 
         static constexpr std::string_view BLEND_SRC_MODE = "SrcOp";
         static constexpr std::string_view BLEND_DST_MODE = "DstOp";
-        static constexpr std::string_view BLEND_ALPHA = "Alpha";
+
+        static constexpr std::string_view BLEND_ZERO = "Zero";
         static constexpr std::string_view BLEND_ONE = "One";
-        static constexpr std::string_view BLEND_ADD = "Add";
-        static constexpr std::string_view BLEND_MUL = "Mul";
+        static constexpr std::string_view BLEND_SRC_COLOR = "SrcColor";
+        static constexpr std::string_view BLEND_DST_COLOR = "DstColor";
+        static constexpr std::string_view BLEND_SRC_ALPHA = "SrcAlpha";
+        static constexpr std::string_view BLEND_INV_SRC_ALPHA = "InvSrcAlpha";
 
         static constexpr std::string_view DEPTH_TEST_TOGGLE = "ZTest";
         static constexpr std::string_view DEPTH_WRITE_TOGGLE = "ZWrite";

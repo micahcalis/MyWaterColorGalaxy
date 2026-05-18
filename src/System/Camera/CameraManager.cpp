@@ -1,5 +1,6 @@
 #include "System/Camera/CameraManager.hpp"
 #include "CameraManager.hpp"
+#include <algorithm>
 
 namespace Beer::System
 {
@@ -17,6 +18,11 @@ namespace Beer::System
         }
 
         cameras.push_back(camera);
+    }
+
+    void CameraManager::RemoveCamera(Camera* camera)
+    {
+        std::erase(cameras, camera);
     }
 
     Camera* CameraManager::GetMainCamera() const

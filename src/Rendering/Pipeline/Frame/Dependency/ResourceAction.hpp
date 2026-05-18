@@ -10,17 +10,18 @@ namespace Beer::Rendering
         ColorRead = 1 << 0,
         ColorWrite = 1 << 1,
         DepthRead = 1 << 2,
-        DepthWrite = 1 << 3,
-        ComputeRead = 1 << 4,
-        ComputeWrite = 1 << 5,
-        ComputeReadWrite = 1 << 6,
-        BufferRead = 1 << 7,
-        BufferWrite = 1 << 8,
-        BufferReadWrite = 1 << 9,
-        ComputeBufferRead = 1 << 10,
-        ComputeBufferWrite = 1 << 11,
-        ComputeBufferReadWrite = 1 << 12,
-        TransferRead = 1 << 13,
+        DephTestOnly = 1 << 3,
+        DepthWrite = 1 << 4,
+        ComputeRead = 1 << 5,
+        ComputeWrite = 1 << 6,
+        ComputeReadWrite = 1 << 7,
+        BufferRead = 1 << 8,
+        BufferWrite = 1 << 9,
+        BufferReadWrite = 1 << 10,
+        ComputeBufferRead = 1 << 11,
+        ComputeBufferWrite = 1 << 12,
+        ComputeBufferReadWrite = 1 << 13,
+        TransferRead = 1 << 14,
         All = ~0u
     };
 
@@ -38,6 +39,7 @@ namespace Beer::Rendering
     constexpr uint32_t RACTION_CREAD_BITS = static_cast<uint32_t>(ResourceAction::ColorRead);
     constexpr uint32_t RACTION_CWRITE_BITS = static_cast<uint32_t>(ResourceAction::ColorWrite);
     constexpr uint32_t RACTION_ZREAD_BITS = static_cast<uint32_t>(ResourceAction::DepthRead);
+    constexpr uint32_t RACTION_ZTEST_BITS = static_cast<uint32_t>(ResourceAction::DephTestOnly);
     constexpr uint32_t RACTION_ZWRITE_BITS = static_cast<uint32_t>(ResourceAction::DepthWrite);
     constexpr uint32_t RACTION_COMPREAD_BITS = static_cast<uint32_t>(ResourceAction::ComputeRead);
     constexpr uint32_t RACTION_COMPWRITE_BITS = static_cast<uint32_t>(ResourceAction::ComputeWrite);

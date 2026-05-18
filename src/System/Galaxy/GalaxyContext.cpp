@@ -9,8 +9,8 @@
 #include "System/Context/IContext.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
-#include "System/Galaxy/Player/PlayerSettings.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include <print>
 #include <stdexcept>
 
 namespace Beer::System
@@ -44,6 +44,8 @@ namespace Beer::System
     void GalaxyContext::Update()
     {
         IContext::Update();
+
+        HandleReturn();
 
         if (playerEntity != nullptr)
         {
@@ -102,5 +104,15 @@ namespace Beer::System
 
         SerializablePaintSession serializedPaintSession = mapHandler.Load();
         galaxyEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
+    }
+
+    void GalaxyContext::HandleReturn()
+    {
+        bool returnPressed = getReturnPressed();
+
+        if (returnPressed)
+        {
+            OnReturnToPainting.Invoke();
+        }
     }
 } // namespace Beer::System

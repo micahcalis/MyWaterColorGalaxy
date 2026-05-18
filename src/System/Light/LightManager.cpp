@@ -20,6 +20,11 @@ namespace Beer::System
         lights.push_back(light);
     }
 
+    void LightManager::RemoveLight(ILight* light)
+    {
+        std::erase(lights, light);
+    }
+
     ILight* LightManager::GetMainLight() const
     {
         if (lights.size() == 0)

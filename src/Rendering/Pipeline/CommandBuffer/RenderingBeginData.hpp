@@ -10,7 +10,7 @@ namespace Beer::Rendering
         vk::RenderingAttachmentInfo DepthWriteTarget;
         uint32_t Width = 0;
         uint32_t Height = 0;
-        bool WritesToDepth = false;
+        bool TestsDepth = false;
         bool IsDrawPass = true;
     };
 } // namespace Beer::Rendering

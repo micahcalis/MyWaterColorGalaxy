@@ -29,24 +29,6 @@ namespace Beer::Rendering
 
     void InjectPaintPass::OnRenderSetup(const RenderContext& context)
     {
-        // System::ButtonInput buttonInput = getDebugButtonInput();
-        // if (buttonInput.ButtonStart)
-        // {
-        //     brushIndex = (brushIndex + 1) % 12;
-
-        //     std::unique_ptr<System::ImageReadbackRequest> readbackRequest = std::make_unique<System::ImageReadbackRequest>(
-        //         context.BlackBox->GetResource<RenderTexture>(PIGMENT_RENDER));
-
-        //     System::ImageReadback* readback = static_cast<System::ImageReadback*>(System::IAsyncReadback::Get(std::move(readbackRequest)));
-        //     readback->Subscribe([this](System::ImagePixelData data) -> void {
-        //         System::Pixel pixel = data.GetPixel(10, 10);
-        //         std::println("Pixel R: {}", pixel.Red);
-        //         std::println("Pixel G: {}", pixel.Green);
-        //         std::println("Pixel B: {}", pixel.Blue);
-        //         std::println("Pixel A: {}", pixel.Alpha);
-        //     });
-        // }
-
         System::PigmentType currentPigment = System::PigmentType::QuinacridoneRose;
 
         if (getCurrentPigment != nullptr)

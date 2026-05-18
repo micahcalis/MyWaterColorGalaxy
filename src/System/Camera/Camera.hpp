@@ -49,6 +49,7 @@ namespace Beer::System
         inline static CameraManager* cameraManager = nullptr;
 
     public:
+        ~Camera();
         static std::unique_ptr<Camera> CreateCamera(const CameraSettings settings, Transform* transform);
         static float GetAspect();
         static void SetCameraManager(CameraManager* cameraManager) { Camera::cameraManager = cameraManager; }

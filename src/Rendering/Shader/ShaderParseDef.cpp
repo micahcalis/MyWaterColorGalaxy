@@ -61,27 +61,26 @@ namespace Beer::Rendering
         std::string toggle = passData.value(std::string(BLEND_TOGGLE), std::string(BLEND_OFF));
         blendOn = (Hash(toggle) == Hash(BLEND_ON));
 
-        std::string src = passData.value(std::string(BLEND_SRC_MODE), std::string(BLEND_ALPHA));
+        std::string src = passData.value(std::string(BLEND_SRC_MODE), std::string(BLEND_SRC_ALPHA));
         switch (Hash(src))
         {
+        case Hash(BLEND_ZERO): srcBlend = vk::BlendFactor::eZero; break;
         case Hash(BLEND_ONE): srcBlend = vk::BlendFactor::eOne; break;
-        case Hash(BLEND_ADD): srcBlend = vk::BlendFactor::eOne; break;
-        case Hash(BLEND_MUL): srcBlend = vk::BlendFactor::eDstColor; break;
-        case Hash(BLEND_ALPHA):
+        case Hash(BLEND_DST_COLOR): srcBlend = vk::BlendFactor::eDstColor; break;
+        case Hash(BLEND_SRC_ALPHA):
         default: srcBlend = vk::BlendFactor::eSrcAlpha; break;
         }
 
-        std::string dst = passData.value(std::string(BLEND_DST_MODE), std::string(BLEND_ALPHA));
+        std::string dst = passData.value(std::string(BLEND_DST_MODE), std::string(BLEND_INV_SRC_ALPHA));
         switch (Hash(dst))
         {
-        case Hash(BLEND_ONE): dstBlend = vk::BlendFactor::eZero; break;
-        case Hash(BLEND_ADD): dstBlend = vk::BlendFactor::eOne; break;
-        case Hash(BLEND_MUL): dstBlend = vk::BlendFactor::eSrcColor; break;
-        case Hash(BLEND_ALPHA):
+        case Hash(BLEND_ZERO): dstBlend = vk::BlendFactor::eZero; break;
+        case Hash(BLEND_ONE): dstBlend = vk::BlendFactor::eOne; break;
+        case Hash(BLEND_SRC_COLOR): dstBlend = vk::BlendFactor::eSrcColor; break;
+        case Hash(BLEND_INV_SRC_ALPHA):
         default: dstBlend = vk::BlendFactor::eOneMinusSrcAlpha; break;
         }
     }
-
     void ShaderParseDef::GetDepthMode(const nlohmann::basic_json<>& passData,
         bool& depthTestOn,
         bool& depthWriteOn,

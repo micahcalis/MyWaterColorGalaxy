@@ -6,7 +6,6 @@
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_scancode.h"
 #include "glm/glm.hpp"
-#include <print>
 
 namespace Beer::System
 {
@@ -29,24 +28,24 @@ namespace Beer::System
 
         if (keyStates[SDL_SCANCODE_W] && keyStates[SDL_SCANCODE_S])
         {
-            moveVec.x = 0;
+            moveVec.y = 0;
         } else if (keyStates[SDL_SCANCODE_W])
         {
-            moveVec.x = 1;
+            moveVec.y = 1;
         } else if (keyStates[SDL_SCANCODE_S])
         {
-            moveVec.x = -1;
+            moveVec.y = -1;
         }
 
         if (keyStates[SDL_SCANCODE_D] && keyStates[SDL_SCANCODE_A])
         {
-            moveVec.y = 0;
+            moveVec.x = 0;
         } else if (keyStates[SDL_SCANCODE_A])
         {
-            moveVec.y = 1;
+            moveVec.x = 1;
         } else if (keyStates[SDL_SCANCODE_D])
         {
-            moveVec.y = -1;
+            moveVec.x = -1;
         }
 
         return moveVec;
@@ -100,5 +99,15 @@ namespace Beer::System
     ButtonInput InputManager::GetSpaceButtonInput()
     {
         return spaceKeyCache.UpdateInput();
+    }
+
+    ButtonInput InputManager::GetTabButtonInput()
+    {
+        return tabKeyCache.UpdateInput();
+    }
+
+    ButtonInput InputManager::GetCtrlButtonInput()
+    {
+        return ctrlKeyCache.UpdateInput();
     }
 } // namespace Beer::System

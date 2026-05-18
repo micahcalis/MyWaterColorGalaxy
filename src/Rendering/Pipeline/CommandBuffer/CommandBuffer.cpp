@@ -44,7 +44,7 @@ namespace Beer::Rendering
         renderingInfo.colorAttachmentCount = beginData.ColorWriteTargets.size();
         renderingInfo.pColorAttachments = beginData.ColorWriteTargets.data();
 
-        if (beginData.WritesToDepth)
+        if (beginData.TestsDepth)
         {
             renderingInfo.pDepthAttachment = &beginData.DepthWriteTarget;
         }

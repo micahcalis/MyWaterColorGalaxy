@@ -12,6 +12,7 @@ namespace Beer::System
     public:
         void Update();
         void AddCamera(Camera* camera);
+        void RemoveCamera(Camera* camera);
         Camera* GetMainCamera() const;
 
     private:

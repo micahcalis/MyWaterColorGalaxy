@@ -12,7 +12,7 @@ struct MeshData
     M_POSITION;
 }
 
-struct VertexData
+struct VertexData   
 {
     float4 positionCS : SV_Position;
     float3 positionWS;
@@ -56,8 +56,7 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
 
     SphereTracing.SphereTracer<SDF.Sphere> tracer = SphereTracing.SphereTracer<SDF.Sphere>(
         planetSDF,
-        ray,
-        boundingbox);
+        ray);
 
     SphereTracing.TraceResult result = tracer.Trace();
 

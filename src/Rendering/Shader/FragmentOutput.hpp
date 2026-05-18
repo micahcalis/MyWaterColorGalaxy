@@ -11,12 +11,12 @@ namespace Beer::Rendering
     {
     public:
         std::vector<vk::Format> ColorFormats;
-        bool WritesDepth = false;
+        bool TestsDepth = false;
 
     public:
         bool operator==(const FragmentOutput& other) const
         {
-            return ColorFormats == other.ColorFormats && WritesDepth == other.WritesDepth;
+            return ColorFormats == other.ColorFormats && TestsDepth == other.TestsDepth;
         }
 
         bool HasUndefined() const
@@ -34,7 +34,7 @@ namespace Beer::Rendering
 
         void Print() const
         {
-            std::println("Writes To Depth: {}", WritesDepth);
+            std::println("Tests With Depth: {}", TestsDepth);
 
             for (const auto format : ColorFormats)
             {
@@ -58,7 +58,7 @@ namespace Beer::Rendering
                 hashCombine(std::hash<uint32_t>()(static_cast<uint32_t>(format)));
             }
 
-            hashCombine(std::hash<uint32_t>()(static_cast<uint32_t>(key.WritesDepth)));
+            hashCombine(std::hash<uint32_t>()(static_cast<uint32_t>(key.TestsDepth)));
 
             return hash;
         }
@@ -104,7 +104,7 @@ namespace Beer::Rendering
                 return false;
             }
 
-            if (HasDepthWrite() && output.WritesDepth == false)
+            if (HasDepthWrite() && output.TestsDepth == false)
             {
                 std::println("DEPTH MISMATCH! Shader requires Depth, but Render Pass does not provide it.");
                 return false;
