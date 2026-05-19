@@ -1,11 +1,11 @@
 #pragma once
 
-#include "PlayerEntity.hpp"
 #include "PlayerInput.hpp"
-#include "System/Galaxy/Player/PlayerEntity.hpp"
 
 namespace Beer::System
 {
+    class PlayerEntity;
+
     class PlayerController
     {
     private:

@@ -27,6 +27,11 @@ namespace Beer::Rendering
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::ColorFormat());
+
+        context.BlackBox->ReallocateIfNeeded(GBUFFER_EMISSION,
+            Core::Screen::Width(),
+            Core::Screen::Height(),
+            GBUFFER_EMISSION_FORMAT);
     }
 
     void DrawOpaquePass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)

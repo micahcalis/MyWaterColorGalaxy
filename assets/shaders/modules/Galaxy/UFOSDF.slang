@@ -31,12 +31,18 @@ namespace SDF
         private float scale;
         private float invScale;
         private float3x3 invRotation;
-        public __init(float3 _center, float _scale, float4x4 rotation)
+        private float cutoff;
+
+        public __init(float3 _center, 
+            float _scale, 
+            float4x4 rotation,
+            float _cutoff)
         {
             center = _center;
             scale = _scale;
             invScale = rcp(scale);
             invRotation = (float3x3)transpose(rotation);
+            cutoff = (_cutoff - 0.5f) * 2.0f;
         }
 
         public float Evaluate(float3 position)
@@ -75,7 +81,10 @@ namespace SDF
             float cockpit = Cockpit.GetCockpit(rotatedPos);
             float fins = GetFins(rotatedPos);
 
-            return Functions.Union(Functions.Subtraction(cockpit, base), fins);
+            float fullSaucer = Functions.Union(Functions.Subtraction(cockpit, base), fins);
+            ApplyCutoff(fullSaucer, rotatedPos, cutoff);
+
+            return fullSaucer;
         }
 
         private float GetGrooveModifier(float radialGrad,
@@ -111,6 +120,12 @@ namespace SDF
 
             return cutBox - FINS_BEVEL;
         }
+
+        public static void ApplyCutoff(inout float dist, float3 rotatedPos, float time)
+        {
+            float cutter = rotatedPos.y - time;
+            dist = Functions.Intersection(dist, cutter);
+        } 
     }
 
     public struct Cockpit : SDF
@@ -119,13 +134,18 @@ namespace SDF
         private float scale;
         private float invScale;
         private float3x3 invRotation;
+        private float cutoff;
 
-        public __init(float3 _center, float _scale, float4x4 rotation)
+        public __init(float3 _center, 
+            float _scale, 
+            float4x4 rotation,
+            float _cutoff)
         {
             center = _center;
             scale = _scale;
             invScale = rcp(scale);
             invRotation = (float3x3)transpose(rotation);
+            cutoff = (_cutoff - 0.5f) * 2.0f;
         }
     
         public float Evaluate(float3 position)
@@ -137,7 +157,9 @@ namespace SDF
         private float Cockpit(float3 localPos)
         {
             float3 rotatedPos = mul(invRotation, localPos);
-            return GetCockpit(rotatedPos);
+            float cockpit = GetCockpit(rotatedPos);
+            Saucer::ApplyCutoff(cockpit, rotatedPos, cutoff);
+            return cockpit;
         }
 
         public static float GetCockpit(float3 rotatedPos)
@@ -145,5 +167,13 @@ namespace SDF
             float3 rotatedOffset = float3(0, COCKPIT_HEIGHT, 0);
             return Functions.Sphere(rotatedPos - rotatedOffset, COCKPIT_RADIUS);
         }
+    }
+
+    public float GetGlowGradient(float3 positionOS, 
+        float cutoff,
+        float thickness)
+    {
+        cutoff = (cutoff - 0.5f) * 2.0f;
+        return 1.0f - smoothstep(cutoff, cutoff - thickness, positionOS.y);
     }
 }

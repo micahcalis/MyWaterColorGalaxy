@@ -64,6 +64,7 @@ FRAG Deferred.FragData DefaultLitFrag(VertexData input)
         input.normalWS,
         _Smoothness,
         _Metallic,
+        0,
         0.5f);
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData);

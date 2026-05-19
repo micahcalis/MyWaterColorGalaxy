@@ -74,6 +74,7 @@ FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFa
     result.Normal,
     0.5f,
     0.2f,
+    0,
     0.5f);
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);

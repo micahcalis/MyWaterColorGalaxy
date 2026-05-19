@@ -69,6 +69,7 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         result.Normal,
         0.5f,
         0.2f,
+        0,
         0.5f);
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);

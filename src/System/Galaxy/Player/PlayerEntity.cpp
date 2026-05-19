@@ -12,10 +12,13 @@ namespace Beer::System
     static const float COCKPIT_METALLIC = 0.0f;
     static const float COCKPIT_SMOOTH = 0.6f;
     static const float PLAYER_SCALE = 1.5f;
+    static const glm::vec4 CUTOFF_COLOR = glm::vec4(0.25f, 1.0f, 0.08f, 1.0f);
+    static const float GLOW_THICKNESS = 0.1f;
 
     PlayerEntity::PlayerEntity(Function<PlayerInput> getPlayerInput,
+        BeerEvent<void(bool)>* onSetPhotoMode,
         Layer layer)
-        : getPlayerInput(getPlayerInput), GameEntity(layer)
+        : getPlayerInput(getPlayerInput), onSetPhotoMode(onSetPhotoMode), GameEntity(layer)
     {
         transform.Position = PLAYER_SETTINGS.StartPos;
         transform.Scale = glm::vec3(PLAYER_SCALE);
@@ -27,6 +30,9 @@ namespace Beer::System
         playerMaterial->SetColor("_CockPitColor", COCKPIT_COLOR);
         playerMaterial->SetFloat("_CockPitMetallic", COCKPIT_METALLIC);
         playerMaterial->SetFloat("_CockPitSmoothness", COCKPIT_SMOOTH);
+        playerMaterial->SetColor("_CutoffColor", CUTOFF_COLOR);
+        playerMaterial->SetFloat("_GlowThickness", GLOW_THICKNESS);
+        playerMaterial->SetFloat("_CutoffTime", 1.0f);
 
         playerMesh = Rendering::Mesh::Get("MDL_Cube");
 
@@ -48,7 +54,7 @@ namespace Beer::System
 
     void PlayerEntity::InitializeManager()
     {
-        manager = std::make_unique<PlayerManager>(this, getPlayerInput);
+        manager = std::make_unique<PlayerManager>(this, getPlayerInput, onSetPhotoMode, playerMaterial.get());
     }
 
 } // namespace Beer::System

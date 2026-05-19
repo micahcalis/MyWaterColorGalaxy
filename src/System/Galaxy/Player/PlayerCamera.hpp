@@ -1,14 +1,14 @@
 #pragma once
 
-#include "PlayerEntity.hpp"
 #include "System/Camera/Camera.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
-#include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
 #include <memory>
 
 namespace Beer::System
 {
+    class PlayerEntity;
+
     class PlayerCamera
     {
         const glm::vec3 WORLD_UP = glm::vec3(0, 1, 0);
@@ -17,6 +17,8 @@ namespace Beer::System
         PlayerEntity* player = nullptr;
         GameSubEntity* cameraEntity = nullptr;
         Function<float> getPlayerNormSpeed = nullptr;
+        Function<bool> getPhotoMode = nullptr;
+
         std::unique_ptr<Camera> camera = nullptr;
         float currentYawOffset = 0.0f;
         float currentPitchOffset = 0.0f;
@@ -24,7 +26,8 @@ namespace Beer::System
     public:
         PlayerCamera(PlayerEntity* player,
             GameSubEntity* cameraEntity,
-            Function<float> getPlayerNormSpeed);
+            Function<float> getPlayerNormSpeed,
+            Function<bool> getPhotoMode);
 
         void Update(PlayerInput input);
 

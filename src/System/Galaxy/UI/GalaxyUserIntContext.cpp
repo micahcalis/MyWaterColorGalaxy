@@ -2,6 +2,7 @@
 #include "ControlsDisplayEntity.hpp"
 #include "OptionsDisplayEntity.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include <print>
 
 namespace Beer::System
 {
@@ -27,6 +28,19 @@ namespace Beer::System
         }
     }
 
+    void GalaxyUserIntContext::SetDisplaysEnabled(bool enabled)
+    {
+        if (controlsDisplayEntity != nullptr)
+        {
+            controlsDisplayEntity->SetTreeEnabled(enabled);
+        }
+
+        if (optionsDisplayEntity != nullptr)
+        {
+            optionsDisplayEntity->SetTreeEnabled(enabled);
+        }
+    }
+
     std::vector<Rendering::IRenderPass*> GalaxyUserIntContext::GetRenderPasses()
     {
         return {drawUIPass};
@@ -41,5 +55,4 @@ namespace Beer::System
     {
         optionsDisplayEntity = registry.CreateEntity<OptionsDisplayEntity>();
     }
-
 } // namespace Beer::System

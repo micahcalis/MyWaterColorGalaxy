@@ -14,6 +14,7 @@ namespace Beer::System
         float TurnSpeed{};
         float RollSpeed{};
         float YawSpeed{};
+        float FadeSpeed{};
     };
 
     static const PlayerSettings PLAYER_SETTINGS = {
@@ -24,7 +25,8 @@ namespace Beer::System
         glm::vec3(500, 0, 500),
         10.0f,
         16.0f,
-        8.0f};
+        8.0f,
+        2.75f};
 
     struct PlayerCameraSettings
     {

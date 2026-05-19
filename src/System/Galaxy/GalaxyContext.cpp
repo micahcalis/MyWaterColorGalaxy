@@ -65,7 +65,7 @@ namespace Beer::System
 
     void GalaxyContext::InitializePlayer()
     {
-        playerEntity = registry.CreateEntity<PlayerEntity>(getPlayerInput);
+        playerEntity = registry.CreateEntity<PlayerEntity>(getPlayerInput, &OnSetPhotoMode);
     }
 
     void GalaxyContext::InitializeLight()

@@ -17,6 +17,9 @@ cbuffer MaterialData
     float4 _CockPitColor;
     float _CockPitMetallic;
     float _CockPitSmoothness;
+    float _CutoffTime;
+    float4 _CutoffColor;
+    float _GlowThickness;
 }
 
 struct MeshData
@@ -28,6 +31,7 @@ struct VertexData
 {
     float4 positionCS : SV_Position;
     float3 positionWS;
+    float3 positionOS;
     nointerpolation uint instanceID;
 }
 
@@ -42,6 +46,7 @@ VERT VertexData SaucerVert(MeshData input, INSTANCEID)
 {
     GETMODELDATA
     VertexData output;
+    output.positionOS = input.positionOS;
     output.positionWS = ObjToWorld(transform, input.positionOS);
     output.positionCS = WorldToClip(output.positionWS);
     return output;
@@ -71,7 +76,7 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
         discard;
     }
 
-    SDF.Saucer saucerSDF = SDF.Saucer(center, scale.x * 0.8f, transform.objToWorldDirMat);
+    SDF.Saucer saucerSDF = SDF.Saucer(center, scale.x * 0.8f, transform.objToWorldDirMat, _CutoffTime);
 
     SphereTracing.SphereTracer<SDF.Saucer> tracer = SphereTracing.SphereTracer<SDF.Saucer>(
         saucerSDF,
@@ -82,12 +87,17 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
     if (!result.Hit)
         discard;
 
+    float3x3 invRotation = (float3x3)transpose(transform.objToWorldDirMat);
+    float3 positionOS = mul(invRotation, (result.Position - center) / scale);
+    float glowGradient = SDF.GetGlowGradient(positionOS, _CutoffTime, _GlowThickness);
+ 
     Deferred.DeferredShadeData data = Deferred.DeferredShadeData(_SaucerColor.rgb,
         0,
         result.Position,
         result.Normal,
         _SaucerSmoothness,
         _SaucerMetallic,
+        _CutoffColor.rgb * glowGradient,
         0.5f);
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
@@ -138,7 +148,10 @@ FRAG Deferred.TransparentFragData CockpitFrag(VertexData input, bool IsFrontFace
         discard;
     }
 
-    SDF.Cockpit cockpitSDF = SDF.Cockpit(center, scale.x * 0.8f, transform.objToWorldDirMat);
+    SDF.Cockpit cockpitSDF = SDF.Cockpit(center, 
+        scale.x * 0.8f, 
+        transform.objToWorldDirMat,
+       _CutoffTime);
 
     SphereTracing.SphereTracer<SDF.Cockpit> tracer = SphereTracing.SphereTracer<SDF.Cockpit>(
         cockpitSDF,
@@ -149,6 +162,11 @@ FRAG Deferred.TransparentFragData CockpitFrag(VertexData input, bool IsFrontFace
     if (!result.Hit)
         discard;
 
+    float3x3 invRotation = (float3x3)transpose(transform.objToWorldDirMat);
+    float3 positionOS = mul(invRotation, (result.Position - center) / scale);
+    float glowGradient = SDF.GetGlowGradient(positionOS, _CutoffTime, _GlowThickness);
+    float4 gradientCol = glowGradient * _CutoffColor;
+
     Lit.BRDF brdf = Lit.BRDF(GetMainLight(result.Position), 
         viewDirWS,
         result.Normal, 
@@ -157,9 +175,10 @@ FRAG Deferred.TransparentFragData CockpitFrag(VertexData input, bool IsFrontFace
         _CockPitMetallic);
 
     float3 lit = brdf.Specular() + brdf.Fresnel();
+    float4 blendCol = float4(lit + gradientCol.rgb, saturate(_CockPitColor.a + glowGradient));
 
     Deferred.TransparentFragData fragData;
-    fragData.color = _CockPitColor;
+    fragData.color = blendCol;
     fragData.depth = Deferred.WorldPosToDepth(result.Position);
 
     return fragData;

@@ -119,10 +119,13 @@ namespace Beer::System
 
     void GameManager::InitializeGalaxy()
     {
-        contextHandler->LoadContext(ContextType::GalaxyUserInt);
         contextHandler->LoadContext(ContextType::Galaxy);
+        GalaxyContext* galaxyContext = contextHandler->GetContext<GalaxyContext>(ContextType::Galaxy);
 
-        GalaxyContext* context = contextHandler->GetContext<GalaxyContext>(ContextType::Galaxy);
+        contextHandler->LoadContext(ContextType::GalaxyUserInt);
+        GalaxyUserIntContext* uiContext = contextHandler->GetContext<GalaxyUserIntContext>(ContextType::GalaxyUserInt);
+
+        galaxyContext->OnSetPhotoMode.Subscribe([uiContext](bool enabled) -> void { uiContext->SetDisplaysEnabled(!enabled); });
 
         Function<void> toPaintTool = [this]() -> void {
             contextHandler->DestroyContext(ContextType::Galaxy);
@@ -134,7 +137,7 @@ namespace Beer::System
             contextHandler->QueueOperation(toPaintTool);
         };
 
-        context->OnReturnToPainting.Subscribe(onReturnToPainting);
+        galaxyContext->OnReturnToPainting.Subscribe(onReturnToPainting);
     }
 
     void GameManager::InitializePaintTool()

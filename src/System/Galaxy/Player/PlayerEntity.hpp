@@ -8,6 +8,7 @@
 #include "System/Drawing/RenderRegister.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
 #include "System/Delegates/Delegate.hpp"
+#include "System/Galaxy/Player/PlayerManager.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -26,6 +27,8 @@ namespace Beer::System
             Layer layer = Layer::Default);
 
         void Update() override;
+
+        PlayerManager* GetPlayerManager() const { return static_cast<PlayerManager*>(manager.get()); }
 
     private:
         void InitializeManager() override;

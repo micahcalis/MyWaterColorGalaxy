@@ -21,6 +21,7 @@ namespace Beer::System
 
         void Load() override;
         void Update() override;
+        void SetDisplaysEnabled(bool enabled);
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
 
     private:

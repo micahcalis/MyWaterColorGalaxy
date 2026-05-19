@@ -16,10 +16,12 @@ namespace Beer::System
 {
     PlayerCamera::PlayerCamera(PlayerEntity* player,
         GameSubEntity* cameraEntity,
-        Function<float> getPlayerNormSpeed)
+        Function<float> getPlayerNormSpeed,
+        Function<bool> getPhotoMode)
         : player(player)
         , cameraEntity(cameraEntity)
         , getPlayerNormSpeed(getPlayerNormSpeed)
+        , getPhotoMode(getPhotoMode)
     {
         camera = Camera::CreateCamera(CAMERA_DEFAULT_SETTINGS,
             cameraEntity->GetTransform());
@@ -38,9 +40,12 @@ namespace Beer::System
         currentYawOffset -= mouseVec.x * PLAYER_CAM_SETTINGS.Sensitivity;
         currentPitchOffset -= -mouseVec.y * PLAYER_CAM_SETTINGS.Sensitivity;
 
-        float maxAngleRadians = glm::radians(PLAYER_CAM_SETTINGS.MaxLookAngle);
-        currentYawOffset = std::clamp(currentYawOffset, -maxAngleRadians, maxAngleRadians);
-        currentPitchOffset = std::clamp(currentPitchOffset, -maxAngleRadians, maxAngleRadians);
+        if (!getPhotoMode())
+        {
+            float maxAngleRadians = glm::radians(PLAYER_CAM_SETTINGS.MaxLookAngle);
+            currentYawOffset = std::clamp(currentYawOffset, -maxAngleRadians, maxAngleRadians);
+            currentPitchOffset = std::clamp(currentPitchOffset, -maxAngleRadians, maxAngleRadians);
+        }
 
         if (ShouldSpringBack(mouseVec))
         {
@@ -78,6 +83,11 @@ namespace Beer::System
 
     bool PlayerCamera::ShouldSpringBack(glm::vec2 mouseVec) const
     {
+        if (getPhotoMode())
+        {
+            return false;
+        }
+
         float deadzoneRadians = glm::radians(PLAYER_CAM_SETTINGS.SpringDeadzone);
         float rotationOffsetLength = glm::length(glm::vec2(currentPitchOffset, currentYawOffset));
 

@@ -1,9 +1,12 @@
 #include "System/Galaxy/Player/PlayerController.hpp"
 #include "PlayerSettings.hpp"
 #include "System/Base/Clock/Clock.hpp"
+#include "System/Components/General/Transform.hpp"
+#include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
 #include "glm/gtc/quaternion.hpp"
+#include <algorithm>
 
 namespace Beer::System
 {
