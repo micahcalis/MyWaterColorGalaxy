@@ -24,62 +24,54 @@ namespace Beer::System
     {
         simulationBuffers = std::make_unique<Rendering::WaterColorSimBuffers>(debugMaterial);
 
-        injectPaintPass = Rendering::IRenderPass::FetchFromRegister<Rendering::InjectPaintPass>(
-            "InjectPaintPass",
+        injectPaintPass = std::make_unique<Rendering::InjectPaintPass>(
             simulationBuffers.get(),
             getMouseInput,
             getCanvasTransform);
 
-        calculateFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::CalculateFluidFluxPass>(
-            "CalculateFluidFluxPass",
+        calculateFluidFluxPass = std::make_unique<Rendering::CalculateFluidFluxPass>(
             simulationBuffers.get());
 
-        resolvePigmentFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ResolvePigmentFluxPass>(
-            "ResolvePigmentFluxPass",
+        resolvePigmentFluxPass = std::make_unique<Rendering::ResolvePigmentFluxPass>(
             simulationBuffers.get());
 
-        resolveFluidFluxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ResolveFluidFluxPass>(
-            "ResolveFluidFluxPass",
+        resolveFluidFluxPass = std::make_unique<Rendering::ResolveFluidFluxPass>(
             simulationBuffers.get());
 
-        transferPigmentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::TransferPigmentPass>(
-            "TransferPigmentPass",
+        transferPigmentPass = std::make_unique<Rendering::TransferPigmentPass>(
             simulationBuffers.get());
 
-        renderPigmentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::RenderPigmentPass>(
-            "RenderPigmentPass",
+        renderPigmentPass = std::make_unique<Rendering::RenderPigmentPass>(
             simulationBuffers.get());
 
-        evaporateWaterPass = Rendering::IRenderPass::FetchFromRegister<Rendering::EvaporateWaterPass>(
-            "EvaporateWaterPass",
+        evaporateWaterPass = std::make_unique<Rendering::EvaporateWaterPass>(
             simulationBuffers.get());
 
-        clearLiquidsPass = Rendering::IRenderPass::FetchFromRegister<Rendering::ClearLiquidsPass>(
-            "ClearLiquidsPass",
+        clearLiquidsPass = std::make_unique<Rendering::ClearLiquidsPass>(
             simulationBuffers.get());
     }
 
     std::vector<Rendering::IRenderPass*> PaintSimSubPipeline::GetRenderPasses()
     {
         std::vector<Rendering::IRenderPass*> renderPasses{
-            calculateFluidFluxPass,
-            resolvePigmentFluxPass,
-            resolveFluidFluxPass,
-            transferPigmentPass,
-            renderPigmentPass,
-            evaporateWaterPass};
+            calculateFluidFluxPass.get(),
+            resolvePigmentFluxPass.get(),
+            resolveFluidFluxPass.get(),
+            transferPigmentPass.get(),
+            renderPigmentPass.get(),
+            evaporateWaterPass.get()};
 
         if (getColorPickerState != nullptr)
         {
             if (getColorPickerState() == ColorPickingState::Idle)
             {
-                renderPasses.push_back(injectPaintPass);
+                renderPasses.push_back(injectPaintPass.get());
             }
         }
 
         if (clearMarker)
         {
-            renderPasses.push_back(clearLiquidsPass);
+            renderPasses.push_back(clearLiquidsPass.get());
             clearMarker = false;
         }
 

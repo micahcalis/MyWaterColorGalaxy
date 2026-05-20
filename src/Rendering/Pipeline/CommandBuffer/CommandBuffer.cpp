@@ -44,7 +44,7 @@ namespace Beer::Rendering
         renderingInfo.colorAttachmentCount = beginData.ColorWriteTargets.size();
         renderingInfo.pColorAttachments = beginData.ColorWriteTargets.data();
 
-        if (beginData.WritesToDepth)
+        if (beginData.TestsDepth)
         {
             renderingInfo.pDepthAttachment = &beginData.DepthWriteTarget;
         }
@@ -126,13 +126,14 @@ namespace Beer::Rendering
     void CommandBuffer::BindDescriptorSets(const vk::PipelineBindPoint bindPoint,
         const vk::PipelineLayout layout,
         const uint32_t setIndex,
-        std::vector<vk::DescriptorSet> sets)
+        std::vector<vk::DescriptorSet> sets,
+        const std::vector<uint32_t>& dynamicOffsets)
     {
         commandBuffer.bindDescriptorSets(bindPoint,
             layout,
             setIndex,
             sets,
-            nullptr);
+            dynamicOffsets);
     }
 
     void CommandBuffer::BindModelPush(Rendering::ModelPush modelPush,
@@ -198,12 +199,14 @@ namespace Beer::Rendering
             shader->GetPipeline(shaderPass, output));
     }
 
-    void CommandBuffer::BindMaterial(const Material* material)
+    void CommandBuffer::BindMaterial(const Material* material,
+        const std::vector<uint32_t>& dynamicOffsets)
     {
         BindDescriptorSets(vk::PipelineBindPoint::eGraphics,
             material->GetShader()->GetPipelineLayout(),
             MaterialData::SET,
-            {material->GetDescriptorSet()});
+            {material->GetDescriptorSet()},
+            dynamicOffsets);
     }
 
     void CommandBuffer::BindFontMaterial(const FontMaterial* fontMaterial)

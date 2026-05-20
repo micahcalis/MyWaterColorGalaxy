@@ -33,15 +33,24 @@ namespace Beer::Rendering
         syncState = std::make_unique<BufferSyncState>(bufferHandle.get());
     }
 
+    void PhaseBuffer::UploadAsync(void* data, size_t size, size_t offset)
+    {
+        Buffer::UploadAsync(bufferHandle, data, size, offset);
+    }
+
     void PhaseBuffer::InitializeFallbackBuffer()
     {
-        std::shared_ptr<Buffer> bufferHandle = std::make_shared<Buffer>(Buffer::CreateSSBO(FALLBACK_SIZE, SSBOType::Hybrid));
-        bufferFallback = std::make_shared<PhaseBuffer>("FallbackBuffer", std::move(bufferHandle));
+        std::shared_ptr<Buffer> bufferHandleStandard = std::make_shared<Buffer>(Buffer::CreateSSBO(FALLBACK_SIZE, SSBOType::Hybrid));
+        bufferFallbackStandard = std::make_shared<PhaseBuffer>("FallbackBufferStandard", std::move(bufferHandleStandard));
+
+        std::shared_ptr<Buffer> bufferHandleDynamic = std::make_shared<Buffer>(Buffer::CreateDynamic(FALLBACK_SIZE, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+        bufferFallbackDynamic = std::make_shared<PhaseBuffer>("FallbackBufferDynamic", std::move(bufferHandleDynamic));
     }
 
     void PhaseBuffer::DestroyFallbackBuffer()
     {
-        bufferFallback.reset();
+        bufferFallbackStandard.reset();
+        bufferFallbackDynamic.reset();
     }
 
     VkDeviceSize PhaseBuffer::CalculateSize(uint32_t count, size_t size)

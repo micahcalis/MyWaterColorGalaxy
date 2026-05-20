@@ -1,16 +1,18 @@
 #pragma once
 
 #include "PlayerCamera.hpp"
-#include "PlayerEntity.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
+#include "System/Delegates/BeerEvent.hpp"
 #include "System/Delegates/Delegate.hpp"
-#include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Galaxy/Player/PlayerController.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
 
 namespace Beer::System
 {
+    class PlayerEntity;
+
     class PlayerManager : public IEntityManager
     {
     private:
@@ -18,13 +20,23 @@ namespace Beer::System
         std::unique_ptr<PlayerController> playerController = nullptr;
         std::unique_ptr<GameSubEntity> cameraEntity = nullptr;
         std::unique_ptr<PlayerCamera> playerCamera = nullptr;
-        bool movementEnabled;
         Function<PlayerInput> getPlayerInput;
+        BeerEvent<void(bool)>* onSetPhotoMode = nullptr;
+        Rendering::Material* playerMaterial = nullptr;
+
+        bool photoMode = false;
+        float cutoffValue = 1.0f;
 
     public:
-        PlayerManager(PlayerEntity* player, Function<PlayerInput> getPlayerInput);
+        PlayerManager(PlayerEntity* player,
+            Function<PlayerInput> getPlayerInput,
+            BeerEvent<void(bool)>* onSetPhotoMode,
+            Rendering::Material* playerMaterial);
+
         void Update() override;
-        void SetMovementEnabled(const bool enabled);
+        void HandleFade();
+
+        bool GetPhotoMode() const { return photoMode; }
     };
 } // namespace Beer::System
 

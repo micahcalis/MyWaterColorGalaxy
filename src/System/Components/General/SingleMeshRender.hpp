@@ -45,5 +45,10 @@ namespace Beer::System
         const Rendering::Shader* GetPrimaryShader() const override { return material->GetShader(); }
         const Rendering::Material* GetPrimaryMaterial() const override { return material.get(); }
         const Rendering::Mesh* GetPrimaryMesh() const override { return mesh.get(); }
+
+        float GetPlanarDist(const glm::vec3 cameraPos, const glm::vec3 cameraForward) const override
+        {
+            return glm::dot(transform->Position - cameraPos, cameraForward);
+        }
     };
 } // namespace Beer::System

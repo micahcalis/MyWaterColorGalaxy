@@ -28,6 +28,11 @@ namespace Beer::Rendering
         static constexpr std::string_view POLY_EDGE = "Line";
         static constexpr std::string_view POLY_POINT = "Point";
 
+        static constexpr std::string_view TOPO_MODE = "Topology";
+        static constexpr std::string_view TOPO_TRI = "Triangle";
+        static constexpr std::string_view TOPO_LINE = "Line";
+        static constexpr std::string_view TOPO_POINT = "Point";
+
         static constexpr std::string_view CULL_MODE = "Cull";
         static constexpr std::string_view CULL_BACK = "Back";
         static constexpr std::string_view CULL_FRONT = "Front";
@@ -39,10 +44,13 @@ namespace Beer::Rendering
 
         static constexpr std::string_view BLEND_SRC_MODE = "SrcOp";
         static constexpr std::string_view BLEND_DST_MODE = "DstOp";
-        static constexpr std::string_view BLEND_ALPHA = "Alpha";
+
+        static constexpr std::string_view BLEND_ZERO = "Zero";
         static constexpr std::string_view BLEND_ONE = "One";
-        static constexpr std::string_view BLEND_ADD = "Add";
-        static constexpr std::string_view BLEND_MUL = "Mul";
+        static constexpr std::string_view BLEND_SRC_COLOR = "SrcColor";
+        static constexpr std::string_view BLEND_DST_COLOR = "DstColor";
+        static constexpr std::string_view BLEND_SRC_ALPHA = "SrcAlpha";
+        static constexpr std::string_view BLEND_INV_SRC_ALPHA = "InvSrcAlpha";
 
         static constexpr std::string_view DEPTH_TEST_TOGGLE = "ZTest";
         static constexpr std::string_view DEPTH_WRITE_TOGGLE = "ZWrite";
@@ -71,6 +79,7 @@ namespace Beer::Rendering
         static std::string GetFragmentEntryPoint(const nlohmann::basic_json<>& passData);
         static vk::PolygonMode GetPolygonMode(const nlohmann::basic_json<>& passData);
         static vk::CullModeFlags GetCullMode(const nlohmann::basic_json<>& passData);
+        static vk::PrimitiveTopology GetTopologyMode(const nlohmann::basic_json<>& passData);
 
         static void GetBlendMode(const nlohmann::basic_json<>& passData,
             bool& blendOn,

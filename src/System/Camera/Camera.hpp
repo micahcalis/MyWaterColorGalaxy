@@ -27,7 +27,7 @@ namespace Beer::System
         uint32_t GetPriority() const;
         glm::mat4 GetViewMatrix() const;
         glm::mat4 GetProjectionMatrix() const;
-        const Transform* GetTransform();
+        const Transform* GetTransform() const;
         void SetPosition(glm::vec3 position);
         void SetOrientation(glm::quat rotation);
         void SetOrientation(glm::vec3 up, glm::vec3 forward);
@@ -49,6 +49,7 @@ namespace Beer::System
         inline static CameraManager* cameraManager = nullptr;
 
     public:
+        ~Camera();
         static std::unique_ptr<Camera> CreateCamera(const CameraSettings settings, Transform* transform);
         static float GetAspect();
         static void SetCameraManager(CameraManager* cameraManager) { Camera::cameraManager = cameraManager; }

@@ -6,6 +6,14 @@
 
 namespace Beer::System
 {
+    inline ILight::~ILight()
+    {
+        if (lightManager != nullptr)
+        {
+            lightManager->RemoveLight(this);
+        }
+    }
+
     template<typename T, typename... Args>
     std::unique_ptr<T> ILight::CreateLight(Args&&... args)
     {

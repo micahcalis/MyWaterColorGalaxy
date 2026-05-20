@@ -28,12 +28,19 @@ namespace Beer::Rendering
                                               Core::Screen::Height(),
                                               Core::Screen::ColorFormat())
                               .AllocPointer;
+
+        GBufferEmission = context.BlackBox->ReallocateIfNeeded(GBUFFER_EMISSION,
+                                              Core::Screen::Width(),
+                                              Core::Screen::Height(),
+                                              GBUFFER_EMISSION_FORMAT)
+                              .AllocPointer;
     }
 
     void DeferredShadePass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
     {
         blitMaterial->SetTexture("_GBufferNormals", GBufferNormal);
         blitMaterial->SetTexture("_GBufferMaterial", GBufferMaterial);
+        blitMaterial->SetTexture("_GBufferEmission", GBufferEmission);
         blitMaterial->SetTexture("_DepthBuffer", context.MainDepthTarget);
 
         commandBuffer->Blit(GBufferAlbedo,

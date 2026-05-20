@@ -8,5 +8,6 @@ namespace Beer::Rendering
     {
         VkDeviceSize Size = VK_WHOLE_SIZE;
         VkDeviceSize Offset = 0;
+        bool IsDynamic = false;
     };
 } // namespace Beer::Rendering

@@ -25,7 +25,6 @@ namespace Beer::System
     static const int RINGS_NUMBER = 7;
     static const float RINGS_THICKNESS = 0.15f;
     static const glm::vec4 RINGS_COLOR = glm::vec4(0.9f, 0.9f, 0.8f, 1.0f);
-    static const float CENTER_STAR_SCALE = 0.15f;
     static const float CENTER_STAR_GRAD_INTENSITY = 2.0f;
     static const float EDGE_RING_INTENSITY = 0.5f;
     static const int CENTER_STAR_GRAD_STEPS = 6;

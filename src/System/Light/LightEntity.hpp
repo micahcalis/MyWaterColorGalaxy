@@ -19,8 +19,10 @@ namespace Beer::System
             glm::vec4 lightColor,
             glm::vec4 shadowColor,
             glm::vec4 ambientColor)
-            : GameEntity(transform, nullptr)
+            : GameEntity()
         {
+            this->transform = std::move(transform);
+
             pointLight = ILight::CreateLight<PointLight>(&this->transform,
                 10,
                 lightColor,

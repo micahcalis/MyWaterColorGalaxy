@@ -9,6 +9,11 @@ namespace Beer::Rendering
         return meshManager->Get(name);
     }
 
+    std::shared_ptr<Mesh> Mesh::Create(const Core::MeshAsset& asset)
+    {
+        return meshManager->CreateProcedural(asset);
+    }
+
     MeshDrawInfo Mesh::GetDrawInfo() const
     {
         return MeshDrawInfo(buffers.HasIndex(),

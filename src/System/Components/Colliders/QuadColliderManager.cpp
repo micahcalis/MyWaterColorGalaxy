@@ -17,6 +17,11 @@ namespace Beer::System
         const MouseInput mouseInput = getMouseInput();
         QuadCollider* selectedCollider = GetSelectedCollider(mouseInput.PixelPos);
 
+        if (!registry->InRegistry(previousCollider))
+        {
+            previousCollider = nullptr;
+        }
+
         if (selectedCollider != previousCollider)
         {
             if (previousCollider != nullptr)

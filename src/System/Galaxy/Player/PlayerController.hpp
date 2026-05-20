@@ -1,15 +1,16 @@
 #pragma once
 
-#include "PlayerEntity.hpp"
 #include "PlayerInput.hpp"
-#include "System/Galaxy/Player/PlayerEntity.hpp"
 
 namespace Beer::System
 {
+    class PlayerEntity;
+
     class PlayerController
     {
     private:
         PlayerEntity* player;
+        float speed = 0;
 
     public:
         PlayerController(PlayerEntity* player)
@@ -18,6 +19,10 @@ namespace Beer::System
         }
 
         void Update(PlayerInput playerInput);
-        void Move(glm::vec2 movementVec);
+        void Move(PlayerInput playerInput);
+        float GetNormalizedSpeed() const;
+
+    private:
+        void HandleSpeed(bool isBoosting);
     };
 } // namespace Beer::System

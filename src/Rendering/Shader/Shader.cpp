@@ -148,7 +148,7 @@ namespace Beer::Rendering
         dynamicCreateInfo.pDynamicStates = dynamicStates.data();
 
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{};
-        inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
+        inputAssemblyCreateInfo.topology = settings.TopologyMode;
 
         vk::PipelineViewportStateCreateInfo viewportCreateInfo{};
         viewportCreateInfo.viewportCount = 1;

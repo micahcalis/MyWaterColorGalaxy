@@ -11,6 +11,12 @@
 
 namespace Beer::Rendering
 {
+    enum class BufferDescriptorType
+    {
+        Uniform,
+        Storage
+    };
+
     class UniformDescriptor
     {
     private:
@@ -31,9 +37,13 @@ namespace Beer::Rendering
             UniformDescriptor::frameIndex = frameIndex;
         }
 
-        static size_t GetMinAlignment()
+        static size_t GetMinAlignment(BufferDescriptorType type)
         {
-            return descriptorAllocator->Device->GetMinUniformBufferOffset();
+            bool isUniform = type == BufferDescriptorType::Uniform;
+
+            return isUniform
+                ? descriptorAllocator->Device->GetMinUniformBufferOffset()
+                : descriptorAllocator->Device->GetMinStorageBufferOffset();
         }
 
         UniformDescriptor(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);

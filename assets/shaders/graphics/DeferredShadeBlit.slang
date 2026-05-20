@@ -9,7 +9,8 @@ import BeerLit;
 BIND_BLIT_SRC(1)
 BIND_MATERIAL_TEX(2) Sampler2D<float2> _GBufferNormals;
 BIND_MATERIAL_TEX(3) Sampler2D _GBufferMaterial;
-BIND_MATERIAL_TEX(4) Sampler2D<float> _DepthBuffer;
+BIND_MATERIAL_TEX(4) Sampler2D<float3> _GBufferEmission;
+BIND_MATERIAL_TEX(5) Sampler2D<float> _DepthBuffer;
 
 struct MeshData
 {
@@ -44,10 +45,12 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
     float4 albedoSample = _BlitSource.Sample(input.uv);
     float2 normalSample = _GBufferNormals.Sample(input.uv);
     float4 materialSample = _GBufferMaterial.Sample(input.uv);
+    float3 emissionSample = _GBufferEmission.Sample(input.uv);
 
    Deferred.DeferredReader reader = Deferred.DeferredReader(albedoSample,
         normalSample,
-        materialSample);
+        materialSample,
+        emissionSample);
 
     float depth = _DepthBuffer.Sample(input.uv);
 
@@ -60,12 +63,23 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
 
     Deferred.DeferredShadeData data = reader.Read(positionWS);
 
-    Lit.BRDF brdf = Lit.BRDF(GetMainLight(positionWS),
-        GetViewDirectionWS(positionWS),
-        data.normalWS,
-        data.albedo,
-        data.smoothness,
-        data.metallic);
+    float3 color = float3(1, 0, 1);
 
-    return float4(brdf.Shade(), 1);
+    if (data.materialIndex == 0)
+    {
+        Lit.BRDF brdf = Lit.BRDF(GetMainLight(positionWS),
+            GetViewDirectionWS(positionWS),
+            data.normalWS,
+            data.albedo,
+            data.smoothness,
+            data.metallic);
+
+        color = brdf.Shade() + data.emission;
+    }
+    if (data.materialIndex == 1)
+    {
+        color = data.albedo + data.emission;
+    }
+
+    return float4(color, 1);
 }

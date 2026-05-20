@@ -34,6 +34,15 @@ namespace Beer::Rendering
                 framesLeft--;
             }
         }
+
+        for (auto& [name, framesLeft] : dirtyBufferCounts)
+        {
+            if (framesLeft > 0)
+            {
+                buffer->UpdateStructuredBufferDescriptor(name);
+                framesLeft--;
+            }
+        }
     }
 
     void Material::SetInt(const std::string& name, uint32_t val)
@@ -72,9 +81,21 @@ namespace Beer::Rendering
         MarkTextureDirty(name);
     }
 
+    void Material::SetStructuredBuffer(const std::string& name, PhaseBuffer* val, bool immediate)
+    {
+        IReflectedContext::SetStructuredBuffer(name, val, immediate);
+        MarkBufferDirty(name);
+    }
+
     void Material::MarkTextureDirty(const std::string& name)
     {
         dirtyTextureCounts[name] = UniformDescriptor::GetFramesInFlight();
+        dirtyQueue.insert(this);
+    }
+
+    void Material::MarkBufferDirty(const std::string& name)
+    {
+        dirtyBufferCounts[name] = UniformDescriptor::GetFramesInFlight();
         dirtyQueue.insert(this);
     }
 
@@ -89,8 +110,19 @@ namespace Beer::Rendering
         return false;
     }
 
+    bool Material::HasDirtyBuffers() const
+    {
+        for (const auto& dirtySet : dirtyBufferCounts)
+        {
+            if (dirtySet.second > 0)
+                return true;
+        }
+
+        return false;
+    }
+
     bool Material::IsDirty() const
     {
-        return dirtyFramesCountBuffer > 0 || HasDirtyTextures();
+        return dirtyFramesCountBuffer > 0 || HasDirtyTextures() || HasDirtyBuffers();
     }
 } // namespace Beer::Rendering

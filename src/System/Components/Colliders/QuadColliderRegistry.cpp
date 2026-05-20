@@ -19,6 +19,14 @@ namespace Beer::System
         std::erase(colliders, nullptr);
     }
 
+    bool QuadColliderRegistry::InRegistry(QuadCollider* collider)
+    {
+        if (collider == nullptr)
+            return false;
+
+        return std::ranges::find(colliders, collider) != colliders.end();
+    }
+
     std::unique_ptr<QuadCollider> QuadColliderRegistry::CreateCollider(UITransform* transform)
     {
         if (quadColliderRegistry == nullptr)

@@ -31,7 +31,7 @@ namespace Beer::System
         return projMat;
     }
 
-    const Transform* Camera::GetTransform()
+    const Transform* Camera::GetTransform() const
     {
         return transform;
     }
@@ -55,6 +55,14 @@ namespace Beer::System
     {
         Rendering::Shader::Globals()->SetCamera(GetViewMatrix(), GetProjectionMatrix(), GetTransform()->Position, GetTransform()->GetForward());
         Rendering::Shader::Globals()->SetZBuffer(nearMin, farMax);
+    }
+
+    Camera::~Camera()
+    {
+        if (cameraManager != nullptr)
+        {
+            cameraManager->RemoveCamera(this);
+        }
     }
 
     std::unique_ptr<Camera> Camera::CreateCamera(const CameraSettings settings,

@@ -10,9 +10,12 @@
 #include "System/Context/WorldContainer.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "System/Galaxy/Player/PlayerInput.hpp"
+#include "System/Galaxy/UI/GalaxyUserIntContext.hpp"
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
+#include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/MapSerializationManager.hpp"
 #include <memory>
 
@@ -20,6 +23,12 @@ static const std::string TEST_MAP = "TestMap";
 
 namespace Beer::System
 {
+    GameManager::~GameManager()
+    {
+        Camera::SetCameraManager(nullptr);
+        ILight::SetLightManager(nullptr);
+    }
+
     void GameManager::Initialize()
     {
         InitializeBase();
@@ -28,7 +37,6 @@ namespace Beer::System
         InitializeContextFactory();
         InitializeColliders();
         // temporary, we dont start gaming immediately
-        // InitializeGalaxy();
         InitializePaintTool();
     }
 
@@ -40,6 +48,7 @@ namespace Beer::System
     void GameManager::Update()
     {
         UpdateBase();
+        contextHandler->Update();
         quadColliderManager->Update();
         worldContainer->UpdateContexts();
     }
@@ -66,21 +75,26 @@ namespace Beer::System
 
     void GameManager::InitializeContextFactory()
     {
-        InputManager* inputManagerP = inputManager.get();
-        auto getPlayerInput =
-            [inputManagerP]() -> PlayerInput { return PlayerInput(inputManagerP->GetMovementVector(), inputManagerP->GetMouseVector()); };
-
+        Function<PlayerInput> getPlayerInput = [this]() -> PlayerInput { return GetPlayerInput(); };
         Function<MouseInput> getMouseInput = [this]() -> MouseInput { return inputManager->GetMouseInput(); };
         Function<ButtonInput> getDebugKeyInput = [this]() -> ButtonInput { return inputManager->GetDebugButtonInput(); };
+        Function<bool> getReturnPressed = [this]() -> bool { return inputManager->GetTabButtonInput().ButtonExit; };
 
         contextHandler->RegisterContextFactory(ContextType::Galaxy,
-            [getPlayerInput]() -> std::shared_ptr<IContext> {
-                return std::make_shared<GalaxyContext>(getPlayerInput);
+            [this, getPlayerInput, getReturnPressed]() -> std::shared_ptr<IContext> {
+                MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
+                return std::make_shared<GalaxyContext>(getPlayerInput, getReturnPressed, handler);
+            });
+
+        contextHandler->RegisterContextFactory(ContextType::GalaxyUserInt,
+            [this]() -> std::shared_ptr<IContext> {
+                return std::make_shared<GalaxyUserIntContext>();
             });
 
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
             [this, getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
-                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, mapSerializationManager->GetMapHandler(TEST_MAP));
+                MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
+                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, handler);
             });
     }
 
@@ -106,11 +120,42 @@ namespace Beer::System
     void GameManager::InitializeGalaxy()
     {
         contextHandler->LoadContext(ContextType::Galaxy);
+        GalaxyContext* galaxyContext = contextHandler->GetContext<GalaxyContext>(ContextType::Galaxy);
+
+        contextHandler->LoadContext(ContextType::GalaxyUserInt);
+        GalaxyUserIntContext* uiContext = contextHandler->GetContext<GalaxyUserIntContext>(ContextType::GalaxyUserInt);
+
+        galaxyContext->OnSetPhotoMode.Subscribe([uiContext](bool enabled) -> void { uiContext->SetDisplaysEnabled(!enabled); });
+
+        Function<void> toPaintTool = [this]() -> void {
+            contextHandler->DestroyContext(ContextType::Galaxy);
+            contextHandler->DestroyContext(ContextType::GalaxyUserInt);
+            InitializePaintTool();
+        };
+
+        Function<void> onReturnToPainting = [this, toPaintTool]() -> void {
+            contextHandler->QueueOperation(toPaintTool);
+        };
+
+        galaxyContext->OnReturnToPainting.Subscribe(onReturnToPainting);
     }
 
     void GameManager::InitializePaintTool()
     {
         contextHandler->LoadContext(ContextType::PaintTool);
+
+        PaintToolContext* context = contextHandler->GetContext<PaintToolContext>(ContextType::PaintTool);
+
+        Function<void> toGalaxy = [this]() -> void {
+            contextHandler->DestroyContext(ContextType::PaintTool);
+            InitializeGalaxy();
+        };
+
+        Function<void> onGalaxyFly = [this, toGalaxy]() -> void {
+            contextHandler->QueueOperation(toGalaxy);
+        };
+
+        context->OnGalaxyFly.Subscribe(onGalaxyFly);
     }
 
     void GameManager::UpdateBase()
@@ -119,5 +164,15 @@ namespace Beer::System
         inputManager->Update();
         cameraManager->Update();
         lightManager->Update();
+    }
+
+    PlayerInput GameManager::GetPlayerInput()
+    {
+        PlayerInput input{};
+        input.MovementVec = inputManager->GetMovementVector();
+        input.MouseVec = inputManager->GetMouseVector();
+        input.IsBoosting = inputManager->GetSpaceButtonInput().ButtonHold;
+        input.PhotoTogglePressed = inputManager->GetPButtonInput().ButtonExit;
+        return input;
     }
 } // namespace Beer::System

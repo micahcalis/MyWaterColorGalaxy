@@ -17,6 +17,7 @@ namespace Beer::System
     public:
         void Update();
         void AddLight(ILight* light);
+        void RemoveLight(ILight* light);
         ILight* GetMainLight() const;
 
     private:

@@ -1,5 +1,6 @@
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/IContext.hpp"
+#include <stdexcept>
 
 namespace Beer::System
 {
@@ -17,6 +18,7 @@ namespace Beer::System
 
     void ContextHandler::SetContextActive(const ContextType type, const bool active)
     {
+        throw std::runtime_error("SetContextActive is not implemented in ContextHandler!");
     }
 
     std::shared_ptr<IContext> ContextHandler::GetContextFromType(const ContextType type)
@@ -27,5 +29,15 @@ namespace Beer::System
             throw std::runtime_error("Context Type not defined in creation factory");
 
         return factory->second();
+    }
+
+    void ContextHandler::FlushOperations()
+    {
+        for (const auto& operation : queuedOperations)
+        {
+            operation();
+        }
+
+        queuedOperations.clear();
     }
 } // namespace Beer::System

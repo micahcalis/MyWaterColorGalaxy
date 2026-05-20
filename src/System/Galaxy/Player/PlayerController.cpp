@@ -1,33 +1,55 @@
 #include "System/Galaxy/Player/PlayerController.hpp"
 #include "PlayerSettings.hpp"
 #include "System/Base/Clock/Clock.hpp"
-#include "System/Camera/Camera.hpp"
+#include "System/Components/General/Transform.hpp"
+#include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
+#include "glm/gtc/quaternion.hpp"
+#include <algorithm>
 
 namespace Beer::System
 {
     void PlayerController::Update(PlayerInput playerInput)
     {
-        Move(playerInput.MovementVec);
+        Move(playerInput);
     }
 
-    void PlayerController::Move(glm::vec2 movementVec)
+    void PlayerController::Move(PlayerInput input)
     {
         Transform* transform = player->GetTransform();
 
-        if (Camera::Main() == nullptr)
-            return;
+        float horizontalInput = input.MovementVec.x;
+        float verticalInput = input.MovementVec.y;
 
-        const Transform* cameraTransform = Camera::Main()->GetTransform();
+        float normalizedSpeed = GetNormalizedSpeed();
+        float normalizedDt = normalizedSpeed * Clock::DeltaTime();
 
-        glm::vec2 normalized = glm::normalize(movementVec);
-        glm::vec3 translation = cameraTransform->GetForward() * movementVec.x;
-        translation += cameraTransform->GetRight() * movementVec.y;
+        float pitchAngle = -verticalInput * PLAYER_SETTINGS.TurnSpeed * normalizedDt;
+        float rollAngle = -horizontalInput * PLAYER_SETTINGS.RollSpeed * normalizedDt;
 
-        transform->Position = transform->Position
-            + translation
-                * PLAYER_SETTINGS.MovementSpeed
-                * glm::vec3(Clock::DeltaTime());
+        glm::quat pitchQuat = glm::angleAxis(pitchAngle, glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::quat rollQuat = glm::angleAxis(rollAngle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        transform->Rotation = transform->Rotation * pitchQuat * rollQuat;
+        transform->Rotation = glm::normalize(transform->Rotation);
+
+        HandleSpeed(input.IsBoosting);
+
+        transform->Position += transform->GetForward() * speed * (float)Clock::DeltaTime();
+    }
+
+    void PlayerController::HandleSpeed(bool isBoosting)
+    {
+        float acceleration = isBoosting ? PLAYER_SETTINGS.Acceleration : 0.0f;
+        speed += acceleration * (float)Clock::DeltaTime();
+        speed *= std::pow(PLAYER_SETTINGS.Drag, (float)Clock::DeltaTime());
+
+        speed = std::clamp(speed, 0.0f, PLAYER_SETTINGS.MaxSpeed);
+    }
+
+    float PlayerController::GetNormalizedSpeed() const
+    {
+        return speed / PLAYER_SETTINGS.MaxSpeed;
     }
 } // namespace Beer::System

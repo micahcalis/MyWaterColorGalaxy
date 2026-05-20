@@ -40,6 +40,11 @@ namespace Beer::Core
         return physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment;
     }
 
+    [[nodiscard]] size_t Device::GetMinStorageBufferOffset() const
+    {
+        return physicalDevice.getProperties().limits.minStorageBufferOffsetAlignment;
+    }
+
     void Device::PickPhysicalDevice(const vk::raii::Instance& instance)
     {
         auto devices = instance.enumeratePhysicalDevices();
@@ -124,6 +129,7 @@ namespace Beer::Core
         vk::PhysicalDeviceFeatures features{};
         features.samplerAnisotropy = VK_TRUE;
         features.independentBlend = VK_TRUE;
+        features.largePoints = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceFeatures2>().features = features;
         featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = VK_TRUE;
         featureChain.get<vk::PhysicalDeviceVulkan12Features>().timelineSemaphore = VK_TRUE;

@@ -58,11 +58,22 @@ namespace Beer::Rendering
                         binding->binding};
                 } else if (IsStructuredBufferBinding(binding))
                 {
+                    bool isDynamicSlot = false;
+                    if (binding->name != nullptr)
+                    {
+                        std::string_view nameView(binding->name);
+                        if (nameView.find(DYNAMIC_KEYWORD) != std::string_view::npos)
+                        {
+                            isDynamicSlot = true;
+                        }
+                    }
+
                     properties[binding->name] = {
                         GetBufferType(binding),
                         0,
                         binding->block.padded_size,
-                        binding->binding};
+                        binding->binding,
+                        isDynamicSlot};
                 }
             }
         }
@@ -90,6 +101,7 @@ namespace Beer::Rendering
             passSettings.Vertex = ShaderParseDef::GetVertexEntryPoint(passData);
             passSettings.Fragment = ShaderParseDef::GetFragmentEntryPoint(passData);
             passSettings.PolygonMode = ShaderParseDef::GetPolygonMode(passData);
+            passSettings.TopologyMode = ShaderParseDef::GetTopologyMode(passData);
             passSettings.CullMode = ShaderParseDef::GetCullMode(passData);
 
             ShaderParseDef::GetBlendMode(passData,
@@ -443,9 +455,26 @@ namespace Beer::Rendering
                 vk::DescriptorSetLayoutBinding vkBinding{};
                 vkBinding.binding = spvBinding->binding;
                 vkBinding.descriptorCount = spvBinding->count;
-
                 vkBinding.stageFlags = stageFlags;
-                vkBinding.descriptorType = GetVkDescriptorType(spvBinding->descriptor_type);
+
+                vk::DescriptorType vkType = GetVkDescriptorType(spvBinding->descriptor_type);
+
+                if (spvBinding->name != nullptr)
+                {
+                    std::string_view nameView(spvBinding->name);
+                    if (nameView.find(DYNAMIC_KEYWORD) != std::string_view::npos)
+                    {
+                        if (vkType == vk::DescriptorType::eStorageBuffer)
+                        {
+                            vkType = vk::DescriptorType::eStorageBufferDynamic;
+                        } else if (vkType == vk::DescriptorType::eUniformBuffer)
+                        {
+                            vkType = vk::DescriptorType::eUniformBufferDynamic;
+                        }
+                    }
+                }
+
+                vkBinding.descriptorType = vkType;
 
                 bindings.push_back(vkBinding);
             }

@@ -2,6 +2,7 @@
 
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
+#include "System/Delegates/BeerEvent.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapEntity.hpp"
 #include "System/PaintTool/MenuBar/MenuBarEntity.hpp"
@@ -21,6 +22,9 @@ namespace Beer::System
 {
     class PaintToolContext : public IContext
     {
+    public:
+        BeerEvent<void()> OnGalaxyFly;
+
     private:
         std::unique_ptr<GalaxyMapBuffer> galaxyMapBuffer = nullptr;
         ColorMixerEntity* colorMixerEntity = nullptr;

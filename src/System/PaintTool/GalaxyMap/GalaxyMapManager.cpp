@@ -70,6 +70,7 @@ namespace Beer::System
             data.Colors = serializedComp.Colors;
             data.Position = serializedComp.Position;
             data.Scale = serializedComp.Scale;
+            data.Tilt = serializedComp.Tilt;
             cursor->Place(data);
         }
 

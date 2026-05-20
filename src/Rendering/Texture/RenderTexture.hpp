@@ -57,7 +57,8 @@ namespace Beer::Rendering
             return static_cast<ImageSyncState*>(syncState.get());
         }
 
-        vk::RenderingAttachmentInfo GetAttachmentInfo(const ResetOperator& resetOperator,
+        vk::RenderingAttachmentInfo GetAttachmentInfo(vk::ImageLayout expectedLayout,
+            const ResetOperator& resetOperator,
             bool& isDepth);
     };
 } // namespace Beer::Rendering

@@ -52,7 +52,5 @@ namespace Beer::System
             renderItems.push_back(UIRenderItem(flyButtonEntity->GetTransform(), flyButtonMaterial.get()));
             return renderItems;
         }
-
-    private:
     };
 } // namespace Beer::System

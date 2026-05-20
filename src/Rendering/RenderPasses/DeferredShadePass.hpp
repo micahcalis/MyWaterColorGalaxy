@@ -14,6 +14,7 @@ namespace Beer::Rendering
         RenderTexture* GBufferAlbedo;
         RenderTexture* GBufferNormal;
         RenderTexture* GBufferMaterial;
+        RenderTexture* GBufferEmission;
 
     public:
         DeferredShadePass()

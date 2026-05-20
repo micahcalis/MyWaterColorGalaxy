@@ -13,6 +13,9 @@ namespace Beer::System
 {
     class GalaxyMapEntity : public QuadTreeEntity
     {
+    public:
+        static constexpr float CENTER_STAR_SCALE = 0.15f;
+
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;
         std::shared_ptr<Rendering::Material> galaxyMaterial = nullptr;

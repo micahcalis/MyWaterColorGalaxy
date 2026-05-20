@@ -38,7 +38,7 @@ namespace Lit
             return metallic + specular + fresnel;
         }
 
-        private float3 Lambert()
+        public float3 Lambert()
         {
             float NdotL = saturate(dot(normal, light.GetDirection()));
             float3 directDiffuse = albedo * NdotL * light.GetLightColor();
@@ -48,7 +48,7 @@ namespace Lit
             return radiance;
         }
 
-        private float3 Metallic(float3 lambert)
+        public float3 Metallic(float3 lambert)
         {
             float roughness = 1 - metallic;
             float3 base = lambert * roughness;
@@ -58,7 +58,7 @@ namespace Lit
             return base + specCol * schlik;
         }
 
-        private float3 Specular()
+        public float3 Specular()
         {
             float3 halfVec = normalize(light.GetDirection() + -viewDirection);
             float NdotH = saturate(dot(normal, halfVec));
@@ -74,7 +74,7 @@ namespace Lit
             return light.GetLightColor() * specularTerm * smoothness;
         }
 
-        private float3 Fresnel()
+        public float3 Fresnel()
         {
             float NdotV = saturate(dot(-viewDirection, normal));
             float fresnelPower = lerp(4, 2, smoothness);

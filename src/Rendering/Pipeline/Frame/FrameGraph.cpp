@@ -4,6 +4,7 @@
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
 #include "Rendering/Pipeline/Frame/Resource/IRenderResource.hpp"
+#include "Rendering/Pipeline/Frame/Synchronization/SyncTargetState.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include <print>
 
@@ -84,7 +85,9 @@ namespace Beer::Rendering
 
         for (const PassDependency& dep : deps.GetDependencies())
         {
-            if (dep.GetAction() == ResourceAction::ColorWrite || dep.GetAction() == ResourceAction::DepthWrite)
+            if (dep.GetAction() == ResourceAction::ColorWrite
+                || dep.GetAction() == ResourceAction::DepthWrite
+                || dep.GetAction() == ResourceAction::DephTestOnly)
             {
                 RenderTexture* texture = context.BlackBox->GetResource<RenderTexture>(dep.GetResourceName());
 
@@ -109,16 +112,17 @@ namespace Beer::Rendering
                     resetOperator.LoadOp = vk::AttachmentLoadOp::eLoad;
                 }
 
-                vk::RenderingAttachmentInfo info = texture->GetAttachmentInfo(resetOperator, isDepth);
+                vk::ImageLayout targetLayout = SyncTargetState::GetState(dep.GetAction()).Layout;
+                vk::RenderingAttachmentInfo info = texture->GetAttachmentInfo(targetLayout, resetOperator, isDepth);
 
                 if (dep.GetAction() == ResourceAction::ColorWrite)
                 {
                     beginData.ColorWriteTargets.push_back(info);
                     beginData.IsDrawPass = true;
-                } else if (dep.GetAction() == ResourceAction::DepthWrite)
+                } else if (dep.GetAction() == ResourceAction::DepthWrite || dep.GetAction() == ResourceAction::DephTestOnly)
                 {
                     beginData.DepthWriteTarget = info;
-                    beginData.WritesToDepth = true;
+                    beginData.TestsDepth = true;
                     beginData.IsDrawPass = true;
                 }
             }

@@ -27,6 +27,7 @@ cbuffer MaterialData
     int _RingCount;
     float _RingThickness;
     float4 _RingColor;
+    float2 _RingShear;
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _NoiseTexture;
@@ -103,8 +104,8 @@ FRAG float4 GalaxyMapFrag(Sprite.VertData input) : SV_Target
         _GalaxySeed, 
         _RingCount, 
         _RingThickness, 
-        _RingColor.rgb
-    );
+        _RingColor.rgb,
+        _RingShear);
 
     float4 starsVal = starsBig.Get() + starsSmall.Get();
     float4 starDustVal = starDust.Get();

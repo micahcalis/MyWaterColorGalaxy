@@ -3,6 +3,7 @@
 import Core.BeerCore;
 import Core.Beer3D;
 import BeerLit;
+import Deferred.DeferredUtils;
 
 // Micah: here are the material properties
 BIND_MATERIAL_DATA
@@ -13,7 +14,7 @@ cbuffer MaterialData
     float _Metallic;
 };
 
-// Micah: we can bind materail textures / ssbo's
+// Micah: we can bind material textures / ssbo's
 BIND_MATERIAL_TEX(1) Sampler2D _AlbedoMap;
 
 struct MeshData
@@ -46,22 +47,27 @@ VERT VertexData DefaultLitVert(MeshData input, INSTANCEID)
     VertexData output;
     float4 positionWS = mul(transform.objToWorldMat, float4(input.positionOS, 1));
     output.positionCS = mul(_ViewProjMat, positionWS);
-    output.positionWS = input.positionOS.xyz;
+    output.positionWS = positionWS.xyz;
     output.normalWS = mul(transform.objToWorldDirMat, float4(input.normalOS, 1)).xyz;
     output.texCoord = input.texCoord;
     return output;
 }
 
-FRAG float4 DefaultLitFrag(VertexData input) : SV_Target
+FRAG Deferred.FragData DefaultLitFrag(VertexData input)
 {
     float4 sample = _AlbedoMap.Sample(input.texCoord);
+    float3 albedo = sample.rgb * _BaseColor.rgb;
 
-    Lit.BRDF brdf = Lit.BRDF(GetMainLight(input.positionWS), 
-        GetViewDirectionWS(input.positionWS),
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(_BaseColor.rgb,
+        1,
+        input.positionWS,
         input.normalWS,
-        sample.rgb,
         _Smoothness,
-        _Metallic);
+        _Metallic,
+        0,
+        0.5f);
 
-    return float4(brdf.Shade(), 1);
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData);
+
+    return writer.Write();
 }

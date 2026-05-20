@@ -10,6 +10,11 @@
 #include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Buffer/SSBOType.hpp"
 
+namespace Beer::Core
+{
+    class UploadManager;
+}
+
 namespace Beer::Rendering
 {
     class Buffer
@@ -73,5 +78,16 @@ namespace Beer::Rendering
     private:
         Buffer(BufferAllocation allocation,
             BufferData data);
+
+    private:
+        static inline Core::UploadManager* uploadManager = nullptr;
+
+    public:
+        static void SetUploadManager(Core::UploadManager* uploadManager)
+        {
+            Buffer::uploadManager = uploadManager;
+        }
+
+        static void UploadAsync(std::shared_ptr<Buffer> buffer, void* data, size_t size, size_t offset = 0);
     };
 } // namespace Beer::Rendering

@@ -7,7 +7,9 @@ module DeferredUtils;
 #define ALBEDO_TARGET     float4 albedo: SV_Target0
 #define NORMAL_TARGET     float2 normal: SV_Target1
 #define MAT_TARGET        float4 material: SV_Target2
+#define EMISSION_TARGET   float3 emission: SV_Target3
 #define DEPTH_TARGET      float depth : SV_Depth
+#define COLOR_TARGET      float4 color: SV_Target0
 
 namespace Deferred
 {
@@ -16,8 +18,15 @@ namespace Deferred
         public ALBEDO_TARGET;
         public NORMAL_TARGET;
         public MAT_TARGET;
+        public EMISSION_TARGET;
         public DEPTH_TARGET;
     };
+
+    public struct TransparentFragData
+    {
+        public COLOR_TARGET;
+        public DEPTH_TARGET;
+    }
 
     static int MAT_COUNT = 2;
 
@@ -29,6 +38,7 @@ namespace Deferred
         public float3 normalWS;
         public float smoothness;
         public float metallic;
+        public float3 emission;
         public float ambientOcclusion;
 
         public __init(float3 _albedo,
@@ -37,6 +47,7 @@ namespace Deferred
             float3 _normalWS,
             float _smoothness,
             float _metallic,
+            float3 _emission,
             float _ambientOcclusion)
         {
             albedo = _albedo;
@@ -45,6 +56,7 @@ namespace Deferred
             normalWS = _normalWS;
             smoothness = _smoothness;
             metallic = _metallic;
+            emission = _emission;
             ambientOcclusion = _ambientOcclusion;
         }
     };
@@ -89,6 +101,7 @@ namespace Deferred
             frag.albedo = float4(data.albedo, (float)data.materialIndex / (float)(MAT_COUNT - 1));
             frag.normal = EncodeNormalOctahedron(data.normalWS);
             frag.material = float4(data.smoothness, data.metallic, data.ambientOcclusion, 0);
+            frag.emission = data.emission;
             frag.depth = WorldPosToDepth(data.positionWS);
             return frag;
         }
@@ -105,14 +118,17 @@ namespace Deferred
         private float4 albedoSample;
         private float2 normalSample;
         private float4 materialSample;
+        private float3 emissionSample;
 
         public __init(float4 _albedoSample,
             float2 _normalSample,
-            float4 _materialSample)
+            float4 _materialSample,
+            float3 _emissionSample)
         {
             albedoSample = _albedoSample;
             normalSample = _normalSample;
             materialSample = _materialSample;
+            emissionSample = _emissionSample;
         }
 
         public DeferredShadeData Read(float3 positionWS)
@@ -123,12 +139,13 @@ namespace Deferred
                 DecodeNormalOctahedron(normalSample),
                 materialSample.r,
                 materialSample.g,
+                emissionSample,
                 materialSample.b);
         }
 
         private int GetMaterialIndex()
         {
-            return round(albedoSample.a * (MAT_COUNT - 1));
+            return (int)round(albedoSample.a * (MAT_COUNT - 1));
         }
     }
 }

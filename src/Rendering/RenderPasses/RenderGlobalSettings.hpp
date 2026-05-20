@@ -2,6 +2,7 @@
 
 #include <string>
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "vulkan/vulkan.hpp"
 
@@ -12,13 +13,16 @@ namespace Beer::Rendering
     const std::string GBUFFER_NORMAL = "GBufferNormal";
     const std::string GBUFFER_ALBEDO = "GBufferAlbedo";
     const std::string GBUFFER_MAT = "GBufferMaterial";
+    const std::string GBUFFER_EMISSION = "GBufferEmission";
     const VkFormat GBUFFER_NORMAL_FORMAT = VK_FORMAT_R16G16_SFLOAT;
     const VkFormat GBUFFER_ALBEDO_FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
     const VkFormat GBUFFER_MAT_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
+    const VkFormat GBUFFER_EMISSION_FORMAT = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
 
     const std::string OPAQUE_PASS = "Opaque";
     const std::string SKYBOX_PASS = "Skybox";
     const std::string DEFERRED_SHADE_PASS = "DeferredShade";
+    const std::string TRANSPARENT_PASS = "Transparent";
     const std::string UI_PASS = "UserInterface";
     const std::string INTERACTIVE_PAINT_PASS = "InteractivePaint";
 
@@ -31,7 +35,7 @@ namespace Beer::Rendering
         static std::vector<PassDependency> GetGBufferDependencies(bool write)
         {
             std::vector<PassDependency> dependencies;
-            dependencies.reserve(3);
+            dependencies.reserve(4);
 
             ResourceAction resourceAction = write ? ResourceAction::ColorWrite : ResourceAction::ColorRead;
 
@@ -49,6 +53,11 @@ namespace Beer::Rendering
                 resourceAction,
                 ResetOperator::ClearColor({0, 0, 0, 0}),
                 vk::Format::eB8G8R8A8Srgb));
+
+            dependencies.emplace_back(PassDependency(std::string(GBUFFER_EMISSION),
+                resourceAction,
+                ResetOperator::ClearColor({0, 0, 0, 0}),
+                static_cast<vk::Format>(GBUFFER_EMISSION_FORMAT)));
 
             return dependencies;
         }

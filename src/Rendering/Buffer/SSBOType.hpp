@@ -5,6 +5,7 @@ namespace Beer::Rendering
     enum class SSBOType
     {
         Persisent,
-        Hybrid
+        Hybrid,
+        Consistent
     };
 }

@@ -14,6 +14,7 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Base/Input/CursorMode.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
@@ -39,6 +40,8 @@ namespace Beer::System
         InitializeHoloCursor();
 
         TryOpenMap();
+
+        Cursor::SetCursorMode(CursorMode::Unlocked);
     }
 
     SerializablePaintSession PaintToolContext::GetSerializedData() const
@@ -182,6 +185,7 @@ namespace Beer::System
         Function<void> saveMap = [this]() -> void {
             SerializablePaintSession paintSession = GetSerializedData();
             mapHandler.Save(paintSession);
+            OnGalaxyFly.Invoke();
         };
 
         menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(), clearHistory, saveMap);
