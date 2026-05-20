@@ -6,6 +6,7 @@ import Deferred.DeferredUtils;
 import SphereTracing;
 import SDF;
 import Galaxy.GalaxyInstancing;
+import Galaxy.GalaxySDFs;
 
 struct MeshData
 {
@@ -29,7 +30,7 @@ struct VertexData
 VERT VertexData PlanetVert(MeshData input, INSTANCEID)
 {
     VertexData output;
-    output.positionWS = Galaxy.ToWorldSpace(input.positionOS, instanceID);
+    output.positionWS = Galaxy.ToWorldSpaceBloated(input.positionOS, instanceID, 1.0f);
     output.positionCS = mul(_ViewProjMat, float4(output.positionWS, 1));
     output.instanceID = instanceID;
     return output;
@@ -37,9 +38,9 @@ VERT VertexData PlanetVert(MeshData input, INSTANCEID)
 
 FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
-    Galaxy.ObjectData materialData = _GalaxyObjectData[input.instanceID];
-    float transformScale = materialData.Scale;
-    float3 transformCenter = _DynamicGalaxyObjectPositions[input.instanceID].xyz;
+    Galaxy.ObjectData materialData = Galaxy.GetMaterialData(input.instanceID);
+    float3 transformCenter = Galaxy.GetTransformCenter(input.instanceID);
+    float transformScale = Galaxy.GetBloatedScale(materialData.Scale, transformCenter, 1.0f);
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
 
     SphereTracing.AABB boundingbox = SphereTracing.AABB(transformCenter, transformScale * 2);
@@ -52,11 +53,13 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
     ray = boundingbox.AlignWithBox(ray);
 
-    SDF.Sphere planetSDF = SDF.Sphere(transformCenter, transformScale * 0.8f);
+    Galaxy.Planet planetSDF = Galaxy.Planet(transformCenter, 
+        materialData.Scale);
 
-    SphereTracing.SphereTracer<SDF.Sphere> tracer = SphereTracing.SphereTracer<SDF.Sphere>(
+    SphereTracing.SphereTracer<Galaxy.Planet> tracer = SphereTracing.SphereTracer<Galaxy.Planet>(
         planetSDF,
         ray);
+
 
     SphereTracing.TraceResult result = tracer.Trace();
 
@@ -64,7 +67,7 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         discard;
 
     Deferred.DeferredShadeData data = Deferred.DeferredShadeData(materialData.ColorA.rgb,
-        0,
+        1,
         result.Position,
         result.Normal,
         0.5f,

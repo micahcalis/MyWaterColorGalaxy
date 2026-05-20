@@ -188,16 +188,23 @@ namespace SphereTracing
         public TraceResult Trace()
         {
             TraceResult result = TraceResult(ray.GetOrigin());
+            SDF.MarchData marchData;
+            marchData.Direction = ray.GetDirection();
+            float invLength = rcp(ray.GetMaxLength());
             
             for (int i = 0; i < MAX_STEPS; i++)
             {
-                float dist = sdf.Evaluate(result.Position);
+                marchData.Position = result.Position;
+                marchData.TotalDistance = result.TotalDistance;
+                marchData.LocalDistance = result.TotalDistance * invLength;
+
+                float dist = sdf.Evaluate(marchData);
 
                 if (dist < DST_EPS)
                 {
                     result.Hit = true;
                     result.TotalSteps = i;
-                    result.Normal = sdf.GetNormal(result.Position, result.TotalDistance);
+                    result.Normal = sdf.GetNormal(marchData);
                     break;
                 }
 

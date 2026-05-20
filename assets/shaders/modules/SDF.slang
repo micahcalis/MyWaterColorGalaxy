@@ -4,17 +4,36 @@ namespace SDF
 {
     static float NORMAL_EPS = 0.001f;
 
+    public struct MarchData
+    {
+        public float3 Position;
+        public float TotalDistance;
+        public float3 Direction;
+        public float LocalDistance;
+    }
+
     public interface SDF
     {
-        float Evaluate(float3 position);
+        float Evaluate(MarchData data);
 
-        float3 GetNormal(float3 position, float totalDistance)
+        float3 GetNormal(MarchData data)
         {
-            float eps = NORMAL_EPS + totalDistance * NORMAL_EPS;
+            float eps = NORMAL_EPS + data.TotalDistance * NORMAL_EPS;
 
-            float dx = Evaluate(position + float3(eps, 0, 0)) - Evaluate(position - float3(eps, 0, 0));
-            float dy = Evaluate(position + float3(0, eps, 0)) - Evaluate(position - float3(0, eps, 0));
-            float dz = Evaluate(position + float3(0, 0, eps)) - Evaluate(position - float3(0, 0, eps));
+            MarchData a = data;
+            MarchData b = data;
+
+            a.Position = data.Position + float3(eps, 0, 0);
+            b.Position = data.Position - float3(eps, 0, 0);
+            float dx = Evaluate(a) - Evaluate(b);
+
+            a.Position = data.Position + float3(0, eps, 0);
+            b.Position = data.Position - float3(0, eps, 0);
+            float dy = Evaluate(a) - Evaluate(b);
+
+            a.Position = data.Position + float3(0, 0, eps);
+            b.Position = data.Position - float3(0, 0, eps);
+            float dz = Evaluate(a) - Evaluate(b);
             
             return normalize(float3(dx, dy, dz));
         }
@@ -117,9 +136,9 @@ namespace SDF
             radius = _radius;
         }
 
-        public float Evaluate(float3 position)
+        public float Evaluate(MarchData data)
         {
-            return Functions.Sphere(position - center, radius);
+            return Functions.Sphere(data.Position - center, radius);
         }
     }
 
@@ -134,9 +153,9 @@ namespace SDF
             size = _size;
         }
 
-        public float Evaluate(float3 position)
+        public float Evaluate(MarchData data)
         {
-            return Functions.Box(position - center, size);
+            return Functions.Box(data.Position, size);
         }
     }
 
@@ -153,9 +172,9 @@ namespace SDF
             minor = _minor;
         }
 
-        public float Evaluate(float3 position)
+        public float Evaluate(MarchData data)
         {
-            return Functions.Torus(position - center, major, minor);
+            return Functions.Torus(data.Position - center, major, minor);
         }
     }
 
@@ -170,9 +189,9 @@ namespace SDF
             scale = _scale;
         }
 
-        public float Evaluate(float3 position)
+        public float Evaluate(MarchData data)
         {
-            return Functions.OctaHedron(position - center, scale);
+            return Functions.OctaHedron(data.Position - center, scale);
         }
     }
 

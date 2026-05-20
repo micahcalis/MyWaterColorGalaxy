@@ -2,6 +2,8 @@
 
 module GalaxyInstancing;
 
+import Galaxy.WatercolorFunctions;
+
 namespace Galaxy
 {
     public struct ObjectData
@@ -26,5 +28,29 @@ namespace Galaxy
         float3 position = _DynamicGalaxyObjectPositions[instanceID].xyz;
 
         return positionOS * scale + position;
+    }
+
+    public float3 ToWorldSpaceBloated(float3 positionOS, uint instanceID, float bloatModifier)
+    {
+        float scale = _GalaxyObjectData[instanceID].Scale;
+        float3 position = _DynamicGalaxyObjectPositions[instanceID].xyz;
+        float bloatedScale = WC.ApplyBloat(scale, position, bloatModifier);
+
+        return positionOS * bloatedScale + position;
+    }
+
+    public float3 GetTransformCenter(uint instanceID)
+    {
+        return _DynamicGalaxyObjectPositions[instanceID].xyz;
+    }
+
+    public float GetBloatedScale(float scale, float3 transformCenter, float bloatModifier)
+    {
+        return WC.ApplyBloat(scale, transformCenter, bloatModifier);
+    }
+
+    public ObjectData GetMaterialData(uint instanceID)
+    {
+        return _GalaxyObjectData[instanceID];
     }
 }

@@ -45,9 +45,9 @@ namespace SDF
             cutoff = (_cutoff - 0.5f) * 2.0f;
         }
 
-        public float Evaluate(float3 position)
+        public float Evaluate(MarchData data)
         {
-            float3 localPos = (position - center) * invScale;
+            float3 localPos = (data.Position - center) * invScale;
             return Saucer(localPos) * scale;
         }
 
@@ -148,9 +148,9 @@ namespace SDF
             cutoff = (_cutoff - 0.5f) * 2.0f;
         }
     
-        public float Evaluate(float3 position)
+        public float Evaluate(MarchData data)
         {
-            float3 localPos = (position - center) * invScale;
+            float3 localPos = (data.Position - center) * invScale;
             return Cockpit(localPos) * scale;
         }
 
