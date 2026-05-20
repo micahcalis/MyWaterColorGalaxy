@@ -1,23 +1,21 @@
 #pragma once
 
-#include "Rendering/Sampler/Sampler.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Texture/ITexture.hpp"
-#include <cstdint>
+#include "Rendering/Texture/Texture2D.hpp"
 #include <memory>
-#include <vulkan/vulkan.h>
-#include "Rendering/Texture/TextureMakeSettings.hpp"
 
 namespace Beer::Rendering
 {
-    class Texture2D : public ITexture
+    class Texture3D : public ITexture
     {
     private:
-        inline static std::shared_ptr<Texture2D> defaultBlack;
+        inline static std::shared_ptr<Texture3D> defaultBlack;
 
     public:
         static void SetFallbackTexture(std::shared_ptr<Image> defaultBlack)
         {
-            Texture2D::defaultBlack = std::make_shared<Texture2D>(defaultBlack);
+            Texture3D::defaultBlack = std::make_shared<Texture3D>(defaultBlack);
         }
 
         static void ResetFallbackTexture()
@@ -25,32 +23,26 @@ namespace Beer::Rendering
             defaultBlack.reset();
         }
 
-        static std::shared_ptr<Texture2D> GetFallbackTexture() { return defaultBlack; }
+        static std::shared_ptr<Texture3D> GetFallbackTexture() { return defaultBlack; }
 
-        static Texture2D Make(TextureMakeSettings settings,
+        static Texture3D Make(TextureMakeSettings settings,
             ComputeContext* context,
             std::shared_ptr<Sampler> sampler = Sampler::Get())
         {
-            std::shared_ptr<Image> image = Image::Generate2D(settings.Width,
+            std::shared_ptr<Image> image = Image::Generate3D(settings.Width,
                 settings.Height,
+                settings.Depth,
                 settings.Format,
-                settings.LayerCount,
                 context,
                 settings.GetThreads(),
                 settings.KernelIndex);
 
-            return Texture2D(image, sampler);
+            return Texture3D(image, sampler);
         }
 
-        Texture2D(std::shared_ptr<Image> image,
+        Texture3D(std::shared_ptr<Image> image,
             std::shared_ptr<Sampler> sampler = Sampler::Get())
             : ITexture(image, sampler)
-        {
-        }
-
-        Texture2D(const std::string& imageName,
-            std::shared_ptr<Sampler> sampler = Sampler::Get())
-            : ITexture(Rendering::Image::GetAsset(imageName), sampler)
         {
         }
 
@@ -62,6 +54,11 @@ namespace Beer::Rendering
         uint32_t GetHeight() const
         {
             return image->GetExtent().height;
+        }
+
+        uint32_t GetDepth() const
+        {
+            return image->GetExtent().depth;
         }
 
         VkFormat GetFormat() const

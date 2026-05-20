@@ -16,22 +16,27 @@ namespace Beer::Rendering
         context.BlackBox->ReallocateIfNeeded(GBUFFER_ALBEDO,
             Core::Screen::Width(),
             Core::Screen::Height(),
-            Core::Screen::ColorFormat());
+            GBUFFER_ALBEDO_FORMAT);
 
-        context.BlackBox->ReallocateIfNeeded(GBUFFER_NORMAL,
+        context.BlackBox->ReallocateIfNeeded(GBUFFER_NORMAL_OFFSET,
             Core::Screen::Width(),
             Core::Screen::Height(),
-            GBUFFER_NORMAL_FORMAT);
+            GBUFFER_NORMAL_OFFSET_FORMAT);
 
         context.BlackBox->ReallocateIfNeeded(GBUFFER_MAT,
             Core::Screen::Width(),
             Core::Screen::Height(),
-            Core::Screen::ColorFormat());
+            GBUFFER_MAT_FORMAT);
 
         context.BlackBox->ReallocateIfNeeded(GBUFFER_EMISSION,
             Core::Screen::Width(),
             Core::Screen::Height(),
             GBUFFER_EMISSION_FORMAT);
+
+        context.BlackBox->ReallocateIfNeeded(GBUFFER_WATERCOLOR,
+            Core::Screen::Width(),
+            Core::Screen::Height(),
+            GBUFFER_WATERCOLOR_FORMAT);
     }
 
     void DrawOpaquePass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)

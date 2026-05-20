@@ -1,4 +1,7 @@
 #include "System/Galaxy/Player/PlayerEntity.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Texture/Texture3D.hpp"
 #include "System/Galaxy/Player/PlayerManager.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
 #include <memory>
@@ -23,6 +26,20 @@ namespace Beer::System
         transform.Position = PLAYER_SETTINGS.StartPos;
         transform.Scale = glm::vec3(PLAYER_SCALE);
 
+        test3DContext = std::make_shared<Rendering::ComputeContext>("Texture/ComputeNoise3D");
+
+        Rendering::TextureMakeSettings makeSettings{};
+        makeSettings.Width = 128;
+        makeSettings.Height = 128;
+        makeSettings.Depth = 128;
+        makeSettings.GroupSizeX = 8;
+        makeSettings.GroupSizeY = 8;
+        makeSettings.GroupSizeZ = 8;
+        makeSettings.KernelIndex = 0;
+
+        test3DTexture = std::make_shared<Rendering::Texture3D>(
+            Rendering::Texture3D::Make(makeSettings, test3DContext.get()));
+
         playerMaterial = std::make_shared<Rendering::Material>("Galaxy/UFO");
         playerMaterial->SetColor("_SaucerColor", SAUCER_COLOR);
         playerMaterial->SetFloat("_SaucerMetallic", SAUCER_METALLIC);
@@ -33,6 +50,7 @@ namespace Beer::System
         playerMaterial->SetColor("_CutoffColor", CUTOFF_COLOR);
         playerMaterial->SetFloat("_GlowThickness", GLOW_THICKNESS);
         playerMaterial->SetFloat("_CutoffTime", 1.0f);
+        playerMaterial->SetTexture("_Test3D", test3DTexture.get());
 
         playerMesh = Rendering::Mesh::Get("MDL_Cube");
 

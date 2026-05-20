@@ -23,6 +23,7 @@
 #include "Rendering/Text/FontAsset.hpp"
 #include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Texture/Texture3D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "Screen.hpp"
 #include "System/Drawing/RenderRegister.hpp"
@@ -57,6 +58,7 @@ namespace Beer::Core
         device.GetLogicalDevice().waitIdle();
 
         Rendering::Texture2D::ResetFallbackTexture();
+        Rendering::Texture3D::ResetFallbackTexture();
         Rendering::PhaseBuffer::DestroyFallbackBuffer();
 
         renderPipeline.reset();

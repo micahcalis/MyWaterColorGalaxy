@@ -32,7 +32,7 @@ namespace Beer::Rendering
         uint32_t layerCount,
         const Core::Device& device)
     {
-        auto allocation = sharedAllocator->CreateImage(width,
+        auto allocation = sharedAllocator->CreateImage2D(width,
             height,
             format,
             VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
@@ -44,6 +44,7 @@ namespace Beer::Rendering
             vk::Format(format),
             aspectFlags,
             layerCount,
+            true,
             device);
 
         ImageData data{};
@@ -51,6 +52,40 @@ namespace Beer::Rendering
         data.Format = format;
         data.AspectMask = aspectFlags;
         data.ArrayLayers = layerCount;
+        data.Type = TextureType::TwoDim;
+
+        return {allocation, defaultView, data};
+    }
+
+    Image Image::CreateImage3D(uint32_t width,
+        uint32_t height,
+        uint32_t depth,
+        VkFormat format,
+        VkImageUsageFlags usage,
+        vk::ImageAspectFlagBits aspectFlags,
+        const Core::Device& device)
+    {
+        auto allocation = sharedAllocator->CreateImage3D(width,
+            height,
+            depth,
+            format,
+            VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
+            usage,
+            VMA_MEMORY_USAGE_AUTO);
+
+        auto defaultView = Core::ImageUtilities::CreateImageView(allocation.Image,
+            vk::Format(format),
+            aspectFlags,
+            1,
+            false,
+            device);
+
+        ImageData data{};
+        data.Extent = vk::Extent3D(width, height, depth);
+        data.Format = format;
+        data.AspectMask = aspectFlags;
+        data.ArrayLayers = 1;
+        data.Type = TextureType::ThreeDim;
 
         return {allocation, defaultView, data};
     }
@@ -67,7 +102,7 @@ namespace Beer::Rendering
         return imageAssetManager->Get(name);
     }
 
-    std::shared_ptr<Image> Image::Generate(uint32_t width,
+    std::shared_ptr<Image> Image::Generate2D(uint32_t width,
         uint32_t height,
         VkFormat format,
         uint32_t layerCount,
@@ -75,10 +110,31 @@ namespace Beer::Rendering
         Threads threads,
         uint32_t kernelIndex)
     {
-        std::shared_ptr<Rendering::Image> image = imageAssetManager->CreateEmpty(width,
+        std::shared_ptr<Rendering::Image> image = imageAssetManager->CreateEmpty2D(width,
             height,
             format,
             layerCount);
+
+        imageAssetManager->GenerateFromEmpty(image,
+            computeContext,
+            threads,
+            kernelIndex);
+
+        return image;
+    }
+
+    std::shared_ptr<Image> Image::Generate3D(uint32_t width,
+        uint32_t height,
+        uint32_t depth,
+        VkFormat format,
+        ComputeContext* computeContext,
+        Threads threads,
+        uint32_t kernelIndex)
+    {
+        std::shared_ptr<Rendering::Image> image = imageAssetManager->CreateEmpty3D(width,
+            height,
+            depth,
+            format);
 
         imageAssetManager->GenerateFromEmpty(image,
             computeContext,

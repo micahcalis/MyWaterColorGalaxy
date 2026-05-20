@@ -67,7 +67,9 @@ FRAG Deferred.FragData DefaultLitFrag(VertexData input)
         0,
         0.5f);
 
-    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData);
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
+
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();
 }

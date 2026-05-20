@@ -66,7 +66,7 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     if (!result.Hit)
         discard;
 
-    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(materialData.ColorA.rgb,
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(materialData.ColorA.rgb,
         1,
         result.Position,
         result.Normal,
@@ -74,8 +74,9 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         0.2f,
         0,
         0.5f);
-
-    Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
+    
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();
 }

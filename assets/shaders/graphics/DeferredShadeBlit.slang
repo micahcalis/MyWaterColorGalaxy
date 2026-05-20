@@ -7,10 +7,11 @@ import Deferred.DeferredUtils;
 import BeerLit;
 
 BIND_BLIT_SRC(1)
-BIND_MATERIAL_TEX(2) Sampler2D<float2> _GBufferNormals;
+BIND_MATERIAL_TEX(2) Sampler2D<float4> _GBufferNormals;
 BIND_MATERIAL_TEX(3) Sampler2D _GBufferMaterial;
 BIND_MATERIAL_TEX(4) Sampler2D<float3> _GBufferEmission;
-BIND_MATERIAL_TEX(5) Sampler2D<float> _DepthBuffer;
+BIND_MATERIAL_TEX(5) Sampler2D<float4> _GBufferWatercolor;
+BIND_MATERIAL_TEX(6) Sampler2D<float> _DepthBuffer;
 
 struct MeshData
 {
@@ -43,14 +44,16 @@ VERT VertexData DeferredShadeVert(MeshData input, uint vertexId : SV_VertexID)
 FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
 {
     float4 albedoSample = _BlitSource.Sample(input.uv);
-    float2 normalSample = _GBufferNormals.Sample(input.uv);
+    float4 normalSample = _GBufferNormals.Sample(input.uv);
     float4 materialSample = _GBufferMaterial.Sample(input.uv);
     float3 emissionSample = _GBufferEmission.Sample(input.uv);
+    float4 watercolorSample = _GBufferWatercolor.Sample(input.uv);
 
    Deferred.DeferredReader reader = Deferred.DeferredReader(albedoSample,
         normalSample,
         materialSample,
-        emissionSample);
+        emissionSample,
+        watercolorSample);
 
     float depth = _DepthBuffer.Sample(input.uv);
 
@@ -61,24 +64,25 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
 
     float3 positionWS = UVDepthToWorld(input.uv, depth);
 
-    Deferred.DeferredShadeData data = reader.Read(positionWS);
+    Deferred.DeferredShadeData shadeData = reader.ReadShade(positionWS);
+    Deferred.DeferredWatercolorData watercolorData = reader.ReadWatercolor();
 
     float3 color = float3(1, 0, 1);
 
-    if (data.materialIndex == 0)
+    if (shadeData.materialIndex == 0)
     {
         Lit.BRDF brdf = Lit.BRDF(GetMainLight(positionWS),
             GetViewDirectionWS(positionWS),
-            data.normalWS,
-            data.albedo,
-            data.smoothness,
-            data.metallic);
+            shadeData.normalWS,
+            shadeData.albedo,
+            shadeData.smoothness,
+            shadeData.metallic);
 
-        color = brdf.Shade() + data.emission;
+        color = brdf.Shade() + shadeData.emission;
     }
-    if (data.materialIndex == 1)
+    if (shadeData.materialIndex == 1)
     {
-        color = data.albedo + data.emission;
+        color = shadeData.albedo + shadeData.emission;
     }
 
     return float4(color, 1);

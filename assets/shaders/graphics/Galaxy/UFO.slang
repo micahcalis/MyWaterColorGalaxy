@@ -22,6 +22,8 @@ cbuffer MaterialData
     float _GlowThickness;
 }
 
+BIND_MATERIAL_TEX(1) Sampler3D<float4> _Test3D;
+
 struct MeshData
 {
     M_POSITION; 
@@ -90,8 +92,10 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
     float3x3 invRotation = (float3x3)transpose(transform.objToWorldDirMat);
     float3 positionOS = mul(invRotation, (result.Position - center) / scale);
     float glowGradient = SDF.GetGlowGradient(positionOS, _CutoffTime, _GlowThickness);
+
+    float4 sample = _Test3D.Sample(frac(result.Position));
  
-    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(_SaucerColor.rgb,
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(sample.rgb,
         0,
         result.Position,
         result.Normal,
@@ -100,7 +104,9 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
         _CutoffColor.rgb * glowGradient,
         0.5f);
 
-    Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
+
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();
 }

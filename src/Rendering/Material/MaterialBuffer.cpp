@@ -5,6 +5,7 @@
 #include "Rendering/Shader/ShaderProperty.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Texture/Texture3D.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 
 namespace Beer::Rendering
@@ -33,7 +34,9 @@ namespace Beer::Rendering
             || !(prop->Type == PropertyType::Texture2D
                 || prop->Type == PropertyType::RWTexture2D
                 || prop->Type == PropertyType::Texture2DArray
-                || prop->Type == PropertyType::RWTexture2DArray))
+                || prop->Type == PropertyType::RWTexture2DArray
+                || prop->Type == PropertyType::Texture3D
+                || prop->Type == PropertyType::RWTexture3D))
             return;
 
         textures[name] = texture;
@@ -124,6 +127,27 @@ namespace Beer::Rendering
             if (prop.Type == PropertyType::Texture2D || prop.Type == PropertyType::RWTexture2D)
             {
                 ITexture* texToBind = Texture2D::GetFallbackTexture().get();
+
+                auto it = textures.find(name);
+                if (it != textures.end())
+                {
+                    texToBind = it->second;
+                }
+
+                for (uint32_t i = 0; i < UniformDescriptor::GetFramesInFlight(); i++)
+                {
+                    descriptor->UpdateImageInfo(
+                        i,
+                        &prop,
+                        texToBind);
+                }
+
+                this->textures[name] = texToBind;
+            }
+
+            if (prop.Type == PropertyType::Texture3D || prop.Type == PropertyType::RWTexture3D)
+            {
+                ITexture* texToBind = Texture3D::GetFallbackTexture().get();
 
                 auto it = textures.find(name);
                 if (it != textures.end())

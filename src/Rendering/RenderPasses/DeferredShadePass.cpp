@@ -14,19 +14,19 @@ namespace Beer::Rendering
         GBufferAlbedo = context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_ALBEDO),
                                             Core::Screen::Width(),
                                             Core::Screen::Height(),
-                                            Core::Screen::ColorFormat())
+                                            GBUFFER_ALBEDO_FORMAT)
                             .AllocPointer;
 
-        GBufferNormal = context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_NORMAL),
+        GBufferNormal = context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_NORMAL_OFFSET),
                                             Core::Screen::Width(),
                                             Core::Screen::Height(),
-                                            GBUFFER_NORMAL_FORMAT)
+                                            GBUFFER_NORMAL_OFFSET_FORMAT)
                             .AllocPointer;
 
         GBufferMaterial = context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_MAT),
                                               Core::Screen::Width(),
                                               Core::Screen::Height(),
-                                              Core::Screen::ColorFormat())
+                                              GBUFFER_MAT_FORMAT)
                               .AllocPointer;
 
         GBufferEmission = context.BlackBox->ReallocateIfNeeded(GBUFFER_EMISSION,
@@ -34,6 +34,12 @@ namespace Beer::Rendering
                                               Core::Screen::Height(),
                                               GBUFFER_EMISSION_FORMAT)
                               .AllocPointer;
+
+        GBufferWatercolor = context.BlackBox->ReallocateIfNeeded(GBUFFER_WATERCOLOR,
+                                                Core::Screen::Width(),
+                                                Core::Screen::Height(),
+                                                GBUFFER_WATERCOLOR_FORMAT)
+                                .AllocPointer;
     }
 
     void DeferredShadePass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
@@ -41,6 +47,7 @@ namespace Beer::Rendering
         blitMaterial->SetTexture("_GBufferNormals", GBufferNormal);
         blitMaterial->SetTexture("_GBufferMaterial", GBufferMaterial);
         blitMaterial->SetTexture("_GBufferEmission", GBufferEmission);
+        blitMaterial->SetTexture("_GBufferWatercolor", GBufferWatercolor);
         blitMaterial->SetTexture("_DepthBuffer", context.MainDepthTarget);
 
         commandBuffer->Blit(GBufferAlbedo,
