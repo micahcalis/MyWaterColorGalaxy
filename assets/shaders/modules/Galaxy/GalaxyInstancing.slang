@@ -3,6 +3,7 @@
 module GalaxyInstancing;
 
 import Galaxy.WatercolorFunctions;
+import Noise.FractalNoise;
 
 namespace Galaxy
 {
@@ -17,8 +18,10 @@ namespace Galaxy
     }
 }
 
-public BIND_MATERIAL_BUFFER(0) StructuredBuffer<float4> _DynamicGalaxyObjectPositions;
-public BIND_MATERIAL_BUFFER(1) StructuredBuffer<Galaxy.ObjectData> _GalaxyObjectData;
+BIND_MATERIAL_BUFFER(0) public StructuredBuffer<float4> _DynamicGalaxyObjectPositions;
+BIND_MATERIAL_BUFFER(1) public StructuredBuffer<Galaxy.ObjectData> _GalaxyObjectData;
+BIND_MATERIAL_TEX(2) public Sampler3D<float> _TurbulenceVolume;
+BIND_MATERIAL_TEX(3) public Sampler3D<float> _TremorNoiseVolume;
 
 namespace Galaxy
 {
@@ -52,5 +55,43 @@ namespace Galaxy
     public ObjectData GetMaterialData(uint instanceID)
     {
         return _GalaxyObjectData[instanceID];
+    }
+
+    public struct TurbulenceNoiseSampler : Noise.INoise3DSampler
+    {
+        public float Sample(float3 uvw)
+        {
+            return _TurbulenceVolume.Sample(uvw);
+        }
+    }
+
+    public float GetTurbulence(float3 positionWS, float3 transformCenter)
+    {
+        Noise.FractalNoise<TurbulenceNoiseSampler> turbulenceNoise = Noise.FractalNoise<TurbulenceNoiseSampler>(
+            TurbulenceNoiseSampler(),
+            positionWS,
+            transformCenter,
+            1.0f);
+
+        return turbulenceNoise.Solve();
+    }
+
+    public struct TremorNoiseSampler : Noise.INoise3DSampler
+    {
+        public float Sample(float3 uvw)
+        {
+            return _TremorNoiseVolume.Sample(uvw);
+        }
+    }
+
+    public float2 GetTremorNoise(float3 positionWS, float3 transformCenter)
+    {
+        Noise.FractalNoise<TremorNoiseSampler> tremorNoise = Noise.FractalNoise<TremorNoiseSampler>(
+            TremorNoiseSampler(),
+            positionWS,
+            transformCenter,
+            1.0f);
+
+        return float2(tremorNoise.Solve(0), tremorNoise.Solve(0.5f) - 0.5f);
     }
 }

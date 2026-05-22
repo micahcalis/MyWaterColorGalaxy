@@ -30,7 +30,7 @@ namespace Beer::Rendering
     {
         for (auto& node : renderNodes)
         {
-            PassDependencyList deps = node.RenderPass->GetDependencies();
+            PassDependencyList deps = node.RenderPass->GetDependencies(context);
 
             for (const PassDependency& dep : deps.GetDependencies())
             {
@@ -68,6 +68,11 @@ namespace Beer::Rendering
 
             node.RenderPass->Execute(commandBuffer, context);
             commandBuffer->EndRendering(beginData.IsDrawPass);
+
+            if (node.RenderPass->BlitsMainTarget())
+            {
+                context.RegisterMainColorPongPass();
+            }
         }
     }
 
@@ -80,7 +85,7 @@ namespace Beer::Rendering
 
         bool extentSet = false;
 
-        PassDependencyList deps = node.RenderPass->GetDependencies();
+        PassDependencyList deps = node.RenderPass->GetDependencies(context);
         context.Output = deps.GetOutput();
 
         for (const PassDependency& dep : deps.GetDependencies())
@@ -152,7 +157,7 @@ namespace Beer::Rendering
         for (size_t i = 0; i < renderNodes.size(); ++i)
         {
             const RenderCommandNode& node = renderNodes[i];
-            PassDependencyList deps = node.RenderPass->GetDependencies();
+            PassDependencyList deps = node.RenderPass->GetDependencies(RenderContext());
 
             std::println("[{}] Pass: {}", i, deps.GetPassName());
             std::println("    Barriers: {}", node.Commands.size());

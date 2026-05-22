@@ -17,9 +17,14 @@ namespace Beer::System
     GalaxyObjectBuffer::GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
         GalaxyObjectType type,
         const char* shaderPath,
-        const char* meshPath)
+        const char* meshPath,
+        Rendering::Texture3D* turbulenceVolume,
+        Rendering::Texture3D* tremorNoiseVolume)
+        : turbulenceVolume(turbulenceVolume), tremorNoiseVolume(tremorNoiseVolume)
     {
         material = std::make_shared<Rendering::Material>(shaderPath);
+        material->SetTexture("_TurbulenceVolume", turbulenceVolume);
+        material->SetTexture("_TremorNoiseVolume", tremorNoiseVolume);
         mesh = Rendering::Mesh::Get(meshPath);
 
         std::vector<SerializableGalaxyComponent> components;

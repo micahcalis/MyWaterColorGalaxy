@@ -134,8 +134,14 @@ namespace Beer::Core
         frameResource.Reset();
 
         UpdateGlobals();
-        renderPipeline->ExecuteFrame(frameResource.GetCommandBuffer());
-        renderPipeline->FinalBlit(frameResource.GetCommandBuffer(), swapchain->GetImage(imageIndex), swapchain->GetExtent());
+
+        bool pongState = false;
+        renderPipeline->ExecuteFrame(frameResource.GetCommandBuffer(), pongState);
+
+        renderPipeline->FinalBlit(frameResource.GetCommandBuffer(),
+            swapchain->GetImage(imageIndex),
+            swapchain->GetExtent(),
+            pongState);
 
         readbackManager->Update(frameResource);
 

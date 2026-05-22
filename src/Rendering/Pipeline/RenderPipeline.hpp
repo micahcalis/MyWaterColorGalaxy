@@ -20,7 +20,8 @@ namespace Beer::Rendering
         FrameBuilder frameBuilder{};
         FrameGraph frameGraph{};
 
-        Rendering::RenderTexture* colorTarget = nullptr;
+        Rendering::RenderTexture* colorTargetA = nullptr;
+        Rendering::RenderTexture* colorTargetB = nullptr;
         Rendering::RenderTexture* depthTarget = nullptr;
         Rendering::PhaseBuffer* transformBuffer = nullptr;
         System::RenderRegister* renderRegister = nullptr;
@@ -31,8 +32,8 @@ namespace Beer::Rendering
             System::RenderRegister* renderRegister);
 
         void InitializeFrame();
-        void ExecuteFrame(CommandBuffer* commandBuffer);
-        void FinalBlit(CommandBuffer* commandBuffer, vk::Image swapchainImage, vk::Extent2D swapchainExtent);
+        void ExecuteFrame(CommandBuffer* commandBuffer, bool& pongState);
+        void FinalBlit(CommandBuffer* commandBuffer, vk::Image swapchainImage, vk::Extent2D swapchainExtent, bool pongState);
         [[nodiscard]] FrameBlackbox* GetBlackbox() const { return frameBlackbox.get(); }
 
     private:

@@ -7,6 +7,8 @@ import SphereTracing;
 import SDF;
 import Galaxy.GalaxyInstancing;
 import Galaxy.GalaxySDFs;
+import Noise.Hash;
+import Noise.FractalScale;
 
 struct MeshData
 {
@@ -60,22 +62,25 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         planetSDF,
         ray);
 
-
     SphereTracing.TraceResult result = tracer.Trace();
 
     if (!result.Hit)
         discard;
 
-    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(materialData.ColorA.rgb,
-        1,
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(
+        materialData.ColorA.rgb, 
+        2,
         result.Position,
         result.Normal,
-        0.5f,
+        Noise.Functions.Hash11(input.instanceID, 0),
         0.2f,
         0,
         0.5f);
-    
-    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
+
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 
+        Galaxy.GetTurbulence(result.Position, transformCenter), 
+        Galaxy.GetTremorNoise(result.Position, transformCenter));
+
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();

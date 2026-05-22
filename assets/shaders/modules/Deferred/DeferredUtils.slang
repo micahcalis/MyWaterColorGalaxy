@@ -31,7 +31,7 @@ namespace Deferred
         public DEPTH_TARGET;
     }
 
-    static int MAT_COUNT = 2;
+    static int MAT_COUNT = 3;
 
     public struct DeferredShadeData
     {
@@ -167,41 +167,46 @@ namespace Deferred
         return hitClipPos.z / hitClipPos.w;
     }
 
-    public struct DeferredReader
+    public interface IDeferredSampler
     {
-        private float4 albedoSample;
-        private float4 normalSample;
-        private float4 materialSample;
-        private float3 emissionSample;
-        private float4 watercolorSample;
+        public float4 SampleAlbedo(float2 offset);
+        public float4 SampleNormalOffset(float2 offset);
+        public float4 SampleMaterial(float2 offset);
+        public float3 SampleEmission(float2 offset);
+        public float4 SampleWatercolor(float2 offset);
+    }
 
-        public __init(float4 _albedoSample,
-            float4 _normalSample,
-            float4 _materialSample,
-            float3 _emissionSample,
-            float4 _watercolorSample)
+    public struct DeferredReader<TDeferredSampler : IDeferredSampler>
+    {
+        private TDeferredSampler deferredSampler;
+
+        public __init(TDeferredSampler _deferredSampler)
         {
-            albedoSample = _albedoSample;
-            normalSample = _normalSample;
-            materialSample = _materialSample;
-            emissionSample = _emissionSample;
-            watercolorSample = _watercolorSample;
+            deferredSampler = _deferredSampler;
         }
 
-        public DeferredShadeData ReadShade(float3 positionWS)
+        public DeferredShadeData ReadShade(float3 positionWS, float2 offset = 0)
         {
+            float4 albedoSample = deferredSampler.SampleAlbedo(offset);
+            float4 normalSample = deferredSampler.SampleNormalOffset(offset);
+            float4 materialSample = deferredSampler.SampleMaterial(offset);
+            float3 emissionSample = deferredSampler.SampleEmission(offset);
+
             return DeferredShadeData(albedoSample.rgb,
-                GetMaterialIndex(),
+                GetMaterialIndex(albedoSample),
                 positionWS,
                 DecodeNormalOctahedron(normalSample.rg),
                 materialSample.r,
                 materialSample.g,
-                emissionSample,
+                emissionSample.rgb,
                 materialSample.b);
         }
 
-        public DeferredWatercolorData ReadWatercolor()
+        public DeferredWatercolorData ReadWatercolor(float2 offset = 0)
         {
+            float4 normalSample = deferredSampler.SampleNormalOffset(offset);
+            float4 watercolorSample = deferredSampler.SampleWatercolor(offset);
+
             return DeferredWatercolorData(watercolorSample.r,
                 watercolorSample.g,
                 watercolorSample.b,
@@ -209,8 +214,8 @@ namespace Deferred
                 DecodeUVOffset(normalSample.ba));
         }
 
-        private int GetMaterialIndex()
-        {
+        private int GetMaterialIndex(float4 albedoSample)
+        {            
             return (int)round(albedoSample.a * (MAT_COUNT - 1));
         }
     }
