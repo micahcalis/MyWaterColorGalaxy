@@ -3,8 +3,10 @@
 #include "FrameGraph.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "Rendering/Pipeline/Frame/Resource/IRenderResource.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/SyncTargetState.hpp"
+#include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include <print>
 
@@ -28,13 +30,28 @@ namespace Beer::Rendering
 
     void FrameGraph::PrepareBarriers(const RenderContext& context)
     {
+        context.ResetMainColorPong();
+
         for (auto& node : renderNodes)
         {
-            PassDependencyList deps = node.RenderPass->GetDependencies(context);
+            PassDependencyList deps = node.RenderPass->GetDependencies();
 
             for (const PassDependency& dep : deps.GetDependencies())
             {
-                IRenderResource* resource = context.BlackBox->GetResource<IRenderResource>(dep.GetResourceName());
+                std::string resourceName = dep.GetResourceName();
+
+                if (resourceName == VIRTUAL_MAIN_COLOR)
+                {
+                    if (dep.GetAction() == ResourceAction::ColorRead)
+                    {
+                        resourceName = context.GetMainColorSourceName();
+                    } else if (dep.GetAction() == ResourceAction::ColorWrite)
+                    {
+                        resourceName = context.GetMainColorDestinationName();
+                    }
+                }
+
+                IRenderResource* resource = context.BlackBox->GetResource<IRenderResource>(resourceName);
 
                 if (!resource)
                     continue;
@@ -42,6 +59,11 @@ namespace Beer::Rendering
                 std::unique_ptr<ISyncBarrier> barrier = resource->GetBarrier(dep.GetAction());
 
                 node.Commands.emplace_back(ResourceActionCommand(std::move(barrier)));
+            }
+
+            if (node.RenderPass->BlitsMainTarget())
+            {
+                context.RegisterMainColorPongPass();
             }
         }
     }
@@ -51,8 +73,8 @@ namespace Beer::Rendering
         System::Function<void> bindGlobals)
     {
         commandBuffer->Begin();
-
         bindGlobals();
+        context.ResetMainColorPong();
 
         std::unordered_set<std::string> clearedResources;
 
@@ -85,7 +107,7 @@ namespace Beer::Rendering
 
         bool extentSet = false;
 
-        PassDependencyList deps = node.RenderPass->GetDependencies(context);
+        PassDependencyList deps = node.RenderPass->GetDependencies();
         context.Output = deps.GetOutput();
 
         for (const PassDependency& dep : deps.GetDependencies())
@@ -94,7 +116,14 @@ namespace Beer::Rendering
                 || dep.GetAction() == ResourceAction::DepthWrite
                 || dep.GetAction() == ResourceAction::DephTestOnly)
             {
-                RenderTexture* texture = context.BlackBox->GetResource<RenderTexture>(dep.GetResourceName());
+                std::string resourceName = dep.GetResourceName();
+
+                if (resourceName == VIRTUAL_MAIN_COLOR)
+                {
+                    resourceName = context.GetMainColorDestinationName();
+                }
+
+                RenderTexture* texture = context.BlackBox->GetResource<RenderTexture>(resourceName);
 
                 if (!texture)
                     continue;
@@ -109,9 +138,9 @@ namespace Beer::Rendering
                 bool isDepth = false;
                 ResetOperator resetOperator = dep.GetResetOperator();
 
-                if (clearedResources.find(dep.GetResourceName()) == clearedResources.end())
+                if (clearedResources.find(resourceName) == clearedResources.end())
                 {
-                    clearedResources.insert(dep.GetResourceName());
+                    clearedResources.insert(resourceName);
                 } else
                 {
                     resetOperator.LoadOp = vk::AttachmentLoadOp::eLoad;
@@ -157,7 +186,7 @@ namespace Beer::Rendering
         for (size_t i = 0; i < renderNodes.size(); ++i)
         {
             const RenderCommandNode& node = renderNodes[i];
-            PassDependencyList deps = node.RenderPass->GetDependencies(RenderContext());
+            PassDependencyList deps = node.RenderPass->GetDependencies();
 
             std::println("[{}] Pass: {}", i, deps.GetPassName());
             std::println("    Barriers: {}", node.Commands.size());

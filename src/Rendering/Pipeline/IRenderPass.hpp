@@ -34,7 +34,7 @@ namespace Beer::Rendering
 
         virtual void OnRenderSetup(const RenderContext& context) = 0;
         virtual void Execute(CommandBuffer* commandBuffer, const RenderContext& context) = 0;
-        virtual PassDependencyList GetDependencies(const RenderContext& context) const = 0;
+        virtual PassDependencyList GetDependencies() const = 0;
 
         virtual bool BlitsMainTarget() const
         {

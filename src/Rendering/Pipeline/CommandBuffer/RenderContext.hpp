@@ -59,7 +59,12 @@ namespace Beer::Rendering
 
         const std::string& GetMainColorDestinationName() const
         {
-            return pong ? MAIN_COLOR_A : MAIN_COLOR_B;
+            return pong ? MAIN_COLOR_B : MAIN_COLOR_A;
+        }
+
+        void ResetMainColorPong() const
+        {
+            pong = false;
         }
     };
 } // namespace Beer::Rendering

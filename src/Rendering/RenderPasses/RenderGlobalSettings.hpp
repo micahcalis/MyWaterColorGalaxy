@@ -8,7 +8,9 @@
 
 namespace Beer::Rendering
 {
-    static const std::string MAIN_COLOR = "MainColor";
+    static const std::string VIRTUAL_MAIN_COLOR = "VirtualMainColor";
+    static const std::string MAIN_COLOR_A = "MainColorA";
+    static const std::string MAIN_COLOR_B = "MainColorB";
     static const std::string MAIN_DEPTH = "MainDepth";
     static const std::string GBUFFER_NORMAL_OFFSET = "GBufferNormalOffset";
     static const std::string GBUFFER_ALBEDO = "GBufferAlbedo";

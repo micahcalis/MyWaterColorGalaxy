@@ -1,5 +1,6 @@
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
+#include "RenderGlobalSettings.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependencyList.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
@@ -9,6 +10,25 @@
 
 namespace Beer::Rendering
 {
+    static const float CANGIANTE = 0.2f;
+    static const float DILUTION = 0.2f;
+    static const float DILUTE_AREA = 0.75f;
+    static const float DARK_INTENSITY = 0.5f;
+    static const float LIGHT_COL_INTENSITY = 0.5f;
+    static const float TURBULENCE_INTENSITY = 0.4f;
+
+    DeferredShadePass::DeferredShadePass()
+        : IRenderPass("Deferred Shade", RenderPassEvent::DEFERRED_SHADE)
+    {
+        blitMaterial = std::make_shared<Material>("DeferredShadeBlit");
+        blitMaterial->SetFloat("_Cangiante", CANGIANTE);
+        blitMaterial->SetFloat("_Dilution", DILUTION);
+        blitMaterial->SetFloat("_DiluteArea", DILUTE_AREA);
+        blitMaterial->SetFloat("_DarkIntensity", DARK_INTENSITY);
+        blitMaterial->SetFloat("_LightColorIntensity", LIGHT_COL_INTENSITY);
+        blitMaterial->SetFloat("_TurbulenceIntensity", TURBULENCE_INTENSITY);
+    }
+
     void DeferredShadePass::OnRenderSetup(const RenderContext& context)
     {
         GBufferAlbedo = context.BlackBox->ReallocateIfNeeded(std::string(GBUFFER_ALBEDO),
@@ -59,7 +79,7 @@ namespace Beer::Rendering
     PassDependencyList DeferredShadePass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
-        dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
+        dependencies.AddDependency(PassDependency(VIRTUAL_MAIN_COLOR,
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0.0f, 0.0f, 0.0f, 0.0f}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));

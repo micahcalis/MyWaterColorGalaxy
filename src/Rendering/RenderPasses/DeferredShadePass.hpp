@@ -18,11 +18,7 @@ namespace Beer::Rendering
         RenderTexture* GBufferWatercolor;
 
     public:
-        DeferredShadePass()
-            : IRenderPass("Deferred Shade", RenderPassEvent::DEFERRED_SHADE)
-        {
-            blitMaterial = std::make_shared<Material>("DeferredShadeBlit");
-        }
+        DeferredShadePass();
 
     private:
         void OnRenderSetup(const RenderContext& context) override;

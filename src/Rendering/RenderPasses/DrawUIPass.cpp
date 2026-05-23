@@ -29,7 +29,7 @@ namespace Beer::Rendering
     PassDependencyList DrawUIPass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
-        dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
+        dependencies.AddDependency(PassDependency(VIRTUAL_MAIN_COLOR,
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));

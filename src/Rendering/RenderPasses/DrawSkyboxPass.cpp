@@ -23,10 +23,6 @@ namespace Beer::Rendering
 
     void DrawSkyboxPass::OnRenderSetup(const RenderContext& context)
     {
-        context.BlackBox->ReallocateIfNeeded(context.MainColorTarget->Name(),
-            Core::Screen::Width(),
-            Core::Screen::Height(),
-            Core::Screen::ColorFormat());
     }
 
     void DrawSkyboxPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
@@ -47,7 +43,7 @@ namespace Beer::Rendering
     PassDependencyList DrawSkyboxPass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
-        dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
+        dependencies.AddDependency(PassDependency(VIRTUAL_MAIN_COLOR,
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
