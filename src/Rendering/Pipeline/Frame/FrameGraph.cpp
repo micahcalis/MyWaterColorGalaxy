@@ -36,21 +36,27 @@ namespace Beer::Rendering
         {
             PassDependencyList deps = node.RenderPass->GetDependencies();
 
+            if (node.RenderPass->BlitsMainTarget())
+            {
+                context.RegisterMainColorPongPass();
+            }
+
             for (const PassDependency& dep : deps.GetDependencies())
             {
-                std::string resourceName = dep.GetResourceName();
+                const std::string* resourceNamePtr = &dep.GetResourceName();
 
-                if (resourceName == VIRTUAL_MAIN_COLOR)
+                if (*resourceNamePtr == VIRTUAL_MAIN_COLOR)
                 {
                     if (dep.GetAction() == ResourceAction::ColorRead)
                     {
-                        resourceName = context.GetMainColorSourceName();
+                        resourceNamePtr = &context.GetMainColorSourceName();
                     } else if (dep.GetAction() == ResourceAction::ColorWrite)
                     {
-                        resourceName = context.GetMainColorDestinationName();
+                        resourceNamePtr = &context.GetMainColorDestinationName();
                     }
                 }
 
+                const std::string& resourceName = *resourceNamePtr;
                 IRenderResource* resource = context.BlackBox->GetResource<IRenderResource>(resourceName);
 
                 if (!resource)
@@ -59,11 +65,6 @@ namespace Beer::Rendering
                 std::unique_ptr<ISyncBarrier> barrier = resource->GetBarrier(dep.GetAction());
 
                 node.Commands.emplace_back(ResourceActionCommand(std::move(barrier)));
-            }
-
-            if (node.RenderPass->BlitsMainTarget())
-            {
-                context.RegisterMainColorPongPass();
             }
         }
     }
@@ -80,6 +81,11 @@ namespace Beer::Rendering
 
         for (auto& node : renderNodes)
         {
+            if (node.RenderPass->BlitsMainTarget())
+            {
+                context.RegisterMainColorPongPass();
+            }
+
             for (auto& resourceCommand : node.Commands)
             {
                 resourceCommand.Execute(commandBuffer);
@@ -90,11 +96,6 @@ namespace Beer::Rendering
 
             node.RenderPass->Execute(commandBuffer, context);
             commandBuffer->EndRendering(beginData.IsDrawPass);
-
-            if (node.RenderPass->BlitsMainTarget())
-            {
-                context.RegisterMainColorPongPass();
-            }
         }
     }
 
@@ -116,13 +117,14 @@ namespace Beer::Rendering
                 || dep.GetAction() == ResourceAction::DepthWrite
                 || dep.GetAction() == ResourceAction::DephTestOnly)
             {
-                std::string resourceName = dep.GetResourceName();
+                const std::string* resourceNamePtr = &dep.GetResourceName();
 
-                if (resourceName == VIRTUAL_MAIN_COLOR)
+                if (*resourceNamePtr == VIRTUAL_MAIN_COLOR)
                 {
-                    resourceName = context.GetMainColorDestinationName();
+                    resourceNamePtr = &context.GetMainColorDestinationName();
                 }
 
+                const std::string& resourceName = *resourceNamePtr;
                 RenderTexture* texture = context.BlackBox->GetResource<RenderTexture>(resourceName);
 
                 if (!texture)

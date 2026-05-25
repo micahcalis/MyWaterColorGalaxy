@@ -10,8 +10,10 @@
 #include "System/Delegates/BeerEvent.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "System/Galaxy/Stars/StarsEntity.hpp"
+#include "System/Galaxy/WatercolorSubPipeline.hpp"
 #include "System/Light/LightEntity.hpp"
 #include "System/Serialization/MapHandler.hpp"
+#include <memory>
 #include <vector>
 
 namespace Beer::System
@@ -32,6 +34,7 @@ namespace Beer::System
         Function<PlayerInput> getPlayerInput = nullptr;
         Function<bool> getReturnPressed = nullptr;
 
+        std::unique_ptr<WatercolorSubPipeline> watercolorSubPipeline = nullptr;
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;

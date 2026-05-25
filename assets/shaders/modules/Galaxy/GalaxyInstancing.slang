@@ -92,6 +92,6 @@ namespace Galaxy
             transformCenter,
             1.0f);
 
-        return float2(tremorNoise.Solve(0), tremorNoise.Solve(0.5f) - 0.5f);
+        return float2(tremorNoise.Solve(0) - 0.5f, tremorNoise.Solve(0.5f) - 0.5f);
     }
 }

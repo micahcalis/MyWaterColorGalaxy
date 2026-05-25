@@ -38,7 +38,7 @@ namespace Beer::Rendering
     PassDependencyList RenderTornadoPass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
-        dependencies.AddDependency(PassDependency(VIRTUAL_MAIN_COLOR,
+        dependencies.AddDependency(PassDependency(std::string(VIRTUAL_MAIN_COLOR),
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));

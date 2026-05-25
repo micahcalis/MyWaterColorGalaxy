@@ -9,6 +9,7 @@
 #include "System/Context/IContext.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include "System/Galaxy/WatercolorSubPipeline.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include <print>
 #include <stdexcept>
@@ -31,6 +32,8 @@ namespace Beer::System
 
         transparentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawTransparentPass>(
             std::string(Rendering::TRANSPARENT_PASS));
+
+        watercolorSubPipeline = std::make_unique<WatercolorSubPipeline>();
 
         InitializeLight();
         InitializePlayer();
@@ -60,7 +63,16 @@ namespace Beer::System
 
     std::vector<Rendering::IRenderPass*> GalaxyContext::GetRenderPasses()
     {
-        return {opaquePass, deferredShadePass, skyboxPass, transparentPass};
+        std::vector<Rendering::IRenderPass*> passes;
+        passes.reserve(20);
+
+        passes.append_range(watercolorSubPipeline->GetRenderPasses());
+        passes.push_back(opaquePass);
+        passes.push_back(deferredShadePass);
+        passes.push_back(skyboxPass);
+        passes.push_back(transparentPass);
+
+        return passes;
     }
 
     void GalaxyContext::InitializePlayer()

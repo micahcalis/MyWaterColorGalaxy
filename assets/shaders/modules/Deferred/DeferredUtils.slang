@@ -86,7 +86,7 @@ namespace Deferred
         }
     }
 
-    float2 EncodeNormalOctahedron(float3 normal)
+    public float2 EncodeNormalOctahedron(float3 normal)
     {
         normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
         
@@ -95,7 +95,7 @@ namespace Deferred
     }
 
 
-    float3 DecodeNormalOctahedron(float2 encoded)
+    public float3 DecodeNormalOctahedron(float2 encoded)
     {
         float2 f = encoded * 2.0 - 1.0;
         float3 n = float3(f.x, f.y, 1.0 - abs(f.x) - abs(f.y));
@@ -106,12 +106,12 @@ namespace Deferred
         return normalize(n);
     }
 
-    float2 EncodeUVOffset(float2 offset)
+    public float2 EncodeUVOffset(float2 offset)
     {
         return offset * 0.5f + 0.5f;
     }
 
-    float2 DecodeUVOffset(float2 encoded)
+    public float2 DecodeUVOffset(float2 encoded)
     {
         return (encoded - 0.5f) * 2.0f;
     }

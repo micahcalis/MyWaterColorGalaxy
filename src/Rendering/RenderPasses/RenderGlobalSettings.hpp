@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
@@ -8,7 +9,7 @@
 
 namespace Beer::Rendering
 {
-    static const std::string VIRTUAL_MAIN_COLOR = "VirtualMainColor";
+    static const std::string_view VIRTUAL_MAIN_COLOR = "VirtualMainColor";
     static const std::string MAIN_COLOR_A = "MainColorA";
     static const std::string MAIN_COLOR_B = "MainColorB";
     static const std::string MAIN_DEPTH = "MainDepth";
@@ -29,6 +30,7 @@ namespace Beer::Rendering
     static const std::string TRANSPARENT_PASS = "Transparent";
     static const std::string UI_PASS = "UserInterface";
     static const std::string INTERACTIVE_PAINT_PASS = "InteractivePaint";
+    static const std::string WC_PROCESSING_PASS = "WatercolorProcessing";
 
     constexpr static uint32_t TRANSFORM_BUFFER_COUNT = 100'000;
     constexpr std::string_view TRANSFORM_BUFFER_NAME = "TransformInstancingBuffer";
@@ -50,7 +52,7 @@ namespace Beer::Rendering
 
             dependencies.emplace_back(PassDependency(std::string(GBUFFER_NORMAL_OFFSET),
                 resourceAction,
-                ResetOperator::ClearColor({0, 0, 0, 0}),
+                ResetOperator::ClearColor({0, 0, 0.5f, 0.5f}),
                 static_cast<vk::Format>(GBUFFER_NORMAL_OFFSET_FORMAT)));
 
             dependencies.emplace_back(PassDependency(std::string(GBUFFER_MAT),
