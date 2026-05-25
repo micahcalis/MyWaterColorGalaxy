@@ -17,10 +17,11 @@ BIND_BLIT_SRC(1)
 BIND_MATERIAL_TEX(2) Sampler2D<float4> _NormalsOffset;
 BIND_MATERIAL_TEX(3) Sampler2D<float4> _WatercolorData;
 BIND_MATERIAL_TEX(4) Sampler2D<float> _DepthBuffer;
+BIND_MATERIAL_TEX(5) Sampler2D<float4> _BlurredColor;
 
 struct MeshData
 {
-};
+}
 
 struct VertexData
 {
@@ -81,8 +82,7 @@ public struct WatercolorProcessingSampler : WC.IWatercolorProcessingSampler
 
     public float4 SampleBlurred(float2 offset)
     {
-        // TODO: Implement blur thing
-        return 0;
+        return _BlurredColor.Sample(uv + offset);
     }
 
     public WC.PaperData SamplePaper(float2 offset)
@@ -113,5 +113,5 @@ FRAG float4 WatercolorProcessingFrag(VertexData input) : SV_Target
         _DepthFadeThreshold,
         viewDirWS);
 
-    return wcSampler.SampleMain(tremorOffsetter.GetOffset());
+    return wcSampler.SampleMain(tremorOffsetter.GetOffset()) + wcSampler.SampleBlurred(0) * 0.5f;
 }

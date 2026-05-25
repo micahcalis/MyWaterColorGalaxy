@@ -116,6 +116,7 @@ namespace Beer::Rendering
         case Hash(PASS_DEFERRED_SHADE): return ShaderPassType::DeferredShade;
         case Hash(PASS_UI): return ShaderPassType::UserInterface;
         case Hash(PASS_WC_PROCESSING): return ShaderPassType::WatercolorProcessing;
+        case Hash(PASS_BLITCOLOR): return ShaderPassType::BlitColor;
         default: return ShaderPassType::Unknown;
         }
     }

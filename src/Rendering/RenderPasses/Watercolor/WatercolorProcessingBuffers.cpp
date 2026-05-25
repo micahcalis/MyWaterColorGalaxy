@@ -20,4 +20,16 @@ namespace Beer::Rendering
                                 .AllocPointer;
     }
 
+    void WatercolorProcessingBuffers::ReallocateBlurredColor(const RenderContext& context)
+    {
+        uint32_t resolutionX = (uint32_t)((float)Core::Screen::Width() / (float)WC_BLIT_RESOLUTION);
+        uint32_t resolutionY = (uint32_t)((float)Core::Screen::Height() / (float)WC_BLIT_RESOLUTION);
+
+        BlurredColor = context.BlackBox->ReallocateIfNeeded(WC_COLORBLIT_TEX_A,
+                                           resolutionX,
+                                           resolutionY,
+                                           Core::Screen::ColorFormat())
+                           .AllocPointer;
+    }
+
 } // namespace Beer::Rendering

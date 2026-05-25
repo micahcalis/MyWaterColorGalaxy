@@ -49,7 +49,9 @@ namespace Beer::Rendering
                 {
                     if (dep.GetAction() == ResourceAction::ColorRead)
                     {
-                        resourceNamePtr = &context.GetMainColorSourceName();
+                        resourceNamePtr = node.RenderPass->BlitsMainTarget()
+                            ? &context.GetMainColorSourceName()
+                            : &context.GetMainColorDestinationName();
                     } else if (dep.GetAction() == ResourceAction::ColorWrite)
                     {
                         resourceNamePtr = &context.GetMainColorDestinationName();

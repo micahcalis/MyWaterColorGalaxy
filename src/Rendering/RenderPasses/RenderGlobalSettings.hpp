@@ -2,6 +2,7 @@
 
 #include <string>
 #include <string_view>
+#include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
@@ -31,6 +32,9 @@ namespace Beer::Rendering
     static const std::string UI_PASS = "UserInterface";
     static const std::string INTERACTIVE_PAINT_PASS = "InteractivePaint";
     static const std::string WC_PROCESSING_PASS = "WatercolorProcessing";
+    static const std::string WC_BLIT_PASS = "WatercolorBlit";
+    static const std::string WC_BLUR_PASS_A = "WatercolorBlurA";
+    static const std::string WC_BLUR_PASS_B = "WatercolorBlurB";
 
     constexpr static uint32_t TRANSFORM_BUFFER_COUNT = 100'000;
     constexpr std::string_view TRANSFORM_BUFFER_NAME = "TransformInstancingBuffer";
@@ -69,6 +73,24 @@ namespace Beer::Rendering
                 resourceAction,
                 ResetOperator::ClearColor({0, 0, 0, 0}),
                 static_cast<vk::Format>(GBUFFER_WATERCOLOR_FORMAT)));
+
+            return dependencies;
+        }
+
+        static std::vector<PassDependency> GetMainColorBlitDependencies()
+        {
+            std::vector<PassDependency> dependencies;
+            dependencies.reserve(2);
+
+            dependencies.emplace_back(PassDependency(std::string(VIRTUAL_MAIN_COLOR),
+                ResourceAction::ColorRead,
+                ResetOperator::ClearColor({0.0f, 0.0f, 0.0f, 0.0f}),
+                static_cast<vk::Format>(Core::Screen::ColorFormat())));
+
+            dependencies.emplace_back(PassDependency(std::string(VIRTUAL_MAIN_COLOR),
+                ResourceAction::ColorWrite,
+                ResetOperator::ClearColor({0.0f, 0.0f, 0.0f, 0.0f}),
+                static_cast<vk::Format>(Core::Screen::ColorFormat())));
 
             return dependencies;
         }
