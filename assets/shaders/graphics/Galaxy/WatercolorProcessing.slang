@@ -5,12 +5,18 @@ import Blit.BlitUtils;
 import Galaxy.WatercolorFunctions;
 import Deferred.DeferredUtils;
 import Core.Beer3D;
+import Math.PartialDerivative;
+import Galaxy.WatercolorLit;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
 {
     float _TremorOffsetIntensity;
     float _DepthFadeThreshold;
+    float2 _DynamicOffset;
+    float _PaperDistortionIntensity;
+    float _PaperTiling;
+    float _GranulationIntensity;
 };
 
 BIND_BLIT_SRC(1)
@@ -18,6 +24,7 @@ BIND_MATERIAL_TEX(2) Sampler2D<float4> _NormalsOffset;
 BIND_MATERIAL_TEX(3) Sampler2D<float4> _WatercolorData;
 BIND_MATERIAL_TEX(4) Sampler2D<float> _DepthBuffer;
 BIND_MATERIAL_TEX(5) Sampler2D<float4> _BlurredColor;
+BIND_MATERIAL_TEX(6) Sampler2D<float4> _PaperTex;
 
 struct MeshData
 {
@@ -87,10 +94,15 @@ public struct WatercolorProcessingSampler : WC.IWatercolorProcessingSampler
 
     public WC.PaperData SamplePaper(float2 offset)
     {
-        // TODO: le paper
+        int width; int height; int levels;
+        _PaperTex.GetDimensions(0, width, height, levels);
+        float2 scale = (_ScreenParams.xy / float2(width, height)) * _PaperTiling;
+
+        float4 sample = _PaperTex.Sample(frac((uv + _DynamicOffset)) * scale + offset);
         WC.PaperData data;
-        data.Height = 0;
-        data.Slope = 0;
+        data.Height = sample.b;
+        data.Derivative = Math.PartialDerivative(sample.r, sample.g);
+        data.Derivative.Uncompress();
         return data;
     }
 
@@ -112,6 +124,37 @@ FRAG float4 WatercolorProcessingFrag(VertexData input) : SV_Target
         _TremorOffsetIntensity,
         _DepthFadeThreshold,
         viewDirWS);
+    
+    float2 tremorOffset = tremorOffsetter.GetOffset();
+    WC.PaperData data = wcSampler.SamplePaper(0);
+    float2 distortionOffset = WC.GetPaperDistortionOffset(data.Derivative, _PaperDistortionIntensity, 1.0f);
+    float2 uvOffset = tremorOffset + distortionOffset;
 
-    return wcSampler.SampleMain(tremorOffsetter.GetOffset()) + wcSampler.SampleBlurred(0) * 0.5f;
+    WC.WatercolorParams params = wcSampler.SampleParams(uvOffset);
+
+    WC.ColorBleeder<WatercolorProcessingSampler> colorBleeder = WC.ColorBleeder<WatercolorProcessingSampler>(
+        wcSampler,
+        params.ColorBleed);
+
+    float3 bleededColor = colorBleeder.GetColor(uvOffset);
+
+    WC.EdgeDarkener<WatercolorProcessingSampler> edgeDarkener = WC.EdgeDarkener<WatercolorProcessingSampler>(
+        wcSampler,
+        bleededColor,
+        1.0f);
+
+    float3 edgeDarkenedColor = edgeDarkener.ComputeEdgeDarkening(uvOffset);
+    
+    WC.PaperGranulator granulator = WC.PaperGranulator(data.Height,
+        edgeDarkenedColor,
+        _GranulationIntensity,
+        1);
+
+    float3 granulatedPigment = granulator.Granulate();
+    
+    float3 base = WC::WCRDFData::CANVAS_COLOR;
+    float3 cangiante = 0.1f * ((1.0f - data.Height * 0.4f) * (base - granulatedPigment)) + granulatedPigment;
+    float3 minColor = granulatedPigment * (1.0f - 0.5f);
+
+     return float4(max(cangiante, minColor), 1);
 }

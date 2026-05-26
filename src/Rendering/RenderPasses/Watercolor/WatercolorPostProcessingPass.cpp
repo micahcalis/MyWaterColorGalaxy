@@ -1,5 +1,7 @@
 #include "Rendering/RenderPasses/Watercolor/WatercolorPostProcessingPass.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
+#include "DynamicCanvasUpdater.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependencyList.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/ResetOperator.hpp"
@@ -8,12 +10,20 @@
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/RenderPasses/RenderPassEvent.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Texture/TextureMakeSettings.hpp"
 #include "WatercolorProcessingBuffers.hpp"
+#include <memory>
 
 namespace Beer::Rendering
 {
     static const float TREMOR_OFFSET_INTENSITY = 0.005f;
     static const float DEPTH_FADE_THRESHOLD = 20.0f;
+    static const float PANNING_PERCENTAGE = 10.0f;
+    static const float PAPER_TILING = 2.5f;
+    static const float PAPER_DISTORTION_INTENSITY = 0.015f;
+    static const float GRANULATION_INTENSITY = 0.25f;
+    static const uint32_t SLOPE_KERNEL = 0;
 
     WatercolorPostProcessingPass::WatercolorPostProcessingPass(WatercolorProcessingBuffers* processingBuffers)
         : processingBuffers(processingBuffers)
@@ -22,6 +32,15 @@ namespace Beer::Rendering
         postProcessingMaterial = std::make_shared<Rendering::Material>("Galaxy/WatercolorProcessing");
         postProcessingMaterial->SetFloat("_TremorOffsetIntensity", TREMOR_OFFSET_INTENSITY);
         postProcessingMaterial->SetFloat("_DepthFadeThreshold", DEPTH_FADE_THRESHOLD);
+        postProcessingMaterial->SetFloat("_PaperTiling", PAPER_TILING);
+        postProcessingMaterial->SetFloat("_PaperDistortionIntensity", PAPER_DISTORTION_INTENSITY);
+        postProcessingMaterial->SetFloat("_GranulationIntensity", GRANULATION_INTENSITY);
+
+        dynamicCanvasUpdater = std::make_unique<DynamicCanvasUpdater>(postProcessingMaterial.get(),
+            glm::vec3(0, 0, 1),
+            PANNING_PERCENTAGE);
+
+        InitializePaperSlopeMap();
     }
 
     void WatercolorPostProcessingPass::OnRenderSetup(const RenderContext& context)
@@ -33,6 +52,11 @@ namespace Beer::Rendering
         postProcessingMaterial->SetTexture("_NormalsOffset", processingBuffers->GBufferNormalsOffset);
         postProcessingMaterial->SetTexture("_WatercolorData", processingBuffers->GBufferWatercolor);
         postProcessingMaterial->SetTexture("_BlurredColor", processingBuffers->BlurredColor);
+
+        dynamicCanvasUpdater->Update(context.Camera->GetTransform()->GetForward(),
+            context.Camera->GetTransform()->GetUp(),
+            context.Camera->GetTransform()->GetRight(),
+            context.Camera->GetFOV());
     }
 
     void WatercolorPostProcessingPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
@@ -69,5 +93,25 @@ namespace Beer::Rendering
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
 
         return dependencies;
+    }
+
+    void WatercolorPostProcessingPass::InitializePaperSlopeMap()
+    {
+        paperSourceTex = std::make_shared<Rendering::Texture2D>("Watercolor/Tex_WatercolorPaper");
+
+        slopeContext = std::make_shared<Rendering::ComputeContext>("Texture/ComputeSlopeMap");
+        slopeContext->SetTexture("_SourceTex", paperSourceTex.get());
+        glm::vec2 texelSize = 1.0f / glm::vec2(paperSourceTex->GetWidth(), paperSourceTex->GetHeight());
+        slopeContext->SetVector("_SourceTexelSize", glm::vec4(texelSize, 0, 0));
+
+        TextureMakeSettings makeSettings{};
+        makeSettings.Width = paperSourceTex->GetWidth();
+        makeSettings.Height = paperSourceTex->GetHeight();
+        makeSettings.KernelIndex = SLOPE_KERNEL;
+
+        paperSlopeMap = std::make_shared<Rendering::Texture2D>(Rendering::Texture2D::Make(makeSettings,
+            slopeContext.get()));
+
+        postProcessingMaterial->SetTexture("_PaperTex", paperSlopeMap.get());
     }
 } // namespace Beer::Rendering

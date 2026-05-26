@@ -18,10 +18,17 @@ namespace Galaxy
     }
 }
 
-BIND_MATERIAL_BUFFER(0) public StructuredBuffer<float4> _DynamicGalaxyObjectPositions;
-BIND_MATERIAL_BUFFER(1) public StructuredBuffer<Galaxy.ObjectData> _GalaxyObjectData;
-BIND_MATERIAL_TEX(2) public Sampler3D<float> _TurbulenceVolume;
-BIND_MATERIAL_TEX(3) public Sampler3D<float> _TremorNoiseVolume;
+BIND_MATERIAL_DATA
+public cbuffer InstanceGlobalData
+{
+    public float _DepthBleedMin;
+    public float _DepthBleedMax;
+}
+
+BIND_MATERIAL_BUFFER(1) public StructuredBuffer<float4> _DynamicGalaxyObjectPositions;
+BIND_MATERIAL_BUFFER(2) public StructuredBuffer<Galaxy.ObjectData> _GalaxyObjectData;
+BIND_MATERIAL_TEX(3) public Sampler3D<float> _TurbulenceVolume;
+BIND_MATERIAL_TEX(4) public Sampler3D<float> _TremorNoiseVolume;
 
 namespace Galaxy
 {
@@ -93,5 +100,15 @@ namespace Galaxy
             1.0f);
 
         return float2(tremorNoise.Solve(0) - 0.5f, tremorNoise.Solve(0.5f) - 0.5f);
+    }
+
+    public float GetColorBleed(float3 positionWS, float3 normalWS)
+    {
+        WC.BleedComputer bleedComputer = WC.BleedComputer(positionWS,
+            normalWS,
+            _DepthBleedMin,
+            _DepthBleedMax);
+
+        return bleedComputer.GetBleedValue();
     }
 }

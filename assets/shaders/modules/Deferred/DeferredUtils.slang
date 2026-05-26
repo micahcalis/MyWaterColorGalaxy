@@ -94,7 +94,6 @@ namespace Deferred
         return oct * 0.5 + 0.5;
     }
 
-
     public float3 DecodeNormalOctahedron(float2 encoded)
     {
         float2 f = encoded * 2.0 - 1.0;

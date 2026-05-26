@@ -47,7 +47,7 @@ namespace Noise
 
         private FractalData GetData()
         {
-            Noise.FractalSolver fractalSolver = Noise.FractalSolver(relativeWorldCoord, fractalScale);
+            Noise.FractalSolver3D fractalSolver = Noise.FractalSolver3D(relativeWorldCoord, fractalScale);
             Noise.FractalData fractalData = fractalSolver.Solve();
             fractalData.LowLevel = max(1, fractalData.LowLevel);
             fractalData.HighLevel = max(1, fractalData.HighLevel);

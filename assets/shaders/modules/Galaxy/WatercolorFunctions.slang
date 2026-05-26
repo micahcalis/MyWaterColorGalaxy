@@ -1,6 +1,8 @@
 #include "Core/BeerMacros.slang"
 
 import Core.BeerCore;
+import Math.PartialDerivative;
+import ColorSpace;
 
 module WatercolorFunctions;
 
@@ -28,7 +30,7 @@ namespace WC
 
     public struct PaperData
     {
-        public float2 Slope;
+        public Math.PartialDerivative Derivative;
         public float Height;
     }
 
@@ -102,6 +104,124 @@ namespace WC
             }
 
             return baseOffset / 5.0f;
+        }
+    }
+
+    public struct PaperGranulator
+    {
+        private float paperInverse;
+        private float3 baseColor;
+        private float granulationIntensity;
+        private float pixelGranulation;
+
+        public __init(float _paperHeight,
+            float3 _baseColor,
+            float _granulationIntensity,
+            float _pixelGranulation)
+        {
+            paperInverse = 1.0f - _paperHeight;
+            baseColor = _baseColor;
+            granulationIntensity = _granulationIntensity;
+            pixelGranulation = _pixelGranulation;
+        }
+
+        public float3 Granulate()
+        {
+            float3 I = baseColor; 
+            float p = 1.0 - paperInverse; 
+            
+            float g = pixelGranulation * granulationIntensity; 
+            float modulatedPiv = p * g; 
+            float3 subtractionMode = I * saturate(I - modulatedPiv);
+            
+            float3 safeI = max(I, 0.0001);
+            float3 transmittanceMode = (1.0 - I) * pow(safeI, 1.0 + modulatedPiv);
+
+            return saturate(subtractionMode + transmittanceMode);
+        }
+    }
+
+    public struct ColorBleeder<TWaterColorProcessingSampler : IWatercolorProcessingSampler>
+    {
+        private TWaterColorProcessingSampler wpSampler;
+        private float colorBleed;
+
+        public __init(TWaterColorProcessingSampler _wpSampler,
+            float _colorBleed)
+        {
+            wpSampler = _wpSampler;
+            colorBleed = _colorBleed;
+        }
+
+        public float3 GetColor(float2 uvOffset)
+        {
+            float3 base = wpSampler.SampleMain(uvOffset).rgb;
+            float3 blur = wpSampler.SampleBlurred(uvOffset).rgb;
+
+            return lerp(base, blur, saturate(colorBleed));
+        }
+    }
+
+    public float2 GetPaperDistortionOffset(Math.PartialDerivative paperDerivative,
+        float paperDistortionIntensity,
+        float pixelDistortion)
+    {
+        return float2(paperDerivative.X, paperDerivative.Y) * paperDistortionIntensity * pixelDistortion;
+    }
+
+    public struct BleedComputer
+    {
+        private float depth;
+        private float3 normalWS;
+        private float3 viewDirWS;
+        private float bleedMin;
+        private float bleedMax;
+
+        public __init(float3 _positionWS,
+            float3 _normalWS,
+            float _bleedMin,
+            float _bleedMax)
+        {
+            float3 viewVector = _positionWS - _CameraPos;
+            depth = length(viewVector);
+            normalWS = _normalWS;
+            viewDirWS = viewVector / max(depth, 0.0001f);
+            bleedMin = _bleedMin;
+            bleedMax = _bleedMax;
+        }
+
+        public float GetBleedValue()
+        {
+            float NdotV = saturate(dot(normalWS, -viewDirWS));
+            float fresnel = 1.0f - smoothstep(0.0f, 1.5f, NdotV * NdotV *  NdotV);
+            float depthGrad = smoothstep(bleedMin, bleedMax, depth);
+
+            return depthGrad * fresnel;
+        }
+    }
+
+    public struct EdgeDarkener<TWaterColorProcessingSampler : IWatercolorProcessingSampler>
+    {
+        private TWaterColorProcessingSampler wpSampler;
+        private float3 bleededColor;
+        private float edgeDarkening;
+
+        public __init(TWaterColorProcessingSampler _wpSampler,
+            float3 _bleededColor,
+            float _edgeDarkening)
+        {
+            wpSampler = _wpSampler;
+            bleededColor = _bleededColor;
+            edgeDarkening = _edgeDarkening;
+        }
+
+        public float3 ComputeEdgeDarkening(float2 offset)
+        {
+            float3 base = wpSampler.SampleMain(offset).rgb;
+            float3 blur = wpSampler.SampleBlurred(offset).rgb;
+            float3 DoG = blur - base;
+            float exponent = 1.0f + edgeDarkening * max(DoG.r, max(DoG.g, DoG.b));
+            return pow(bleededColor, exponent);
         }
     }
 }
