@@ -127,7 +127,9 @@ FRAG float4 WatercolorProcessingFrag(VertexData input) : SV_Target
     
     float2 tremorOffset = tremorOffsetter.GetOffset();
     WC.PaperData data = wcSampler.SamplePaper(0);
-    float2 distortionOffset = WC.GetPaperDistortionOffset(data.Derivative, _PaperDistortionIntensity, 1.0f);
+    WC.WatercolorParams baseParams = wcSampler.SampleParams(tremorOffset);
+
+    float2 distortionOffset = WC.GetPaperDistortionOffset(data.Derivative, _PaperDistortionIntensity, baseParams.PaperDistortion);
     float2 uvOffset = tremorOffset + distortionOffset;
 
     WC.WatercolorParams params = wcSampler.SampleParams(uvOffset);
@@ -141,14 +143,14 @@ FRAG float4 WatercolorProcessingFrag(VertexData input) : SV_Target
     WC.EdgeDarkener<WatercolorProcessingSampler> edgeDarkener = WC.EdgeDarkener<WatercolorProcessingSampler>(
         wcSampler,
         bleededColor,
-        1.0f);
+        params.ColorBleed);
 
     float3 edgeDarkenedColor = edgeDarkener.ComputeEdgeDarkening(uvOffset);
     
     WC.PaperGranulator granulator = WC.PaperGranulator(data.Height,
         edgeDarkenedColor,
         _GranulationIntensity,
-        1);
+        params.PaperGranulation);
 
     float3 granulatedPigment = granulator.Granulate();
     

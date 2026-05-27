@@ -77,10 +77,10 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         2,
         result.Position,
         result.Normal,
-        Noise.Functions.Hash11(input.instanceID, 0),
-        0.2f,
+        _Smoothness,
+        0.0f,
         0,
-        0.5f,
+        0.0f,
         hardness);
 
     Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(

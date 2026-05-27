@@ -21,7 +21,7 @@ namespace Beer::Rendering
     static const float DEPTH_FADE_THRESHOLD = 20.0f;
     static const float PANNING_PERCENTAGE = 10.0f;
     static const float PAPER_TILING = 2.5f;
-    static const float PAPER_DISTORTION_INTENSITY = 0.015f;
+    static const float PAPER_DISTORTION_INTENSITY = 0.02f;
     static const float GRANULATION_INTENSITY = 0.25f;
     static const uint32_t SLOPE_KERNEL = 0;
 

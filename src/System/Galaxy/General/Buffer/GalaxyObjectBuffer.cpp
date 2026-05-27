@@ -16,7 +16,9 @@ namespace Beer::System
     static const float DEPTH_BLEED_MIN = 200.0f;
     static const float DEPTH_BLEED_MAX = 600.0f;
     static const float GRANULATION_NOISE_INTENSITY = 0.2f;
-    static const float HARDNESS = 0.8f;
+    static const float HARDNESS = 0.2f;
+    static const float SMOOTHNESS = 0.5f;
+    static const float WETNESS = 0.8f;
 
     GalaxyObjectBuffer::GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
         GalaxyObjectType type,
@@ -31,6 +33,8 @@ namespace Beer::System
         material->SetFloat("_DepthBleedMax", DEPTH_BLEED_MAX);
         material->SetFloat("_GranulationNoiseIntensity", GRANULATION_NOISE_INTENSITY);
         material->SetFloat("_Hardness", HARDNESS);
+        material->SetFloat("_Smoothness", SMOOTHNESS);
+        material->SetFloat("_Wetness", 1.0f);
 
         mesh = Rendering::Mesh::Get(meshPath);
 
