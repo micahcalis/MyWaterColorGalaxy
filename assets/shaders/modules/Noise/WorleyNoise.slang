@@ -51,4 +51,49 @@ namespace Noise
             return 1.0f - minDist;
         }
     }
+
+    public struct Worley3D
+    {
+        private float3 uvw; 
+        private int seed;
+
+        public __init(float3 _uvw,
+            int _seed)
+        {
+            uvw = _uvw;
+            seed = _seed;
+        }
+
+        public float Compute(float3 frequency = 1)
+        {
+            int3 scale = (int3)frequency;
+            float3 scaledCoord = uvw * scale;
+            int3 floorCoord = (int3)floor(scaledCoord);
+            float3 fracCoord = frac(scaledCoord);
+
+            float minDist = 1e+6f;
+
+            [unroll]
+            for (int z = -1; z <= 1; z++)
+            {
+                [unroll]
+                for (int y = -1; y <= 1; y++)
+                {
+                    [unroll]
+                    for (int x = -1; x <= 1; x++)
+                    {
+                        float3 neighbour = float3(x, y, z);
+                        int3 cellId = floorCoord + int3(x, y, z);
+                        int3 wrappedCellId = (cellId % scale + scale) % scale;
+                        float3 randomPoint = Functions.Hash33(wrappedCellId + seed);
+                        float3 diff = neighbour + randomPoint - fracCoord;
+                        float dist = length(diff);
+                        minDist = min(minDist, dist);
+                    }
+                }
+            }
+
+            return 1.0f - minDist;
+        }
+    }
 }

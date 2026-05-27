@@ -51,7 +51,6 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     {
         discard;
     }
-
     
     SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
     ray = boundingbox.AlignWithBox(ray);
@@ -68,6 +67,11 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     if (!result.Hit)
         discard;
 
+    float hardness = Galaxy.GetScrapeNoise(result.Position, 
+        transformCenter,
+        result.Normal,
+        viewDirWS);
+
     Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(
         materialData.ColorA.rgb, 
         2,
@@ -76,10 +80,12 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         Noise.Functions.Hash11(input.instanceID, 0),
         0.2f,
         0,
-        0.5f);
+        0.5f,
+        hardness);
 
-    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 
-        0, 
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(
+        Galaxy.GetDistortion(), 
+        Galaxy.GetGranulation(result.Position, transformCenter, result.Normal), 
         Galaxy.GetColorBleed(result.Position, result.Normal), 
         Galaxy.GetTurbulence(result.Position, transformCenter), 
         Galaxy.GetTremorNoise(result.Position, transformCenter));

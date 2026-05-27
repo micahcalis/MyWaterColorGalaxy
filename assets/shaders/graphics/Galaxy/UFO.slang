@@ -92,13 +92,14 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
     float glowGradient = SDF.GetGlowGradient(positionOS, _CutoffTime, _GlowThickness);
  
     Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(_SaucerColor.rgb,
-        0,
+        2,
         result.Position,
         result.Normal,
         _SaucerSmoothness,
         _SaucerMetallic,
         _CutoffColor.rgb * glowGradient,
-        0.5f);
+        0.5f,
+        0.0f);
 
     Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
 

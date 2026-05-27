@@ -4,6 +4,9 @@ module GalaxyInstancing;
 
 import Galaxy.WatercolorFunctions;
 import Noise.FractalNoise;
+import Core.BeerCore;
+import Lights;
+import Math.BeerMath;
 
 namespace Galaxy
 {
@@ -21,14 +24,17 @@ namespace Galaxy
 BIND_MATERIAL_DATA
 public cbuffer InstanceGlobalData
 {
+    public float _Smoothness;
+    public float _Wetness;
     public float _DepthBleedMin;
     public float _DepthBleedMax;
+    public float _GranulationNoiseIntensity;
+    public float _Hardness;
 }
 
 BIND_MATERIAL_BUFFER(1) public StructuredBuffer<float4> _DynamicGalaxyObjectPositions;
 BIND_MATERIAL_BUFFER(2) public StructuredBuffer<Galaxy.ObjectData> _GalaxyObjectData;
-BIND_MATERIAL_TEX(3) public Sampler3D<float> _TurbulenceVolume;
-BIND_MATERIAL_TEX(4) public Sampler3D<float> _TremorNoiseVolume;
+BIND_MATERIAL_TEX(3) public Sampler3D<float4> _ControlNoiseVolume;
 
 namespace Galaxy
 {
@@ -68,7 +74,7 @@ namespace Galaxy
     {
         public float Sample(float3 uvw)
         {
-            return _TurbulenceVolume.Sample(uvw);
+            return _ControlNoiseVolume.Sample(uvw).r;
         }
     }
 
@@ -87,7 +93,7 @@ namespace Galaxy
     {
         public float Sample(float3 uvw)
         {
-            return _TremorNoiseVolume.Sample(uvw);
+            return _ControlNoiseVolume.Sample(uvw).g;
         }
     }
 
@@ -110,5 +116,63 @@ namespace Galaxy
             _DepthBleedMax);
 
         return bleedComputer.GetBleedValue();
+    }
+
+    public struct GranulationNoiseSampler : Noise.INoise3DSampler
+    {
+        public float Sample(float3 uvw)
+        {
+            return _ControlNoiseVolume.Sample(uvw).b;      
+        }
+    }
+
+    public float GetGranulation(float3 positionWS, 
+        float3 transformCenter,
+        float3 normalWS)
+    {
+        Noise.FractalNoise<GranulationNoiseSampler> granulationNoise = Noise.FractalNoise<GranulationNoiseSampler>(
+            GranulationNoiseSampler(),
+            positionWS,
+            transformCenter,
+            1.2f);
+
+        float noise = (granulationNoise.Solve() * _GranulationNoiseIntensity) - 0.5f;
+        float3 noiseNormal = normalize(normalWS + noise);
+        Light light = GetMainLight(positionWS);
+        float NdotL = saturate(dot(noiseNormal, light.GetDirection()) * 0.5f + 0.5f);
+
+        return 1.0f - (NdotL * NdotL * NdotL * NdotL) * 0.5f;
+    }
+
+    public float GetDistortion()
+    {
+        return pow(_Wetness, 0.75f) * 0.5f + 0.5f;
+    }
+
+    public struct ScrapeNoiseSampler : Noise.INoise3DSampler
+    {
+        public float Sample(float3 uvw)
+        {
+            return _ControlNoiseVolume.Sample(uvw).a;      
+        }
+    }
+
+    public float GetScrapeNoise(float3 positionWS, 
+        float3 transformCenter,
+        float3 normalWS,
+        float3 viewDirWS)
+    {
+        Noise.FractalNoise<ScrapeNoiseSampler> scrapeNoise = Noise.FractalNoise<ScrapeNoiseSampler>(
+            ScrapeNoiseSampler(),
+            positionWS,
+            transformCenter,
+            0.9f);
+
+        float noise = scrapeNoise.Solve();
+        float threshold = Math.Remap(_Hardness, float2(0, 1), float2(0.6f, 0.45f));
+        float scrape = step(threshold, noise);
+
+        float mask = smoothstep(0.5f, 0.45f, (1.0f - saturate(dot(normalWS, -viewDirWS))));
+        return scrape * mask;
     }
 }

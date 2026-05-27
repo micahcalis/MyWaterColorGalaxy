@@ -75,7 +75,8 @@ FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFa
         0.5f,
         0.2f,
         0,
-        0.5f);
+        0.5f,
+        0.0f);
 
     Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
 

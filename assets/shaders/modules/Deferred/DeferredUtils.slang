@@ -43,6 +43,7 @@ namespace Deferred
         public float metallic;
         public float3 emission;
         public float ambientOcclusion;
+        public float hardness;
 
         public __init(float3 _albedo,
             int _materialIndex,
@@ -51,7 +52,8 @@ namespace Deferred
             float _smoothness,
             float _metallic,
             float3 _emission,
-            float _ambientOcclusion)
+            float _ambientOcclusion,
+            float _hardness)
         {
             albedo = _albedo;
             materialIndex = _materialIndex;
@@ -61,6 +63,7 @@ namespace Deferred
             metallic = _metallic;
             emission = _emission;
             ambientOcclusion = _ambientOcclusion;
+            hardness = _hardness;
         }
     };
 
@@ -144,7 +147,7 @@ namespace Deferred
         {
             frag.albedo = float4(shadeData.albedo, (float)shadeData.materialIndex / (float)(MAT_COUNT - 1));
             frag.normal.rg = EncodeNormalOctahedron(shadeData.normalWS);
-            frag.material = float4(shadeData.smoothness, shadeData.metallic, shadeData.ambientOcclusion, 0);
+            frag.material = float4(shadeData.smoothness, shadeData.metallic, shadeData.ambientOcclusion, shadeData.hardness);
             frag.emission = shadeData.emission;
             frag.depth = WorldPosToDepth(shadeData.positionWS);
         }
@@ -198,7 +201,8 @@ namespace Deferred
                 materialSample.r,
                 materialSample.g,
                 emissionSample.rgb,
-                materialSample.b);
+                materialSample.b,
+                materialSample.a);
         }
 
         public DeferredWatercolorData ReadWatercolor(float2 offset = 0)

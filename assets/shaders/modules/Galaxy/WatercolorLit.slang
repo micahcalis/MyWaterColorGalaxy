@@ -44,18 +44,21 @@ namespace WC
         private Light light;
         private float3 normal;
         private float3 viewDirection;
+        private float hardness = 0;
 
         public __init(WCRDFData _data,
             float3 _albedo,
             Light _light,
             float3 _normal,
-            float3 _viewDirection)
+            float3 _viewDirection,
+            float _hardness)
         {
             data = _data;
             albedo = _albedo;
             light = _light;
             normal = _normal;
             viewDirection = _viewDirection;
+            hardness = _hardness;
         }
 
         public float3 Shade()
@@ -64,7 +67,8 @@ namespace WC
             float3 cangianteColor = GetCangianteColor(area);
             float3 specularColor = GetSpecularColor();
 
-            return cangianteColor + specularColor;
+            float3 wcrdf = cangianteColor + specularColor;
+            return lerp(wcrdf, WCRDFData::CANVAS_COLOR, hardness);
         }
 
         public float GetArea()

@@ -24,10 +24,11 @@ namespace Beer::System
             "Galaxy/Planet",
             "MDL_Cube")};
 
-    static const uint32_t TURBULENCE_RESOLUTION = 256;
-    static const VkFormat TURBULENCE_FORMAT = VK_FORMAT_R16_SFLOAT;
-    static const uint32_t TURBULENCE_KERNEL = 0;
-    static const uint32_t TURBULENCE_GROUPSIZE = 8;
+    static const uint32_t CONTROL_RESOLUTION = 256;
+    static const VkFormat CONTROL_FORMAT = VK_FORMAT_R16G16B16A16_SFLOAT;
+    static const uint32_t CONTROL_KERNEL = 0;
+    static const uint32_t CONTROL_GROUPSIZE = 8;
+
     static const uint32_t TURBULENCE_DEPTH = 3;
     static const uint32_t TURBULENCE_SEED = 8;
     static const float TURBULENCE_FREQUENCY = 8.0f;
@@ -35,16 +36,27 @@ namespace Beer::System
     static const float TURBULENCE_AMPLITUDE_MUL = 0.9f;
     static const float TURBULENCE_EXPONENT = 1.0f;
 
-    static const uint32_t TREMOR_RESOLUTION = 256;
-    static const VkFormat TREMOR_FORMAT = VK_FORMAT_R16_SFLOAT;
-    static const uint32_t TREMOR_KERNEL = 0;
-    static const uint32_t TREMOR_GROUPSIZE = 8;
     static const uint32_t TREMOR_DEPTH = 7;
     static const uint32_t TREMOR_SEED = 45;
     static const float TREMOR_FREQUENCY = 4.0f;
     static const float TREMOR_FREQ_MUL = 1.5f;
     static const float TREMOR_AMPLITUDE_MUL = 0.95f;
     static const float TREMOR_EXPONENT = 1.0f;
+
+    static const uint32_t GRANULATION_DEPTH = 1;
+    static const uint32_t GRANULATION_SEED = 87;
+    static const float GRANULATION_FREQUENCY = 4.0f;
+    static const float GRANULATION_FREQ_MUL = 1.5f;
+    static const float GRANULATION_AMPLITUDE_MUL = 0.95f;
+    static const float GRANULATION_EXPONENT = 1.0f;
+    static const float GRANULATION_NOISEBALANCE = 0.7f;
+
+    static const uint32_t SCRAPE_DEPTH = 3;
+    static const uint32_t SCRAPE_SEED = 15;
+    static const float SCRAPE_FREQUENCY = 8.0f;
+    static const float SCRAPE_FREQ_MUL = 1.5f;
+    static const float SCRAPE_AMPLITUDE_MUL = 1.0f;
+    static const float SCRAPE_EXPONENT = 0.5f;
 
     void GalaxyContainer::CreateBuffers(const SerializableGalaxy& serializedData)
     {
@@ -56,8 +68,7 @@ namespace Beer::System
                 definition.Type,
                 definition.ShaderPath,
                 definition.MeshPath,
-                turbulenceVolume.get(),
-                tremorNoiseVolume.get());
+                controlNoiseVolume.get());
         }
     }
 
@@ -84,46 +95,47 @@ namespace Beer::System
     void GalaxyContainer::CreateNoiseVolumes()
     {
         Rendering::TextureMakeSettings makeSettings{};
-        makeSettings.Width = TURBULENCE_RESOLUTION;
-        makeSettings.Height = TURBULENCE_RESOLUTION;
-        makeSettings.Depth = TURBULENCE_RESOLUTION;
-        makeSettings.Format = TURBULENCE_FORMAT;
-        makeSettings.KernelIndex = TURBULENCE_KERNEL;
-        makeSettings.GroupSizeX = TURBULENCE_GROUPSIZE;
-        makeSettings.GroupSizeY = TURBULENCE_GROUPSIZE;
-        makeSettings.GroupSizeZ = TURBULENCE_GROUPSIZE;
+        makeSettings.Width = CONTROL_RESOLUTION;
+        makeSettings.Height = CONTROL_RESOLUTION;
+        makeSettings.Depth = CONTROL_RESOLUTION;
+        makeSettings.Format = CONTROL_FORMAT;
+        makeSettings.KernelIndex = CONTROL_KERNEL;
+        makeSettings.GroupSizeX = CONTROL_GROUPSIZE;
+        makeSettings.GroupSizeY = CONTROL_GROUPSIZE;
+        makeSettings.GroupSizeZ = CONTROL_GROUPSIZE;
 
-        turbulenceContext = std::make_shared<Rendering::ComputeContext>("Texture/ComputeNoise3D");
-        turbulenceContext->SetInt("_Depth", TURBULENCE_DEPTH);
-        turbulenceContext->SetInt("_Seed", TURBULENCE_SEED);
-        turbulenceContext->SetFloat("_Frequency", TURBULENCE_FREQUENCY);
-        turbulenceContext->SetFloat("_AmplitudeMultiplier", TURBULENCE_AMPLITUDE_MUL);
-        turbulenceContext->SetFloat("_FrequencyMultiplier", TURBULENCE_FREQ_MUL);
-        turbulenceContext->SetFloat("_Exponent", TURBULENCE_EXPONENT);
+        controlNoiseContext = std::make_shared<Rendering::ComputeContext>("Watercolor/ControlNoise");
 
-        turbulenceVolume = std::make_shared<Rendering::Texture3D>(Rendering::Texture3D::Make(
-            makeSettings,
-            turbulenceContext.get()));
+        controlNoiseContext->SetInt("_DepthR", TURBULENCE_DEPTH);
+        controlNoiseContext->SetInt("_SeedR", TURBULENCE_SEED);
+        controlNoiseContext->SetFloat("_FrequencyR", TURBULENCE_FREQUENCY);
+        controlNoiseContext->SetFloat("_AmplitudeMultiplierR", TURBULENCE_AMPLITUDE_MUL);
+        controlNoiseContext->SetFloat("_FrequencyMultiplierR", TURBULENCE_FREQ_MUL);
+        controlNoiseContext->SetFloat("_ExponentR", TURBULENCE_EXPONENT);
 
-        makeSettings.Width = TREMOR_RESOLUTION;
-        makeSettings.Height = TREMOR_RESOLUTION;
-        makeSettings.Depth = TREMOR_RESOLUTION;
-        makeSettings.Format = TREMOR_FORMAT;
-        makeSettings.KernelIndex = TREMOR_KERNEL;
-        makeSettings.GroupSizeX = TREMOR_GROUPSIZE;
-        makeSettings.GroupSizeY = TREMOR_GROUPSIZE;
-        makeSettings.GroupSizeZ = TREMOR_GROUPSIZE;
+        controlNoiseContext->SetInt("_DepthG", TREMOR_DEPTH);
+        controlNoiseContext->SetInt("_SeedG", TREMOR_SEED);
+        controlNoiseContext->SetFloat("_FrequencyG", TREMOR_FREQUENCY);
+        controlNoiseContext->SetFloat("_AmplitudeMultiplierG", TREMOR_AMPLITUDE_MUL);
+        controlNoiseContext->SetFloat("_FrequencyMultiplierG", TREMOR_FREQ_MUL);
+        controlNoiseContext->SetFloat("_ExponentG", TREMOR_EXPONENT);
 
-        tremorNoiseContext = std::make_shared<Rendering::ComputeContext>("Texture/ComputeNoise3D");
-        tremorNoiseContext->SetInt("_Depth", TREMOR_DEPTH);
-        tremorNoiseContext->SetInt("_Seed", TREMOR_SEED);
-        tremorNoiseContext->SetFloat("_Frequency", TREMOR_FREQUENCY);
-        tremorNoiseContext->SetFloat("_AmplitudeMultiplier", TREMOR_AMPLITUDE_MUL);
-        tremorNoiseContext->SetFloat("_FrequencyMultiplier", TREMOR_FREQ_MUL);
-        tremorNoiseContext->SetFloat("_Exponent", TREMOR_EXPONENT);
+        controlNoiseContext->SetInt("_DepthB", GRANULATION_DEPTH);
+        controlNoiseContext->SetInt("_SeedB", GRANULATION_SEED);
+        controlNoiseContext->SetFloat("_FrequencyB", GRANULATION_FREQUENCY);
+        controlNoiseContext->SetFloat("_AmplitudeMultiplierB", GRANULATION_AMPLITUDE_MUL);
+        controlNoiseContext->SetFloat("_FrequencyMultiplierB", GRANULATION_FREQ_MUL);
+        controlNoiseContext->SetFloat("_ExponentB", GRANULATION_EXPONENT);
+        controlNoiseContext->SetFloat("_NoiseBalanceB", GRANULATION_NOISEBALANCE);
 
-        tremorNoiseVolume = std::make_shared<Rendering::Texture3D>(Rendering::Texture3D::Make(
-            makeSettings,
-            tremorNoiseContext.get()));
+        controlNoiseContext->SetInt("_DepthA", SCRAPE_DEPTH);
+        controlNoiseContext->SetInt("_SeedA", SCRAPE_SEED);
+        controlNoiseContext->SetFloat("_FrequencyA", SCRAPE_FREQUENCY);
+        controlNoiseContext->SetFloat("_AmplitudeMultiplierA", SCRAPE_AMPLITUDE_MUL);
+        controlNoiseContext->SetFloat("_FrequencyMultiplierA", SCRAPE_FREQ_MUL);
+        controlNoiseContext->SetFloat("_ExponentA", SCRAPE_EXPONENT);
+
+        controlNoiseVolume = std::make_shared<Rendering::Texture3D>(Rendering::Texture3D::Make(makeSettings,
+            controlNoiseContext.get()));
     }
 } // namespace Beer::System

@@ -65,7 +65,8 @@ FRAG Deferred.FragData DefaultLitFrag(VertexData input)
         _Smoothness,
         _Metallic,
         0,
-        0.5f);
+        0.5f,
+        0.0f);
 
     Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
 

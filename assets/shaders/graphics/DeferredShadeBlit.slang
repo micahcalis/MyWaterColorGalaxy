@@ -135,7 +135,8 @@ FRAG float4 DeferredShadeFrag(VertexData input) : SV_Target
             shadeData.albedo,
             GetMainLight(positionWS),
             shadeData.normalWS,
-            GetViewDirectionWS(positionWS));
+            GetViewDirectionWS(positionWS),
+            shadeData.hardness);
 
         color = wcrdf.Shade() + shadeData.emission;
     }

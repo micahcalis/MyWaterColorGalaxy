@@ -15,20 +15,23 @@ namespace Beer::System
     static const float SPEED_MULTIPLIER = 0.02f;
     static const float DEPTH_BLEED_MIN = 200.0f;
     static const float DEPTH_BLEED_MAX = 600.0f;
+    static const float GRANULATION_NOISE_INTENSITY = 0.2f;
+    static const float HARDNESS = 0.8f;
 
     GalaxyObjectBuffer::GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
         GalaxyObjectType type,
         const char* shaderPath,
         const char* meshPath,
-        Rendering::Texture3D* turbulenceVolume,
-        Rendering::Texture3D* tremorNoiseVolume)
-        : turbulenceVolume(turbulenceVolume), tremorNoiseVolume(tremorNoiseVolume)
+        Rendering::Texture3D* controlNoiseVolume)
+        : controlNoiseVolume(controlNoiseVolume)
     {
         material = std::make_shared<Rendering::Material>(shaderPath);
-        material->SetTexture("_TurbulenceVolume", turbulenceVolume);
-        material->SetTexture("_TremorNoiseVolume", tremorNoiseVolume);
+        material->SetTexture("_ControlNoiseVolume", controlNoiseVolume);
         material->SetFloat("_DepthBleedMin", DEPTH_BLEED_MIN);
         material->SetFloat("_DepthBleedMax", DEPTH_BLEED_MAX);
+        material->SetFloat("_GranulationNoiseIntensity", GRANULATION_NOISE_INTENSITY);
+        material->SetFloat("_Hardness", HARDNESS);
+
         mesh = Rendering::Mesh::Get(meshPath);
 
         std::vector<SerializableGalaxyComponent> components;

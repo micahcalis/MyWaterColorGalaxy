@@ -28,8 +28,7 @@ namespace Beer::System
 
         std::shared_ptr<Rendering::Material> material = nullptr;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;
-        Rendering::Texture3D* turbulenceVolume = nullptr;
-        Rendering::Texture3D* tremorNoiseVolume = nullptr;
+        Rendering::Texture3D* controlNoiseVolume = nullptr;
         uint32_t instanceCount = 0;
         Rendering::ShaderProperty positionBufferProperty{};
         size_t minAligment;
@@ -40,8 +39,7 @@ namespace Beer::System
             GalaxyObjectType type,
             const char* shaderPath,
             const char* meshPath,
-            Rendering::Texture3D* turbulenceVolume,
-            Rendering::Texture3D* tremorNoiseVolume);
+            Rendering::Texture3D* controlNoiseVolume);
 
         void Update();
 
