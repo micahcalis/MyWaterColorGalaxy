@@ -143,7 +143,7 @@ FRAG float4 WatercolorProcessingFrag(VertexData input) : SV_Target
     WC.EdgeDarkener<WatercolorProcessingSampler> edgeDarkener = WC.EdgeDarkener<WatercolorProcessingSampler>(
         wcSampler,
         bleededColor,
-        params.ColorBleed);
+        1.0f);
 
     float3 edgeDarkenedColor = edgeDarkener.ComputeEdgeDarkening(uvOffset);
     
@@ -158,5 +158,5 @@ FRAG float4 WatercolorProcessingFrag(VertexData input) : SV_Target
     float3 cangiante = 0.1f * ((1.0f - data.Height * 0.4f) * (base - granulatedPigment)) + granulatedPigment;
     float3 minColor = granulatedPigment * (1.0f - 0.5f);
 
-     return float4(max(cangiante, minColor), 1);
+    return float4(max(cangiante, minColor), 1);
 }

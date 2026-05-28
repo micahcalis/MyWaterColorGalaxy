@@ -6,6 +6,7 @@ import Deferred.DeferredUtils;
 import SphereTracing;
 import SDF;
 import Galaxy.GalaxyInstancing;
+import Galaxy.GalaxyInstancingGlobals;
 import Galaxy.GalaxySDFs;
 import Noise.Hash;
 import Noise.FractalScale;
@@ -70,7 +71,8 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     float hardness = Galaxy.GetScrapeNoise(result.Position, 
         transformCenter,
         result.Normal,
-        viewDirWS);
+        viewDirWS,
+        _Hardness);
 
     Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(
         materialData.ColorA.rgb, 
@@ -84,9 +86,9 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         hardness);
 
     Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(
-        Galaxy.GetDistortion(), 
-        Galaxy.GetGranulation(result.Position, transformCenter, result.Normal), 
-        Galaxy.GetColorBleed(result.Position, result.Normal), 
+        Galaxy.GetDistortion(_Wetness), 
+        Galaxy.GetGranulation(result.Position, transformCenter, result.Normal, _GranulationNoiseIntensity), 
+        Galaxy.GetColorBleed(result.Position, result.Normal, _DepthBleedMin, _DepthBleedMax), 
         Galaxy.GetTurbulence(result.Position, transformCenter), 
         Galaxy.GetTremorNoise(result.Position, transformCenter));
 

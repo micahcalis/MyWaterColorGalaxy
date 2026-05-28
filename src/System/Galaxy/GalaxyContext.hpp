@@ -26,7 +26,6 @@ namespace Beer::System
 
     private:
         PlayerEntity* playerEntity = nullptr;
-        LightEntity* mainLightEntity = nullptr;
         GalaxyEntity* galaxyEntity = nullptr;
         SunEntity* sunEntity = nullptr;
         StarsEntity* starsEntity = nullptr;
@@ -58,7 +57,6 @@ namespace Beer::System
 
     private:
         void InitializePlayer();
-        void InitializeLight();
         void InitializeGalaxy();
         void InitializeStars();
         void TryLoadMap();

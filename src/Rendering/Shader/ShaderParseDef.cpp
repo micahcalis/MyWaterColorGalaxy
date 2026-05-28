@@ -1,5 +1,6 @@
 #include "Rendering/Shader/ShaderParseDef.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "ShaderPass.hpp"
 #include "vulkan/vulkan.hpp"
 
 namespace Beer::Rendering
@@ -53,34 +54,84 @@ namespace Beer::Rendering
         }
     }
 
-    void ShaderParseDef::GetBlendMode(const nlohmann::basic_json<>& passData,
-        bool& blendOn,
-        vk::BlendFactor& srcBlend,
-        vk::BlendFactor& dstBlend)
+    void ShaderParseDef::GetBlendMode(const nlohmann::basic_json<>& passData, PassSettings& settings)
     {
         std::string toggle = passData.value(std::string(BLEND_TOGGLE), std::string(BLEND_OFF));
-        blendOn = (Hash(toggle) == Hash(BLEND_ON));
+        settings.Blend = (Hash(toggle) == Hash(BLEND_ON));
 
         std::string src = passData.value(std::string(BLEND_SRC_MODE), std::string(BLEND_SRC_ALPHA));
         switch (Hash(src))
         {
-        case Hash(BLEND_ZERO): srcBlend = vk::BlendFactor::eZero; break;
-        case Hash(BLEND_ONE): srcBlend = vk::BlendFactor::eOne; break;
-        case Hash(BLEND_DST_COLOR): srcBlend = vk::BlendFactor::eDstColor; break;
+        case Hash(BLEND_ZERO): settings.SrcBlend = vk::BlendFactor::eZero; break;
+        case Hash(BLEND_ONE): settings.SrcBlend = vk::BlendFactor::eOne; break;
+        case Hash(BLEND_DST_COLOR): settings.SrcBlend = vk::BlendFactor::eDstColor; break;
+        case Hash(BLEND_INV_SRC_ALPHA): settings.SrcBlend = vk::BlendFactor::eOneMinusSrcAlpha; break;
         case Hash(BLEND_SRC_ALPHA):
-        default: srcBlend = vk::BlendFactor::eSrcAlpha; break;
+        default: settings.SrcBlend = vk::BlendFactor::eSrcAlpha; break;
         }
 
         std::string dst = passData.value(std::string(BLEND_DST_MODE), std::string(BLEND_INV_SRC_ALPHA));
         switch (Hash(dst))
         {
-        case Hash(BLEND_ZERO): dstBlend = vk::BlendFactor::eZero; break;
-        case Hash(BLEND_ONE): dstBlend = vk::BlendFactor::eOne; break;
-        case Hash(BLEND_SRC_COLOR): dstBlend = vk::BlendFactor::eSrcColor; break;
+        case Hash(BLEND_ZERO): settings.DstBlend = vk::BlendFactor::eZero; break;
+        case Hash(BLEND_ONE): settings.DstBlend = vk::BlendFactor::eOne; break;
+        case Hash(BLEND_SRC_COLOR): settings.DstBlend = vk::BlendFactor::eSrcColor; break;
+        case Hash(BLEND_SRC_ALPHA): settings.DstBlend = vk::BlendFactor::eSrcAlpha; break;
         case Hash(BLEND_INV_SRC_ALPHA):
-        default: dstBlend = vk::BlendFactor::eOneMinusSrcAlpha; break;
+        default: settings.DstBlend = vk::BlendFactor::eOneMinusSrcAlpha; break;
+        }
+
+        std::string colorOp = passData.value(std::string(COLOR_OP), std::string(OP_ADD));
+        switch (Hash(colorOp))
+        {
+        case Hash(OP_SUBTRACT): settings.ColorOp = vk::BlendOp::eSubtract; break;
+        case Hash(OP_REVERSE_SUBTRACT): settings.ColorOp = vk::BlendOp::eReverseSubtract; break;
+        case Hash(OP_MIN): settings.ColorOp = vk::BlendOp::eMin; break;
+        case Hash(OP_MAX): settings.ColorOp = vk::BlendOp::eMax; break;
+        case Hash(OP_ADD):
+        default: settings.ColorOp = vk::BlendOp::eAdd; break;
+        }
+
+        if (passData.contains(std::string(BLEND_SRC_ALPHA_MODE)) || passData.contains(std::string(BLEND_DST_ALPHA_MODE)) || passData.contains(std::string(ALPHA_OP)))
+        {
+            settings.HasSeparateAlphaBlend = true;
+
+            std::string srcAlpha = passData.value(std::string(BLEND_SRC_ALPHA_MODE), std::string(BLEND_ONE));
+            switch (Hash(srcAlpha))
+            {
+            case Hash(BLEND_ZERO): settings.SrcAlphaBlend = vk::BlendFactor::eZero; break;
+            case Hash(BLEND_SRC_ALPHA): settings.SrcAlphaBlend = vk::BlendFactor::eSrcAlpha; break;
+            case Hash(BLEND_INV_SRC_ALPHA): settings.SrcAlphaBlend = vk::BlendFactor::eOneMinusSrcAlpha; break;
+            case Hash(BLEND_ONE):
+            default: settings.SrcAlphaBlend = vk::BlendFactor::eOne; break;
+            }
+
+            std::string dstAlpha = passData.value(std::string(BLEND_DST_ALPHA_MODE), std::string(BLEND_ZERO));
+            switch (Hash(dstAlpha))
+            {
+            case Hash(BLEND_ONE): settings.DstAlphaBlend = vk::BlendFactor::eOne; break;
+            case Hash(BLEND_SRC_ALPHA): settings.DstAlphaBlend = vk::BlendFactor::eSrcAlpha; break;
+            case Hash(BLEND_INV_SRC_ALPHA): settings.DstAlphaBlend = vk::BlendFactor::eOneMinusSrcAlpha; break;
+            case Hash(BLEND_ZERO):
+            default: settings.DstAlphaBlend = vk::BlendFactor::eZero; break;
+            }
+
+            std::string alphaOp = passData.value(std::string(ALPHA_OP), std::string(OP_ADD));
+            switch (Hash(alphaOp))
+            {
+            case Hash(OP_SUBTRACT): settings.AlphaOp = vk::BlendOp::eSubtract; break;
+            case Hash(OP_REVERSE_SUBTRACT): settings.AlphaOp = vk::BlendOp::eReverseSubtract; break;
+            case Hash(OP_MIN): settings.AlphaOp = vk::BlendOp::eMin; break;
+            case Hash(OP_MAX): settings.AlphaOp = vk::BlendOp::eMax; break;
+            case Hash(OP_ADD):
+            default: settings.AlphaOp = vk::BlendOp::eAdd; break;
+            }
+        } else
+        {
+            settings.HasSeparateAlphaBlend = false;
         }
     }
+
     void ShaderParseDef::GetDepthMode(const nlohmann::basic_json<>& passData,
         bool& depthTestOn,
         bool& depthWriteOn,

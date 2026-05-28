@@ -29,14 +29,15 @@ namespace Beer::System
     {
     private:
         std::unordered_map<GalaxyObjectType, std::unique_ptr<GalaxyObjectBuffer>> bufferMap;
-        // std::shared_ptr<Rendering::ComputeContext> turbulenceContext = nullptr;
-        // std::shared_ptr<Rendering::Texture3D> turbulenceVolume = nullptr;
-        // std::shared_ptr<Rendering::ComputeContext> tremorNoiseContext = nullptr;
-        // std::shared_ptr<Rendering::Texture3D> tremorNoiseVolume = nullptr;
         std::shared_ptr<Rendering::ComputeContext> controlNoiseContext = nullptr;
         std::shared_ptr<Rendering::Texture3D> controlNoiseVolume = nullptr;
 
     public:
+        GalaxyContainer()
+        {
+            CreateNoiseVolumes();
+        }
+
         void CreateBuffers(const SerializableGalaxy& serializedData);
         void Update();
 
@@ -48,6 +49,8 @@ namespace Beer::System
         {
             bufferMap.clear();
         }
+
+        std::shared_ptr<Rendering::Texture3D> GetControlNoiseVolume() const { return controlNoiseVolume; }
 
     private:
         void CreateNoiseVolumes();

@@ -33,6 +33,16 @@ namespace Beer::Rendering
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
 
+        dependencies.AddDependency(PassDependency(std::string(GBUFFER_NORMAL_OFFSET),
+            ResourceAction::ColorWrite,
+            ResetOperator::ClearColor({0, 0, 0.5f, 0.5f}),
+            static_cast<vk::Format>(GBUFFER_NORMAL_OFFSET_FORMAT)));
+
+        dependencies.AddDependency(PassDependency(std::string(GBUFFER_WATERCOLOR),
+            ResourceAction::ColorWrite,
+            ResetOperator::ClearColor({0, 0, 0, 0}),
+            static_cast<vk::Format>(GBUFFER_WATERCOLOR_FORMAT)));
+
         dependencies.AddDependency(PassDependency(std::string(MAIN_DEPTH),
             ResourceAction::DephTestOnly,
             ResetOperator::ClearDepth()));

@@ -23,10 +23,12 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> playerMaterial = nullptr;
         std::shared_ptr<Rendering::Mesh> playerMesh = nullptr;
         BeerEvent<void(bool)>* onSetPhotoMode = nullptr;
+        std::shared_ptr<Rendering::Texture3D> controlNoiseVolume = nullptr;
 
     public:
         PlayerEntity(Function<PlayerInput> getPlayerInput,
             BeerEvent<void(bool)>* onSetPhotoMode,
+            std::shared_ptr<Rendering::Texture3D> controlNoiseVolume,
             Layer layer = Layer::Default);
 
         void Update() override;

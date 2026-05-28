@@ -30,11 +30,17 @@ struct VertexData
 //$ Fragment StarsFrag
 //$ Topology Point
 //$ Cull None
-//$ Blend On
-//$ SrcOp One
-//$ DstOp Alpha
 //$ ZWrite Off
 //$ ZTest On
+
+//$ Blend On
+//$ SrcOp SrcAlpha
+//$ DstOp One
+//$ ColorOp Add
+
+//$ SrcAlphaMode One
+//$ DstAlphaMode One
+//$ AlphaOp Add
 
 VERT VertexData StarsVert(MeshData input, out float pointSize : SV_PointSize)
 {
@@ -56,7 +62,7 @@ VERT VertexData StarsVert(MeshData input, out float pointSize : SV_PointSize)
     return output;
 }
 
-FRAG float4 StarsFrag(VertexData input, float2 pointCoord : SV_PointCoord) : SV_Target
+FRAG Deferred.TransparentFragData StarsFrag(VertexData input, float2 pointCoord : SV_PointCoord)
 {
     float dist = length(pointCoord - float2(0.5f, 0.5f));
 
@@ -68,5 +74,11 @@ FRAG float4 StarsFrag(VertexData input, float2 pointCoord : SV_PointCoord) : SV_
     float nearMask = 1.0f - smoothstep(0.08f, 0.02f, input.normalizedDistance);
     float alpha = pow(1.0f - input.normalizedDistance, 2) * nearMask;
 
-    return alpha * _StarColor;
+    Deferred.TransparentFragData fragData;
+    fragData.color = alpha * _StarColor;
+    fragData.normal = 0;
+    fragData.waterColValues = 0;
+    fragData.depth = Deferred.WorldPosToDepth(input.positionWS);
+
+    return fragData;
 }

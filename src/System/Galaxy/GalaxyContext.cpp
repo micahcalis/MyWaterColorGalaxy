@@ -35,9 +35,8 @@ namespace Beer::System
 
         watercolorSubPipeline = std::make_unique<WatercolorSubPipeline>();
 
-        InitializeLight();
-        InitializePlayer();
         InitializeGalaxy();
+        InitializePlayer();
         InitializeStars();
         TryLoadMap();
 
@@ -77,29 +76,29 @@ namespace Beer::System
 
     void GalaxyContext::InitializePlayer()
     {
-        playerEntity = registry.CreateEntity<PlayerEntity>(getPlayerInput, &OnSetPhotoMode);
-    }
+        if (galaxyEntity == nullptr)
+        {
+            throw std::runtime_error("Trying To Initialize Player when Galaxy is null!");
+        }
 
-    void GalaxyContext::InitializeLight()
-    {
-        Transform lightTransform{};
-        lightTransform.Position = glm::vec3(0, 1000, 100);
-
-        mainLightEntity = registry.CreateEntity<LightEntity>(std::move(lightTransform),
-            10,
-            glm::vec4(1, 1, 0.8, 1),
-            glm::vec4(0.2, 0.23, 0.35, 1),
-            glm::vec4(0.86, 0.98, 1, 1));
+        playerEntity = registry.CreateEntity<PlayerEntity>(getPlayerInput,
+            &OnSetPhotoMode,
+            galaxyEntity->GetContainer()->GetControlNoiseVolume());
     }
 
     void GalaxyContext::InitializeGalaxy()
     {
         galaxyEntity = registry.CreateEntity<GalaxyEntity>();
-        sunEntity = registry.CreateEntity<SunEntity>();
+        sunEntity = registry.CreateEntity<SunEntity>(galaxyEntity->GetContainer()->GetControlNoiseVolume());
     }
 
     void GalaxyContext::InitializeStars()
     {
+        if (galaxyEntity == nullptr)
+        {
+            throw std::runtime_error("Trying To Initialize Stars when Galaxy is null!");
+        }
+
         starsEntity = registry.CreateEntity<StarsEntity>(STAR_COUNT, STAR_BOX_SIZE);
     }
 

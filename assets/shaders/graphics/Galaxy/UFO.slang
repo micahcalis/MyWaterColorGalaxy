@@ -4,6 +4,7 @@ import Core.BeerCore;
 import Core.Beer3D;
 import Deferred.DeferredUtils;
 import SphereTracing;
+import Galaxy.GalaxyInstancing;
 import SDF;
 import Galaxy.UFOSDF;
 import BeerLit;
@@ -20,6 +21,9 @@ cbuffer MaterialData
     float _CutoffTime;
     float4 _CutoffColor;
     float _GlowThickness;
+    float _Hardness;
+    float _Wetness;
+    float _GranulationNoiseIntensity;
 }
 
 struct MeshData
@@ -90,6 +94,12 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
     float3x3 invRotation = (float3x3)transpose(transform.objToWorldDirMat);
     float3 positionOS = mul(invRotation, (result.Position - center) / scale);
     float glowGradient = SDF.GetGlowGradient(positionOS, _CutoffTime, _GlowThickness);
+
+    float hardness = Galaxy.GetScrapeNoise(result.Position, 
+        center,
+        result.Normal,
+        viewDirWS,
+        _Hardness);
  
     Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(_SaucerColor.rgb,
         2,
@@ -99,9 +109,14 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
         _SaucerMetallic,
         _CutoffColor.rgb * glowGradient,
         0.5f,
-        0.0f);
+        hardness);
 
-    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(
+        Galaxy.GetDistortion(_Wetness), 
+        Galaxy.GetGranulation(result.Position, center, result.Normal, _GranulationNoiseIntensity), 
+        Galaxy.GetColorBleed(result.Position, result.Normal, 0, 0.01f), 
+        Galaxy.GetTurbulence(result.Position, center), 
+        Galaxy.GetTremorNoise(result.Position, center));
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
@@ -112,11 +127,17 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
 //$ Vertex CockpitVert
 //$ Fragment CockpitFrag
 //$ Cull None
-//$ Blend On
-//$ SrcOp SrcAlpha
-//$ DstOp InvSrcAlpha
 //$ ZWrite Off
 //$ ZTest On
+
+//$ Blend On
+//$ SrcOp SrcAlpha
+//$ DstOp One
+//$ ColorOp Add
+
+//$ SrcAlphaMode One
+//$ DstAlphaMode One
+//$ AlphaOp Add
 
 VERT VertexData CockpitVert(MeshData input, INSTANCEID)
 {
@@ -177,11 +198,19 @@ FRAG Deferred.TransparentFragData CockpitFrag(VertexData input, bool IsFrontFace
         _CockPitSmoothness,
         _CockPitMetallic);
 
-    float3 lit = brdf.Specular() + brdf.Fresnel();
-    float4 blendCol = float4(lit + gradientCol.rgb, saturate(_CockPitColor.a + glowGradient));
+    float3 lit = brdf.Lambert() + brdf.Specular() + brdf.Fresnel();
+    float alpha = saturate(_CockPitColor.a + glowGradient);
+    float3 blendCol = lit + gradientCol.rgb;
 
     Deferred.TransparentFragData fragData;
-    fragData.color = blendCol;
+    fragData.color = float4(blendCol * alpha, alpha);
+
+    fragData.normal = Deferred.PackTransparentNormalOffsetData(Galaxy.GetTremorNoise(result.Position, center)) * alpha;
+
+    fragData.waterColValues = Deferred.PackTransparentWatercolorData(Galaxy.GetDistortion(_Wetness), 
+        Galaxy.GetGranulation(result.Position, center, result.Normal, _GranulationNoiseIntensity), 
+        Galaxy.GetColorBleed(result.Position, result.Normal, 0, 0.01f)) * alpha;
+
     fragData.depth = Deferred.WorldPosToDepth(result.Position);
 
     return fragData;

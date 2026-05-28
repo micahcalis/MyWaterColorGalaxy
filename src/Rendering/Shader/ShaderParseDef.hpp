@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/Shader/ShaderPassType.hpp"
+#include "ShaderPass.hpp"
 #include "Vendor/nlohmann/json.hpp"
 #include "vulkan/vulkan.hpp"
 #include <string_view>
@@ -52,6 +53,17 @@ namespace Beer::Rendering
         static constexpr std::string_view BLEND_SRC_ALPHA = "SrcAlpha";
         static constexpr std::string_view BLEND_INV_SRC_ALPHA = "InvSrcAlpha";
 
+        static constexpr std::string_view BLEND_SRC_ALPHA_MODE = "SrcAlphaMode";
+        static constexpr std::string_view BLEND_DST_ALPHA_MODE = "DstAlphaMode";
+
+        static constexpr std::string_view COLOR_OP = "ColorOp";
+        static constexpr std::string_view ALPHA_OP = "AlphaOp";
+        static constexpr std::string_view OP_ADD = "Add";
+        static constexpr std::string_view OP_SUBTRACT = "Subtract";
+        static constexpr std::string_view OP_REVERSE_SUBTRACT = "ReverseSubtract";
+        static constexpr std::string_view OP_MIN = "Min";
+        static constexpr std::string_view OP_MAX = "Max";
+
         static constexpr std::string_view DEPTH_TEST_TOGGLE = "ZTest";
         static constexpr std::string_view DEPTH_WRITE_TOGGLE = "ZWrite";
         static constexpr std::string_view DEPTH_ON = "On";
@@ -83,10 +95,7 @@ namespace Beer::Rendering
         static vk::CullModeFlags GetCullMode(const nlohmann::basic_json<>& passData);
         static vk::PrimitiveTopology GetTopologyMode(const nlohmann::basic_json<>& passData);
 
-        static void GetBlendMode(const nlohmann::basic_json<>& passData,
-            bool& blendOn,
-            vk::BlendFactor& srcBlend,
-            vk::BlendFactor& dstBlend);
+        static void GetBlendMode(const nlohmann::basic_json<>& passData, PassSettings& settings);
 
         static void GetDepthMode(const nlohmann::basic_json<>& passData,
             bool& depthTestOn,

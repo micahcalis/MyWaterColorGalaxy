@@ -104,10 +104,7 @@ namespace Beer::Rendering
             passSettings.TopologyMode = ShaderParseDef::GetTopologyMode(passData);
             passSettings.CullMode = ShaderParseDef::GetCullMode(passData);
 
-            ShaderParseDef::GetBlendMode(passData,
-                passSettings.Blend,
-                passSettings.SrcBlend,
-                passSettings.DstBlend);
+            ShaderParseDef::GetBlendMode(passData, passSettings);
 
             ShaderParseDef::GetDepthMode(passData,
                 passSettings.DepthTest,

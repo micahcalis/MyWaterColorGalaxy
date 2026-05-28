@@ -13,6 +13,9 @@ module DeferredUtils;
 #define DEPTH_TARGET      float depth : SV_Depth
 #define COLOR_TARGET      float4 color: SV_Target0
 
+#define TRANSPARENT_NORMAL_OFFSET_TARGET     float4 normal: SV_Target1
+#define TRANSPARENT_WATERCOL_TARGET           float4 waterColValues: SV_Target2
+
 namespace Deferred
 {
     public struct FragData
@@ -28,6 +31,8 @@ namespace Deferred
     public struct TransparentFragData
     {
         public COLOR_TARGET;
+        public TRANSPARENT_NORMAL_OFFSET_TARGET;
+        public TRANSPARENT_WATERCOL_TARGET;
         public DEPTH_TARGET;
     }
 
@@ -221,5 +226,17 @@ namespace Deferred
         {            
             return (int)round(albedoSample.a * (MAT_COUNT - 1));
         }
+    }
+
+    public float4 PackTransparentWatercolorData(float paperDistortion,
+        float paperGranulation,
+        float colorBleed)
+    {
+        return float4(paperDistortion, paperGranulation, colorBleed, 0);
+    }
+
+    public float4 PackTransparentNormalOffsetData(float2 offset)
+    {
+        return float4(0, 0, EncodeUVOffset(offset));
     }
 }

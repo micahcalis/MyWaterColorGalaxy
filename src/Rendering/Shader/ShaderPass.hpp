@@ -18,9 +18,16 @@ namespace Beer::Rendering
         vk::PrimitiveTopology TopologyMode = vk::PrimitiveTopology::eTriangleList;
         vk::CullModeFlags CullMode = vk::CullModeFlagBits::eBack;
 
+        // --- Color Blending ---
         bool Blend = false;
         vk::BlendFactor SrcBlend = vk::BlendFactor::eSrcAlpha;
         vk::BlendFactor DstBlend = vk::BlendFactor::eOneMinusSrcAlpha;
+        vk::BlendOp ColorOp = vk::BlendOp::eAdd;
+
+        bool HasSeparateAlphaBlend = false;
+        vk::BlendFactor SrcAlphaBlend = vk::BlendFactor::eOne;
+        vk::BlendFactor DstAlphaBlend = vk::BlendFactor::eZero;
+        vk::BlendOp AlphaOp = vk::BlendOp::eAdd;
 
         bool DepthTest = true;
         bool DepthWrite = true;

@@ -60,8 +60,6 @@ namespace Beer::System
 
     void GalaxyContainer::CreateBuffers(const SerializableGalaxy& serializedData)
     {
-        CreateNoiseVolumes();
-
         for (const auto& definition : DEFINITIONS)
         {
             bufferMap[definition.Type] = std::make_unique<GalaxyObjectBuffer>(serializedData,

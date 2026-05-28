@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Rendering/Texture/Texture3D.hpp"
 #include "System/Components/Registry/GameEntity.hpp"
 #include "System/Light/PointLight.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -12,10 +14,12 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> sunMaterial = nullptr;
         std::shared_ptr<Rendering::Mesh> sunMesh = nullptr;
         std::unique_ptr<PointLight> pointLight = nullptr;
+        std::shared_ptr<Rendering::Texture3D> controlNoiseVolume = nullptr;
 
     public:
-        SunEntity()
-            : GameEntity()
+        SunEntity(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume)
+            : controlNoiseVolume(controlNoiseVolume)
+            , GameEntity()
         {
         }
 
