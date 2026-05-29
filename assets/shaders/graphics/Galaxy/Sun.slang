@@ -89,8 +89,8 @@ FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFa
         Galaxy.GetDistortion(_Wetness), 
         Galaxy.GetGranulation(result.Position, transformCenter, result.Normal, _GranulationNoiseIntensity), 
         Galaxy.GetColorBleed(result.Position, result.Normal, _DepthBleedMin, _DepthBleedMax), 
-        Galaxy.GetTurbulence(result.Position, transformCenter), 
-        Galaxy.GetTremorNoise(result.Position, transformCenter));
+        Galaxy.GetTurbulence(result.Position, transformCenter, 0), 
+        Galaxy.GetTremorNoise(result.Position, transformCenter, 0));
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 

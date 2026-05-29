@@ -41,10 +41,8 @@ namespace Blur
         }
         public float4 GetBlurredColor()
         {
-            // 1. Calculate the proper Gaussian weight for the center pixel
             float centerGaussWeight = Functions.GaussWeight(0, blurSpread);
 
-            // 2. Initialize with the weighted center pixel
             float4 colorSum = colorSampler.Sample(0) * centerGaussWeight;
             float weightSum = centerGaussWeight;
             
@@ -63,8 +61,6 @@ namespace Blur
 
                 float depthSample = depthSampler.SampleLinear(offset * (float)i);
                 
-                // At edges (high diff), depthWeight -> 1 (Normal Blur)
-                // On flats (low diff), depthWeight -> 0 (No Blur from neighbors)
                 float depthWeight = smoothstep(0, depthThreshold, abs(baseDepth - depthSample));
 
                 float weight = gaussWeight * depthWeight;

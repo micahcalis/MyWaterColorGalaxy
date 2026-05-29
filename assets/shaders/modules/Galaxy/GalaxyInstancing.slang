@@ -7,6 +7,7 @@ import Noise.FractalNoise;
 import Core.BeerCore;
 import Lights;
 import Math.BeerMath;
+import NOise.Hash;
 
 namespace Galaxy
 {
@@ -61,16 +62,29 @@ namespace Galaxy
 
     public struct TurbulenceNoiseSampler : Noise.INoise3DSampler
     {
+        private float3 offset;
+
+        public __init(uint instanceID)
+        {
+            offset = float3(Noise.Functions.Hash11(instanceID, 23),
+                Noise.Functions.Hash11(instanceID, 86),
+                Noise.Functions.Hash11(instanceID, 654));
+
+            offset = offset * 2.0f - 1.0f;
+        }
+
         public float Sample(float3 uvw)
         {
-            return _ControlNoiseVolume.Sample(uvw).r;
+            return _ControlNoiseVolume.Sample(uvw + offset).r;
         }
     }
 
-    public float GetTurbulence(float3 positionWS, float3 transformCenter)
+    public float GetTurbulence(float3 positionWS, 
+        float3 transformCenter,
+        uint instanceID)
     {
         Noise.FractalNoise<TurbulenceNoiseSampler> turbulenceNoise = Noise.FractalNoise<TurbulenceNoiseSampler>(
-            TurbulenceNoiseSampler(),
+            TurbulenceNoiseSampler(instanceID),
             positionWS,
             transformCenter,
             1.0f);
@@ -80,16 +94,29 @@ namespace Galaxy
 
     public struct TremorNoiseSampler : Noise.INoise3DSampler
     {
+        private float3 offset;
+
+        public __init(uint instanceID)
+        {
+            offset = float3(Noise.Functions.Hash11(instanceID, 753),
+                Noise.Functions.Hash11(instanceID, 77),
+                Noise.Functions.Hash11(instanceID, 4));
+
+            offset = offset * 2.0f - 1.0f;
+        }
+        
         public float Sample(float3 uvw)
         {
-            return _ControlNoiseVolume.Sample(uvw).g;
+            return _ControlNoiseVolume.Sample(uvw + offset).g;
         }
     }
 
-    public float2 GetTremorNoise(float3 positionWS, float3 transformCenter)
+    public float2 GetTremorNoise(float3 positionWS, 
+        float3 transformCenter,
+        uint instanceID)
     {
         Noise.FractalNoise<TremorNoiseSampler> tremorNoise = Noise.FractalNoise<TremorNoiseSampler>(
-            TremorNoiseSampler(),
+            TremorNoiseSampler(instanceID),
             positionWS,
             transformCenter,
             1.0f);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GalaxyBufferSettings.hpp"
 #include "GalaxyDataObject.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Material/Material.hpp"
@@ -21,6 +22,7 @@ namespace Beer::System
         static constexpr float GALAXY_SIZE_SCALE = 200.0f;
 
     private:
+        std::shared_ptr<IGalaxyBufferSettings> settings = nullptr;
         std::shared_ptr<Rendering::PhaseBuffer> dataBuffer = nullptr;
         std::shared_ptr<Rendering::PhaseBuffer> positionBuffer;
         std::vector<OrbitComponent> orbitComponents;
@@ -39,7 +41,8 @@ namespace Beer::System
             GalaxyObjectType type,
             const char* shaderPath,
             const char* meshPath,
-            Rendering::Texture3D* controlNoiseVolume);
+            Rendering::Texture3D* controlNoiseVolume,
+            std::shared_ptr<IGalaxyBufferSettings> settings);
 
         void Update();
 

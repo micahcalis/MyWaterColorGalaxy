@@ -8,6 +8,9 @@ import Galaxy.GalaxyInstancing;
 import SDF;
 import Galaxy.UFOSDF;
 import BeerLit;
+import Galaxy.WatercolorLit;
+import Lights;
+import ColorSpace;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -115,8 +118,8 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
         Galaxy.GetDistortion(_Wetness), 
         Galaxy.GetGranulation(result.Position, center, result.Normal, _GranulationNoiseIntensity), 
         Galaxy.GetColorBleed(result.Position, result.Normal, 1000, 10000), 
-        Galaxy.GetTurbulence(result.Position, center), 
-        Galaxy.GetTremorNoise(result.Position, center));
+        Galaxy.GetTurbulence(result.Position, center, 0), 
+        Galaxy.GetTremorNoise(result.Position, center, 0));
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
@@ -191,21 +194,40 @@ FRAG Deferred.TransparentFragData CockpitFrag(VertexData input, bool IsFrontFace
     float glowGradient = SDF.GetGlowGradient(positionOS, _CutoffTime, _GlowThickness);
     float4 gradientCol = glowGradient * _CutoffColor;
 
-    Lit.BRDF brdf = Lit.BRDF(GetMainLight(result.Position), 
+    Light light = GetMainLight(result.Position);
+
+    Lit.BRDF brdf = Lit.BRDF(light, 
         viewDirWS,
         result.Normal, 
         _CockPitColor.rgb, 
         _CockPitSmoothness,
         _CockPitMetallic);
 
-    float3 lit = brdf.Lambert() + brdf.Specular() + brdf.Fresnel();
+
+    WC.WCRDFData wcrdfData = WC.WCRDFData(0,
+        0,
+        0,
+        _CockPitSmoothness,
+        0,
+        0,
+        0);
+    
+    WC.WCRDF wcrdf = WC.WCRDF(wcrdfData,
+        _CockPitColor.rgb,
+        light,
+        result.Normal,
+        viewDirWS,
+        0);
+
+    float3 specular = wcrdf.GetSpecularColor();
+    float3 lit = brdf.Lambert() + specular + brdf.Fresnel();
     float alpha = saturate(_CockPitColor.a + glowGradient);
     float3 blendCol = lit + gradientCol.rgb;
 
     Deferred.TransparentFragData fragData;
     fragData.color = float4(blendCol * alpha, alpha);
 
-    fragData.normal = Deferred.PackTransparentNormalOffsetData(Galaxy.GetTremorNoise(result.Position, center)) * alpha;
+    fragData.normal = Deferred.PackTransparentNormalOffsetData(Galaxy.GetTremorNoise(result.Position, center, 0)) * alpha;
 
     fragData.waterColValues = Deferred.PackTransparentWatercolorData(Galaxy.GetDistortion(_Wetness), 
         Galaxy.GetGranulation(result.Position, center, result.Normal, _GranulationNoiseIntensity), 

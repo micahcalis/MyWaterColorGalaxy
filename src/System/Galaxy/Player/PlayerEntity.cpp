@@ -8,7 +8,7 @@
 
 namespace Beer::System
 {
-    static const glm::vec4 SAUCER_COLOR = glm::vec4(0.75f, 0.0f, 0.0f, 1);
+    static const glm::vec4 SAUCER_COLOR = glm::vec4(0.75f, 0.2f, 0.2f, 1);
     static const float SAUCER_METALLIC = 1.0f;
     static const float SAUCER_SMOOTH = 0.8f;
     static const glm::vec4 COCKPIT_COLOR = glm::vec4(1.0f, 1.0f, 0.6f, 0.5f);

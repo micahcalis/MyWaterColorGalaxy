@@ -1,4 +1,5 @@
 #include "System/Galaxy/General/GalaxyContainer.hpp"
+#include "Buffer/GalaxyBufferSettings.hpp"
 #include "Buffer/GalaxyObjectBuffer.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Texture/Texture3D.hpp"
@@ -10,19 +11,54 @@ namespace Beer::System
     static const std::array<GalaxyBufferDefinition, 5> DEFINITIONS = {
         GalaxyBufferDefinition(GalaxyObjectType::Planet,
             "Galaxy/Planet",
-            "MDL_Cube"),
+            "MDL_Cube",
+            std::make_shared<UnimplementedBufferSettings>(0.02f,
+                200.0f,
+                600.0f,
+                0.2f,
+                0.2f,
+                0.0f,
+                0.8f)),
         GalaxyBufferDefinition(GalaxyObjectType::Asteroids,
             "Galaxy/Planet",
-            "MDL_Cube"),
+            "MDL_Cube",
+            std::make_shared<UnimplementedBufferSettings>(0.02f,
+                200.0f,
+                600.0f,
+                0.2f,
+                0.2f,
+                0.5f,
+                0.8f)),
         GalaxyBufferDefinition(GalaxyObjectType::SpaceGoo,
             "Galaxy/Planet",
-            "MDL_Cube"),
+            "MDL_Cube",
+            std::make_shared<UnimplementedBufferSettings>(0.02f,
+                200.0f,
+                600.0f,
+                0.2f,
+                0.2f,
+                0.8f,
+                0.8f)),
         GalaxyBufferDefinition(GalaxyObjectType::BlackHole,
             "Galaxy/Planet",
-            "MDL_Cube"),
+            "MDL_Cube",
+            std::make_shared<UnimplementedBufferSettings>(0.02f,
+                200.0f,
+                600.0f,
+                0.2f,
+                0.2f,
+                0.0f,
+                0.8f)),
         GalaxyBufferDefinition(GalaxyObjectType::StarDust,
             "Galaxy/Planet",
-            "MDL_Cube")};
+            "MDL_Cube",
+            std::make_shared<UnimplementedBufferSettings>(0.02f,
+                200.0f,
+                600.0f,
+                0.2f,
+                0.2f,
+                0.5f,
+                0.8f))};
 
     static const uint32_t CONTROL_RESOLUTION = 256;
     static const VkFormat CONTROL_FORMAT = VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -66,7 +102,8 @@ namespace Beer::System
                 definition.Type,
                 definition.ShaderPath,
                 definition.MeshPath,
-                controlNoiseVolume.get());
+                controlNoiseVolume.get(),
+                definition.Settings);
         }
     }
 

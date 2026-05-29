@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Buffer/GalaxyBufferSettings.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Texture/Texture3D.hpp"
 #include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
@@ -15,12 +16,14 @@ namespace Beer::System
         const GalaxyObjectType Type;
         const char* ShaderPath;
         const char* MeshPath;
+        std::shared_ptr<IGalaxyBufferSettings> Settings = nullptr;
 
     public:
         GalaxyBufferDefinition(const GalaxyObjectType type,
             const char* shaderPath,
-            const char* meshPath)
-            : Type(type), ShaderPath(shaderPath), MeshPath(meshPath)
+            const char* meshPath,
+            const std::shared_ptr<IGalaxyBufferSettings> settings)
+            : Type(type), ShaderPath(shaderPath), MeshPath(meshPath), Settings(settings)
         {
         }
     };

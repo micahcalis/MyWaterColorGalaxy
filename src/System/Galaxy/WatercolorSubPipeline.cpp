@@ -14,7 +14,7 @@ namespace Beer::System
     static const float BLUR_SPREAD = 20.0f;
 
     static const uint32_t EDGE_BLUR_DEPTH = 5;
-    static const float EDGE_BLUR_SPREAD = 10.0f;
+    static const float EDGE_BLUR_SPREAD = 20.0f;
     static const float EDGE_DEPTH_THRESHOLD = 10.0f;
 
     WatercolorSubPipeline::WatercolorSubPipeline()

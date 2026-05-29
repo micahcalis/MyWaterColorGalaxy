@@ -89,8 +89,8 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         Galaxy.GetDistortion(_Wetness), 
         Galaxy.GetGranulation(result.Position, transformCenter, result.Normal, _GranulationNoiseIntensity), 
         Galaxy.GetColorBleed(result.Position, result.Normal, _DepthBleedMin, _DepthBleedMax), 
-        Galaxy.GetTurbulence(result.Position, transformCenter), 
-        Galaxy.GetTremorNoise(result.Position, transformCenter));
+        Galaxy.GetTurbulence(result.Position, transformCenter, input.instanceID), 
+        Galaxy.GetTremorNoise(result.Position, transformCenter, input.instanceID));
 
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 

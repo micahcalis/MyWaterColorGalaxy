@@ -49,7 +49,7 @@ FRAG Deferred.SkyboxFragData GalaxySkyboxFrag(VertexData input)
     Deferred.SkyboxFragData fragData;
     fragData.color = float4(_SkyboxColor.rgb, 1);
 
-    fragData.normal = Deferred.PackTransparentNormalOffsetData(Galaxy.GetTremorNoise(input.positionWS, GetTransformCenter(transform.objToWorldMat)) * 0.3f);
+    fragData.normal = Deferred.PackTransparentNormalOffsetData(Galaxy.GetTremorNoise(input.positionWS, GetTransformCenter(transform.objToWorldMat), 0) * 0.3f);
 
     fragData.waterColValues = Deferred.PackTransparentWatercolorData(Galaxy.GetDistortion(_Wetness), 
         _GranulationNoiseIntensity, 

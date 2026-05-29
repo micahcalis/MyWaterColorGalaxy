@@ -44,7 +44,7 @@ namespace WC
         private Light light;
         private float3 normal;
         private float3 viewDirection;
-        private float hardness = 0;
+        private float hardness;
 
         public __init(WCRDFData _data,
             float3 _albedo,
