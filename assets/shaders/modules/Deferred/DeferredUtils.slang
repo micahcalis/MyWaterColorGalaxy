@@ -36,6 +36,13 @@ namespace Deferred
         public DEPTH_TARGET;
     }
 
+    public struct SkyboxFragData
+    {
+        public COLOR_TARGET;
+        public TRANSPARENT_NORMAL_OFFSET_TARGET;
+        public TRANSPARENT_WATERCOL_TARGET;
+    }
+
     static int MAT_COUNT = 3;
 
     public struct DeferredShadeData

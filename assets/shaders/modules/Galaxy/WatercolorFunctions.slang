@@ -219,7 +219,7 @@ namespace WC
         {
             float3 base = wpSampler.SampleMain(offset).rgb;
             float3 blur = wpSampler.SampleBlurred(offset).rgb;
-            float3 DoG = blur - base;
+            float3 DoG = base - blur;
             float exponent = 1.0f + edgeDarkening * max(DoG.r, max(DoG.g, DoG.b));
             return pow(bleededColor, exponent);
         }

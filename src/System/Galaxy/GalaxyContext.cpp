@@ -21,23 +21,10 @@ namespace Beer::System
 
     void GalaxyContext::Load()
     {
-        opaquePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawOpaquePass>(
-            std::string(Rendering::OPAQUE_PASS));
-
-        skyboxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawSkyboxPass>(
-            std::string(Rendering::SKYBOX_PASS));
-
-        deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
-            std::string(Rendering::DEFERRED_SHADE_PASS));
-
-        transparentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawTransparentPass>(
-            std::string(Rendering::TRANSPARENT_PASS));
-
-        watercolorSubPipeline = std::make_unique<WatercolorSubPipeline>();
-
         InitializeGalaxy();
         InitializePlayer();
         InitializeStars();
+        InitializeRenderPasses();
         TryLoadMap();
 
         Cursor::SetCursorMode(CursorMode::Locked);
@@ -100,6 +87,29 @@ namespace Beer::System
         }
 
         starsEntity = registry.CreateEntity<StarsEntity>(STAR_COUNT, STAR_BOX_SIZE);
+    }
+
+    void GalaxyContext::InitializeRenderPasses()
+    {
+        if (galaxyEntity == nullptr)
+        {
+            throw std::runtime_error("Trying To Initialize Render Passes when Galaxy is null!");
+        }
+
+        opaquePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawOpaquePass>(
+            std::string(Rendering::OPAQUE_PASS));
+
+        skyboxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawSkyboxPass>(
+            std::string(Rendering::SKYBOX_PASS),
+            galaxyEntity->GetContainer()->GetControlNoiseVolume());
+
+        deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
+            std::string(Rendering::DEFERRED_SHADE_PASS));
+
+        transparentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawTransparentPass>(
+            std::string(Rendering::TRANSPARENT_PASS));
+
+        watercolorSubPipeline = std::make_unique<WatercolorSubPipeline>();
     }
 
     void GalaxyContext::TryLoadMap()

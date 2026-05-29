@@ -27,7 +27,7 @@ namespace Beer::Rendering
 
     WatercolorPostProcessingPass::WatercolorPostProcessingPass(WatercolorProcessingBuffers* processingBuffers)
         : processingBuffers(processingBuffers)
-        , IRenderPass("Watercolor Post Processing", static_cast<uint32_t>(RenderPassEvent::WATERCOLOR) + 4)
+        , IRenderPass("Watercolor Post Processing", static_cast<uint32_t>(RenderPassEvent::WATERCOLOR) + 6)
     {
         postProcessingMaterial = std::make_shared<Rendering::Material>("Galaxy/WatercolorProcessing");
         postProcessingMaterial->SetFloat("_TremorOffsetIntensity", TREMOR_OFFSET_INTENSITY);

@@ -59,6 +59,7 @@ namespace Beer::System
         void InitializePlayer();
         void InitializeGalaxy();
         void InitializeStars();
+        void InitializeRenderPasses();
         void TryLoadMap();
         void HandleReturn();
     };

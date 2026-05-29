@@ -114,7 +114,7 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
     Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(
         Galaxy.GetDistortion(_Wetness), 
         Galaxy.GetGranulation(result.Position, center, result.Normal, _GranulationNoiseIntensity), 
-        Galaxy.GetColorBleed(result.Position, result.Normal, 0, 0.01f), 
+        Galaxy.GetColorBleed(result.Position, result.Normal, 1000, 10000), 
         Galaxy.GetTurbulence(result.Position, center), 
         Galaxy.GetTremorNoise(result.Position, center));
 

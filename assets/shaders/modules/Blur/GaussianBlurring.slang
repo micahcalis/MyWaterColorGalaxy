@@ -45,7 +45,7 @@ namespace Blur
 
             for (int i = -blurResolution; i <= blurResolution; i++)
             {
-                float gaussWeight = GaussWeight(i, blurSpread);
+                float gaussWeight = Functions.GaussWeight(i, blurSpread);
                 float4 sample = colorSampler.Sample(offset * (float)i);
 
                 colorSum += sample * gaussWeight;
@@ -54,8 +54,11 @@ namespace Blur
 
             return colorSum / weightSum;
         }
+    }
 
-        public static float GaussWeight(float offset, float spread)
+    namespace Functions
+    {
+        public float GaussWeight(float offset, float spread)
         {
             float x = offset;
             float sigmaSqu = spread * spread;

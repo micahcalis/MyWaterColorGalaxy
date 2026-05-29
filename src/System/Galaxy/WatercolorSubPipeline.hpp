@@ -2,6 +2,7 @@
 
 #include "Rendering/RenderPasses/Watercolor/BlitMainColorPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/GaussianBlurPass.hpp"
+#include "Rendering/RenderPasses/Watercolor/OffsetEdgeBlurPass.hpp"
 #include "System/Components/General/ISubRenderPipeline.hpp"
 #include <memory>
 #include "Rendering/RenderPasses/Watercolor/WatercolorPostProcessingPass.hpp"
@@ -15,6 +16,8 @@ namespace Beer::System
         Rendering::BlitMainColorPass* waterColorLowerResBlitPass = nullptr;
         Rendering::GaussianBlurPass* blurHorizontalPass = nullptr;
         Rendering::GaussianBlurPass* blurVerticalPass = nullptr;
+        Rendering::OffsetEdgeBlurPass* edgeBlurHorizontalPass = nullptr;
+        Rendering::OffsetEdgeBlurPass* edgeBlurVerticalPass = nullptr;
         Rendering::WatercolorPostProcessingPass* watercolorPostProcessingPass = nullptr;
 
     public:

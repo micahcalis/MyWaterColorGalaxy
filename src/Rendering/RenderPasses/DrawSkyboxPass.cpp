@@ -8,17 +8,23 @@
 
 namespace Beer::Rendering
 {
-    DrawSkyboxPass::DrawSkyboxPass()
-        : IRenderPass("Skybox", RenderPassEvent::SKYBOX)
+    static const glm::vec4 SKYBOX_COLOR = glm::vec4(0, 0, 0, 1);
+    static const float GRANULATION_NOISE_INTENSITY = 0.5f;
+    static const float WETNESS = 0.0f;
+
+    DrawSkyboxPass::DrawSkyboxPass(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume)
+        : controlNoiseVolume(controlNoiseVolume)
+        , IRenderPass("Skybox", RenderPassEvent::SKYBOX)
     {
-        auto skyboxShader = Shader::Get("DefaultSkybox");
+        auto skyboxShader = Shader::Get("Galaxy/GalaxySkybox");
         skyboxMaterial = std::make_shared<Rendering::Material>(skyboxShader);
         cubeMesh = Mesh::Get("MDL_Cube");
         skyboxTransform.Scale = glm::vec3(800, 800, 800);
 
-        skyboxMaterial->SetFloat("_GradientExponentTop", 0.9f);
-        skyboxMaterial->SetFloat("_GradientExponentBot", 2);
-        skyboxMaterial->SetFloat("_SunSize", 0.001f);
+        skyboxMaterial->SetColor("_SkyboxColor", SKYBOX_COLOR);
+        skyboxMaterial->SetFloat("_GranulationNoiseIntensity", GRANULATION_NOISE_INTENSITY);
+        skyboxMaterial->SetFloat("_Wetness", WETNESS);
+        skyboxMaterial->SetTexture("_ControlNoiseVolume", controlNoiseVolume.get());
     }
 
     void DrawSkyboxPass::OnRenderSetup(const RenderContext& context)
@@ -47,6 +53,16 @@ namespace Beer::Rendering
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
+
+        dependencies.AddDependency(PassDependency(std::string(GBUFFER_NORMAL_OFFSET),
+            ResourceAction::ColorWrite,
+            ResetOperator::ClearColor({0, 0, 0.5f, 0.5f}),
+            static_cast<vk::Format>(GBUFFER_NORMAL_OFFSET_FORMAT)));
+
+        dependencies.AddDependency(PassDependency(std::string(GBUFFER_WATERCOLOR),
+            ResourceAction::ColorWrite,
+            ResetOperator::ClearColor({0, 0, 0, 0}),
+            static_cast<vk::Format>(GBUFFER_WATERCOLOR_FORMAT)));
 
         return dependencies;
     }

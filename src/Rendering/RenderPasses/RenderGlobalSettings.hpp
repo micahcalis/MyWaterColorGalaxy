@@ -15,6 +15,7 @@ namespace Beer::Rendering
     static const std::string MAIN_COLOR_B = "MainColorB";
     static const std::string MAIN_DEPTH = "MainDepth";
     static const std::string GBUFFER_NORMAL_OFFSET = "GBufferNormalOffset";
+    static const std::string GBUFFER_NORMAL_OFFSET_PONG = "GBufferNormalOffsetPong";
     static const std::string GBUFFER_ALBEDO = "GBufferAlbedo";
     static const std::string GBUFFER_MAT = "GBufferMaterial";
     static const std::string GBUFFER_EMISSION = "GBufferEmission";
@@ -35,6 +36,8 @@ namespace Beer::Rendering
     static const std::string WC_BLIT_PASS = "WatercolorBlit";
     static const std::string WC_BLUR_PASS_A = "WatercolorBlurA";
     static const std::string WC_BLUR_PASS_B = "WatercolorBlurB";
+    static const std::string WC_EDGE_BLUR_PASS_A = "EdgeBlurA";
+    static const std::string WC_EDGE_BLUR_PASS_B = "EdgeBlurB";
 
     constexpr static uint32_t TRANSFORM_BUFFER_COUNT = 100'000;
     constexpr std::string_view TRANSFORM_BUFFER_NAME = "TransformInstancingBuffer";
