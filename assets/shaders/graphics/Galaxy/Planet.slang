@@ -6,6 +6,10 @@ import Deferred.DeferredUtils;
 import SphereTracing;
 import SDF;
 import Galaxy.GalaxyInstancing;
+import Galaxy.GalaxyInstancingGlobals;
+import Galaxy.GalaxySDFs;
+import Noise.Hash;
+import Noise.FractalScale;
 
 struct MeshData
 {
@@ -29,7 +33,7 @@ struct VertexData
 VERT VertexData PlanetVert(MeshData input, INSTANCEID)
 {
     VertexData output;
-    output.positionWS = Galaxy.ToWorldSpace(input.positionOS, instanceID);
+    output.positionWS = Galaxy.ToWorldSpaceBloated(input.positionOS, instanceID, 1.0f);
     output.positionCS = mul(_ViewProjMat, float4(output.positionWS, 1));
     output.instanceID = instanceID;
     return output;
@@ -37,9 +41,9 @@ VERT VertexData PlanetVert(MeshData input, INSTANCEID)
 
 FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
-    Galaxy.ObjectData materialData = _GalaxyObjectData[input.instanceID];
-    float transformScale = materialData.Scale;
-    float3 transformCenter = _DynamicGalaxyObjectPositions[input.instanceID].xyz;
+    Galaxy.ObjectData materialData = Galaxy.GetMaterialData(input.instanceID);
+    float3 transformCenter = Galaxy.GetTransformCenter(input.instanceID);
+    float transformScale = Galaxy.GetBloatedScale(materialData.Scale, transformCenter, 1.0f);
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
 
     SphereTracing.AABB boundingbox = SphereTracing.AABB(transformCenter, transformScale * 2);
@@ -48,13 +52,14 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     {
         discard;
     }
-
+    
     SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
     ray = boundingbox.AlignWithBox(ray);
 
-    SDF.Sphere planetSDF = SDF.Sphere(transformCenter, transformScale * 0.8f);
+    Galaxy.Planet planetSDF = Galaxy.Planet(transformCenter, 
+        materialData.Scale);
 
-    SphereTracing.SphereTracer<SDF.Sphere> tracer = SphereTracing.SphereTracer<SDF.Sphere>(
+    SphereTracing.SphereTracer<Galaxy.Planet> tracer = SphereTracing.SphereTracer<Galaxy.Planet>(
         planetSDF,
         ray);
 
@@ -63,16 +68,31 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     if (!result.Hit)
         discard;
 
-    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(materialData.ColorA.rgb,
-        0,
+    float hardness = Galaxy.GetScrapeNoise(result.Position, 
+        transformCenter,
+        result.Normal,
+        viewDirWS,
+        _Hardness);
+
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(
+        materialData.ColorA.rgb, 
+        2,
         result.Position,
         result.Normal,
-        0.5f,
-        0.2f,
+        _Smoothness,
+        0.0f,
         0,
-        0.5f);
+        0.0f,
+        hardness);
 
-    Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(
+        Galaxy.GetDistortion(_Wetness), 
+        Galaxy.GetGranulation(result.Position, transformCenter, result.Normal, _GranulationNoiseIntensity), 
+        Galaxy.GetColorBleed(result.Position, result.Normal, _DepthBleedMin, _DepthBleedMax), 
+        Galaxy.GetTurbulence(result.Position, transformCenter, input.instanceID), 
+        Galaxy.GetTremorNoise(result.Position, transformCenter, input.instanceID));
+
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();
 }

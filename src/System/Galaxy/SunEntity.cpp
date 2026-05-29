@@ -8,10 +8,24 @@
 
 namespace Beer::System
 {
+    static const float SMOOTHNESS = 0.5f;
+    static const float HARDNESS = 0.0f;
+    static const float WETNESS = 0.8f;
+    static const float GRANULATION_NOISE_INTENSITY = 1.0f;
+    static const float DEPTH_BLEED_MIN = 200.0f;
+    static const float DEPTH_BLEED_MAX = 600.0f;
+
     void SunEntity::LoadFromSerialized(const SerializableGalaxy& serializedGalaxy)
     {
         sunMaterial = std::make_shared<Rendering::Material>("Galaxy/Sun");
         sunMaterial->SetColor("_SunColor", serializedGalaxy.StarColor);
+        sunMaterial->SetTexture("_ControlNoiseVolume", controlNoiseVolume.get());
+        sunMaterial->SetFloat("_Smoothness", SMOOTHNESS);
+        sunMaterial->SetFloat("_Hardness", HARDNESS);
+        sunMaterial->SetFloat("_Wetness", WETNESS);
+        sunMaterial->SetFloat("_GranulationNoiseIntensity", GRANULATION_NOISE_INTENSITY);
+        sunMaterial->SetFloat("_DepthBleedMin", DEPTH_BLEED_MIN);
+        sunMaterial->SetFloat("_DepthBleedMax", DEPTH_BLEED_MAX);
 
         sunMesh = Rendering::Mesh::Get("MDL_Cube");
 

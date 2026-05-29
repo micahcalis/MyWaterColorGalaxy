@@ -28,10 +28,20 @@ namespace Beer::Rendering
     PassDependencyList DrawTransparentPass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
-        dependencies.AddDependency(PassDependency(std::string(MAIN_COLOR),
+        dependencies.AddDependency(PassDependency(std::string(VIRTUAL_MAIN_COLOR),
             ResourceAction::ColorWrite,
             ResetOperator::ClearColor({0, 0, 0, 0}),
             static_cast<vk::Format>(Core::Screen::ColorFormat())));
+
+        dependencies.AddDependency(PassDependency(std::string(GBUFFER_NORMAL_OFFSET),
+            ResourceAction::ColorWrite,
+            ResetOperator::ClearColor({0, 0, 0.5f, 0.5f}),
+            static_cast<vk::Format>(GBUFFER_NORMAL_OFFSET_FORMAT)));
+
+        dependencies.AddDependency(PassDependency(std::string(GBUFFER_WATERCOLOR),
+            ResourceAction::ColorWrite,
+            ResetOperator::ClearColor({0, 0, 0, 0}),
+            static_cast<vk::Format>(GBUFFER_WATERCOLOR_FORMAT)));
 
         dependencies.AddDependency(PassDependency(std::string(MAIN_DEPTH),
             ResourceAction::DephTestOnly,

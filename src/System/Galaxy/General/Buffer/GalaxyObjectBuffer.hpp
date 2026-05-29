@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GalaxyBufferSettings.hpp"
 #include "GalaxyDataObject.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
 #include "Rendering/Material/Material.hpp"
@@ -8,6 +9,7 @@
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Shader/ShaderProperty.hpp"
+#include "Rendering/Texture/Texture3D.hpp"
 #include "System/Galaxy/General/GalaxyObjectType.hpp"
 #include "System/Galaxy/General/Buffer/OrbitComponent.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
@@ -20,6 +22,7 @@ namespace Beer::System
         static constexpr float GALAXY_SIZE_SCALE = 200.0f;
 
     private:
+        std::shared_ptr<IGalaxyBufferSettings> settings = nullptr;
         std::shared_ptr<Rendering::PhaseBuffer> dataBuffer = nullptr;
         std::shared_ptr<Rendering::PhaseBuffer> positionBuffer;
         std::vector<OrbitComponent> orbitComponents;
@@ -27,6 +30,7 @@ namespace Beer::System
 
         std::shared_ptr<Rendering::Material> material = nullptr;
         std::shared_ptr<Rendering::Mesh> mesh = nullptr;
+        Rendering::Texture3D* controlNoiseVolume = nullptr;
         uint32_t instanceCount = 0;
         Rendering::ShaderProperty positionBufferProperty{};
         size_t minAligment;
@@ -36,7 +40,9 @@ namespace Beer::System
         GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
             GalaxyObjectType type,
             const char* shaderPath,
-            const char* meshPath);
+            const char* meshPath,
+            Rendering::Texture3D* controlNoiseVolume,
+            std::shared_ptr<IGalaxyBufferSettings> settings);
 
         void Update();
 

@@ -1,34 +1,14 @@
 #pragma once
 
-#include "Core/Application/Jobs/ImageGenerationJob.hpp"
-#include "Rendering/Compute/Threads.hpp"
 #include "Rendering/Sampler/Sampler.hpp"
 #include "Rendering/Texture/ITexture.hpp"
-#include "Rendering/Texture/RenderTexture.hpp"
 #include <cstdint>
 #include <memory>
 #include <vulkan/vulkan.h>
+#include "Rendering/Texture/TextureMakeSettings.hpp"
 
 namespace Beer::Rendering
 {
-    struct TextureMakeSettings
-    {
-    public:
-        uint32_t Width = 1;
-        uint32_t Height = 1;
-        VkFormat Format = VK_FORMAT_R8G8B8A8_UNORM;
-        uint32_t LayerCount = 1;
-        uint32_t KernelIndex = 0;
-        uint32_t GroupSizeX = 8;
-        uint32_t GroupSizeY = 8;
-
-    public:
-        Threads GetThreads()
-        {
-            return Threads::GetCustom(Width, GroupSizeX, Height, GroupSizeY);
-        }
-    };
-
     class Texture2D : public ITexture
     {
     private:
@@ -51,7 +31,7 @@ namespace Beer::Rendering
             ComputeContext* context,
             std::shared_ptr<Sampler> sampler = Sampler::Get())
         {
-            std::shared_ptr<Image> image = Image::Generate(settings.Width,
+            std::shared_ptr<Image> image = Image::Generate2D(settings.Width,
                 settings.Height,
                 settings.Format,
                 settings.LayerCount,

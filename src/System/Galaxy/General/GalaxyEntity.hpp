@@ -41,7 +41,8 @@ namespace Beer::System
             GetGalaxyManager()->Clear();
         }
 
-        GalaxyManager* GetGalaxyManager() const { return static_cast<GalaxyManager*>(manager.get()); }
+        [[nodiscard]] GalaxyManager* GetGalaxyManager() const { return static_cast<GalaxyManager*>(manager.get()); }
+        [[nodiscard]] GalaxyContainer* GetContainer() const { return container.get(); }
 
     private:
         void InitializeManager() override

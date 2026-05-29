@@ -5,6 +5,12 @@
 
 namespace Beer::Rendering
 {
+    enum class TextureType
+    {
+        TwoDim,
+        ThreeDim
+    };
+
     struct ImageData
     {
     public:
@@ -15,6 +21,7 @@ namespace Beer::Rendering
         uint32_t MipLevels = VK_REMAINING_MIP_LEVELS;
         uint32_t BaseArrayLayer = 0;
         uint32_t ArrayLayers = VK_REMAINING_ARRAY_LAYERS;
+        TextureType Type = TextureType::TwoDim;
 
     public:
         size_t GetSize() const

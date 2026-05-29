@@ -3,8 +3,10 @@
 #include "FrameGraph.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderingBeginData.hpp"
+#include "Rendering/Pipeline/Frame/Dependency/ResourceAction.hpp"
 #include "Rendering/Pipeline/Frame/Resource/IRenderResource.hpp"
 #include "Rendering/Pipeline/Frame/Synchronization/SyncTargetState.hpp"
+#include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include <print>
 
@@ -28,13 +30,36 @@ namespace Beer::Rendering
 
     void FrameGraph::PrepareBarriers(const RenderContext& context)
     {
+        context.ResetMainColorPong();
+
         for (auto& node : renderNodes)
         {
             PassDependencyList deps = node.RenderPass->GetDependencies();
 
+            if (node.RenderPass->BlitsMainTarget())
+            {
+                context.RegisterMainColorPongPass();
+            }
+
             for (const PassDependency& dep : deps.GetDependencies())
             {
-                IRenderResource* resource = context.BlackBox->GetResource<IRenderResource>(dep.GetResourceName());
+                const std::string* resourceNamePtr = &dep.GetResourceName();
+
+                if (*resourceNamePtr == VIRTUAL_MAIN_COLOR)
+                {
+                    if (dep.GetAction() == ResourceAction::ColorRead)
+                    {
+                        resourceNamePtr = node.RenderPass->BlitsMainTarget()
+                            ? &context.GetMainColorSourceName()
+                            : &context.GetMainColorDestinationName();
+                    } else if (dep.GetAction() == ResourceAction::ColorWrite)
+                    {
+                        resourceNamePtr = &context.GetMainColorDestinationName();
+                    }
+                }
+
+                const std::string& resourceName = *resourceNamePtr;
+                IRenderResource* resource = context.BlackBox->GetResource<IRenderResource>(resourceName);
 
                 if (!resource)
                     continue;
@@ -51,13 +76,18 @@ namespace Beer::Rendering
         System::Function<void> bindGlobals)
     {
         commandBuffer->Begin();
-
         bindGlobals();
+        context.ResetMainColorPong();
 
         std::unordered_set<std::string> clearedResources;
 
         for (auto& node : renderNodes)
         {
+            if (node.RenderPass->BlitsMainTarget())
+            {
+                context.RegisterMainColorPongPass();
+            }
+
             for (auto& resourceCommand : node.Commands)
             {
                 resourceCommand.Execute(commandBuffer);
@@ -89,7 +119,15 @@ namespace Beer::Rendering
                 || dep.GetAction() == ResourceAction::DepthWrite
                 || dep.GetAction() == ResourceAction::DephTestOnly)
             {
-                RenderTexture* texture = context.BlackBox->GetResource<RenderTexture>(dep.GetResourceName());
+                const std::string* resourceNamePtr = &dep.GetResourceName();
+
+                if (*resourceNamePtr == VIRTUAL_MAIN_COLOR)
+                {
+                    resourceNamePtr = &context.GetMainColorDestinationName();
+                }
+
+                const std::string& resourceName = *resourceNamePtr;
+                RenderTexture* texture = context.BlackBox->GetResource<RenderTexture>(resourceName);
 
                 if (!texture)
                     continue;
@@ -104,9 +142,9 @@ namespace Beer::Rendering
                 bool isDepth = false;
                 ResetOperator resetOperator = dep.GetResetOperator();
 
-                if (clearedResources.find(dep.GetResourceName()) == clearedResources.end())
+                if (clearedResources.find(resourceName) == clearedResources.end())
                 {
-                    clearedResources.insert(dep.GetResourceName());
+                    clearedResources.insert(resourceName);
                 } else
                 {
                     resetOperator.LoadOp = vk::AttachmentLoadOp::eLoad;

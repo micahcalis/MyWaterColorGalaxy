@@ -25,11 +25,14 @@ namespace Beer::Core
         vk::Format format,
         vk::ImageAspectFlagBits aspectFlags,
         uint32_t layerCount,
+        bool is2D,
         const Device& device)
     {
         vk::ImageViewCreateInfo viewInfo{};
         viewInfo.image = image;
-        viewInfo.viewType = layerCount > 1 ? vk::ImageViewType::e2DArray : vk::ImageViewType::e2D;
+
+        vk::ImageViewType viewType = is2D ? (layerCount > 1 ? vk::ImageViewType::e2DArray : vk::ImageViewType::e2D) : vk::ImageViewType::e3D;
+        viewInfo.viewType = viewType;
         viewInfo.format = format;
         viewInfo.subresourceRange = vk::ImageSubresourceRange(aspectFlags, 0, 1, 0, layerCount);
 

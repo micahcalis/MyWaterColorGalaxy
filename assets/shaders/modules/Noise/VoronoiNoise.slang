@@ -13,6 +13,13 @@ namespace Noise
         public float2 Center;
     }
 
+    public struct VoronoiResult3D
+    {
+        public float Distance;
+        public int3 Id;
+        public float3 Center;
+    }
+
     public struct Voronoi
     {
         private float2 uv;
@@ -123,5 +130,98 @@ namespace Noise
 
             return minDist;
         } 
+    }
+
+    public struct VoronoiPolygonal3D
+    {
+        private float3 uvw;
+        private int seed;
+
+        public __init(float3 _uvw, int _seed)
+        {
+            uvw = _uvw;
+            seed = _seed;
+        }
+
+        public VoronoiResult3D Compute(float3 frequency = 1)
+        {
+            int3 scale = (int3)frequency;
+            float3 scaledCoord = uvw * scale;
+            int3 floorCoord = (int3)floor(scaledCoord);
+            float3 fracCoord = frac(scaledCoord);
+
+            int3 mb = 0;
+            float3 mr = 0;
+            float res = 8.0;
+            
+            int3 closestCellId = 0;
+            float3 closestRandomPoint = 0;
+
+            [unroll]
+            for (int z1 = -1; z1 <= 1; z1++)
+            {
+                [unroll]
+                for (int y1 = -1; y1 <= 1; y1++)
+                {
+                    [unroll]
+                    for (int x1 = -1; x1 <= 1; x1++)
+                    {
+                        int3 b = int3(x1, y1, z1);
+                        int3 cellId = floorCoord + b;
+                        
+                        int3 wrappedCellId = (cellId % scale + scale) % scale;
+                        
+                        float3 randomPoint = Functions.Hash33(wrappedCellId + seed);
+                        float3 r = b + randomPoint - fracCoord;
+                        float d = dot(r, r);
+
+                        if (d < res)
+                        {
+                            res = d;
+                            mr = r;
+                            mb = b;
+                            closestCellId = cellId;
+                            closestRandomPoint = randomPoint;
+                        }
+                    }
+                }
+            }
+
+            res = 8.0;
+
+            [unroll]
+            for (int z2 = -2; z2 <= 2; z2++)
+            {
+                [unroll]
+                for (int y2 = -2; y2 <= 2; y2++)
+                {
+                    [unroll]
+                    for (int x2 = -2; x2 <= 2; x2++)
+                    {
+                        int3 b = mb + int3(x2, y2, z2);
+                        int3 cellId = floorCoord + b;
+                        
+                        int3 wrappedCellId = (cellId % scale + scale) % scale;
+                        
+                        float3 randomPoint = Functions.Hash33(wrappedCellId + seed);
+                        float3 r = b + randomPoint - fracCoord;
+                        float3 diff = r - mr;
+                        
+                        if (dot(diff, diff) > 0.00001)
+                        {
+                            float d = dot(0.5 * (mr + r), normalize(diff));
+                            res = min(res, d);
+                        }
+                    }
+                }
+            }
+
+            VoronoiResult3D result = (VoronoiResult3D)0;
+            result.Distance = res;
+            result.Id = closestCellId;
+            result.Center = closestCellId + closestRandomPoint;
+
+            return result;
+        }
     }
 }

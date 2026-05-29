@@ -5,11 +5,18 @@ import Core.Beer3D;
 import Deferred.DeferredUtils;
 import SphereTracing;
 import SDF;
+import Galaxy.GalaxyInstancing;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
 {
     float4 _SunColor;
+    float _Smoothness;
+    float _Hardness;
+    float _Wetness;
+    float _GranulationNoiseIntensity;
+    float _DepthBleedMin;
+    float _DepthBleedMax;
 }
 
 struct MeshData
@@ -68,16 +75,24 @@ FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFa
     if (!result.Hit)
         discard;
 
-    Deferred.DeferredShadeData data = Deferred.DeferredShadeData(_SunColor.rgb,
-    1,
-    result.Position,
-    result.Normal,
-    0.5f,
-    0.2f,
-    0,
-    0.5f);
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(_SunColor.rgb,
+        1,
+        result.Position,
+        result.Normal,
+        _Smoothness,
+        0.2f,
+        0,
+        0.5f,
+        0.0f);
 
-    Deferred.DeferredWriter writer = Deferred.DeferredWriter(data);
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(
+        Galaxy.GetDistortion(_Wetness), 
+        Galaxy.GetGranulation(result.Position, transformCenter, result.Normal, _GranulationNoiseIntensity), 
+        Galaxy.GetColorBleed(result.Position, result.Normal, _DepthBleedMin, _DepthBleedMax), 
+        Galaxy.GetTurbulence(result.Position, transformCenter, 0), 
+        Galaxy.GetTremorNoise(result.Position, transformCenter, 0));
+
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();
 }

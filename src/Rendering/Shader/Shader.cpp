@@ -181,11 +181,22 @@ namespace Beer::Rendering
             colorBlendAttachment.colorWriteMask = fragPair.ColorComponents;
             colorBlendAttachment.srcColorBlendFactor = settings.SrcBlend;
             colorBlendAttachment.dstColorBlendFactor = settings.DstBlend;
-            colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+            colorBlendAttachment.colorBlendOp = settings.ColorOp;
+
+            if (settings.HasSeparateAlphaBlend)
+            {
+                colorBlendAttachment.srcAlphaBlendFactor = settings.SrcAlphaBlend;
+                colorBlendAttachment.dstAlphaBlendFactor = settings.DstAlphaBlend;
+                colorBlendAttachment.alphaBlendOp = settings.AlphaOp;
+            } else
+            {
+                colorBlendAttachment.srcAlphaBlendFactor = settings.SrcBlend;
+                colorBlendAttachment.dstAlphaBlendFactor = settings.DstBlend;
+                colorBlendAttachment.alphaBlendOp = settings.ColorOp;
+            }
 
             colorAttachments.push_back(colorBlendAttachment);
         }
-
         vk::PipelineColorBlendStateCreateInfo colorBlendCreateInfo{};
         colorBlendCreateInfo.logicOpEnable = vk::False;
         colorBlendCreateInfo.logicOp = vk::LogicOp::eCopy;

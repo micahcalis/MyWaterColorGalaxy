@@ -1,4 +1,5 @@
 #include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
+#include "GalaxyBufferSettings.hpp"
 #include "GalaxyDataObject.hpp"
 #include "Rendering/Buffer/Buffer.hpp"
 #include "Rendering/Buffer/PhaseBuffer.hpp"
@@ -12,14 +13,19 @@
 
 namespace Beer::System
 {
-    static const float SPEED_MULTIPLIER = 0.02f;
-
     GalaxyObjectBuffer::GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
         GalaxyObjectType type,
         const char* shaderPath,
-        const char* meshPath)
+        const char* meshPath,
+        Rendering::Texture3D* controlNoiseVolume,
+        std::shared_ptr<IGalaxyBufferSettings> settings)
+        : settings(settings)
+        , controlNoiseVolume(controlNoiseVolume)
     {
         material = std::make_shared<Rendering::Material>(shaderPath);
+        settings->ApplyMaterialSettings(material.get());
+        material->SetTexture("_ControlNoiseVolume", controlNoiseVolume);
+
         mesh = Rendering::Mesh::Get(meshPath);
 
         std::vector<SerializableGalaxyComponent> components;
@@ -151,6 +157,6 @@ namespace Beer::System
         float dy = normCompPos.y - normSunPos.y;
         float radius = std::sqrt(dx * dx + dy * dy);
 
-        return SPEED_MULTIPLIER / (std::sqrt(radius) + 1.0f);
+        return settings->SpeedMultiplier / (std::sqrt(radius) + 1.0f);
     }
 } // namespace Beer::System

@@ -55,7 +55,6 @@ public Light GetMainLight(float3 positionWS)
         _SkyColor.rgb);
 }
 
-
 public struct CameraData
 {
     public float3 position;
@@ -94,4 +93,14 @@ public void ClipInMap(float2 pixelPos)
     {
         discard;
     }
+}
+
+public float GetLinearDepth(float rawDepth)
+{
+    return rawDepth * _ZBufferParams.y;
+}
+
+public float2 GetScreenTexelSize()
+{
+    return _ScreenParams.zw;
 }

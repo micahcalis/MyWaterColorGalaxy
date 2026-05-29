@@ -28,13 +28,21 @@ namespace Beer::Rendering
 
         [[nodiscard]] BufferAllocation CreateStagingBuffer(vk::DeviceSize size) const;
 
-        [[nodiscard]] ImageAllocation CreateImage(uint32_t width,
+        [[nodiscard]] ImageAllocation CreateImage2D(uint32_t width,
             uint32_t height,
             VkFormat format,
             VkImageTiling tiling,
             VkImageUsageFlags usage,
             VmaMemoryUsage memoryUsage,
             uint32_t layerCount) const;
+
+        [[nodiscard]] ImageAllocation CreateImage3D(uint32_t width,
+            uint32_t height,
+            uint32_t depth,
+            VkFormat format,
+            VkImageTiling tiling,
+            VkImageUsageFlags usage,
+            VmaMemoryUsage memoryUsage) const;
 
         void DestroyBuffer(BufferAllocation& buffer);
         void DestroyImage(ImageAllocation& image);

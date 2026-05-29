@@ -36,6 +36,11 @@ namespace Beer::Rendering
         virtual void Execute(CommandBuffer* commandBuffer, const RenderContext& context) = 0;
         virtual PassDependencyList GetDependencies() const = 0;
 
+        virtual bool BlitsMainTarget() const
+        {
+            return false;
+        }
+
     private:
         inline static RenderPassPool* renderPassPool = nullptr;
 

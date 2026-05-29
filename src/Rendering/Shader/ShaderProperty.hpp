@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Texture/Texture2D.hpp"
 #include <cstdint>
 
 namespace Beer::Rendering
@@ -17,6 +18,8 @@ namespace Beer::Rendering
         RWTexture2D,
         Texture2DArray,
         RWTexture2DArray,
+        Texture3D,
+        RWTexture3D,
         StructuredBuffer,
         RWStructuredBuffer
     };

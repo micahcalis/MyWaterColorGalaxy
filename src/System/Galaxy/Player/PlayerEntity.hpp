@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Texture/Texture3D.hpp"
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "System/Components/Registry/GameEntity.hpp"
 #include "System/Context/ContextType.hpp"
@@ -20,10 +23,12 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> playerMaterial = nullptr;
         std::shared_ptr<Rendering::Mesh> playerMesh = nullptr;
         BeerEvent<void(bool)>* onSetPhotoMode = nullptr;
+        std::shared_ptr<Rendering::Texture3D> controlNoiseVolume = nullptr;
 
     public:
         PlayerEntity(Function<PlayerInput> getPlayerInput,
             BeerEvent<void(bool)>* onSetPhotoMode,
+            std::shared_ptr<Rendering::Texture3D> controlNoiseVolume,
             Layer layer = Layer::Default);
 
         void Update() override;

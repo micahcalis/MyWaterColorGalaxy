@@ -102,5 +102,13 @@ namespace Color
         {
             return dot(float3(0.2126, 0.7152, 0.0722), rgb);
         }
+
+        public float Saturation(float3 rgb)
+        {
+            float cMin = min(min(rgb.r, rgb.g), rgb.b);
+            float cMax = max(max(rgb.r, rgb.g), rgb.b);
+            float delta = cMax - cMin;
+            return cMax == 0.0 ? 0.0 : (delta / cMax);
+        }
     }
 }

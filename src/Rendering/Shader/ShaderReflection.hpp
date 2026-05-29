@@ -1,10 +1,10 @@
 #pragma once
 
 #include "FragmentOutput.hpp"
+#include "ShaderPass.hpp"
 #include "Vendor/spirv_reflect/spirv_reflect.h"
 #include <unordered_map>
 #include "Rendering/Shader/ShaderProperty.hpp"
-#include "Rendering/Shader/ShaderPass.hpp"
 #include <filesystem>
 #include <vector>
 #include "Rendering/Mesh/MeshBufferType.hpp"

@@ -49,6 +49,14 @@ namespace Beer::Rendering
             uint32_t layerCount,
             const Core::Device& device);
 
+        static Image CreateImage3D(uint32_t width,
+            uint32_t height,
+            uint32_t depth,
+            VkFormat format,
+            VkImageUsageFlags usage,
+            vk::ImageAspectFlagBits aspectFlags,
+            const Core::Device& device);
+
         static void SetImageAssetManager(Core::ImageAssetManager* imageAssetManager)
         {
             Image::imageAssetManager = imageAssetManager;
@@ -56,10 +64,18 @@ namespace Beer::Rendering
 
         static std::shared_ptr<Image> GetAsset(const std::string& name);
 
-        static std::shared_ptr<Image> Generate(uint32_t width,
+        static std::shared_ptr<Image> Generate2D(uint32_t width,
             uint32_t height,
             VkFormat format,
             uint32_t layerCount,
+            ComputeContext* computeContext,
+            Threads threads,
+            uint32_t kernelIndex);
+
+        static std::shared_ptr<Image> Generate3D(uint32_t width,
+            uint32_t height,
+            uint32_t depth,
+            VkFormat format,
             ComputeContext* computeContext,
             Threads threads,
             uint32_t kernelIndex);

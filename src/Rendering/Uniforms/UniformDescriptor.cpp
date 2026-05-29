@@ -58,11 +58,11 @@ namespace Beer::Rendering
     {
         vk::DescriptorImageInfo imageInfo{};
         imageInfo.imageView = texture->GetImageView();
-        if (property->Type == PropertyType::RWTexture2D || property->Type == PropertyType::RWTexture2DArray)
+        if (property->Type == PropertyType::RWTexture2D || property->Type == PropertyType::RWTexture2DArray || property->Type == PropertyType::RWTexture3D)
         {
             imageInfo.imageLayout = vk::ImageLayout::eGeneral;
             imageInfo.sampler = nullptr;
-        } else if (property->Type == PropertyType::Texture2D || property->Type == PropertyType::Texture2DArray)
+        } else if (property->Type == PropertyType::Texture2D || property->Type == PropertyType::Texture2DArray || property->Type == PropertyType::Texture3D)
         {
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             imageInfo.sampler = texture->GetSampler()->GetVk();
@@ -76,7 +76,10 @@ namespace Beer::Rendering
         descriptorWrite.dstBinding = property->Binding;
         descriptorWrite.dstArrayElement = 0;
 
-        bool isStorageImage = (property->Type == PropertyType::RWTexture2D || property->Type == PropertyType::RWTexture2DArray);
+        bool isStorageImage = (property->Type == PropertyType::RWTexture2D
+            || property->Type == PropertyType::RWTexture2DArray
+            || property->Type == PropertyType::RWTexture3D);
+
         descriptorWrite.descriptorType = isStorageImage
             ? vk::DescriptorType::eStorageImage
             : vk::DescriptorType::eCombinedImageSampler;

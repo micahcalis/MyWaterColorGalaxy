@@ -22,7 +22,12 @@ namespace Beer::Rendering
     {
         frameBlackbox = std::make_unique<FrameBlackbox>(device, uploadManager);
 
-        colorTarget = frameBlackbox->CreateRenderTexture2D(std::string(MAIN_COLOR),
+        colorTargetA = frameBlackbox->CreateRenderTexture2D(std::string(MAIN_COLOR_A),
+            Core::Screen::Width(),
+            Core::Screen::Height(),
+            Core::Screen::ColorFormat());
+
+        colorTargetB = frameBlackbox->CreateRenderTexture2D(std::string(MAIN_COLOR_B),
             Core::Screen::Width(),
             Core::Screen::Height(),
             Core::Screen::ColorFormat());
@@ -46,11 +51,17 @@ namespace Beer::Rendering
         frameBuilder = FrameBuilder(GetSortedRenderPasses());
         frameGraph = frameBuilder.BuildGraph();
 
-        colorTarget = frameBlackbox->ReallocateIfNeeded(std::string(MAIN_COLOR),
-                                       Core::Screen::Width(),
-                                       Core::Screen::Height(),
-                                       Core::Screen::ColorFormat())
-                          .AllocPointer;
+        colorTargetA = frameBlackbox->ReallocateIfNeeded(std::string(MAIN_COLOR_A),
+                                        Core::Screen::Width(),
+                                        Core::Screen::Height(),
+                                        Core::Screen::ColorFormat())
+                           .AllocPointer;
+
+        colorTargetB = frameBlackbox->ReallocateIfNeeded(std::string(MAIN_COLOR_B),
+                                        Core::Screen::Width(),
+                                        Core::Screen::Height(),
+                                        Core::Screen::ColorFormat())
+                           .AllocPointer;
 
         depthTarget = frameBlackbox->ReallocateIfNeeded(std::string(MAIN_DEPTH),
                                        Core::Screen::Width(),
@@ -72,7 +83,7 @@ namespace Beer::Rendering
         frameGraph.PrepareBarriers(context);
     }
 
-    void RenderPipeline::ExecuteFrame(CommandBuffer* commandBuffer)
+    void RenderPipeline::ExecuteFrame(CommandBuffer* commandBuffer, bool& pongState)
     {
         RenderContext context = GetRenderContext();
 
@@ -81,12 +92,17 @@ namespace Beer::Rendering
         };
 
         frameGraph.Execute(commandBuffer, context, bindGlobals);
+        pongState = context.GetPongState();
     }
 
-    void RenderPipeline::FinalBlit(CommandBuffer* commandBuffer, vk::Image swapchainImage, vk::Extent2D swapchainExtent)
+    void RenderPipeline::FinalBlit(CommandBuffer* commandBuffer,
+        vk::Image swapchainImage,
+        vk::Extent2D swapchainExtent,
+        bool pongState)
     {
         vk::CommandBuffer cmd = commandBuffer->GetVk();
 
+        RenderTexture* colorTarget = pongState ? colorTargetB : colorTargetA;
         vk::Image colorImage = colorTarget->GetImage()->GetHandle();
 
         Core::CommandBufferUtilities::TransitionImageLayout(cmd,
@@ -175,10 +191,10 @@ namespace Beer::Rendering
         context.BlackBox = frameBlackbox.get();
         context.Camera = System::Camera::Main();
         context.MainLight = System::ILight::Main();
-        context.MainColorTarget = colorTarget;
         context.MainDepthTarget = depthTarget;
         context.TransformBuffer = transformBuffer;
         context.Register = renderRegister;
+        context.SetMainColorTargets(colorTargetA, colorTargetB);
         return context;
     }
 

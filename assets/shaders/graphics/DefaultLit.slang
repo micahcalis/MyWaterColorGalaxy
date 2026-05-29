@@ -65,9 +65,12 @@ FRAG Deferred.FragData DefaultLitFrag(VertexData input)
         _Smoothness,
         _Metallic,
         0,
-        0.5f);
+        0.5f,
+        0.0f);
 
-    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData);
+    Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(0, 0, 0, 0, 0);
+
+    Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();
 }

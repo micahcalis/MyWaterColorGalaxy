@@ -33,6 +33,7 @@ namespace Beer::System
         void SetOrientation(glm::vec3 up, glm::vec3 forward);
         void SetPriority(uint32_t priority);
         void BindToShaders();
+        float GetFOV() const { return fieldOfView; }
 
     private:
         Camera(Transform* transform,

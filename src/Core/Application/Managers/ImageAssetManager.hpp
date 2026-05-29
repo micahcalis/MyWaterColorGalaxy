@@ -23,7 +23,7 @@ namespace Beer::Core
             UploadManager* uploadManager)
             : device(device), uploadManager(uploadManager)
         {
-            InitializeTextureFallback();
+            InitializeTextureFallbacks();
         }
 
         ~ImageAssetManager()
@@ -33,10 +33,15 @@ namespace Beer::Core
 
         std::shared_ptr<Rendering::Image> Load(const std::filesystem::path& path) override;
 
-        std::shared_ptr<Rendering::Image> CreateEmpty(uint32_t width,
+        std::shared_ptr<Rendering::Image> CreateEmpty2D(uint32_t width,
             uint32_t height,
             VkFormat format,
             uint32_t layerCount);
+
+        std::shared_ptr<Rendering::Image> CreateEmpty3D(uint32_t width,
+            uint32_t height,
+            uint32_t depth,
+            VkFormat format);
 
         void GenerateFromEmpty(std::shared_ptr<Rendering::Image> image,
             Rendering::ComputeContext* context,
@@ -44,7 +49,7 @@ namespace Beer::Core
             uint32_t kernelIndex);
 
     private:
-        void InitializeTextureFallback();
+        void InitializeTextureFallbacks();
         const std::filesystem::path GetPath(const std::string& name) override;
     };
 } // namespace Beer::Core

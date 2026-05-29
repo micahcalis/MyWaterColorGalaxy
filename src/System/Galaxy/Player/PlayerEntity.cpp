@@ -1,11 +1,14 @@
 #include "System/Galaxy/Player/PlayerEntity.hpp"
+#include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
+#include "Rendering/Texture/Texture3D.hpp"
 #include "System/Galaxy/Player/PlayerManager.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
 #include <memory>
 
 namespace Beer::System
 {
-    static const glm::vec4 SAUCER_COLOR = glm::vec4(0.75f, 0.0f, 0.0f, 1);
+    static const glm::vec4 SAUCER_COLOR = glm::vec4(0.75f, 0.2f, 0.2f, 1);
     static const float SAUCER_METALLIC = 1.0f;
     static const float SAUCER_SMOOTH = 0.8f;
     static const glm::vec4 COCKPIT_COLOR = glm::vec4(1.0f, 1.0f, 0.6f, 0.5f);
@@ -14,11 +17,18 @@ namespace Beer::System
     static const float PLAYER_SCALE = 1.5f;
     static const glm::vec4 CUTOFF_COLOR = glm::vec4(0.25f, 1.0f, 0.08f, 1.0f);
     static const float GLOW_THICKNESS = 0.1f;
+    static const float HARDNESS = 0.0f;
+    static const float WETNESS = 0.15f;
+    static const float GRANULATION_NOISE_INTENSITY = 1.0f;
 
     PlayerEntity::PlayerEntity(Function<PlayerInput> getPlayerInput,
         BeerEvent<void(bool)>* onSetPhotoMode,
+        std::shared_ptr<Rendering::Texture3D> controlNoiseVolume,
         Layer layer)
-        : getPlayerInput(getPlayerInput), onSetPhotoMode(onSetPhotoMode), GameEntity(layer)
+        : getPlayerInput(getPlayerInput)
+        , onSetPhotoMode(onSetPhotoMode)
+        , controlNoiseVolume(controlNoiseVolume)
+        , GameEntity(layer)
     {
         transform.Position = PLAYER_SETTINGS.StartPos;
         transform.Scale = glm::vec3(PLAYER_SCALE);
@@ -33,6 +43,10 @@ namespace Beer::System
         playerMaterial->SetColor("_CutoffColor", CUTOFF_COLOR);
         playerMaterial->SetFloat("_GlowThickness", GLOW_THICKNESS);
         playerMaterial->SetFloat("_CutoffTime", 1.0f);
+        playerMaterial->SetTexture("_ControlNoiseVolume", controlNoiseVolume.get());
+        playerMaterial->SetFloat("_Hardness", HARDNESS);
+        playerMaterial->SetFloat("_Wetness", WETNESS);
+        playerMaterial->SetFloat("_GranulationNoiseIntensity", GRANULATION_NOISE_INTENSITY);
 
         playerMesh = Rendering::Mesh::Get("MDL_Cube");
 

@@ -77,7 +77,9 @@ namespace Beer::Rendering
         if (typeFetch != PropertyType::Texture2D
             && typeFetch != PropertyType::RWTexture2D
             && typeFetch != PropertyType::Texture2DArray
-            && typeFetch != PropertyType::RWTexture2DArray)
+            && typeFetch != PropertyType::RWTexture2DArray
+            && typeFetch != PropertyType::Texture3D
+            && typeFetch != PropertyType::RWTexture3D)
             return;
 
         buffer->SetTexture(name, val, immediate);
