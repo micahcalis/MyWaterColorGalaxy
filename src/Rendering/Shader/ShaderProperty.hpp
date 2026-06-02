@@ -20,6 +20,8 @@ namespace Beer::Rendering
         RWTexture2DArray,
         Texture3D,
         RWTexture3D,
+        CubeMap,
+        RWCubeMap,
         StructuredBuffer,
         RWStructuredBuffer
     };

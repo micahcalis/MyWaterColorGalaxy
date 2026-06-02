@@ -47,6 +47,7 @@ namespace Beer::Rendering
             VkImageUsageFlags usage,
             vk::ImageAspectFlagBits aspectFlags,
             uint32_t layerCount,
+            bool isCubemap,
             const Core::Device& device);
 
         static Image CreateImage3D(uint32_t width,
@@ -68,9 +69,18 @@ namespace Beer::Rendering
             uint32_t height,
             VkFormat format,
             uint32_t layerCount,
+            bool isCubemap,
             ComputeContext* computeContext,
             Threads threads,
             uint32_t kernelIndex);
+
+        static std::shared_ptr<Image> GetEmpty2D(uint32_t width,
+            uint32_t height,
+            VkFormat format,
+            VkImageUsageFlags usage,
+            vk::ImageAspectFlagBits aspectFlags,
+            uint32_t layerCount,
+            bool isCubemap);
 
         static std::shared_ptr<Image> Generate3D(uint32_t width,
             uint32_t height,
@@ -102,6 +112,10 @@ namespace Beer::Rendering
             Rendering::ComputeContext* computeContext,
             Rendering::Threads threads,
             uint32_t kernelIndex);
+
+        void QueueImageCopy(vk::raii::CommandBuffer& commandBuffer,
+            std::shared_ptr<Rendering::Image> destinationImage,
+            vk::ImageLayout sourceLayout);
 
         NO_COPY(Image);
         DEFAULT_MOVE(Image);

@@ -187,15 +187,21 @@ namespace Beer::Rendering
         bool isArray = binding->image.arrayed != 0;
         bool is3D = binding->image.dim == SpvDim3D;
 
+        bool isCubeMap = binding->image.dim == SpvDimCube;
+
         switch (binding->descriptor_type)
         {
         case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
         case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            if (isCubeMap)
+                return PropertyType::CubeMap;
             if (is3D)
                 return PropertyType::Texture3D;
             return isArray ? PropertyType::Texture2DArray : PropertyType::Texture2D;
 
         case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            if (isCubeMap)
+                return PropertyType::RWCubeMap;
             if (is3D)
                 return PropertyType::RWTexture3D;
             return isArray ? PropertyType::RWTexture2DArray : PropertyType::RWTexture2D;

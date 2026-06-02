@@ -22,6 +22,7 @@ namespace Beer::Rendering
         uint32_t BaseArrayLayer = 0;
         uint32_t ArrayLayers = VK_REMAINING_ARRAY_LAYERS;
         TextureType Type = TextureType::TwoDim;
+        bool Cubemap = false;
 
     public:
         size_t GetSize() const

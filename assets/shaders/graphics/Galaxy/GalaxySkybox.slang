@@ -4,6 +4,7 @@ import Core.BeerCore;
 import Core.Beer3D;
 import Deferred.DeferredUtils;
 import Galaxy.GalaxyInstancing;
+import Noise.PerlinNoise;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -12,6 +13,8 @@ cbuffer MaterialData
     float _GranulationNoiseIntensity;
     float _Wetness;
 }
+
+BIND_MATERIAL_TEX(4) SamplerCube<float4> _Cubemapyur;
 
 struct MeshData
 {
@@ -46,8 +49,12 @@ VERT VertexData GalaxySkyboxVert(MeshData input, INSTANCEID)
 FRAG Deferred.SkyboxFragData GalaxySkyboxFrag(VertexData input)
 {
     TransformData transform = GetModelTransform(input.instanceID);
+
+    float perlinTest = Noise.TileablePerlin3D(0, GetViewDirectionWS(input.positionWS)).Compute(10);
+    float4 cubeSample = _Cubemapyur.Sample(GetViewDirectionWS(input.positionWS));
+
     Deferred.SkyboxFragData fragData;
-    fragData.color = float4(_SkyboxColor.rgb, 1);
+    fragData.color = float4(cubeSample.rgb, 1);
 
     fragData.normal = Deferred.PackTransparentNormalOffsetData(Galaxy.GetTremorNoise(input.positionWS, GetTransformCenter(transform.objToWorldMat), 0) * 0.3f);
 

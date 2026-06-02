@@ -57,7 +57,7 @@ namespace Beer::Core
     {
         device.GetLogicalDevice().waitIdle();
 
-        Rendering::Texture2D::ResetFallbackTexture();
+        Rendering::Texture2D::ResetFallbackTextures();
         Rendering::Texture3D::ResetFallbackTexture();
         Rendering::PhaseBuffer::DestroyFallbackBuffer();
 
@@ -326,6 +326,7 @@ namespace Beer::Core
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                 vk::ImageAspectFlagBits::eDepth,
                 1,
+                false,
                 device));
     }
 

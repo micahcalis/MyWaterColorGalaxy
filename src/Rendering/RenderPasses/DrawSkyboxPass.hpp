@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Texture/Texture3D.hpp"
 #include "System/Components/General/Transform.hpp"
 #include <memory>
@@ -15,11 +17,17 @@ namespace Beer::Rendering
         System::Transform skyboxTransform{};
         std::shared_ptr<Rendering::Texture3D> controlNoiseVolume = nullptr;
 
+        std::shared_ptr<ComputeContext> noiseContext = nullptr;
+        std::shared_ptr<Texture2D> noiseCubemap = nullptr;
+
     public:
         DrawSkyboxPass(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume);
 
         void OnRenderSetup(const RenderContext& context) override;
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context) override;
         PassDependencyList GetDependencies() const override;
+
+    private:
+        void InitializeNoiseCubemap();
     };
 } // namespace Beer::Rendering

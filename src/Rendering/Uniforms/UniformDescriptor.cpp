@@ -58,11 +58,11 @@ namespace Beer::Rendering
     {
         vk::DescriptorImageInfo imageInfo{};
         imageInfo.imageView = texture->GetImageView();
-        if (property->Type == PropertyType::RWTexture2D || property->Type == PropertyType::RWTexture2DArray || property->Type == PropertyType::RWTexture3D)
+        if (property->Type == PropertyType::RWTexture2D || property->Type == PropertyType::RWTexture2DArray || property->Type == PropertyType::RWTexture3D || property->Type == PropertyType::RWCubeMap)
         {
             imageInfo.imageLayout = vk::ImageLayout::eGeneral;
             imageInfo.sampler = nullptr;
-        } else if (property->Type == PropertyType::Texture2D || property->Type == PropertyType::Texture2DArray || property->Type == PropertyType::Texture3D)
+        } else if (property->Type == PropertyType::Texture2D || property->Type == PropertyType::Texture2DArray || property->Type == PropertyType::Texture3D || property->Type == PropertyType::CubeMap)
         {
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             imageInfo.sampler = texture->GetSampler()->GetVk();
