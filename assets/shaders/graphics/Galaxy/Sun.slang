@@ -54,15 +54,13 @@ FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFa
     float3 transformCenter = GetTransformCenter(transform.objToWorldMat);
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
 
-    SphereTracing.AABB boundingbox = SphereTracing.AABB(transformCenter, transformScale * 2);
+    SphereTracing.AABB volume = SphereTracing.AABB(transformCenter, transformScale * 2);
+    SphereTracing.RayAligner<SphereTracing.AABB> rayAligner = SphereTracing.RayAligner<SphereTracing.AABB>(
+        volume,
+        isFrontFace,
+        viewDirWS);
 
-    if (!boundingbox.ShouldMarch(_CameraPos, isFrontFace, _ZBufferParams.x))
-    {
-        discard;
-    }
-
-    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
-    ray = boundingbox.AlignWithBox(ray);
+    SphereTracing.Ray ray = rayAligner.GetAlignedRay();
 
     SDF.Sphere planetSDF = SDF.Sphere(transformCenter, transformScale.x * 0.8f);
 

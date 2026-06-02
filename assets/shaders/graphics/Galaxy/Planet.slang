@@ -23,6 +23,8 @@ struct VertexData
     nointerpolation uint instanceID;
 }
 
+BIND_MATERIAL_TEX(4) Sampler3D _PlanetNoiseVolume;
+
 //$ Pass Opaque
 //$ Vertex PlanetVert
 //$ Fragment PlanetFrag
@@ -39,6 +41,16 @@ VERT VertexData PlanetVert(MeshData input, INSTANCEID)
     return output;
 }
 
+public struct PlanetNoiseReader : Galaxy.IPlanetNoiseReader
+{
+    public float Read(float3 uvw, int index)
+    {
+        index = index % 4;
+        float4 sample = _PlanetNoiseVolume.Sample(uvw);
+        return sample[index];
+    }
+}
+
 FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
     Galaxy.ObjectData materialData = Galaxy.GetMaterialData(input.instanceID);
@@ -47,17 +59,19 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
 
     SphereTracing.AABB boundingbox = SphereTracing.AABB(transformCenter, transformScale * 2);
+    SphereTracing.AABB volume = SphereTracing.AABB(transformCenter, transformScale * 2);
 
-    if (!boundingbox.ShouldMarch(_CameraPos, isFrontFace, _ZBufferParams.x))
-    {
-        discard;
-    }
-    
-    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
-    ray = boundingbox.AlignWithBox(ray);
+    SphereTracing.RayAligner<SphereTracing.AABB> rayAligner = SphereTracing.RayAligner<SphereTracing.AABB>(
+        volume,
+        isFrontFace,
+        viewDirWS);
+
+    SphereTracing.Ray ray = rayAligner.GetAlignedRay();
 
     Galaxy.Planet planetSDF = Galaxy.Planet(transformCenter, 
-        materialData.Scale);
+        materialData.Scale,
+        materialData.Id,
+        { materialData.ColorA, materialData.ColorB, materialData.ColorC, materialData.ColorD });
 
     SphereTracing.SphereTracer<Galaxy.Planet> tracer = SphereTracing.SphereTracer<Galaxy.Planet>(
         planetSDF,
@@ -73,9 +87,15 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         result.Normal,
         viewDirWS,
         _Hardness);
+        
+    float4 noise = _PlanetNoiseVolume.Sample(result.Position * 0.01f);
+
+    float3 color = planetSDF.GetColor<PlanetNoiseReader>(result.Position,
+        result.Material,
+        PlanetNoiseReader());
 
     Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(
-        materialData.ColorA.rgb, 
+        color,
         2,
         result.Position,
         result.Normal,

@@ -34,4 +34,18 @@ namespace Math
     {
         return b.x + (x - a.x) * (b.y - b.x) / (a.y - a.x);
     }
+
+    public float3x3 GetOrthogonalBasis(float3 normal)
+    {
+        float3 n = normal;
+        float sign = n.z >= 0.0f ? 1.0f : -1.0f; 
+        
+        float a = -1.0f / (sign + n.z);
+        float b = n.x * n.y * a;
+        
+        float3 b1 = float3(1.0f + sign * n.x * n.x * a, sign * b, -sign * n.x);
+        float3 b2 = float3(b, sign + n.y * n.y * a, -n.y);
+
+        return float3x3(b1, b2, n);
+    }
 }

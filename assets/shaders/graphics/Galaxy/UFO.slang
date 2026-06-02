@@ -59,29 +59,23 @@ VERT VertexData SaucerVert(MeshData input, INSTANCEID)
     return output;
 }
 
-FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFrontFace)
+FRAG Deferred.FragData SaucerFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
     TransformData transform = GetModelTransform(input.instanceID);
     float3 center = GetTransformCenter(transform.objToWorldMat);
     float3 scale = GetTransformScale(transform.objToWorldMat);
-
-    float radius = scale.x;
-    SphereTracing.SphereVolume sphere = SphereTracing.SphereVolume(center, radius);
-
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
 
-    if(!sphere.ShouldMarch(_CameraPos, IsFrontFace, _ZBufferParams.x))
-    {
-        discard;
-    }
+    SphereTracing.OBB volume = SphereTracing.OBB(center, 
+        scale * 2.0f, 
+        (float3x3)transform.objToWorldDirMat);
 
-    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
-    ray = sphere.AlignWithSphere(ray);
+    SphereTracing.RayAligner<SphereTracing.OBB> rayAligner = SphereTracing.RayAligner<SphereTracing.OBB>(
+        volume,
+        isFrontFace,
+        viewDirWS);
 
-    if (ray.GetMaxLength() < 1e-3f)
-    {
-        discard;
-    }
+    SphereTracing.Ray ray = rayAligner.GetAlignedRay();
 
     SDF.Saucer saucerSDF = SDF.Saucer(center, scale.x * 0.8f, transform.objToWorldDirMat, _CutoffTime);
 
@@ -121,6 +115,7 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool IsFrontFace : SV_IsFron
         Galaxy.GetTurbulence(result.Position, center, 0), 
         Galaxy.GetTremorNoise(result.Position, center, 0));
 
+
     Deferred.DeferredWriter writer = Deferred.DeferredWriter(shadeData, watercolorData);
 
     return writer.Write();
@@ -151,29 +146,24 @@ VERT VertexData CockpitVert(MeshData input, INSTANCEID)
     return output;
 }
 
-FRAG Deferred.TransparentFragData CockpitFrag(VertexData input, bool IsFrontFace : SV_IsFrontFace) 
+FRAG Deferred.TransparentFragData CockpitFrag(VertexData input, bool isFrontFace : SV_IsFrontFace) 
 {
     TransformData transform = GetModelTransform(input.instanceID);
     float3 center = GetTransformCenter(transform.objToWorldMat);
     float3 scale = GetTransformScale(transform.objToWorldMat);
 
-    float radius = scale.x;
-    SphereTracing.SphereVolume sphere = SphereTracing.SphereVolume(center, radius);
-
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
 
-    if(!sphere.ShouldMarch(_CameraPos, IsFrontFace, _ZBufferParams.x))
-    {
-        discard;
-    }
-    
-    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
-    ray = sphere.AlignWithSphere(ray);
+    SphereTracing.OBB volume = SphereTracing.OBB(center, 
+        scale * 2.0f, 
+        (float3x3)transform.objToWorldDirMat);
 
-    if (ray.GetMaxLength() < 1e-3f)
-    {
-        discard;
-    }
+    SphereTracing.RayAligner<SphereTracing.OBB> rayAligner = SphereTracing.RayAligner<SphereTracing.OBB>(
+        volume,
+        isFrontFace,
+        viewDirWS);
+
+    SphereTracing.Ray ray = rayAligner.GetAlignedRay();
 
     SDF.Cockpit cockpitSDF = SDF.Cockpit(center, 
         scale.x * 0.8f, 

@@ -42,7 +42,7 @@ namespace Beer::System
             SpeedMultiplier = speedMultiplier;
             DepthBleedMin = depthBleedMin;
             DepthBleedMax = depthBleedMax;
-            GranulationNoiseIntensity = 0.2f;
+            GranulationNoiseIntensity = granulationNoiseIntensity;
             Hardness = hardness;
             Smoothness = smoothness;
             Wetness = wetness;

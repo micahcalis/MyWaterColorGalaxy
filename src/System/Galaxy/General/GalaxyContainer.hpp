@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Buffer/GalaxyBufferSettings.hpp"
+#include "Buffer/PlanetBufferSettings.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Texture/Texture3D.hpp"
 #include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
 #include "GalaxyObjectType.hpp"
+#include <array>
 #include <memory>
 #include <unordered_map>
 
@@ -34,9 +36,54 @@ namespace Beer::System
         std::unordered_map<GalaxyObjectType, std::unique_ptr<GalaxyObjectBuffer>> bufferMap;
         std::shared_ptr<Rendering::ComputeContext> controlNoiseContext = nullptr;
         std::shared_ptr<Rendering::Texture3D> controlNoiseVolume = nullptr;
+        std::array<GalaxyBufferDefinition, 5> definitions;
 
     public:
         GalaxyContainer()
+            : definitions({GalaxyBufferDefinition(GalaxyObjectType::Planet,
+                               "Galaxy/Planet",
+                               "MDL_Cube",
+                               std::make_shared<PlanetBufferSettings>()),
+                  GalaxyBufferDefinition(GalaxyObjectType::Asteroids,
+                      "Galaxy/Planet",
+                      "MDL_Cube",
+                      std::make_shared<UnimplementedBufferSettings>(0.02f,
+                          200.0f,
+                          600.0f,
+                          0.2f,
+                          0.2f,
+                          0.5f,
+                          0.8f)),
+                  GalaxyBufferDefinition(GalaxyObjectType::SpaceGoo,
+                      "Galaxy/Planet",
+                      "MDL_Cube",
+                      std::make_shared<UnimplementedBufferSettings>(0.02f,
+                          200.0f,
+                          600.0f,
+                          0.2f,
+                          0.2f,
+                          0.8f,
+                          0.8f)),
+                  GalaxyBufferDefinition(GalaxyObjectType::BlackHole,
+                      "Galaxy/Planet",
+                      "MDL_Cube",
+                      std::make_shared<UnimplementedBufferSettings>(0.02f,
+                          200.0f,
+                          600.0f,
+                          0.2f,
+                          0.2f,
+                          0.0f,
+                          0.8f)),
+                  GalaxyBufferDefinition(GalaxyObjectType::StarDust,
+                      "Galaxy/Planet",
+                      "MDL_Cube",
+                      std::make_shared<UnimplementedBufferSettings>(0.02f,
+                          200.0f,
+                          600.0f,
+                          0.2f,
+                          0.2f,
+                          0.5f,
+                          0.8f))})
         {
             CreateNoiseVolumes();
         }
