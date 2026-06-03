@@ -42,6 +42,8 @@ struct VertexData
 //$ DstAlphaMode One
 //$ AlphaOp Add
 
+static const float INV_REFERENCE_RES_Y = 1.0 / 1440.0f;
+
 VERT VertexData StarsVert(MeshData input, out float pointSize : SV_PointSize)
 {
     VertexData output;
@@ -56,7 +58,8 @@ VERT VertexData StarsVert(MeshData input, out float pointSize : SV_PointSize)
     output.positionCS = WorldToClip(output.positionWS);
      
     float dist = distance(output.positionWS, _CameraPos);
-    pointSize = _StarSize / dist;
+    float screenScalar = (float)_ScreenParams.y * INV_REFERENCE_RES_Y;
+    pointSize = (_StarSize * screenScalar) / dist;
     output.normalizedDistance = dist / length(float3(halfBox));
 
     return output;

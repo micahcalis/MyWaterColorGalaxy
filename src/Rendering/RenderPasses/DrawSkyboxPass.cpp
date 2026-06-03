@@ -1,13 +1,16 @@
+#include "Core/Assets/MeshAsset.hpp"
 #include "RenderPassEvent.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Shader/Shader.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include "Rendering/Shader/ShaderPass.hpp"
 #include "Rendering/Shader/ShaderPassType.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Texture/TextureMakeSettings.hpp"
 #include "System/Camera/Camera.hpp"
+#include <cmath>
 #include <memory>
 
 namespace Beer::Rendering
@@ -37,6 +40,10 @@ namespace Beer::Rendering
     static const float NOISE_BLUR_SPREAD_A = 10.0f;
     static const float NOISE_BLUR_SPREAD_B = 100.0f;
 
+    static const uint32_t STAR_COUNT = 10000;
+    static const float STAR_SIZE = 5;
+    static const glm::vec4 STAR_COLOR = glm::vec4(1);
+
     DrawSkyboxPass::DrawSkyboxPass(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume)
         : controlNoiseVolume(controlNoiseVolume)
         , IRenderPass("Skybox", RenderPassEvent::SKYBOX)
@@ -52,6 +59,8 @@ namespace Beer::Rendering
         skyboxMaterial->SetFloat("_DustOpacity", DUST_OPACITY);
         skyboxMaterial->SetFloat("_BleedThreshold", DUST_BLEED_THRESHOLD);
         skyboxMaterial->SetTexture("_ControlNoiseVolume", controlNoiseVolume.get());
+
+        InitializeStarPointCloud();
     }
 
     void DrawSkyboxPass::OnRenderSetup(const RenderContext& context)
@@ -64,13 +73,24 @@ namespace Beer::Rendering
         commandBuffer->BindModelPush(skyboxTransform.GetShaderTransform(),
             skyboxMaterial->GetShader());
 
-        const ShaderPass* pass = skyboxMaterial->GetShader()->GetPass(ShaderPassType::Skybox);
-        commandBuffer->BindShaderPass(skyboxMaterial->GetShader(), pass, context.Output);
+        const ShaderPass* skyboxPass = skyboxMaterial->GetShader()->GetPass(ShaderPassType::Skybox);
+        commandBuffer->BindShaderPass(skyboxMaterial->GetShader(), skyboxPass, context.Output);
         commandBuffer->BindMaterial(skyboxMaterial.get());
-        commandBuffer->BindMesh(cubeMesh.get(), &pass->Input.BufferOrder);
+        commandBuffer->BindMesh(cubeMesh.get(), &skyboxPass->Input.BufferOrder);
 
-        Rendering::MeshDrawInfo drawInfo = cubeMesh->GetDrawInfo();
-        commandBuffer->DrawMeshSingle(drawInfo);
+        Rendering::MeshDrawInfo skyboxDrawInfo = cubeMesh->GetDrawInfo();
+        commandBuffer->DrawMeshSingle(skyboxDrawInfo);
+
+        commandBuffer->BindModelPush(skyboxTransform.GetShaderTransform(),
+            starMaterial->GetShader());
+
+        const ShaderPass* starsPass = starMaterial->GetShader()->GetPass(ShaderPassType::Skybox);
+        commandBuffer->BindShaderPass(starMaterial->GetShader(), starsPass, context.Output);
+        commandBuffer->BindMaterial(starMaterial.get());
+        commandBuffer->BindMesh(starPointCloud.get(), &starsPass->Input.BufferOrder);
+
+        Rendering::MeshDrawInfo starsDrawInfo = starPointCloud->GetDrawInfo();
+        commandBuffer->DrawMeshSingle(starsDrawInfo);
     }
 
     PassDependencyList DrawSkyboxPass::GetDependencies() const
@@ -150,5 +170,34 @@ namespace Beer::Rendering
             blurNoiseContextB.get()));
 
         skyboxMaterial->SetTexture("_BlurredDustNoiseCubemapB", blurredNoiseCubemapB.get());
+
+        starMaterial->SetInt("_StarSeed", serializedGalaxy.ColorSeed);
+    }
+
+    void DrawSkyboxPass::InitializeStarPointCloud()
+    {
+        Core::MeshAsset proceduralAsset;
+
+        for (uint32_t i = 0; i < STAR_COUNT; i++)
+        {
+            float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+            float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+            float theta = 2.0f * 3.14f * u;
+            float y = 2.0f * v - 1.0f;
+
+            float r = std::sqrt(1.0f - y * y);
+
+            float x = r * std::cos(theta);
+            float z = r * std::sin(theta);
+
+            proceduralAsset.Positions.push_back(glm::vec3(x, y, z));
+        }
+
+        starPointCloud = Rendering::Mesh::Create(proceduralAsset);
+
+        starMaterial = std::make_shared<Material>("Galaxy/SkyboxStars");
+        starMaterial->SetFloat("_StarSize", STAR_SIZE);
+        starMaterial->SetColor("_StarColor", STAR_COLOR);
     }
 } // namespace Beer::Rendering

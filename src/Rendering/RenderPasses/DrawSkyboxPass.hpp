@@ -25,14 +25,18 @@ namespace Beer::Rendering
         std::shared_ptr<ComputeContext> blurNoiseContextB = nullptr;
         std::shared_ptr<Texture2D> blurredNoiseCubemapB = nullptr;
 
+        std::shared_ptr<Material> starMaterial = nullptr;
+        std::shared_ptr<Mesh> starPointCloud = nullptr;
+
     public:
         DrawSkyboxPass(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume);
 
         void OnRenderSetup(const RenderContext& context) override;
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context) override;
         PassDependencyList GetDependencies() const override;
-
-    public:
         void InitializeNoiseCubemaps(const System::SerializableGalaxy& serializedGalaxy);
+
+    private:
+        void InitializeStarPointCloud();
     };
 } // namespace Beer::Rendering
