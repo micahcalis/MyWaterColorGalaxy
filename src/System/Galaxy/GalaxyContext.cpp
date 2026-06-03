@@ -127,6 +127,7 @@ namespace Beer::System
         SerializablePaintSession serializedPaintSession = mapHandler.Load();
         galaxyEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
         sunEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
+        skyboxPass->InitializeNoiseCubemaps(serializedPaintSession.Galaxy);
     }
 
     void GalaxyContext::HandleReturn()

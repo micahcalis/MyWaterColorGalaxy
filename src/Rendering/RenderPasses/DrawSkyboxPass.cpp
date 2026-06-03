@@ -8,17 +8,34 @@
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Texture/TextureMakeSettings.hpp"
 #include "System/Camera/Camera.hpp"
+#include <memory>
 
 namespace Beer::Rendering
 {
     static const glm::vec4 SKYBOX_COLOR = glm::vec4(0, 0, 0, 1);
     static const float GRANULATION_NOISE_INTENSITY = 0.5f;
-    static const float WETNESS = 0.0f;
+    static const float WETNESS = 1.0f;
+    static const float DUST_OPACITY = 0.3f;
+    static const float DUST_BLEED_THRESHOLD = 0.1f;
 
     static const uint32_t NOISE_RESOLUTION = 2048;
-    static const VkFormat NOISE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
+    static const VkFormat NOISE_FORMAT = VK_FORMAT_R16G16B16A16_SFLOAT;
     static const uint32_t NOISE_GROUP_SIZE = 8;
     static const uint32_t NOISE_KERNEL = 0;
+    static const uint32_t NOISE_DEPTH = 6;
+    static const float NOISE_FREQ = 2.75f;
+    static const float NOISE_FREQ_MUL = 2.0f;
+    static const float NOISE_AMPL_MUL = 0.8f;
+    static const float NOISE_BALANCE = 0.55f;
+    static const float NOISE_EXP = 2.0f;
+    static const float NOISE_EDGE_MIN = 0.2f;
+    static const float NOISE_EDGE_MAX = 0.6f;
+
+    static const uint32_t BLUR_KERNEL = 1;
+    static const uint32_t NOISE_BLUR_DEPTH = 4;
+    static const float NOISE_BLUR_RADIUS = 1.0f;
+    static const float NOISE_BLUR_SPREAD_A = 10.0f;
+    static const float NOISE_BLUR_SPREAD_B = 100.0f;
 
     DrawSkyboxPass::DrawSkyboxPass(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume)
         : controlNoiseVolume(controlNoiseVolume)
@@ -32,9 +49,9 @@ namespace Beer::Rendering
         skyboxMaterial->SetColor("_SkyboxColor", SKYBOX_COLOR);
         skyboxMaterial->SetFloat("_GranulationNoiseIntensity", GRANULATION_NOISE_INTENSITY);
         skyboxMaterial->SetFloat("_Wetness", WETNESS);
+        skyboxMaterial->SetFloat("_DustOpacity", DUST_OPACITY);
+        skyboxMaterial->SetFloat("_BleedThreshold", DUST_BLEED_THRESHOLD);
         skyboxMaterial->SetTexture("_ControlNoiseVolume", controlNoiseVolume.get());
-
-        InitializeNoiseCubemap();
     }
 
     void DrawSkyboxPass::OnRenderSetup(const RenderContext& context)
@@ -77,7 +94,7 @@ namespace Beer::Rendering
         return dependencies;
     }
 
-    void DrawSkyboxPass::InitializeNoiseCubemap()
+    void DrawSkyboxPass::InitializeNoiseCubemaps(const System::SerializableGalaxy& serializedGalaxy)
     {
         TextureMakeSettings makeSettings{};
         makeSettings.Width = NOISE_RESOLUTION;
@@ -90,10 +107,48 @@ namespace Beer::Rendering
         makeSettings.GroupSizeY = NOISE_GROUP_SIZE;
 
         noiseContext = std::make_shared<ComputeContext>("Watercolor/SkyboxNoise");
+        noiseContext->SetInt("_Depth", NOISE_DEPTH);
+        noiseContext->SetFloat("_Frequency", NOISE_FREQ);
+        noiseContext->SetFloat("_FrequencyMultiplier", NOISE_FREQ_MUL);
+        noiseContext->SetFloat("_AmplitudeMultiplier", NOISE_AMPL_MUL);
+        noiseContext->SetFloat("_NoiseBalance", NOISE_BALANCE);
+        noiseContext->SetFloat("_Exponent", NOISE_EXP);
+        noiseContext->SetFloat("_EdgeMin", NOISE_EDGE_MIN);
+        noiseContext->SetFloat("_EdgeMax", NOISE_EDGE_MAX);
+        noiseContext->SetInt("_SeedR", serializedGalaxy.ColorSeed);
+        noiseContext->SetInt("_SeedG", serializedGalaxy.ColorSeed + 234);
+        noiseContext->SetInt("_SeedB", serializedGalaxy.ColorSeed + 40606);
+        skyboxMaterial->SetColor("_ColorA", serializedGalaxy.ColorA);
+        skyboxMaterial->SetColor("_ColorB", serializedGalaxy.ColorB);
+        skyboxMaterial->SetColor("_ColorC", serializedGalaxy.ColorC);
 
         noiseCubemap = std::make_shared<Texture2D>(Texture2D::Make(makeSettings,
             noiseContext.get()));
 
-        skyboxMaterial->SetTexture("_Cubemapyur", noiseCubemap.get());
+        skyboxMaterial->SetTexture("_DustNoiseCubemap", noiseCubemap.get());
+
+        makeSettings.KernelIndex = BLUR_KERNEL;
+
+        blurNoiseContextA = std::make_shared<ComputeContext>("Watercolor/SkyboxNoise");
+        blurNoiseContextA->SetInt("_BlurDepth", NOISE_BLUR_DEPTH);
+        blurNoiseContextA->SetFloat("_BlurRadius", 1.0f);
+        blurNoiseContextA->SetFloat("_BlurSpread", 2.0f);
+        blurNoiseContextA->SetTexture("_BlurSource", noiseCubemap.get());
+
+        blurredNoiseCubemapA = std::make_shared<Texture2D>(Texture2D::Make(makeSettings,
+            blurNoiseContextA.get()));
+
+        skyboxMaterial->SetTexture("_BlurredDustNoiseCubemapA", blurredNoiseCubemapA.get());
+
+        blurNoiseContextB = std::make_shared<ComputeContext>("Watercolor/SkyboxNoise");
+        blurNoiseContextB->SetInt("_BlurDepth", NOISE_BLUR_DEPTH);
+        blurNoiseContextB->SetFloat("_BlurRadius", 5.0f);
+        blurNoiseContextB->SetFloat("_BlurSpread", 20.0f);
+        blurNoiseContextB->SetTexture("_BlurSource", noiseCubemap.get());
+
+        blurredNoiseCubemapB = std::make_shared<Texture2D>(Texture2D::Make(makeSettings,
+            blurNoiseContextB.get()));
+
+        skyboxMaterial->SetTexture("_BlurredDustNoiseCubemapB", blurredNoiseCubemapB.get());
     }
 } // namespace Beer::Rendering
