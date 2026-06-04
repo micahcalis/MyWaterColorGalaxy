@@ -40,7 +40,6 @@ namespace Beer::System
         GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
             GalaxyObjectType type,
             const char* shaderPath,
-            const char* meshPath,
             Rendering::Texture3D* controlNoiseVolume,
             std::shared_ptr<IGalaxyBufferSettings> settings);
 

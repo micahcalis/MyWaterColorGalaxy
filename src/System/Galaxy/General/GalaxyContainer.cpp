@@ -50,7 +50,6 @@ namespace Beer::System
             bufferMap[definition.Type] = std::make_unique<GalaxyObjectBuffer>(serializedData,
                 definition.Type,
                 definition.ShaderPath,
-                definition.MeshPath,
                 controlNoiseVolume.get(),
                 definition.Settings);
         }

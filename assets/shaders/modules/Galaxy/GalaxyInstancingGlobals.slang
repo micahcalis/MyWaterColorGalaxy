@@ -9,4 +9,5 @@ public cbuffer InstanceGlobalData
     public float _DepthBleedMax;
     public float _GranulationNoiseIntensity;
     public float _Hardness;
+    public int _AsteroidsCount;
 }

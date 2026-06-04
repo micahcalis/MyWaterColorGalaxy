@@ -51,7 +51,7 @@ VERT VertexData SkyboxStarsVert(MeshData input, INSTANCEID, uint vertexID : SV_V
     output.positionWS = ObjToWorld(transform, input.positionOS);
     output.positionCS = WorldToClip(output.positionWS); 
     float screenScalar = (float)_ScreenParams.y * INV_REFERENCE_RES_Y;
-    float sizeHash = Noise.Functions.Hash11(vertexID, _StarSeed);
+    float sizeHash = pow(Noise.Functions.Hash11(vertexID, _StarSeed), 0.33f);
     pointSize = _StarSize * screenScalar * (1.0f - sizeHash * 0.7f);
     return output;
 }

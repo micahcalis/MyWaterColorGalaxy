@@ -156,8 +156,20 @@ namespace SDF
             
             return FieldOut(
                 dist, 
-                lerp(b.Material, a.Material, blendFactor)
-            );
+                lerp(b.Material, a.Material, blendFactor));
+        }
+
+        public FieldOut SmoothMax(FieldOut a, FieldOut b, float k) 
+        {
+            k *= 4.0f;
+            float h = max(k - abs(a.SignedDist - b.SignedDist), 0.0f);
+            
+            float dist = max(a.SignedDist, b.SignedDist) + h * h * 0.25f / k;
+            float blendFactor = clamp(0.5f + (a.SignedDist - b.SignedDist) / k, 0.0f, 1.0f);
+            
+            return FieldOut(
+                dist, 
+                lerp(b.Material, a.Material, blendFactor));
         }
     }
 

@@ -57,8 +57,7 @@ namespace Noise
         private float3 uvw; 
         private int seed;
 
-        public __init(float3 _uvw,
-            int _seed)
+        public __init(float3 _uvw, int _seed)
         {
             uvw = _uvw;
             seed = _seed;
@@ -67,7 +66,11 @@ namespace Noise
         public float Compute(float3 frequency = 1)
         {
             int3 scale = (int3)frequency;
-            float3 scaledCoord = uvw * scale;
+
+            int octaveSeed = seed + scale.x * 12345; 
+            float3 gridOffset = Functions.Hash33(int3(octaveSeed, octaveSeed * 2, octaveSeed * 3)) * 100.0f;
+            float3 scaledCoord = (uvw * scale) + gridOffset;
+            
             int3 floorCoord = (int3)floor(scaledCoord);
             float3 fracCoord = frac(scaledCoord);
 
@@ -84,8 +87,10 @@ namespace Noise
                     {
                         float3 neighbour = float3(x, y, z);
                         int3 cellId = floorCoord + int3(x, y, z);
+                        
                         int3 wrappedCellId = (cellId % scale + scale) % scale;
-                        float3 randomPoint = Functions.Hash33(wrappedCellId + seed);
+                        float3 randomPoint = Functions.Hash33(wrappedCellId + octaveSeed);
+                        
                         float3 diff = neighbour + randomPoint - fracCoord;
                         float dist = length(diff);
                         minDist = min(minDist, dist);

@@ -34,6 +34,8 @@ namespace Beer::System
     static const float PLNT_NOISE_EDGE_MIN = 0.02f;
     static const float PLNT_NOISE_EDGE_MAX = 0.7f;
 
+    static const std::string PLANET_MESH_PATH = "MDL_Cube";
+
     class PlanetBufferSettings : public IGalaxyBufferSettings
     {
     private:
@@ -52,6 +54,11 @@ namespace Beer::System
             Hardness = PLNT_HARDNESS;
             Smoothness = PLNT_SMOOTHNESS;
             Wetness = PLNT_WETNESS;
+        }
+
+        std::shared_ptr<Rendering::Mesh> GetMesh() override
+        {
+            return Rendering::Mesh::Get(PLANET_MESH_PATH);
         }
 
         void ApplyMaterialSettings(Rendering::Material* material) override

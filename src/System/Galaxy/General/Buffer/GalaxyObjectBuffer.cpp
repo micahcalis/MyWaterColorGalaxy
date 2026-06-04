@@ -16,7 +16,6 @@ namespace Beer::System
     GalaxyObjectBuffer::GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
         GalaxyObjectType type,
         const char* shaderPath,
-        const char* meshPath,
         Rendering::Texture3D* controlNoiseVolume,
         std::shared_ptr<IGalaxyBufferSettings> settings)
         : settings(settings)
@@ -26,7 +25,7 @@ namespace Beer::System
         settings->ApplyMaterialSettings(material.get());
         material->SetTexture("_ControlNoiseVolume", controlNoiseVolume);
 
-        mesh = Rendering::Mesh::Get(meshPath);
+        mesh = settings->GetMesh();
 
         std::vector<SerializableGalaxyComponent> components;
         serializedObjects.reserve(serializedData.Components.size());

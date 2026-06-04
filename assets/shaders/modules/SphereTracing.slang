@@ -337,7 +337,7 @@ public struct AABB : IBoundingVolume
             ray = _ray;
         }
 
-        public TraceResult Trace()
+        public TraceResult Trace(float stepScalar = 1.0f)
         {
             TraceResult result = TraceResult(ray.GetOrigin());
             SDF.MarchData marchData;
@@ -361,8 +361,9 @@ public struct AABB : IBoundingVolume
                     break;
                 }
 
-                result.Position += fieldOut.SignedDist * ray.GetDirection();
-                result.TotalDistance += fieldOut.SignedDist;
+                float marchStep = fieldOut.SignedDist * stepScalar;
+                result.Position += marchStep * ray.GetDirection();
+                result.TotalDistance += marchStep;
 
                 if (result.TotalDistance > ray.GetMaxLength())
                 {

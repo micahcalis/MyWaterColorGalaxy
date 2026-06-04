@@ -59,5 +59,21 @@ namespace Noise
             
             return int(n & uint(0x7fffffffU));
         }
+
+        public float3 Hash13(int p, int seed)
+        {
+            uint p_u = uint(p);
+            uint s_u = uint(seed);
+
+            uint hx = p_u * 1619U ^ s_u * 31337U;
+            uint hy = p_u * 31337U ^ s_u * 6971U;
+            uint hz = p_u * 6971U ^ s_u * 2893U;
+            
+            return float3(
+                IntegerHash(hx), 
+                IntegerHash(hy), 
+                IntegerHash(hz)
+            );
+        }
     }
 }

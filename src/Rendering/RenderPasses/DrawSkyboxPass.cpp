@@ -41,7 +41,7 @@ namespace Beer::Rendering
     static const float NOISE_BLUR_SPREAD_B = 100.0f;
 
     static const uint32_t STAR_COUNT = 10000;
-    static const float STAR_SIZE = 5;
+    static const float STAR_SIZE = 10;
     static const glm::vec4 STAR_COLOR = glm::vec4(1);
 
     DrawSkyboxPass::DrawSkyboxPass(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume)

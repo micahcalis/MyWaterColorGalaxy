@@ -5,6 +5,9 @@ import SDF;
 import Noise.Hash;
 import Math.BeerMath;
 import Math.Gradient;
+import Core.Samplers;
+import Noise.Hash;
+import Noise.VoronoiNoise;
 
 module GalaxySDFs;
 
@@ -137,4 +140,203 @@ namespace Galaxy
             return color * (hash[4] * 0.5f + 0.5f);
         }
     };
+
+    const static float3 SUN_NOISE_DIR_R = normalize(float3(0.6f, -0.4f, 0.2f));
+    const static float3 SUN_NOISE_DIR_G = normalize(float3(-0.2f, 0.2f, -0.8f));
+    const static float SUN_NOISE_SPEED = 0.05f;
+    const static float SUN_NOISE_SCALE = 1.5f;
+
+    public struct Sun : SDF.SDF
+    {
+        private float radius = 0.8f;
+        private float3 center;
+        private float scale;
+        private float invScale;
+        private float3 color;
+        private float gradientIntensity;
+
+        public __init(float3 _center,
+            float _scale,
+            float3 _color,
+            float _gradientIntensity)
+        {
+            center = _center;
+            scale = _scale;
+            invScale = rcp(scale);
+            color = _color;
+            gradientIntensity = _gradientIntensity;
+        }
+
+        public SDF.FieldOut Evaluate(SDF.MarchData data)
+        {
+            float3 localPos = (data.Position - center) * invScale;
+            SDF.FieldOut sunDist = Sun(localPos);
+            sunDist.SignedDist *= scale;
+            return sunDist;
+        }
+
+        private SDF.FieldOut Sun(float3 localPos)
+        {
+            return SDF.FieldOut(SDF.Functions.Sphere(localPos, radius));
+        }
+
+        public float3 GetSunColor<TSunNoiseSampler : ISampler3DFloat2>(float3 position,
+            float3 normal,
+            TSunNoiseSampler noiseSampler)
+        {
+            float fresnel = GetFresnel(position, normal);
+            float noise = GetNoise<TSunNoiseSampler>(position, noiseSampler);
+
+            return GetMixColor(fresnel + noise);
+        }
+
+        private float GetFresnel(float3 position,
+            float3 normal)
+        {
+            float3 viewDirWS = GetViewDirectionWS(position);
+            float fresnel = 1.0f - saturate(dot(-viewDirWS, normal));
+            return fresnel * fresnel * fresnel * fresnel;
+        }
+
+        private float GetNoise<TSunNoiseSampler : ISampler3DFloat2>(float3 position,
+            TSunNoiseSampler noiseSampler)
+        {
+            float3 localPos = (position - center) * invScale;
+
+            float3 noiseOffsetR = _Time * SUN_NOISE_SPEED * SUN_NOISE_DIR_R;
+            float noiseR = noiseSampler.Sample((localPos + noiseOffsetR) * SUN_NOISE_SCALE).r;
+
+            float3 noiseOffsetG = _Time * SUN_NOISE_SPEED * SUN_NOISE_DIR_G;
+            float noiseG = noiseSampler.Sample((localPos + noiseOffsetG) * SUN_NOISE_SCALE).g;
+
+            return noiseR * noiseG;
+        }
+
+        private float3 GetMixColor(float gradient)
+        {
+            float inkThickness = (gradient * gradientIntensity) + 1.0f; 
+            return pow(color.rgb, inkThickness);
+        }
+    }
+
+    public float3 GetAsteroidColor(int asteroidID,
+        int seed,
+        float3[4] colors)
+    {
+        float hash = Noise.Functions.Hash11(asteroidID, seed + 48358);
+        int index = clamp(int(hash * 4.0f), 0, 3); 
+        return colors[index];
+    }
+
+    static const float CRATER_DIST_THRESHOLD = 0.21f;
+    static const int NUM_COMPONENTS = 3;
+    static const float CRATER_FREQ = 0.25f;
+    static const float CRATER_RADIUS = 0.4f;
+
+    public interface IAsteroidNoiseReader
+    {
+        public float Read(float3 uvw);
+    }
+
+    struct AsteroidComponent
+    {
+        float3 offset;
+        float radius;
+    }
+
+    public struct Asteroid<TAsteroidNoiseReader : IAsteroidNoiseReader> : SDF.SDF
+    {
+        private TAsteroidNoiseReader noiseReader;
+        private float3 center;
+        private float scale;
+        private float invScale;
+        private float3 color;
+        private int asteroidID;
+        private int seed;
+        private int craterSeed;
+        private AsteroidComponent[NUM_COMPONENTS] components = (AsteroidComponent[NUM_COMPONENTS])0;
+
+        public __init(TAsteroidNoiseReader noiseReader,
+            float3 _center,
+            float _scale,
+            float3 _color,
+            int _asteroidID,
+            int _seed)
+        {
+            center = _center;
+            scale = _scale;
+            invScale = rcp(scale);
+            color = _color;
+            asteroidID = _asteroidID;
+            seed = _seed;
+
+            [unroll(NUM_COMPONENTS)]
+            for (int i = 0; i < NUM_COMPONENTS; i++)
+            {
+                components[i].offset = (Noise.Functions.Hash13(asteroidID, seed + 34553 + (i * 123)) - 0.5f);
+                components[i].radius = lerp(0.2f, 0.75f, Noise.Functions.Hash11(asteroidID, seed + 2932 + (i * 77)));
+            }
+
+            craterSeed = int(Noise.Functions.Hash11(asteroidID, seed + 4033) * 30392);
+        }
+        
+        public SDF.FieldOut Evaluate(SDF.MarchData data)
+        {
+            float3 localPos = (data.Position - center) * invScale;
+            SDF.FieldOut asteroidDist = Asteroid(localPos);
+
+            if (asteroidDist.SignedDist < CRATER_DIST_THRESHOLD)
+            {
+                SDF.FieldOut craterDist = Craters(localPos);
+                craterDist.SignedDist = -craterDist.SignedDist;
+                asteroidDist = SDF.Functions.SmoothMax(asteroidDist, craterDist, 0.05f);
+            }
+
+            asteroidDist.SignedDist *= scale;
+
+            return asteroidDist;
+        }
+
+        public SDF.FieldOut Asteroid(float3 localPos)
+        {
+            return Base(localPos);
+        }
+
+        private SDF.FieldOut Base(float3 localPos)
+        {
+            SDF.FieldOut smoothMinOut = SDF.FieldOut(SDF.Functions.Sphere(
+                    localPos - components[0].offset, 
+                    components[0].radius));
+
+            [unroll(NUM_COMPONENTS - 1)]
+            for (int i = 1; i < NUM_COMPONENTS; i++)
+            {
+                SDF.FieldOut currentOut = SDF.FieldOut(SDF.Functions.Sphere(
+                    localPos - components[i].offset,
+                    components[i].radius));
+
+                smoothMinOut = SDF.Functions.SmoothMin(smoothMinOut, currentOut, 0.1f);
+            }
+
+            return smoothMinOut;
+        }
+
+        private SDF.FieldOut Craters(float3 localPos)
+        {
+            float rawNoise = noiseReader.Read(localPos * CRATER_FREQ);
+            float scaledNoise = rawNoise;
+
+            float craterRadius = 0.4f; 
+            float craterSphere = scaledNoise - craterRadius;
+
+            return SDF.FieldOut(craterSphere);
+        }
+
+        public float3 GetColor(float3[4] colors)
+        {
+            return GetAsteroidColor(asteroidID,
+                seed,
+                colors);
+        }
+    }
 }

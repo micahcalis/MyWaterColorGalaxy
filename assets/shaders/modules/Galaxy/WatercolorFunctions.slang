@@ -80,16 +80,6 @@ namespace WC
             float2 sampledOffset = normalsOffset.Offset * offsetIntensity * float2(GetAspect(), 1);
             float NdotL = dot(normalsOffset.Normal, -viewDirWS);
 
-            // if (NdotL < FRESNEL_EPS)
-            // {
-            //     sampledOffset = BlurOffset(sampledOffset);
-            // }
-
-            // float currentDepth = GetLinearDepth(wpSampler.SampleDepth(0));
-            // float offsetDepth = GetLinearDepth(wpSampler.SampleDepth(sampledOffset));
-            // float depthDifference = abs(currentDepth - offsetDepth);
-            // float depthFade = 1.0 - smoothstep(0.0, depthThreshold, depthDifference);
-
             return sampledOffset;
         }
 
