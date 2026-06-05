@@ -51,7 +51,7 @@ namespace Beer::System
         transform.Scale = glm::vec3(serializedGalaxy.StarSize
             * GalaxyObjectBuffer::GALAXY_SIZE_SCALE
             * GalaxyMapEntity::CENTER_STAR_SCALE
-            * 3.0f);
+            * 4.0f);
 
         pointLight = ILight::CreateLight<PointLight>(&transform,
             15,

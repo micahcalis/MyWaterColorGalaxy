@@ -12,8 +12,8 @@ namespace Beer::System
     static const float ASTRDS_SPEED_MUL = 0.02f;
     static const float ASTRDS_BLEED_MIN = 200.0f;
     static const float ASTRDS_BLEED_MAX = 600.0f;
-    static const float ASTRDS_GRANULATION_NOISE = 0.4f;
-    static const float ASTRDS_HARDNESS = 0.8f;
+    static const float ASTRDS_GRANULATION_NOISE = 0.5f;
+    static const float ASTRDS_HARDNESS = 1.0f;
     static const float ASTRDS_SMOOTHNESS = 0.0f;
     static const float ASTRDS_WETNESS = 0.8f;
 

@@ -15,8 +15,9 @@ namespace Galaxy
 {
     const static int[5] PLANET_SEEDS = { 240, 30, 324, 23, 68 };
     const static float PLANET_RING_THICKNESS = 0.01f;
-    const static float2 OUTER_RING_SIZE = float2(0.95f, 1.8f);
-    const static float2 INNER_RING_SIZE = float2(1.05f, 1.3f);
+    const static float2 OUTER_RING_SIZE = float2(0.5f, 2.0f); 
+    const static float2 INNER_RING_SIZE = float2(1.15f, 1.4f); 
+
     const static float MIN_RING_THICKNESS = 0.15f;
     public const static float PLANET_MAT = 0.0f;
     public const static float RING_MAT = 1.0f;
@@ -48,7 +49,7 @@ namespace Galaxy
             scale = _scale;
             colors = _colors;
             invScale = rcp(scale);
-            radius = 0.8f;
+            radius = 0.48f;
     
             [unroll(5)]
             for (int i = 0; i < 5; i++)
@@ -219,7 +220,7 @@ namespace Galaxy
         }
     }
 
-    public float3 GetAsteroidColor(int asteroidID,
+    public float3 GetRandomPaletteColor(int asteroidID,
         int seed,
         float3[4] colors)
     {
@@ -273,7 +274,7 @@ namespace Galaxy
             [unroll(NUM_COMPONENTS)]
             for (int i = 0; i < NUM_COMPONENTS; i++)
             {
-                components[i].offset = (Noise.Functions.Hash13(asteroidID, seed + 34553 + (i * 123)) - 0.5f);
+                components[i].offset = Noise.Functions.Hash13(asteroidID, seed + 34553 + (i * 123)) - 0.5f;
                 components[i].radius = lerp(0.2f, 0.75f, Noise.Functions.Hash11(asteroidID, seed + 2932 + (i * 77)));
             }
 
@@ -334,9 +335,98 @@ namespace Galaxy
 
         public float3 GetColor(float3[4] colors)
         {
-            return GetAsteroidColor(asteroidID,
+            return GetRandomPaletteColor(asteroidID,
                 seed,
                 colors);
+        }
+    }
+
+    static const int NUM_GOO_SPHERES = 8;
+
+    struct GooSphere
+    {
+        float3 radius;
+        float scale;
+        float speed;
+        float3x3 basis;
+        float3 color;
+    }
+
+    public struct SpaceGoo : SDF.SDF
+    {
+        private float3 center;
+        private float scale;
+        private float invScale;      
+        private int seed;
+        private GooSphere[NUM_GOO_SPHERES] gooSpheres = (GooSphere[NUM_GOO_SPHERES])0;
+        private static float3 gooColor;
+
+        public __init(float3 _center,
+            float _scale,
+            int _seed,
+            float3[4] _colors)
+        {
+            center = _center;
+            scale = _scale;
+            invScale = rcp(_scale);
+            seed = _seed;
+
+            [unroll(NUM_GOO_SPHERES)]
+            for (int i = 0; i < NUM_GOO_SPHERES; i++)
+            {
+                gooSpheres[i].radius = Noise.Functions.Hash11(i, seed + 64) * 0.65f;
+                gooSpheres[i].scale = lerp(0.2f, 0.5f, Noise.Functions.Hash11(i, seed + 3221));
+                gooSpheres[i].speed = lerp(-0.5f, 0.5f, Noise.Functions.Hash11(i, seed + 55));
+                
+                float3 normal = normalize(Noise.Functions.Hash13(i, seed + 454) - 0.5f);
+                gooSpheres[i].basis = Math.GetOrthogonalBasis(normal);
+                gooSpheres[i].color = _colors[i % 4];
+            } 
+
+            gooColor = _colors[0];
+        }
+
+        public SDF.FieldOut Evaluate(SDF.MarchData data)
+        {
+            float3 localPos = (data.Position - center) * invScale;
+            SDF.FieldOut gooDist = Goo(localPos);
+            gooDist.SignedDist *= scale;
+
+            return gooDist;
+        }
+
+        private SDF.FieldOut Goo(float3 localPos)
+        {
+            SDF.FieldOut smoothMinOut = Sphere(localPos, gooSpheres[0]);
+            gooColor = gooSpheres[0].color;
+
+            [unroll(NUM_GOO_SPHERES - 1)]
+            for (int i = 1; i < NUM_GOO_SPHERES; i++)
+            {
+                SDF.FieldOut currentSphere = Sphere(localPos, gooSpheres[i]);
+
+                smoothMinOut.Material = 0.0f;
+                smoothMinOut = SDF.Functions.SmoothMin(smoothMinOut, currentSphere, 0.05f);
+
+                gooColor = lerp(gooColor, gooSpheres[i].color, smoothMinOut.Material);
+            }
+
+            return smoothMinOut;
+        }
+
+        private SDF.FieldOut Sphere(float3 localPos, GooSphere sphere)
+        {
+            float x; float y;
+            sincos(_Time * sphere.speed, y, x);
+            float3 circularPos = float3(x, y, 0) * sphere.radius;
+            float3 rotatedPos = mul(sphere.basis, circularPos);
+
+            return SDF.FieldOut(SDF.Functions.Sphere(localPos - rotatedPos, sphere.scale), 1.0f);
+        }
+
+        public float3 GetColor()
+        {
+            return gooColor;
         }
     }
 }

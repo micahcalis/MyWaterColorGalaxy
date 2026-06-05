@@ -19,7 +19,7 @@ namespace Beer::System
     {
     public:
         static constexpr float GALAXY_POS_SCALE = 1000.0f;
-        static constexpr float GALAXY_SIZE_SCALE = 200.0f;
+        static constexpr float GALAXY_SIZE_SCALE = 300.0f;
 
     private:
         std::shared_ptr<IGalaxyBufferSettings> settings = nullptr;
