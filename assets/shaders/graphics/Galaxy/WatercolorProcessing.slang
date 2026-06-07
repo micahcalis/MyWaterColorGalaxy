@@ -155,7 +155,7 @@ FRAG float4 WatercolorProcessingFrag(VertexData input) : SV_Target
     float3 granulatedPigment = granulator.Granulate();
     
     float3 base = WC::WCRDFData::CANVAS_COLOR;
-    float3 cangiante = 0.1f * ((1.0f - data.Height * 0.4f) * (base - granulatedPigment)) + granulatedPigment;
+    float3 cangiante = 0.05f * ((1.0f - data.Height * 0.4f) * (base - granulatedPigment)) + granulatedPigment;
     float3 minColor = granulatedPigment * (1.0f - 0.5f);
 
     return float4(max(cangiante, minColor), 1);

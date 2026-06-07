@@ -1,5 +1,3 @@
-#pragma once
-
 #include "System/Components/General/SingleMeshRender.hpp"
 #include "Rendering/Mesh/MeshDrawInfo.hpp"
 #include "Rendering/Pipeline/CommandBuffer/CommandBuffer.hpp"

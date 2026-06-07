@@ -1,5 +1,3 @@
-#pragma once
-
 #include "System/Base/Input/InputManager.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
 #include "SDL3/SDL_keyboard.h"

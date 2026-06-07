@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Buffer/AsteroidsBufferSettings.hpp"
+#include "Buffer/BlackHoleBufferSettings.hpp"
 #include "System/Galaxy/General/Buffer/GalaxyBufferSettings.hpp"
 #include "System/Galaxy/General/Buffer/PlanetBufferSettings.hpp"
 #include "System/Galaxy/General/Buffer/SpaceGooBufferSettings.hpp"
@@ -50,15 +51,8 @@ namespace Beer::System
                       "Galaxy/SpaceGoo",
                       std::make_shared<SpaceGooBufferSettings>()),
                   GalaxyBufferDefinition(GalaxyObjectType::BlackHole,
-                      "Galaxy/Planet",
-                      std::make_shared<UnimplementedBufferSettings>(0.02f,
-                          200.0f,
-                          600.0f,
-                          0.2f,
-                          0.2f,
-                          0.0f,
-                          0.8f,
-                          "MDL_Cube")),
+                      "Galaxy/BlackHole",
+                      std::make_shared<BlackHoleBuferSettings>()),
                   GalaxyBufferDefinition(GalaxyObjectType::StarDust,
                       "Galaxy/Planet",
                       std::make_shared<UnimplementedBufferSettings>(0.02f,

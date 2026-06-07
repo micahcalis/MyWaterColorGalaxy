@@ -8,6 +8,7 @@ import Math.Gradient;
 import Core.Samplers;
 import Noise.Hash;
 import Noise.VoronoiNoise;
+import Noise.PerlinNoise;
 
 module GalaxySDFs;
 
@@ -427,6 +428,138 @@ namespace Galaxy
         public float3 GetColor()
         {
             return gooColor;
+        }
+    }
+
+    static const float VOID_MAT = 0.0f;
+    static const float HALO_MAT = 1.0f;
+    static const float BLHOLE_HORIZON_RADIUS = 0.35f;
+    static const float BLHOLE_DISK_OUTER_RADIUS = 0.7f;
+    static const float BLHOLE_DISK_THICKNESS = 0.01f;
+    static const float LIGHT_RING_MIN = 0.45f;
+    static const float LIGHT_RING_MAX = 0.55f;
+    static const float3 LIGHT_COL = float3(1);
+    static const float BLKHOLE_NOISE_SPEED = 0.1f;
+    static const float BLKHOLE_NOISE_FREQ = 30.0f;
+    static const float BLKHOLE_NOISE_INTENSITY = 0.25f;
+    static const float BLKHOLE_STEP_GRAD_SCALE = 15.0f;
+    static const float BLKHOLE_STEP_GRAD_SMOOTH = 0.3f;
+
+    public struct BlackHole : SDF.SDF
+    {
+        private float3 center;
+        private float scale;
+        private float invScale;      
+        private int seed;  
+        private float3 normal;
+        private float3x3 basis;
+        private float3[4] colors;
+        private static float testGradient;
+        
+        public __init(float3 _center,
+            float _scale,
+            int _seed,
+            float3[4] _colors)
+        {
+            center = _center;
+            scale = _scale;
+            invScale = rcp(scale);
+            seed = _seed;
+            
+            normal = normalize(Noise.Functions.Hash13(223, seed + 9322) - 0.5f);
+            basis = Math.GetOrthogonalBasis(normal);
+            colors = _colors;
+        }
+
+        public SDF.FieldOut Evaluate(SDF.MarchData data)
+        {
+            float3 localPos = (data.Position - center) * invScale;
+            
+            SDF.FieldOut finalDist = GetBlackHoleShape(localPos, data.Direction);
+            
+            finalDist.SignedDist *= scale;
+            finalDist.SignedDist *= 0.8f;
+
+            return finalDist;
+        }
+
+        private SDF.FieldOut GetBlackHoleShape(float3 localPos, float3 viewDir)
+        {
+            float3 rotatedPos = mul(basis, localPos);
+            float voidDist = SDF.Functions.Sphere(localPos, BLHOLE_HORIZON_RADIUS);
+            float diskDist = max(length(rotatedPos.xz) - BLHOLE_DISK_OUTER_RADIUS, abs(rotatedPos.y) - BLHOLE_DISK_THICKNESS);
+            diskDist = max(diskDist, -(length(localPos) - (BLHOLE_HORIZON_RADIUS + 0.02f)));
+
+            float haloRadius = BLHOLE_HORIZON_RADIUS + 0.06f; 
+            float shellDist = abs(length(localPos) - haloRadius) - BLHOLE_DISK_THICKNESS;
+
+            float depth = dot(localPos, viewDir);
+            float backMask = smoothstep(-0.05f, 0.15f, depth);
+            shellDist = lerp(100.0f, shellDist, backMask);
+
+            SDF.FieldOut accretionShape = SDF.Functions.SmoothMin(SDF.FieldOut(diskDist), SDF.FieldOut(shellDist), 0.12f);
+
+            testGradient = abs(accretionShape.SignedDist);
+
+
+            if (voidDist < accretionShape.SignedDist)
+            {
+                return SDF.FieldOut(voidDist, VOID_MAT);
+            }
+            else
+            {
+                return SDF.FieldOut(accretionShape.SignedDist, HALO_MAT);
+            }
+        }
+
+        public float3 GetColor(float3 position, float material)
+        {
+            if (material < 0.5f)
+            {
+                return GetVoidColor();
+            }
+            else
+            {
+                return GetHaloColor(position);
+            }
+        }
+
+        private float3 GetHaloColor(float3 position)
+        {
+            float3 localPos = (position - center) * invScale;
+            float distanceGrad = length(localPos);
+            float3 rotatedPos = mul(basis, localPos);
+            float angleGrad = ((atan2(rotatedPos.z, rotatedPos.x) + PI) / TAU);
+            angleGrad = frac(angleGrad + _Time * BLKHOLE_NOISE_SPEED);
+            
+            Noise.TileablePerlin perlin = Noise.TileablePerlin(seed, float2(distanceGrad, angleGrad));
+            float noise = perlin.Compute(int2(BLKHOLE_NOISE_FREQ));
+
+            float stepGrad = distanceGrad + noise * BLKHOLE_NOISE_INTENSITY;
+            float stepGradient = Math.SmoothedSteps(stepGrad * BLKHOLE_STEP_GRAD_SCALE, BLKHOLE_STEP_GRAD_SMOOTH);
+
+            int2 id = int2(floor(float2(stepGradient, angleGrad)));
+
+            float hash0 = Noise.Functions.Hash11(id.x, seed);
+            int colorID0 = clamp((int)(hash0 * 4.0f), 0, 3);
+            float3 colorCurrent = colors[colorID0];
+
+            float hash1 = Noise.Functions.Hash11(id.x + 1, seed);
+            int colorID1 = clamp((int)(hash1 * 4.0f), 0, 3);
+            float3 colorNext = colors[colorID1];
+
+            float blendWeight = stepGradient - floor(stepGradient); 
+            float3 gradientColor = lerp(colorCurrent, colorNext, blendWeight);
+
+            float lightRing = smoothstep(LIGHT_RING_MAX, LIGHT_RING_MIN, distanceGrad);
+
+
+            return lerp(gradientColor, LIGHT_COL, lightRing);
+        }
+
+        private float3 GetVoidColor()
+        {
+            return 0;
         }
     }
 }

@@ -48,4 +48,19 @@ namespace Math
 
         return float3x3(b1, b2, n);
     }
+
+    public float SmoothedSteps(float x, float s)
+    {
+        s = max(s, 0.0001); 
+
+        float f = floor(x);
+        float r = round(x);
+        float a = 1.0f / (2.0f * s);
+        
+        float G = a * (x - (r - s)) + r - 1.0;
+        float c = 0.5f - s;
+        float d = abs(0.5f - frac(x)); 
+        
+        return (d < c) ? f : G; 
+    }
 }

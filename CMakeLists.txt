@@ -24,6 +24,24 @@ endforeach()
 
 include(FetchContent)
 
+option(ENABLE_ASAN "Enable Address Sanitizer for memory debugging" OFF)
+
+if(ENABLE_ASAN)
+    message(STATUS "Address Sanitizer ENABLED. Warning: This will slow down execution.")
+    
+    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        # MSVC syntax for ASan
+        target_compile_options(${PROJECT_NAME} PRIVATE /fsanitize=address)
+        
+        # Note: MSVC automatically links the necessary ASan libraries when this flag is present,
+        # but you MUST have the "C++ AddressSanitizer" component installed via the Visual Studio Installer.
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        # Clang/GCC syntax for ASan
+        target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+        target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+    endif()
+endif()
+
 # FetchContent_Declare(
 #     SDL3
 #     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git

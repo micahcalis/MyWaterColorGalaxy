@@ -77,7 +77,7 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         planetSDF,
         ray);
 
-    SphereTracing.TraceResult result = tracer.Trace();
+    SphereTracing.TraceResult result = tracer.Trace(1.0f, 1.0f);
 
     if (!result.Hit)
         discard;
@@ -101,7 +101,7 @@ FRAG Deferred.FragData PlanetFrag(VertexData input, bool isFrontFace : SV_IsFron
         0.0f,
         0,
         0.0f,
-        hardness);
+        result.Material > 0.5f ? hardness : 0.0f);
 
     Deferred.DeferredWatercolorData watercolorData = Deferred.DeferredWatercolorData(
         Galaxy.GetDistortion(_Wetness), 

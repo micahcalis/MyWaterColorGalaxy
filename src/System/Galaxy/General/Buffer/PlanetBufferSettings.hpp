@@ -4,8 +4,6 @@
 #include "Rendering/Texture/Texture3D.hpp"
 #include "Rendering/Texture/TextureMakeSettings.hpp"
 #include "System/Galaxy/General/Buffer/GalaxyBufferSettings.hpp"
-#include "System/PaintTool/PaintToolContext.hpp"
-#include <print>
 
 namespace Beer::System
 {
@@ -13,7 +11,7 @@ namespace Beer::System
     static const float PLNT_BLEED_MIN = 200.0f;
     static const float PLNT_BLEED_MAX = 600.0f;
     static const float PLNT_GRANULATION_NOISE = 0.6f;
-    static const float PLNT_HARDNESS = 0.8f;
+    static const float PLNT_HARDNESS = 0.75f;
     static const float PLNT_SMOOTHNESS = 0.0f;
     static const float PLNT_WETNESS = 0.8f;
 

@@ -21,13 +21,13 @@ struct VertexData
 }
 
 //$ Pass Opaque
-//$ Vertex SpaceGooVert
-//$ Fragment SpaceGooFrag
+//$ Vertex BlackHoleVert
+//$ Fragment BlackHoleFrag
 //$ Cull None
 //$ Blend Off
 //$ Zwrite On
 
-VERT VertexData SpaceGooVert(MeshData input, INSTANCEID)
+VERT VertexData BlackHoleVert(MeshData input, INSTANCEID)
 {
     VertexData output;
     output.positionWS = Galaxy.ToWorldSpace(input.positionOS, instanceID);
@@ -36,12 +36,12 @@ VERT VertexData SpaceGooVert(MeshData input, INSTANCEID)
     return output;
 }
 
-FRAG Deferred.FragData SpaceGooFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
+FRAG Deferred.FragData BlackHoleFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
     Galaxy.ObjectData materialData = Galaxy.GetMaterialData(input.instanceID);
     float3 transformCenter = Galaxy.GetTransformCenter(input.instanceID);
     float transformScale = materialData.Scale;
-    float3 viewDirWS = GetViewDirectionWS(input.positionWS);    
+    float3 viewDirWS = GetViewDirectionWS(input.positionWS);   
 
     SphereTracing.AABB volume = SphereTracing.AABB(transformCenter, transformScale * 2);
 
@@ -52,23 +52,23 @@ FRAG Deferred.FragData SpaceGooFrag(VertexData input, bool isFrontFace : SV_IsFr
 
     SphereTracing.Ray ray = rayAligner.GetAlignedRay();
 
-    Galaxy.SpaceGoo spaceGooSDF = Galaxy.SpaceGoo(transformCenter, 
-        materialData.Scale,
+    Galaxy.BlackHole blackHoleSDF = Galaxy.BlackHole(transformCenter,
+        transformScale,
         materialData.Id,
         {materialData.ColorA.rgb, materialData.ColorB.rgb, materialData.ColorC.rgb, materialData.ColorD.rgb});
 
-    SphereTracing.SphereTracer<Galaxy.SpaceGoo> tracer = SphereTracing.SphereTracer<Galaxy.SpaceGoo>(
-        spaceGooSDF,
+    SphereTracing.SphereTracer<Galaxy.BlackHole> tracer = SphereTracing.SphereTracer<Galaxy.BlackHole>(
+        blackHoleSDF,
         ray);
-
-    SphereTracing.TraceResult result = tracer.Trace(1.0f, 1.0f);
+    
+    SphereTracing.TraceResult result = tracer.Trace(0.8f, 1.0f);
 
     if (!result.Hit)
         discard;
 
     Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(
-        spaceGooSDF.GetColor(),
-        2,
+        blackHoleSDF.GetColor(result.Position, result.Material),
+        1,
         result.Position,
         result.Normal,
         _Smoothness,

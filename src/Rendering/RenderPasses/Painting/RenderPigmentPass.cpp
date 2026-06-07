@@ -35,6 +35,12 @@ namespace Beer::Rendering
     PassDependencyList RenderPigmentPass::GetDependencies() const
     {
         PassDependencyList dependencies = PassDependencyList(name);
+        dependencies.AddDependency(PassDependency(SUSPENDED_PIGMENT_A,
+            ResourceAction::ComputeReadWrite));
+
+        dependencies.AddDependency(PassDependency(SUSPENDED_PIGMENT_B,
+            ResourceAction::ComputeReadWrite));
+
         dependencies.AddDependency(PassDependency(DEPOSITED_PIGMENT,
             ResourceAction::ComputeReadWrite));
 

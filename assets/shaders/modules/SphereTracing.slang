@@ -326,6 +326,9 @@ public struct AABB : IBoundingVolume
         }
     }
 
+    static const float K_MIN = 0.000f;
+    static const float K_MAX = 0.005f;
+
     public struct SphereTracer<T : SDF.SDF>
     {
         private T sdf;
@@ -337,12 +340,13 @@ public struct AABB : IBoundingVolume
             ray = _ray;
         }
 
-        public TraceResult Trace(float stepScalar = 1.0f)
+        public TraceResult Trace(float stepScalar = 1.0f, float kScalar = 0.0f)
         {
             TraceResult result = TraceResult(ray.GetOrigin());
             SDF.MarchData marchData;
             marchData.Direction = ray.GetDirection();
             float invLength = rcp(ray.GetMaxLength());
+            float K = lerp(K_MIN, K_MAX, saturate(kScalar));
             
             for (int i = 0; i < MAX_STEPS; i++)
             {
@@ -352,7 +356,9 @@ public struct AABB : IBoundingVolume
 
                 SDF.FieldOut fieldOut = sdf.Evaluate(marchData);
 
-                if (fieldOut.SignedDist < DST_EPS)
+                float epsK = DST_EPS + (K * result.TotalDistance);
+
+                if (fieldOut.SignedDist < epsK)
                 {
                     result.Hit = true;
                     result.TotalSteps = i;
