@@ -97,7 +97,8 @@ namespace Beer::Rendering
         VkImageTiling tiling,
         VkImageUsageFlags usage,
         VmaMemoryUsage memoryUsage,
-        uint32_t layerCount) const
+        uint32_t layerCount,
+        bool isCubeMap) const
     {
         ImageAllocation imageAlloc{};
 
@@ -115,6 +116,12 @@ namespace Beer::Rendering
         imageInfo.usage = usage;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (isCubeMap)
+        {
+            imageInfo.arrayLayers = 6;
+            imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        }
 
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = memoryUsage;

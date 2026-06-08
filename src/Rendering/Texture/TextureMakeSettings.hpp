@@ -13,11 +13,11 @@ namespace Beer::Rendering
         uint32_t Height = 1;
         uint32_t Depth = 1;
         VkFormat Format = VK_FORMAT_R8G8B8A8_UNORM;
-        uint32_t LayerCount = 1;
         uint32_t KernelIndex = 0;
         uint32_t GroupSizeX = 8;
         uint32_t GroupSizeY = 8;
         uint32_t GroupSizeZ = 1;
+        bool IsCubeMap = false;
 
     public:
         Threads GetThreads()

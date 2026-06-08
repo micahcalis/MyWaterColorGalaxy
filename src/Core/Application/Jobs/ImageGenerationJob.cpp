@@ -14,9 +14,14 @@ namespace Beer::Core
     {
         if (image->GetData().Type == Rendering::TextureType::TwoDim)
         {
-            Rendering::Texture2D tempTexture = Rendering::Texture2D(image);
-            computeContext->SetTexture(GENERATION_TARGET, &tempTexture);
-            computeContext->SetVector("_Resolution", glm::vec4(tempTexture.GetWidth(), tempTexture.GetHeight(), 0, 0));
+            if (!image->GetData().Cubemap)
+            {
+                Rendering::Texture2D tempTexture = Rendering::Texture2D(image);
+                computeContext->SetTexture(GENERATION_TARGET, &tempTexture);
+                computeContext->SetVector("_Resolution", glm::vec4(tempTexture.GetWidth(), tempTexture.GetHeight(), 0, 0));
+            } else
+            {
+            }
         } else if (image->GetData().Type == Rendering::TextureType::ThreeDim)
         {
             Rendering::Texture3D tempTexture = Rendering::Texture3D(image);

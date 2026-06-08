@@ -10,6 +10,7 @@ namespace Beer::Rendering
         SKYBOX = 100,
         OPAQUE = 200,
         DEFERRED_SHADE = 300,
+        VOLUMETRICS = 350,
         TRANSPARENT = 400,
         WATERCOLOR = 500,
         PRE_USER_INTERFACE = 900,

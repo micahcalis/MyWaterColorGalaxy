@@ -38,6 +38,7 @@ namespace Beer::Core
             vk::ImageAspectFlagBits aspectFlags,
             uint32_t layerCount,
             bool is2D,
+            bool isCubemap,
             const Device& device);
 
         static vk::Format FindSupportedFormat(const std::vector<vk::Format> candidates,

@@ -96,6 +96,7 @@ namespace Beer::Rendering
         engineGlobalsData.ViewMat = viewMat;
         engineGlobalsData.ViewDirMat = glm::mat4(glm::mat3(viewMat));
         engineGlobalsData.ProjMat = projMat;
+        engineGlobalsData.InvProjMat = glm::inverse(projMat);
     }
 
     void ShaderGlobalsHandler::SetZBuffer(float nearPlane, float farPlane)

@@ -1,6 +1,7 @@
 #include "System/Galaxy/General/GalaxyContainer.hpp"
 #include "Buffer/GalaxyBufferSettings.hpp"
 #include "Buffer/GalaxyObjectBuffer.hpp"
+#include "Buffer/PlanetBufferSettings.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Texture/Texture3D.hpp"
 #include "Rendering/Texture/TextureMakeSettings.hpp"
@@ -8,58 +9,6 @@
 
 namespace Beer::System
 {
-    static const std::array<GalaxyBufferDefinition, 5> DEFINITIONS = {
-        GalaxyBufferDefinition(GalaxyObjectType::Planet,
-            "Galaxy/Planet",
-            "MDL_Cube",
-            std::make_shared<UnimplementedBufferSettings>(0.02f,
-                200.0f,
-                600.0f,
-                0.2f,
-                0.2f,
-                0.0f,
-                0.8f)),
-        GalaxyBufferDefinition(GalaxyObjectType::Asteroids,
-            "Galaxy/Planet",
-            "MDL_Cube",
-            std::make_shared<UnimplementedBufferSettings>(0.02f,
-                200.0f,
-                600.0f,
-                0.2f,
-                0.2f,
-                0.5f,
-                0.8f)),
-        GalaxyBufferDefinition(GalaxyObjectType::SpaceGoo,
-            "Galaxy/Planet",
-            "MDL_Cube",
-            std::make_shared<UnimplementedBufferSettings>(0.02f,
-                200.0f,
-                600.0f,
-                0.2f,
-                0.2f,
-                0.8f,
-                0.8f)),
-        GalaxyBufferDefinition(GalaxyObjectType::BlackHole,
-            "Galaxy/Planet",
-            "MDL_Cube",
-            std::make_shared<UnimplementedBufferSettings>(0.02f,
-                200.0f,
-                600.0f,
-                0.2f,
-                0.2f,
-                0.0f,
-                0.8f)),
-        GalaxyBufferDefinition(GalaxyObjectType::StarDust,
-            "Galaxy/Planet",
-            "MDL_Cube",
-            std::make_shared<UnimplementedBufferSettings>(0.02f,
-                200.0f,
-                600.0f,
-                0.2f,
-                0.2f,
-                0.5f,
-                0.8f))};
-
     static const uint32_t CONTROL_RESOLUTION = 256;
     static const VkFormat CONTROL_FORMAT = VK_FORMAT_R16G16B16A16_SFLOAT;
     static const uint32_t CONTROL_KERNEL = 0;
@@ -96,12 +45,11 @@ namespace Beer::System
 
     void GalaxyContainer::CreateBuffers(const SerializableGalaxy& serializedData)
     {
-        for (const auto& definition : DEFINITIONS)
+        for (const auto& definition : definitions)
         {
             bufferMap[definition.Type] = std::make_unique<GalaxyObjectBuffer>(serializedData,
                 definition.Type,
                 definition.ShaderPath,
-                definition.MeshPath,
                 controlNoiseVolume.get(),
                 definition.Settings);
         }

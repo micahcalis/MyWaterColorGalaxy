@@ -19,7 +19,7 @@ namespace Beer::System
     {
     public:
         static constexpr float GALAXY_POS_SCALE = 1000.0f;
-        static constexpr float GALAXY_SIZE_SCALE = 200.0f;
+        static constexpr float GALAXY_SIZE_SCALE = 300.0f;
 
     private:
         std::shared_ptr<IGalaxyBufferSettings> settings = nullptr;
@@ -40,7 +40,6 @@ namespace Beer::System
         GalaxyObjectBuffer(const SerializableGalaxy& serializedData,
             GalaxyObjectType type,
             const char* shaderPath,
-            const char* meshPath,
             Rendering::Texture3D* controlNoiseVolume,
             std::shared_ptr<IGalaxyBufferSettings> settings);
 
@@ -49,6 +48,10 @@ namespace Beer::System
         void Draw(Rendering::CommandBuffer* commandBuffer,
             const Rendering::RenderContext& context,
             const Rendering::ShaderPassType pass);
+
+        Rendering::PhaseBuffer* GetDataBuffer() const { return dataBuffer.get(); }
+        Rendering::PhaseBuffer* GetPositionBuffer() const { return positionBuffer.get(); }
+        uint32_t GetInstanceCount() const { return instanceCount; }
 
     private:
         void InitializeDataBuffer();

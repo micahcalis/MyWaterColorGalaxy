@@ -12,11 +12,23 @@ namespace SDF
         public float LocalDistance;
     }
 
+    public struct FieldOut
+    {
+        public float SignedDist;
+        public float Material;
+
+        public __init(float _signedDist, float _material = 0)
+        {
+            SignedDist = _signedDist;
+            Material = _material;
+        }
+    }
+
     public interface SDF
     {
-        float Evaluate(MarchData data);
+        public FieldOut Evaluate(MarchData data);
 
-        float3 GetNormal(MarchData data)
+        public float3 GetNormal(MarchData data)
         {
             float eps = NORMAL_EPS + data.TotalDistance * NORMAL_EPS;
 
@@ -25,19 +37,19 @@ namespace SDF
 
             a.Position = data.Position + float3(eps, 0, 0);
             b.Position = data.Position - float3(eps, 0, 0);
-            float dx = Evaluate(a) - Evaluate(b);
+            float dx = Evaluate(a).SignedDist - Evaluate(b).SignedDist;
 
             a.Position = data.Position + float3(0, eps, 0);
             b.Position = data.Position - float3(0, eps, 0);
-            float dy = Evaluate(a) - Evaluate(b);
+            float dy = Evaluate(a).SignedDist - Evaluate(b).SignedDist;
 
             a.Position = data.Position + float3(0, 0, eps);
             b.Position = data.Position - float3(0, 0, eps);
-            float dz = Evaluate(a) - Evaluate(b);
+            float dz = Evaluate(a).SignedDist - Evaluate(b).SignedDist;
             
             return normalize(float3(dx, dy, dz));
         }
-    };
+    }
 
     public interface SDF2D
     {
@@ -72,6 +84,11 @@ namespace SDF
             return (position.x + position.y + position.z - scale) * 0.57735027;
         }
 
+        public float Plane(float3 position, float3 normal, float height)
+        {
+            return dot(position, normal) + height;
+        }
+
         public float Star2D(float2 position, float radius, int number, float sharpness)
         {
             float an = 3.14159265359 / float(number);
@@ -97,31 +114,62 @@ namespace SDF
             return abs(sphere) - thickness;
         }
 
-        public float Union(float a, float b)
+        public FieldOut Union(FieldOut a, FieldOut b)
         {
-            return min(a, b);
+            return (a.SignedDist < b.SignedDist) ? a : b;
         }
 
-        public float Subtraction(float a, float b)
+        public FieldOut Subtraction(FieldOut a, FieldOut b)
         {
-            return max(-a, b);
+            return FieldOut(
+                max(-a.SignedDist, b.SignedDist),
+                (-a.SignedDist > b.SignedDist) ? a.Material : b.Material
+            );
         }
 
-        public float Intersection(float a, float b)
+        public FieldOut Intersection(FieldOut a, FieldOut b)
         {
-            return max(a, b);
+            return (a.SignedDist > b.SignedDist) ? a : b;
         }
 
-        public float Xor(float a, float b)
+        public FieldOut Xor(FieldOut a, FieldOut b)
         {
-            return max(min(a, b), -max(a, b));
+            float d1 = min(a.SignedDist, b.SignedDist);
+            float d2 = -max(a.SignedDist, b.SignedDist);
+            
+            float m1 = (a.SignedDist < b.SignedDist) ? a.Material : b.Material;
+            float m2 = (a.SignedDist > b.SignedDist) ? a.Material : b.Material;
+            
+            return FieldOut(
+                max(d1, d2), 
+                (d1 > d2) ? m1 : m2
+            );
         }
 
-        public float SmoothMin(float a, float b, float k) 
+        public FieldOut SmoothMin(FieldOut a, FieldOut b, float k) 
         {
             k *= 4.0f;
-            float h = max(k - abs(a - b), 0.0f);
-            return min(a, b) - h * h * 0.25 / k;
+            float h = max(k - abs(a.SignedDist - b.SignedDist), 0.0f);
+            
+            float dist = min(a.SignedDist, b.SignedDist) - h * h * 0.25f / k;
+            float blendFactor = clamp(0.5f + (b.SignedDist - a.SignedDist) / k, 0.0f, 1.0f);
+            
+            return FieldOut(
+                dist, 
+                lerp(b.Material, a.Material, blendFactor));
+        }
+
+        public FieldOut SmoothMax(FieldOut a, FieldOut b, float k) 
+        {
+            k *= 4.0f;
+            float h = max(k - abs(a.SignedDist - b.SignedDist), 0.0f);
+            
+            float dist = max(a.SignedDist, b.SignedDist) + h * h * 0.25f / k;
+            float blendFactor = clamp(0.5f + (a.SignedDist - b.SignedDist) / k, 0.0f, 1.0f);
+            
+            return FieldOut(
+                dist, 
+                lerp(b.Material, a.Material, blendFactor));
         }
     }
 
@@ -136,9 +184,9 @@ namespace SDF
             radius = _radius;
         }
 
-        public float Evaluate(MarchData data)
+        public FieldOut Evaluate(MarchData data)
         {
-            return Functions.Sphere(data.Position - center, radius);
+            return FieldOut(Functions.Sphere(data.Position - center, radius));
         }
     }
 
@@ -153,9 +201,9 @@ namespace SDF
             size = _size;
         }
 
-        public float Evaluate(MarchData data)
+        public FieldOut Evaluate(MarchData data)
         {
-            return Functions.Box(data.Position, size);
+            return FieldOut(Functions.Box(data.Position, size));
         }
     }
 
@@ -172,9 +220,9 @@ namespace SDF
             minor = _minor;
         }
 
-        public float Evaluate(MarchData data)
+        public FieldOut Evaluate(MarchData data)
         {
-            return Functions.Torus(data.Position - center, major, minor);
+            return FieldOut(Functions.Torus(data.Position - center, major, minor));
         }
     }
 
@@ -189,9 +237,9 @@ namespace SDF
             scale = _scale;
         }
 
-        public float Evaluate(MarchData data)
+        public FieldOut Evaluate(MarchData data)
         {
-            return Functions.OctaHedron(data.Position - center, scale);
+            return FieldOut(Functions.OctaHedron(data.Position - center, scale));
         }
     }
 

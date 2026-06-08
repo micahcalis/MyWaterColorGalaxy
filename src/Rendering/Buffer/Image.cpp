@@ -30,29 +30,35 @@ namespace Beer::Rendering
         VkImageUsageFlags usage,
         vk::ImageAspectFlagBits aspectFlags,
         uint32_t layerCount,
+        bool isCubeMap,
         const Core::Device& device)
     {
+        layerCount = isCubeMap ? 6 : layerCount;
+
         auto allocation = sharedAllocator->CreateImage2D(width,
             height,
             format,
             VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
             usage,
             VMA_MEMORY_USAGE_AUTO,
-            layerCount);
+            layerCount,
+            isCubeMap);
 
         auto defaultView = Core::ImageUtilities::CreateImageView(allocation.Image,
             vk::Format(format),
             aspectFlags,
             layerCount,
             true,
+            isCubeMap,
             device);
 
         ImageData data{};
         data.Extent = vk::Extent3D(width, height, 1);
         data.Format = format;
         data.AspectMask = aspectFlags;
-        data.ArrayLayers = layerCount;
+        data.ArrayLayers = isCubeMap ? 6 : layerCount;
         data.Type = TextureType::TwoDim;
+        data.Cubemap = isCubeMap;
 
         return {allocation, defaultView, data};
     }
@@ -78,6 +84,7 @@ namespace Beer::Rendering
             aspectFlags,
             1,
             false,
+            false,
             device);
 
         ImageData data{};
@@ -86,6 +93,7 @@ namespace Beer::Rendering
         data.AspectMask = aspectFlags;
         data.ArrayLayers = 1;
         data.Type = TextureType::ThreeDim;
+        data.Cubemap = false;
 
         return {allocation, defaultView, data};
     }
@@ -106,6 +114,7 @@ namespace Beer::Rendering
         uint32_t height,
         VkFormat format,
         uint32_t layerCount,
+        bool isCubemap,
         ComputeContext* computeContext,
         Threads threads,
         uint32_t kernelIndex)
@@ -113,12 +122,48 @@ namespace Beer::Rendering
         std::shared_ptr<Rendering::Image> image = imageAssetManager->CreateEmpty2D(width,
             height,
             format,
-            layerCount);
+            layerCount,
+            isCubemap);
 
-        imageAssetManager->GenerateFromEmpty(image,
-            computeContext,
-            threads,
-            kernelIndex);
+        if (!isCubemap)
+        {
+            imageAssetManager->GenerateFromEmpty(image,
+                computeContext,
+                threads,
+                kernelIndex);
+        } else
+        {
+            std::shared_ptr<Rendering::Image> copyImage = imageAssetManager->CreateEmpty2D(width,
+                height,
+                format,
+                image->GetData().ArrayLayers,
+                false);
+
+            imageAssetManager->GenerateFromEmpty(copyImage,
+                computeContext,
+                threads,
+                kernelIndex);
+
+            imageAssetManager->CopyImage(copyImage,
+                image);
+        }
+
+        return image;
+    }
+
+    std::shared_ptr<Image> Image::GetEmpty2D(uint32_t width,
+        uint32_t height,
+        VkFormat format,
+        VkImageUsageFlags usage,
+        vk::ImageAspectFlagBits aspectFlags,
+        uint32_t layerCount,
+        bool isCubemap)
+    {
+        std::shared_ptr<Rendering::Image> image = imageAssetManager->CreateEmpty2D(width,
+            height,
+            format,
+            layerCount,
+            isCubemap);
 
         return image;
     }
@@ -202,7 +247,20 @@ namespace Beer::Rendering
 
             sourceStage = vk::PipelineStageFlagBits::eComputeShader;
             destinationStage = vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader;
+        } else if (oldLayout == vk::ImageLayout::eGeneral && newLayout == vk::ImageLayout::eTransferSrcOptimal)
+        {
+            barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+            barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
 
+            sourceStage = vk::PipelineStageFlagBits::eComputeShader;
+            destinationStage = vk::PipelineStageFlagBits::eTransfer;
+        } else if (oldLayout == vk::ImageLayout::eShaderReadOnlyOptimal && newLayout == vk::ImageLayout::eTransferSrcOptimal)
+        {
+            barrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+            barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+
+            sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
+            destinationStage = vk::PipelineStageFlagBits::eTransfer;
         } else
         {
             throw std::invalid_argument("unsupported layout transition!");
@@ -310,4 +368,47 @@ namespace Beer::Rendering
             vk::ImageLayout::eShaderReadOnlyOptimal);
     }
 
+    void Image::QueueImageCopy(vk::raii::CommandBuffer& commandBuffer,
+        std::shared_ptr<Rendering::Image> destinationImage,
+        vk::ImageLayout sourceLayout)
+    {
+        QueueTransitionLayout(GetHandle(),
+            GetData(),
+            commandBuffer,
+            sourceLayout,
+            vk::ImageLayout::eTransferSrcOptimal);
+
+        QueueTransitionLayout(destinationImage->GetHandle(),
+            destinationImage->GetData(),
+            commandBuffer,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eTransferDstOptimal);
+
+        ImageData sourceData = GetData();
+        vk::ImageCopy copyRegion{};
+        copyRegion.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+        copyRegion.srcSubresource.baseArrayLayer = sourceData.BaseArrayLayer;
+        copyRegion.srcSubresource.layerCount = sourceData.ArrayLayers;
+        copyRegion.srcSubresource.mipLevel = 0;
+
+        ImageData destinationData = destinationImage->GetData();
+        copyRegion.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+        copyRegion.dstSubresource.baseArrayLayer = destinationData.BaseArrayLayer;
+        copyRegion.dstSubresource.layerCount = destinationData.ArrayLayers;
+        copyRegion.dstSubresource.mipLevel = 0;
+
+        copyRegion.extent = sourceData.Extent;
+
+        commandBuffer.copyImage(GetHandle(),
+            vk::ImageLayout::eTransferSrcOptimal,
+            destinationImage->GetHandle(),
+            vk::ImageLayout::eTransferDstOptimal,
+            copyRegion);
+
+        QueueTransitionLayout(destinationImage->GetHandle(),
+            destinationImage->GetData(),
+            commandBuffer,
+            vk::ImageLayout::eTransferDstOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
 } // namespace Beer::Rendering

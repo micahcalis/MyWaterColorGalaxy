@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Core/Application/Utilities/RendererUtilities.hpp"
 #include "RendererUtilities.hpp"
 #include "vulkan/vulkan.hpp"

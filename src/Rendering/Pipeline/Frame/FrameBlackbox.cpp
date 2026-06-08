@@ -157,6 +157,7 @@ namespace Beer::Rendering
                 usageFlags,
                 aspectFlags,
                 layerCount,
+                false,
                 *device));
 
         if (!isDepth)

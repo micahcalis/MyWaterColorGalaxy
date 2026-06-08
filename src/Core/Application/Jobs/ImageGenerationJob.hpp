@@ -3,6 +3,7 @@
 #include "Core/Application/Jobs/IUploadJob.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Compute/Threads.hpp"
+
 namespace Beer::Core
 {
     class ImageGenerationJob : public IUploadJob

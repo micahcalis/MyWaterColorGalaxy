@@ -1,8 +1,11 @@
 #pragma once
 
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Texture/Texture3D.hpp"
 #include "System/Components/General/Transform.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -15,11 +18,25 @@ namespace Beer::Rendering
         System::Transform skyboxTransform{};
         std::shared_ptr<Rendering::Texture3D> controlNoiseVolume = nullptr;
 
+        std::shared_ptr<ComputeContext> noiseContext = nullptr;
+        std::shared_ptr<Texture2D> noiseCubemap = nullptr;
+        std::shared_ptr<ComputeContext> blurNoiseContextA = nullptr;
+        std::shared_ptr<Texture2D> blurredNoiseCubemapA = nullptr;
+        std::shared_ptr<ComputeContext> blurNoiseContextB = nullptr;
+        std::shared_ptr<Texture2D> blurredNoiseCubemapB = nullptr;
+
+        std::shared_ptr<Material> starMaterial = nullptr;
+        std::shared_ptr<Mesh> starPointCloud = nullptr;
+
     public:
         DrawSkyboxPass(std::shared_ptr<Rendering::Texture3D> controlNoiseVolume);
 
         void OnRenderSetup(const RenderContext& context) override;
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context) override;
         PassDependencyList GetDependencies() const override;
+        void InitializeNoiseCubemaps(const System::SerializableGalaxy& serializedGalaxy);
+
+    private:
+        void InitializeStarPointCloud();
     };
 } // namespace Beer::Rendering

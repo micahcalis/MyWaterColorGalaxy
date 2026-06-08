@@ -26,14 +26,31 @@ namespace Beer::Core
         vk::ImageAspectFlagBits aspectFlags,
         uint32_t layerCount,
         bool is2D,
+        bool isCubemap,
         const Device& device)
     {
         vk::ImageViewCreateInfo viewInfo{};
         viewInfo.image = image;
 
-        vk::ImageViewType viewType = is2D ? (layerCount > 1 ? vk::ImageViewType::e2DArray : vk::ImageViewType::e2D) : vk::ImageViewType::e3D;
+        vk::ImageViewType viewType;
+
+        if (is2D)
+        {
+            if (!isCubemap)
+            {
+                viewType = layerCount > 1 ? vk::ImageViewType::e2DArray : vk::ImageViewType::e2D;
+            } else
+            {
+                viewType = vk::ImageViewType::eCube;
+            }
+        } else
+        {
+            viewType = vk::ImageViewType::e3D;
+        }
+
         viewInfo.viewType = viewType;
         viewInfo.format = format;
+        layerCount = isCubemap ? 6 : layerCount;
         viewInfo.subresourceRange = vk::ImageSubresourceRange(aspectFlags, 0, 1, 0, layerCount);
 
         return (*device.GetLogicalDevice()).createImageView(viewInfo);

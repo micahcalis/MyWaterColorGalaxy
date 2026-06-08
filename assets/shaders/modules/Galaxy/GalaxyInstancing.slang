@@ -7,7 +7,7 @@ import Noise.FractalNoise;
 import Core.BeerCore;
 import Lights;
 import Math.BeerMath;
-import NOise.Hash;
+import Noise.Hash;
 
 namespace Galaxy
 {
@@ -42,7 +42,7 @@ namespace Galaxy
         float3 position = _DynamicGalaxyObjectPositions[instanceID].xyz;
         float bloatedScale = WC.ApplyBloat(scale, position, bloatModifier);
 
-        return positionOS * bloatedScale + position;
+        return positionOS * scale + position;
     }
 
     public float3 GetTransformCenter(uint instanceID)
@@ -58,6 +58,30 @@ namespace Galaxy
     public ObjectData GetMaterialData(uint instanceID)
     {
         return _GalaxyObjectData[instanceID];
+    }
+    
+    public float3 ToWorldSpaceBloatedAsteroid(float3 positionOS, 
+        uint instanceID, 
+        float bloatModifier,
+        uint asteroidID,
+        out float3 transformCenter,
+        out float transformScale)
+    {
+        Galaxy.ObjectData data = _GalaxyObjectData[instanceID];
+        float3 randomDir = normalize((Noise.Functions.Hash13(asteroidID, data.Id) - 0.5f) * 2.0f);
+        float randomRadius = pow(Noise.Functions.Hash11(asteroidID, data.Id + 123), 0.3333f);
+
+        float3 position = _DynamicGalaxyObjectPositions[instanceID].xyz + (randomDir * randomRadius * data.Scale * 1.5f);
+
+        float hashScale = Noise.Functions.Hash11(asteroidID, data.Id + 4893);
+        float scale = data.Scale * lerp(0.05f, 0.3f, hashScale);
+        
+        float bloatedScale = WC.ApplyBloat(scale, position, bloatModifier);
+
+        transformCenter = position;
+        transformScale = scale;
+
+        return positionOS * scale + position;
     }
 
     public struct TurbulenceNoiseSampler : Noise.INoise3DSampler

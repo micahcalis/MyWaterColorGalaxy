@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Mesh/Mesh.hpp"
 
 namespace Beer::System
 {
@@ -17,6 +18,8 @@ namespace Beer::System
 
     public:
         virtual ~IGalaxyBufferSettings() = default;
+        virtual std::shared_ptr<Rendering::Mesh> GetMesh() = 0;
+
         virtual void ApplyMaterialSettings(Rendering::Material* material)
         {
             material->SetFloat("_DepthBleedMin", DepthBleedMin);
@@ -30,6 +33,9 @@ namespace Beer::System
 
     class UnimplementedBufferSettings : public IGalaxyBufferSettings
     {
+    private:
+        const char* meshPath;
+
     public:
         UnimplementedBufferSettings(float speedMultiplier,
             float depthBleedMin,
@@ -37,15 +43,22 @@ namespace Beer::System
             float granulationNoiseIntensity,
             float hardness,
             float smoothness,
-            float wetness)
+            float wetness,
+            const char* meshPath)
         {
             SpeedMultiplier = speedMultiplier;
             DepthBleedMin = depthBleedMin;
             DepthBleedMax = depthBleedMax;
-            GranulationNoiseIntensity = 0.2f;
+            GranulationNoiseIntensity = granulationNoiseIntensity;
             Hardness = hardness;
             Smoothness = smoothness;
             Wetness = wetness;
+            this->meshPath = meshPath;
+        }
+
+        std::shared_ptr<Rendering::Mesh> GetMesh() override
+        {
+            return Rendering::Mesh::Get(meshPath);
         }
 
         void ApplyMaterialSettings(Rendering::Material* material) override

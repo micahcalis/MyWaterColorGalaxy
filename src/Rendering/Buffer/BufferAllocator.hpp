@@ -20,7 +20,6 @@ namespace Beer::Rendering
 
         [[nodiscard]] VmaAllocator GetAllocator() const { return vmaAllocator; }
 
-        /// When returning the BufferAllocation a "copy" is made, so marking the BufferAllocation as const doesn't do anything.
         [[nodiscard]] BufferAllocation CreateBuffer(VkDeviceSize size,
             VkBufferUsageFlags usage,
             VmaMemoryUsage memoryUsage,
@@ -34,7 +33,8 @@ namespace Beer::Rendering
             VkImageTiling tiling,
             VkImageUsageFlags usage,
             VmaMemoryUsage memoryUsage,
-            uint32_t layerCount) const;
+            uint32_t layerCount,
+            bool isCubeMap) const;
 
         [[nodiscard]] ImageAllocation CreateImage3D(uint32_t width,
             uint32_t height,

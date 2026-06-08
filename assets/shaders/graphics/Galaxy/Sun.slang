@@ -6,6 +6,8 @@ import Deferred.DeferredUtils;
 import SphereTracing;
 import SDF;
 import Galaxy.GalaxyInstancing;
+import Galaxy.GalaxySDFs;
+import Core.Samplers;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -17,7 +19,10 @@ cbuffer MaterialData
     float _GranulationNoiseIntensity;
     float _DepthBleedMin;
     float _DepthBleedMax;
+    float _GradientIntensity;
 }
+
+BIND_MATERIAL_TEX(4) Sampler3D<float2> _SunNoiseVolume;
 
 struct MeshData
 {
@@ -47,6 +52,14 @@ VERT VertexData SunVert(MeshData input, INSTANCEID)
     return output;
 }
 
+public struct SunNoiseSampler : ISampler3DFloat2
+{
+    public float2 Sample(float3 uvw)
+    {
+        return _SunNoiseVolume.Sample(uvw);
+    }
+}
+
 FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFace)
 {
     TransformData transform = GetModelTransform(input.instanceID);
@@ -54,20 +67,21 @@ FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFa
     float3 transformCenter = GetTransformCenter(transform.objToWorldMat);
     float3 viewDirWS = GetViewDirectionWS(input.positionWS);
 
-    SphereTracing.AABB boundingbox = SphereTracing.AABB(transformCenter, transformScale * 2);
+    SphereTracing.AABB volume = SphereTracing.AABB(transformCenter, transformScale * 2);
+    SphereTracing.RayAligner<SphereTracing.AABB> rayAligner = SphereTracing.RayAligner<SphereTracing.AABB>(
+        volume,
+        isFrontFace,
+        viewDirWS);
 
-    if (!boundingbox.ShouldMarch(_CameraPos, isFrontFace, _ZBufferParams.x))
-    {
-        discard;
-    }
+    SphereTracing.Ray ray = rayAligner.GetAlignedRay();
 
-    SphereTracing.Ray ray = SphereTracing.Ray(_CameraPos, viewDirWS, _ZBufferParams.x);
-    ray = boundingbox.AlignWithBox(ray);
+    Galaxy.Sun sunSDF = Galaxy.Sun(transformCenter, 
+        transformScale.x, 
+        _SunColor.rgb,
+        _GradientIntensity);
 
-    SDF.Sphere planetSDF = SDF.Sphere(transformCenter, transformScale.x * 0.8f);
-
-    SphereTracing.SphereTracer<SDF.Sphere> tracer = SphereTracing.SphereTracer<SDF.Sphere>(
-        planetSDF,
+    SphereTracing.SphereTracer<Galaxy.Sun> tracer = SphereTracing.SphereTracer<Galaxy.Sun>(
+        sunSDF,
         ray);
 
     SphereTracing.TraceResult result = tracer.Trace();
@@ -75,7 +89,11 @@ FRAG Deferred.FragData SunFrag(VertexData input, bool isFrontFace : SV_IsFrontFa
     if (!result.Hit)
         discard;
 
-    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(_SunColor.rgb,
+    float3 sunColor = sunSDF.GetSunColor(result.Position, 
+        result.Normal,
+        SunNoiseSampler());
+
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(sunColor,
         1,
         result.Position,
         result.Normal,

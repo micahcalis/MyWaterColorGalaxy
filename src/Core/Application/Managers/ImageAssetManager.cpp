@@ -1,4 +1,5 @@
 #include "Core/Application/Managers/ImageAssetManager.hpp"
+#include "Core/Application/Jobs/ImageCopyJob.hpp"
 #include "Core/Application/Jobs/ImageGenerationJob.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
 #include "Core/Assets/ImageAsset.hpp"
@@ -7,6 +8,7 @@
 #include "Rendering/Texture/Texture2D.hpp"
 #include "Rendering/Texture/Texture3D.hpp"
 #include <glm/glm.hpp>
+#include <memory>
 
 namespace Beer::Core
 {
@@ -25,6 +27,7 @@ namespace Beer::Core
                 VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
                 vk::ImageAspectFlagBits::eColor,
                 1,
+                false,
                 *device));
 
         std::unique_ptr<ImageUploadJob> uploadJob = std::make_unique<ImageUploadJob>(
@@ -51,6 +54,7 @@ namespace Beer::Core
                     | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT,
                 vk::ImageAspectFlagBits::eColor,
                 1,
+                false,
                 *device));
 
         std::unique_ptr<ImageUploadJob> uploadJob2D = std::make_unique<ImageUploadJob>(
@@ -58,7 +62,24 @@ namespace Beer::Core
 
         uploadManager->AddJob(std::move(uploadJob2D));
 
-        Rendering::Texture2D::SetFallbackTexture(image2D);
+        std::shared_ptr<Rendering::Image> imageCube = std::make_shared<Rendering::Image>(
+            Rendering::Image::CreateImage2D(1,
+                1,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT
+                    | VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT
+                    | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT,
+                vk::ImageAspectFlagBits::eColor,
+                6,
+                true,
+                *device));
+
+        std::unique_ptr<ImageUploadJob> uploadJobCube = std::make_unique<ImageUploadJob>(
+            imageCube, (void*)&WHITE_PIXEL, PIXEL_SIZE);
+
+        uploadManager->AddJob(std::move(uploadJobCube));
+
+        Rendering::Texture2D::SetFallbackTextures(image2D, imageCube);
 
         std::shared_ptr<Rendering::Image> image3D = std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage3D(1,
@@ -82,16 +103,20 @@ namespace Beer::Core
     std::shared_ptr<Rendering::Image> ImageAssetManager::CreateEmpty2D(uint32_t width,
         uint32_t height,
         VkFormat format,
-        uint32_t layerCount)
+        uint32_t layerCount,
+        bool isCubemap)
     {
         return std::make_shared<Rendering::Image>(
             Rendering::Image::CreateImage2D(width,
                 height,
                 format,
-                VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT
-                    | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT,
+                VK_IMAGE_USAGE_SAMPLED_BIT
+                    | VK_IMAGE_USAGE_STORAGE_BIT
+                    | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+                    | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
                 vk::ImageAspectFlagBits::eColor,
                 layerCount,
+                isCubemap,
                 *device));
     }
 
@@ -123,5 +148,15 @@ namespace Beer::Core
             kernelIndex);
 
         uploadManager->AddJob(std::move(imageGenerationJob));
+    }
+
+    void ImageAssetManager::CopyImage(std::shared_ptr<Rendering::Image> sourceImage,
+        std::shared_ptr<Rendering::Image> destinationImage)
+    {
+        std::unique_ptr<Core::ImageCopyJob> imageCopyJob = std::make_unique<Core::ImageCopyJob>(
+            sourceImage,
+            destinationImage);
+
+        uploadManager->AddJob(std::move(imageCopyJob));
     }
 } // namespace Beer::Core

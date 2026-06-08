@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Buffer/Image.hpp"
 #include "Rendering/Sampler/Sampler.hpp"
 #include "Rendering/Texture/ITexture.hpp"
 #include <cstdint>
@@ -13,19 +14,24 @@ namespace Beer::Rendering
     {
     private:
         inline static std::shared_ptr<Texture2D> defaultBlack;
+        inline static std::shared_ptr<Texture2D> cubeDefaultBlack;
 
     public:
-        static void SetFallbackTexture(std::shared_ptr<Image> defaultBlack)
+        static void SetFallbackTextures(std::shared_ptr<Image> defaultBlack,
+            std::shared_ptr<Image> cubeDefaultBlack)
         {
             Texture2D::defaultBlack = std::make_shared<Texture2D>(defaultBlack);
+            Texture2D::cubeDefaultBlack = std::make_shared<Texture2D>(cubeDefaultBlack);
         }
 
-        static void ResetFallbackTexture()
+        static void ResetFallbackTextures()
         {
             defaultBlack.reset();
+            cubeDefaultBlack.reset();
         }
 
         static std::shared_ptr<Texture2D> GetFallbackTexture() { return defaultBlack; }
+        static std::shared_ptr<Texture2D> GetFallbackCubeTexture() { return cubeDefaultBlack; }
 
         static Texture2D Make(TextureMakeSettings settings,
             ComputeContext* context,
@@ -34,7 +40,8 @@ namespace Beer::Rendering
             std::shared_ptr<Image> image = Image::Generate2D(settings.Width,
                 settings.Height,
                 settings.Format,
-                settings.LayerCount,
+                settings.Depth,
+                settings.IsCubeMap,
                 context,
                 settings.GetThreads(),
                 settings.KernelIndex);

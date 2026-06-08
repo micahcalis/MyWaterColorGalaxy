@@ -224,4 +224,61 @@ namespace Noise
             return result;
         }
     }
+
+    public struct Voronoi3D
+    {
+        private float3 uvw; 
+        private int seed;
+
+        public __init(float3 _uvw, int _seed)
+        {
+            uvw = _uvw;
+            seed = _seed;
+        }
+
+        public VoronoiResult3D Compute(float3 frequency = 1)
+        {
+            int3 scale = (int3)frequency;
+
+            int octaveSeed = seed + scale.x * 12345; 
+            float3 gridOffset = Functions.Hash33(int3(octaveSeed, octaveSeed * 2, octaveSeed * 3)) * 100.0f;
+            float3 scaledCoord = (uvw * scale) + gridOffset;
+            
+            int3 floorCoord = (int3)floor(scaledCoord);
+            float3 fracCoord = frac(scaledCoord);
+
+            VoronoiResult3D result = (VoronoiResult3D)0;
+            result.Distance = 1e+6f;
+
+            [unroll]
+            for (int z = -1; z <= 1; z++)
+            {
+                [unroll]
+                for (int y = -1; y <= 1; y++)
+                {
+                    [unroll]
+                    for (int x = -1; x <= 1; x++)
+                    {
+                        float3 neighbour = float3(x, y, z);
+                        int3 cellId = floorCoord + int3(x, y, z);
+                        
+                        int3 wrappedCellId = (cellId % scale + scale) % scale;
+                        float3 randomPoint = Functions.Hash33(wrappedCellId + octaveSeed);
+                        
+                        float3 diff = neighbour + randomPoint - fracCoord;
+                        float dist = length(diff);
+                        
+                        if (dist < result.Distance)
+                        {
+                            result.Distance = dist;
+                            result.Center = randomPoint + cellId;
+                            result.Id = cellId;
+                        }
+                    }
+                }
+            }
+
+            return result;
+         }
+    }
 }
