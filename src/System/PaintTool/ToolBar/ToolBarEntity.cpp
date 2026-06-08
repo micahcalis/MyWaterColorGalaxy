@@ -37,8 +37,8 @@ namespace Beer::System
         backgroundMat->SetTexture("_SpriteTex", squareTexture.get());
         backgroundMat->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-        rootTransform.Anchor = AnchorMode::BottomLeft;
-        rootTransform.Pivot = AnchorMode::BottomLeft;
+        rootTransform.Anchor = AnchorMode::TopLeft;
+        rootTransform.Pivot = AnchorMode::TopLeft;
         rootTransform.Position.x += 0.02f;
         rootTransform.Scale = PANEL_SIZE;
         MarkDirty();

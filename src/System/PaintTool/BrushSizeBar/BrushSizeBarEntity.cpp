@@ -9,7 +9,7 @@
 namespace Beer::System
 {
     static const glm::vec2 PANEL_SIZE = glm::vec2(0.25f, 0.8f);
-    static const glm::vec2 PANEL_OFFSET = glm::vec2(-0.05f, -0.05f);
+    static const glm::vec2 PANEL_OFFSET = glm::vec2(0.6f, -0.02f);
 
     static const glm::vec2 SLIDER_CONTAINER_SIZE = glm::vec2(0.1f, 0.4f);
     static const glm::vec2 SLIDER_BUTTON_SIZE = glm::vec2(0.1f, 0.05f);
@@ -27,8 +27,8 @@ namespace Beer::System
         backgroundMaterial->SetTexture("_SpriteTex", squareTexture.get());
         backgroundMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-        rootTransform.Anchor = AnchorMode::TopRight;
-        rootTransform.Pivot = AnchorMode::TopRight;
+        rootTransform.Anchor = AnchorMode::TopLeft;
+        rootTransform.Pivot = AnchorMode::TopLeft;
         rootTransform.Scale = PANEL_SIZE;
         rootTransform.Position = PANEL_OFFSET;
 

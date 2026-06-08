@@ -11,6 +11,7 @@
 #include "GalaxyMap/GalaxySeed.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
 #include "MenuBar/MenuBarEntity.hpp"
+#include "ModeButton/ModeButtonEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
@@ -38,6 +39,7 @@ namespace Beer::System
         InitializeColorBar();
         InitializeBrushSizeBar();
         InitializeHoloCursor();
+        InitializeModeButton();
 
         TryOpenMap();
 
@@ -89,6 +91,11 @@ namespace Beer::System
         if (hologramCursorEntity != nullptr)
         {
             hologramCursorEntity->Update();
+        }
+
+        if (modeButtonEntity != nullptr)
+        {
+            modeButtonEntity->Update();
         }
     }
 
@@ -272,6 +279,36 @@ namespace Beer::System
         hologramCursorEntity = registry.CreateEntity<HologramCursorEntity>(getCursorState,
             getMouseInput,
             getBrushTexture);
+    }
+
+    void PaintToolContext::InitializeModeButton()
+    {
+        if (colorMixerEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Mode Button when Color Mixer is null!");
+        }
+
+        if (brushSizeBarEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Mode Button when Brush Size Bar is null!");
+        }
+
+        if (toolBarEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Mode Button when Tool Bar is null!");
+        }
+
+        Function<void, bool> setColorModeActive = [this](bool enabled) -> void { colorBarEntity->SetTreeEnabled(enabled); };
+
+        Function<void, bool> setBrushModeActive = [this](bool enabled) -> void {
+            toolBarEntity->SetTreeEnabled(enabled);
+            brushSizeBarEntity->SetTreeEnabled(enabled); };
+
+        modeButtonEntity = registry.CreateEntity<ModeButtonEntity>(setColorModeActive,
+            setBrushModeActive,
+            getTabKeyInput);
+
+        modeButtonEntity->InitializeModeButton();
     }
 
     void PaintToolContext::TryOpenMap()

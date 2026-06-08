@@ -12,6 +12,7 @@
 namespace Beer::System
 {
     static const float MAP_SCALE = 2.0f;
+    static const glm::vec2 MAP_OFFSET = glm::vec2(0.25f, 0);
     static const float STARS_FREQUENCY = 10.0f;
     static const float STARS_SCALE = 0.2f;
     static const glm::vec4 STARS_COLOR = glm::vec4(0.97f, 0.97f, 0.7f, 1.0f);
@@ -53,6 +54,7 @@ namespace Beer::System
         rootTransform.Anchor = AnchorMode::Center;
         rootTransform.Pivot = AnchorMode::Center;
         rootTransform.Scale = glm::vec2(MAP_SCALE);
+        rootTransform.Position = MAP_OFFSET;
 
         InitializePerlinWorleyTex();
         InitializeStar();

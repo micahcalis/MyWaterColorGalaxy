@@ -79,6 +79,7 @@ namespace Beer::System
         Function<MouseInput> getMouseInput = [this]() -> MouseInput { return inputManager->GetMouseInput(); };
         Function<ButtonInput> getDebugKeyInput = [this]() -> ButtonInput { return inputManager->GetDebugButtonInput(); };
         Function<bool> getReturnPressed = [this]() -> bool { return inputManager->GetTabButtonInput().ButtonExit; };
+        Function<ButtonInput> getTabKeyInput = [this]() -> ButtonInput { return inputManager->GetTabButtonInput(); };
 
         contextHandler->RegisterContextFactory(ContextType::Galaxy,
             [this, getPlayerInput, getReturnPressed]() -> std::shared_ptr<IContext> {
@@ -92,9 +93,9 @@ namespace Beer::System
             });
 
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
-            [this, getMouseInput, getDebugKeyInput]() -> std::shared_ptr<PaintToolContext> {
+            [this, getMouseInput, getDebugKeyInput, getTabKeyInput]() -> std::shared_ptr<PaintToolContext> {
                 MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
-                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, handler);
+                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, getTabKeyInput, handler);
             });
     }
 

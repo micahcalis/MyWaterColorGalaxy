@@ -2,6 +2,7 @@
 
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
+#include "ModeButton/ModeButtonEntity.hpp"
 #include "System/Delegates/BeerEvent.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapEntity.hpp"
@@ -34,19 +35,23 @@ namespace Beer::System
         ToolBarEntity* toolBarEntity = nullptr;
         BrushSizeBarEntity* brushSizeBarEntity = nullptr;
         HologramCursorEntity* hologramCursorEntity = nullptr;
+        ModeButtonEntity* modeButtonEntity = nullptr;
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
         Function<ButtonInput> getDebugKeyInput = nullptr;
+        Function<ButtonInput> getTabKeyInput = nullptr;
         bool toggle = false;
         MapHandler mapHandler;
 
     public:
         PaintToolContext(Function<MouseInput> getMouseInput,
             Function<ButtonInput> getDebugKeyInput,
+            Function<ButtonInput> getTabKeyInput,
             MapHandler mapHandler)
             : getMouseInput(getMouseInput)
             , getDebugKeyInput(getDebugKeyInput)
+            , getTabKeyInput(getTabKeyInput)
             , mapHandler(mapHandler)
         {
         }
@@ -65,6 +70,7 @@ namespace Beer::System
         void InitializeToolBar();
         void InitializeBrushSizeBar();
         void InitializeHoloCursor();
+        void InitializeModeButton();
         void TryOpenMap();
         SerializablePaintTool SerializePaintTool() const;
     };
