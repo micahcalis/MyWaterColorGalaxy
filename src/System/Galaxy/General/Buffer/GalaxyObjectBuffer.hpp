@@ -49,6 +49,10 @@ namespace Beer::System
             const Rendering::RenderContext& context,
             const Rendering::ShaderPassType pass);
 
+        Rendering::PhaseBuffer* GetDataBuffer() const { return dataBuffer.get(); }
+        Rendering::PhaseBuffer* GetPositionBuffer() const { return positionBuffer.get(); }
+        uint32_t GetInstanceCount() const { return instanceCount; }
+
     private:
         void InitializeDataBuffer();
         void InitializeDynamicPositions(const SerializableGalaxy& serializedData,
