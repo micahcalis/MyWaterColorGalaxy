@@ -31,9 +31,8 @@ namespace Beer::System
     static const int CENTER_STAR_GRAD_STEPS = 6;
 
     GalaxyMapEntity::GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
-        Function<MouseInput> getMouseInput,
-        Function<bool> isColorMixerOpen)
-        : galaxyMapBuffer(galaxyMapBuffer), getMouseInput(getMouseInput), isColorMixerOpen(isColorMixerOpen), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+        Function<MouseInput> getMouseInput)
+        : galaxyMapBuffer(galaxyMapBuffer), getMouseInput(getMouseInput), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         galaxyMaterial = std::make_shared<Rendering::Material>("UI/GalaxyMapSprite");
         galaxyMapBuffer->SetMapMaterial(galaxyMaterial);

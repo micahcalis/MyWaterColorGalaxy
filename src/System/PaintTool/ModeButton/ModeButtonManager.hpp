@@ -38,7 +38,7 @@ namespace Beer::System
         {
             ButtonInput tabInput = getTabKeyInput();
 
-            if (tabInput.ButtonExit)
+            if (tabInput.ButtonStart)
             {
                 ToggleMode();
             }
@@ -69,7 +69,7 @@ namespace Beer::System
             this->setBrushModeActive = setBrushModeActive;
 
             buttonMaterial->SetTexture("_SpriteTex",
-                startMode == BrushMenuMode::ColorMenu ? colorModeTexture : brushModeTexture,
+                startMode == BrushMenuMode::ColorMenu ? brushModeTexture : colorModeTexture,
                 false);
         }
 
@@ -82,13 +82,13 @@ namespace Beer::System
             {
                 setColorModeActive(true);
                 setBrushModeActive(false);
-                buttonMaterial->SetTexture("_SpriteTex", colorModeTexture, false);
+                buttonMaterial->SetTexture("_SpriteTex", brushModeTexture, false);
 
             } else
             {
                 setColorModeActive(false);
                 setBrushModeActive(true);
-                buttonMaterial->SetTexture("_SpriteTex", brushModeTexture, false);
+                buttonMaterial->SetTexture("_SpriteTex", colorModeTexture, false);
             }
 
             currentMode = isTool ? BrushMenuMode::ColorMenu : BrushMenuMode::ToolMenu;

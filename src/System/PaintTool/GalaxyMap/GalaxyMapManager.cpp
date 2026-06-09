@@ -8,6 +8,7 @@
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
 #include <memory>
+#include <print>
 
 namespace Beer::System
 {

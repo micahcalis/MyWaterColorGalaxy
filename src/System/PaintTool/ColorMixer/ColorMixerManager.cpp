@@ -41,16 +41,6 @@ namespace Beer::System
         clearButton->SetOnClick([this]() -> void { ClearColorMixer(); });
     }
 
-    void ColorMixerManager::SetCloseButton(Function<void> closeColorMixer,
-        UITransform* closeTransform,
-        Rendering::Material* closeMaterial)
-    {
-        this->closeColorMixer = closeColorMixer;
-
-        closeButton = std::make_unique<Button>(closeTransform, closeMaterial);
-        closeButton->SetOnClick([this]() -> void { CloseColorMixer(); });
-    }
-
     void ColorMixerManager::SetColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
         Function<MouseInput> getMouseInput,
         UITransform* colorPickerTransform,
@@ -74,13 +64,5 @@ namespace Beer::System
             return;
 
         clearColorMixer();
-    }
-
-    void ColorMixerManager::CloseColorMixer()
-    {
-        if (closeColorMixer == nullptr)
-            return;
-
-        closeColorMixer();
     }
 } // namespace Beer::System

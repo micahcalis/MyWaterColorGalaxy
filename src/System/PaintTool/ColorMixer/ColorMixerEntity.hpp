@@ -41,10 +41,6 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> colorDisplay = nullptr;
         std::shared_ptr<Rendering::Material> colorDisplayMaterial = nullptr;
 
-        std::unique_ptr<UISubEntity> closeButton = nullptr;
-        std::shared_ptr<Rendering::Material> closeButtonMaterial = nullptr;
-        std::shared_ptr<Rendering::Texture2D> closeButtonTexture = nullptr;
-
     public:
         ColorMixerEntity();
         Rendering::Material* GetColorMixerMat() const { return colorMixerDisplayMat.get(); }
@@ -53,8 +49,6 @@ namespace Beer::System
 
         void InitializeColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
             Function<MouseInput> getMouseInput);
-
-        void InitializeCloseButton();
 
         void Update() override
         {
@@ -120,11 +114,6 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(colorPickerIcon.get(), colorPickerIconMaterial.get()));
                 renderItems.push_back(UIRenderItem(paintPigmentIcon.get(), paintPigmentIconMaterial.get()));
                 renderItems.push_back(UIRenderItem(colorDisplay.get(), colorDisplayMaterial.get()));
-            }
-
-            if (GetMixerManager()->CloseButtonInitialized())
-            {
-                renderItems.push_back(UIRenderItem(closeButton->GetTransform(), closeButtonMaterial.get()));
             }
 
             return renderItems;

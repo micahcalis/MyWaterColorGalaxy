@@ -28,18 +28,13 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> starEntity = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
-        Function<bool> isColorMixerOpen = nullptr;
 
     public:
         GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
-            Function<MouseInput> getMouseInput,
-            Function<bool> isColorPickerOpen);
+            Function<MouseInput> getMouseInput);
 
         void Update() override
         {
-            if (!isColorMixerOpen())
-                manager->Update();
-
             if (NeedsUpdate())
             {
                 rootTransform.HierarchalUpdate();
@@ -48,6 +43,8 @@ namespace Beer::System
                 screenVersion = Core::Screen::Version();
                 Rendering::Shader::Globals()->SetGalaxyMapRect(rootTransform.Rect);
             }
+
+            manager->Update();
         }
 
         GalaxyMapManager* GetMapManager() const { return static_cast<GalaxyMapManager*>(manager.get()); }

@@ -140,9 +140,6 @@ namespace Beer::System
         paintSimSubPipeline->SetGetColorPickerState([this]() -> ColorPickingState {
             return colorMixerEntity->GetMixerManager()->GetColorPicker()->GetState();
         });
-
-        colorMixerEntity->InitializeCloseButton();
-        colorMixerEntity->Close();
     }
 
     void PaintToolContext::InitializeColorBar()
@@ -208,9 +205,7 @@ namespace Beer::System
 
         galaxyMapBuffer = std::make_unique<GalaxyMapBuffer>(GalaxySeed());
 
-        Function<bool> isColorMixerOpen = [this]() -> bool { return colorMixerEntity->GetEnabled(); };
-
-        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get(), getMouseInput, isColorMixerOpen);
+        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get(), getMouseInput);
 
         galaxyMapEntity->InitializeCursor(
             [this](ColorBarLevel level)
@@ -298,7 +293,10 @@ namespace Beer::System
             throw std::runtime_error("Trying to Mode Button when Tool Bar is null!");
         }
 
-        Function<void, bool> setColorModeActive = [this](bool enabled) -> void { colorBarEntity->SetTreeEnabled(enabled); };
+        Function<void, bool> setColorModeActive = [this](bool enabled) -> void {
+            colorBarEntity->SetTreeEnabled(enabled);
+            colorMixerEntity->SetTreeEnabled(enabled);
+        };
 
         Function<void, bool> setBrushModeActive = [this](bool enabled) -> void {
             toolBarEntity->SetTreeEnabled(enabled);

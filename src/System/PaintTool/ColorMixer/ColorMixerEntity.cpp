@@ -11,10 +11,10 @@
 
 namespace Beer::System
 {
-    const static uint32_t NUM_PIGMENTS = 10;
-    const static uint32_t NUM_ROWS = 2;
+    static const uint32_t NUM_PIGMENTS = 10;
+    static const uint32_t NUM_ROWS = 2;
 
-    const static std::array<PigmentType, NUM_PIGMENTS> BUTTON_PIGMENTS = {
+    static const std::array<PigmentType, NUM_PIGMENTS> BUTTON_PIGMENTS = {
         PigmentType::QuinacridoneRose,
         PigmentType::CadmiumRed,
         PigmentType::HansaYellow,
@@ -26,12 +26,14 @@ namespace Beer::System
         PigmentType::BurntUmber,
         PigmentType::IndianRed};
 
-    const static float PIGMENT_BUTTON_SCALE = 0.2f;
-    const static float CLEAR_BUTTON_SCALE = 0.25f;
-    const static float PICKER_BUTTON_SCALE = 0.25f;
-    const static float PAINT_BUTTON_SCALE = 0.25f;
-    const static float COLOR_DISPLAY_SCALE = 0.25f;
-    const static float CLOSE_BUTTON_SCALE = 0.1f;
+    static const float DISPLAY_SCALE = 0.75f;
+    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.22f, -0.35f);
+    static const float PIGMENT_BUTTON_SCALE = 0.15f;
+    static const float CLEAR_BUTTON_SCALE = 0.2f;
+    static const float PICKER_BUTTON_SCALE = 0.2f;
+    static const float PAINT_BUTTON_SCALE = 0.2f;
+    static const float COLOR_DISPLAY_SCALE = 0.2f;
+    static const float CLOSE_BUTTON_SCALE = 0.1f;
 
     ColorMixerEntity::ColorMixerEntity()
         : QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
@@ -39,8 +41,10 @@ namespace Beer::System
         colorMixerDisplayMat = std::make_shared<Rendering::Material>("UI/ColorMixerSprite");
         colorMixerDisplayMat->SetColor("_CanvasColor", glm::vec4(0.969f, 0.969f, 0.914, 1));
 
-        rootTransform.Anchor = AnchorMode::Center;
-        rootTransform.Pivot = AnchorMode::Center;
+        rootTransform.Anchor = AnchorMode::MiddleLeft;
+        rootTransform.Pivot = AnchorMode::MiddleLeft;
+        rootTransform.Scale = glm::vec2(DISPLAY_SCALE);
+        rootTransform.Position = DISPLAY_OFFSET;
         rootTransform.Depth = 0.1f;
         MarkDirty();
     }
@@ -171,27 +175,5 @@ namespace Beer::System
         });
 
         MarkDirty();
-    }
-
-    void ColorMixerEntity::InitializeCloseButton()
-    {
-        ColorMixerManager* mixerManager = GetMixerManager();
-        UITransform closeButtonTransform{};
-        closeButtonTransform.Anchor = AnchorMode::TopRight;
-        closeButtonTransform.Pivot = AnchorMode::BottomLeft;
-        closeButtonTransform.Scale = glm::vec2(CLOSE_BUTTON_SCALE, CLOSE_BUTTON_SCALE);
-
-        closeButton = std::make_unique<UISubEntity>(closeButtonTransform);
-        rootTransform.BindChild(closeButton->GetTransform());
-
-        closeButtonTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_CloseButton");
-        closeButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        closeButtonMaterial->SetColor("_TintColor", glm::vec4(1));
-        closeButtonMaterial->SetTexture("_SpriteTex", closeButtonTexture.get());
-        closeButtonMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
-
-        mixerManager->SetCloseButton([this]() -> void { Close(); },
-            closeButton->GetTransform(),
-            closeButtonMaterial.get());
     }
 } // namespace Beer::System
