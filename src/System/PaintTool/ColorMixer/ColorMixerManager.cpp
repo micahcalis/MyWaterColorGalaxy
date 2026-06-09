@@ -1,5 +1,6 @@
 #include "System/PaintTool/ColorMixer/ColorMixerManager.hpp"
 #include "PigmentButton.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -16,14 +17,18 @@ namespace Beer::System
         Rendering::Material* spriteMaterial,
         PigmentType pigment)
     {
-        Function<void, PigmentType> setPigment = [this](PigmentType pigmentParam) -> void {
-            SetCurrentPigment(pigmentParam);
+        Function<void, PigmentType, UITransform*> pigmentCallback = [this](PigmentType pigment, UITransform* transform) -> void {
+            SetCurrentPigment(pigment);
+            colorPicker->PaintPigment();
+            transform->BindChild(selectSpriteTransform);
+            markDirty();
+            OnPigmentClicked.Invoke();
         };
 
         pigmentButtons.emplace_back(std::make_unique<PigmentButton>(transform,
             spriteMaterial,
             pigment,
-            setPigment));
+            pigmentCallback));
     }
 
     void ColorMixerManager::SetCurrentPigment(PigmentType pigment)

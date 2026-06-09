@@ -149,10 +149,10 @@ namespace Beer::System
             throw std::runtime_error("Trying to Initialize Color Bar when Color Mixer or Menu Bar is null!");
         }
 
-        Function<void> openColorPicker = [this]() -> void { colorMixerEntity->Open(); };
         Function<void, glm::vec4> setColorDisplayColor = [this](glm::vec4 color) -> void { colorMixerEntity->SetColorDisplayColor(color); };
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = [this](glm::vec4 newColor, ColorBarLevel level) -> void { galaxyMapBuffer->SetColorByLevel(newColor, level); };
         Function<std::array<glm::vec4, 4>> getGalaxyColors = [this]() -> std::array<glm::vec4, 4> { return galaxyMapBuffer->GetGalaxyColors(); };
+        Function<void> pickerSelectColor = [this]() -> void { colorMixerEntity->GetMixerManager()->GetColorPicker()->SelectColor(); };
 
         Function<Rendering::Texture2D*> getBrushTexture =
             [this]() -> Rendering::Texture2D* {
@@ -161,11 +161,11 @@ namespace Beer::System
         };
 
         colorBarEntity = registry.CreateEntity<ColorBarEntity>(getMouseInput,
-            openColorPicker,
             setColorDisplayColor,
             setGalaxyBufferColor,
             getGalaxyColors,
             getBrushTexture,
+            pickerSelectColor,
             &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
             &colorMixerEntity->OnColorMixerClosed,
             &menuBarEntity->GetMenuBarManager()->OnNewSeed);
@@ -175,6 +175,12 @@ namespace Beer::System
         galaxyMapEntity->GetMapManager()->OnNewBrush.Subscribe([this](GalaxyBrushType type) -> void {
             colorBarEntity->GetColorBarManager()->UpdateDisplayMaterials();
         });
+
+        Function<void> deselectColorBar = [this]() -> void { colorBarEntity->GetColorBarManager()->DeselectColors(); };
+        Function<void> deselectPigments = [this]() -> void { colorMixerEntity->GetMixerManager()->DeselectPigments(); };
+
+        colorMixerEntity->GetMixerManager()->OnPigmentClicked.Subscribe(deselectColorBar);
+        colorBarEntity->GetColorBarManager()->OnColorClicked.Subscribe(deselectPigments);
     }
 
     void PaintToolContext::InitializeMenuBar()

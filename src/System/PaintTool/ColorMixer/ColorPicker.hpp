@@ -45,18 +45,19 @@ namespace Beer::System
             : subscribeToReadback(subscribeToReadback), getMouseInput(getMouseInput), canvasTransform(canvasTransform), colorPickerButtonMaterial(colorPickerButtonMaterial), paintPigmentButtonMaterial(paintPigmentMaterial)
         {
             colorPickerButton = std::make_unique<Button>(colorPickerTransform, colorPickerButtonMaterial);
-            colorPickerButton->SetOnClick([this]() -> void { ClickSelectColorButton(); });
+            colorPickerButton->SetOnClick([this]() -> void { SelectColor(); });
 
             paintPigmentButton = std::make_unique<Button>(paintPigmentTransform, paintPigmentMaterial);
-            paintPigmentButton->SetOnClick([this]() -> void { ClickPaintPigmentButton(); });
+            paintPigmentButton->SetOnClick([this]() -> void { PaintPigment(); });
         }
 
         void Update();
         ColorPickingState GetState() const { return state; }
 
+        void SelectColor();
+        void PaintPigment();
+
     private:
-        void ClickSelectColorButton();
-        void ClickPaintPigmentButton();
         void TryPickColor();
         void SelectColorReadback(ImagePixelData imageData);
         glm::vec2 GetNormalizedCanvasPos(const PixelRect& rect, const glm::vec2 mousePos) const;

@@ -11,18 +11,23 @@
 
 namespace Beer::System
 {
-    static const glm::vec2 PANEL_SIZE = glm::vec2(0.8f, 0.8f);
+    static const glm::vec2 PANEL_SIZE = glm::vec2(1.0f, 0.5f);
+    static const glm::vec2 PANEL_OFFSET = glm::vec2(0.02f, -0.3f);
     static const uint32_t PLANET_LAYERS_COUNT = 4;
     static const uint32_t GALAXY_LAYERS_COUNT = 4;
-    static const glm::vec2 COLOR_LAYER_SIZE = glm::vec2(0.3f, 0.1f);
+    static const glm::vec2 COLOR_LAYER_SIZE = glm::vec2(0.15f, 0.15f);
     static const glm::vec2 DISPLAY_SIZE = glm::vec2(0.15f, 0.15f);
     static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.08f, -0.075f);
+    static const float BAR_BG_HEIGHT = 0.2f;
+    static const float SELECT_BORDER_THICKNESS = 0.02f;
+    static const glm::vec4 SELECT_COLOR = glm::vec4(0, 0, 0, 1);
 
-    static const std::array<glm::vec4, PLANET_LAYERS_COUNT> PLANET_COLORS = {
-        glm::vec4(0.8f, 0.2f, 0.1f, 1),
-        glm::vec4(0.6f, 0.1f, 0.6f, 1),
-        glm::vec4(0.2f, 0.7f, 0.7f, 1),
-        glm::vec4(0.3f, 0.4f, 0.8f, 1)};
+    static const std::array<glm::vec4, PLANET_LAYERS_COUNT>
+        PLANET_COLORS = {
+            glm::vec4(0.8f, 0.2f, 0.1f, 1),
+            glm::vec4(0.6f, 0.1f, 0.6f, 1),
+            glm::vec4(0.2f, 0.7f, 0.7f, 1),
+            glm::vec4(0.3f, 0.4f, 0.8f, 1)};
 
     static const std::array<glm::vec4, PLANET_LAYERS_COUNT> GALAXY_COLORS = {
         glm::vec4(0.3f, 0.8f, 0.3f, 1),
@@ -31,20 +36,20 @@ namespace Beer::System
         glm::vec4(0.3f, 0.4f, 0.8f, 1)};
 
     ColorBarEntity::ColorBarEntity(Function<MouseInput> getMouseInput,
-        Function<void> openColorPicker,
         Function<void, glm::vec4> setColorDisplayColor,
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
         Function<std::array<glm::vec4, 4>> getGalaxyColors,
         Function<Rendering::Texture2D*> getBrushTexture,
+        Function<void> pickerSelectColor,
         BeerEvent<void(glm::vec4)>* onColorPicked,
         BeerEvent<void()>* onColorPickerClosed,
         BeerEvent<void()>* onNewSeed)
         : getMouseInput(getMouseInput)
-        , openColorPicker(openColorPicker)
         , setColorDisplayColor(setColorDisplayColor)
         , setGalaxyBufferColor(setGalaxyBufferColor)
         , getGalaxyColors(getGalaxyColors)
         , getBrushTexture(getBrushTexture)
+        , pickerSelectColor(pickerSelectColor)
         , onColorPicked(onColorPicked)
         , onColorPickerClosed(onColorPickerClosed)
         , onNewSeed(onNewSeed)
@@ -59,9 +64,9 @@ namespace Beer::System
         backgroundMat->SetTexture("_SpriteTex", squareTexture.get());
         backgroundMat->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-        rootTransform.Anchor = AnchorMode::TopLeft;
-        rootTransform.Pivot = AnchorMode::TopLeft;
-        rootTransform.Position.x += 0.02f;
+        rootTransform.Anchor = AnchorMode::MiddleLeft;
+        rootTransform.Pivot = AnchorMode::MiddleLeft;
+        rootTransform.Position = PANEL_OFFSET;
         rootTransform.Scale = PANEL_SIZE;
         MarkDirty();
     }
@@ -69,15 +74,18 @@ namespace Beer::System
     void ColorBarEntity::InitializeColorLayers()
     {
         InitializeDisplays();
+        InitializeBackgrounds();
+        InitializeSelectSpriteEntity();
 
         colorLayerSprite = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_ColorLayer");
-        glm::vec2 startPos = glm::vec2(0, 0.1f);
+        glm::vec2 startPos = glm::vec2(0.1, 0.025f);
 
         UITransform colorLayersTransform{};
         colorLayersTransform.Position = startPos;
         colorLayersTransform.Scale = COLOR_LAYER_SIZE;
-        colorLayersTransform.Anchor = AnchorMode::BottomMiddle;
+        colorLayersTransform.Anchor = AnchorMode::MiddleLeft;
         colorLayersTransform.Pivot = AnchorMode::BottomRight;
+        colorLayersTransform.Depth = 0.1f;
 
         colorLayers.reserve(PLANET_LAYERS_COUNT);
         colorLayerMaterials.reserve(PLANET_LAYERS_COUNT);
@@ -86,25 +94,26 @@ namespace Beer::System
         {
             colorLayerMaterials.emplace_back(std::make_shared<Rendering::Material>("UI/SpriteDefault"));
             colorLayerMaterials[i]->SetColor("_TintColor", PLANET_COLORS[i]);
-            colorLayerMaterials[i]->SetTexture("_SpriteTex", colorLayerSprite.get());
+            colorLayerMaterials[i]->SetTexture("_SpriteTex", squareTexture.get());
             colorLayerMaterials[i]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-            colorLayersTransform.Position.y += COLOR_LAYER_SIZE.y * 0.75f;
+            colorLayersTransform.Position.x += COLOR_LAYER_SIZE.x * 1.05f;
             colorLayers.emplace_back(std::make_unique<UISubEntity>(colorLayersTransform));
             rootTransform.BindChild(colorLayers[i]->GetTransform());
         }
 
+        startPos.y = -0.025f;
         colorLayersTransform.Position = startPos;
-        colorLayersTransform.Pivot = AnchorMode::BottomLeft;
+        colorLayersTransform.Pivot = AnchorMode::TopRight;
 
         for (int i = 0; i < GALAXY_LAYERS_COUNT; i++)
         {
             colorLayerMaterials.emplace_back(std::make_shared<Rendering::Material>("UI/SpriteDefault"));
             colorLayerMaterials[i + PLANET_LAYERS_COUNT]->SetColor("_TintColor", GALAXY_COLORS[i]);
-            colorLayerMaterials[i + PLANET_LAYERS_COUNT]->SetTexture("_SpriteTex", colorLayerSprite.get());
+            colorLayerMaterials[i + PLANET_LAYERS_COUNT]->SetTexture("_SpriteTex", squareTexture.get());
             colorLayerMaterials[i + PLANET_LAYERS_COUNT]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-            colorLayersTransform.Position.y += COLOR_LAYER_SIZE.y * 0.75f;
+            colorLayersTransform.Position.x += COLOR_LAYER_SIZE.x * 1.05f;
             colorLayers.emplace_back(std::make_unique<UISubEntity>(colorLayersTransform));
             rootTransform.BindChild(colorLayers[i + PLANET_LAYERS_COUNT]->GetTransform());
         }
@@ -133,19 +142,20 @@ namespace Beer::System
                 GALAXY_COLORS[i]);
         }
 
-        colorBarManager->CreateAnimator(ColorBarType::Planet);
-        colorBarManager->CreateAnimator(ColorBarType::Galaxy);
         colorBarManager->ForceSetColorsFromSeed();
         colorBarManager->UpdateDisplayMaterials();
     }
 
     void ColorBarEntity::InitializeDisplays()
     {
+        glm::vec2 planetDisplayOffset = glm::vec2(0.1 + (PLANET_LAYERS_COUNT + 1) * (COLOR_LAYER_SIZE.x * 1.05f), 0.025f);
+
         UITransform displayTransform{};
-        displayTransform.Anchor = AnchorMode::TopMiddle;
-        displayTransform.Pivot = AnchorMode::TopRight;
+        displayTransform.Anchor = AnchorMode::MiddleLeft;
+        displayTransform.Pivot = AnchorMode::BottomRight;
         displayTransform.Scale = DISPLAY_SIZE;
-        displayTransform.Position = glm::vec2(-DISPLAY_OFFSET.x, DISPLAY_OFFSET.y);
+        displayTransform.Position = planetDisplayOffset;
+        displayTransform.Depth = 0.1f;
 
         planetDisplayEntity = std::make_unique<UISubEntity>(displayTransform);
         rootTransform.BindChild(planetDisplayEntity->GetTransform());
@@ -154,8 +164,10 @@ namespace Beer::System
         planetDisplayMaterial->SetTexture("_SpriteTex", getBrushTexture());
         planetDisplayMaterial->SetInt("_OverrideMapClip", 1);
 
-        displayTransform.Pivot = AnchorMode::TopLeft;
-        displayTransform.Position = glm::vec2(DISPLAY_OFFSET.x, DISPLAY_OFFSET.y);
+        glm::vec2 galaxyDisplayOffset = glm::vec2(0.1 + (GALAXY_LAYERS_COUNT + 1) * (COLOR_LAYER_SIZE.x * 1.05f), -0.025f);
+
+        displayTransform.Pivot = AnchorMode::TopRight;
+        displayTransform.Position = galaxyDisplayOffset;
 
         galaxyDisplayEntity = std::make_unique<UISubEntity>(displayTransform);
         rootTransform.BindChild(galaxyDisplayEntity->GetTransform());
@@ -167,5 +179,45 @@ namespace Beer::System
         ColorBarManager* colorBarManager = GetColorBarManager();
         colorBarManager->SetDisplayMaterials(planetDisplayMaterial.get(),
             galaxyDisplayMaterial.get());
+    }
+
+    void ColorBarEntity::InitializeBackgrounds()
+    {
+        UITransform backgroundTransform{};
+        backgroundTransform.Anchor = AnchorMode::MiddleLeft;
+        backgroundTransform.Pivot = AnchorMode::BottomLeft;
+        backgroundTransform.Position = glm::vec2(0, 0.005f);
+
+        glm::vec2 planetBgScale = glm::vec2(0.2 + (PLANET_LAYERS_COUNT + 1) * (COLOR_LAYER_SIZE.x * 1.05f), BAR_BG_HEIGHT);
+        backgroundTransform.Scale = planetBgScale;
+
+        planetBarBgEntity = std::make_unique<UISubEntity>(backgroundTransform);
+        rootTransform.BindChild(planetBarBgEntity->GetTransform());
+
+        glm::vec2 galaxyBGScale = glm::vec2(0.2 + (GALAXY_LAYERS_COUNT + 1) * (COLOR_LAYER_SIZE.x * 1.05f), BAR_BG_HEIGHT);
+        backgroundTransform.Pivot = AnchorMode::TopLeft;
+        backgroundTransform.Position = glm::vec2(0, -0.005f);
+        backgroundTransform.Scale = galaxyBGScale;
+
+        galaxyBarBgEntity = std::make_unique<UISubEntity>(backgroundTransform);
+        rootTransform.BindChild(galaxyBarBgEntity->GetTransform());
+    }
+
+    void ColorBarEntity::InitializeSelectSpriteEntity()
+    {
+        UITransform selectTransform{};
+        selectTransform.Anchor = AnchorMode::Center;
+        selectTransform.Pivot = AnchorMode::Center;
+        selectTransform.Scale = COLOR_LAYER_SIZE + SELECT_BORDER_THICKNESS;
+        selectTransform.Depth = 0.05f;
+
+        selectSpriteEntity = std::make_unique<UISubEntity>(selectTransform);
+
+        selectSpriteMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        selectSpriteMaterial->SetTexture("_SpriteTex", squareTexture.get());
+        selectSpriteMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+        selectSpriteMaterial->SetColor("_TintColor", SELECT_COLOR);
+
+        GetColorBarManager()->SetSelectSpriteTransform(selectSpriteEntity->GetTransform());
     }
 } // namespace Beer::System

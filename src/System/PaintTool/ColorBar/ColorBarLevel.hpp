@@ -26,10 +26,6 @@ namespace Beer::System
         Rendering::Material* material = nullptr;
         glm::vec4 color;
         ColorBarLevel level;
-        SubscriptionToken token = INVALID_TOKEN;
-
-        Function<SubscriptionToken, Function<void, glm::vec4>> subscribeToColorPicker = nullptr;
-        Function<void, SubscriptionToken> unsubscribeToColorPicker = nullptr;
 
     public:
         ColorBarController(UITransform* transform,
@@ -42,15 +38,6 @@ namespace Beer::System
             button->SetOnClick([this]() -> void { ButtonClicked(); });
         }
 
-        void Unsubscribe()
-        {
-            if (unsubscribeToColorPicker != nullptr)
-            {
-                unsubscribeToColorPicker(token);
-                token = INVALID_TOKEN;
-            }
-        }
-
         glm::vec4 GetColor() const { return color; }
 
         void SetColor(glm::vec4 color)
@@ -59,23 +46,11 @@ namespace Beer::System
             material->SetColor("_TintColor", color);
         }
 
-        void SetSubscriptions(Function<SubscriptionToken, Function<void, glm::vec4>> subscribeToColorPicker,
-            Function<void, SubscriptionToken> unsubscribeToColorPicker)
-        {
-            this->subscribeToColorPicker = subscribeToColorPicker;
-            this->unsubscribeToColorPicker = unsubscribeToColorPicker;
-        }
-
         [[nodiscard]] UITransform* GetTransform() const { return button->GetTransform(); }
 
     private:
         void ButtonClicked()
         {
-            if (subscribeToColorPicker != nullptr && token == INVALID_TOKEN)
-            {
-                token = subscribeToColorPicker([this](glm::vec4 newColor) -> void { ColorPickerCallback(newColor); });
-            }
-
             OnButtonClicked.Invoke(this);
         }
 

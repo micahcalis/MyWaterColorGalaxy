@@ -17,7 +17,7 @@ namespace Beer::System
         UpdateButtonMaterials();
     }
 
-    void ColorPicker::ClickSelectColorButton()
+    void ColorPicker::SelectColor()
     {
         switch (state)
         {
@@ -29,7 +29,7 @@ namespace Beer::System
         }
     }
 
-    void ColorPicker::ClickPaintPigmentButton()
+    void ColorPicker::PaintPigment()
     {
         switch (state)
         {

@@ -9,7 +9,6 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/Delegates/Delegate.hpp"
-#include <print>
 
 namespace Beer::System
 {
@@ -38,8 +37,15 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> paintPigmentIconMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> paintPigmentIconTexture = nullptr;
 
+        std::unique_ptr<UISubEntity> pigmentsBgEntity = nullptr;
+        std::shared_ptr<Rendering::Material> pigmentsBgMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> pigmentsBgTex = nullptr;
+
         std::unique_ptr<UISubEntity> colorDisplay = nullptr;
         std::shared_ptr<Rendering::Material> colorDisplayMaterial = nullptr;
+
+        std::unique_ptr<UISubEntity> selectSpriteEntity = nullptr;
+        std::shared_ptr<Rendering::Material> selectSpriteMaterial = nullptr;
 
     public:
         ColorMixerEntity();
@@ -84,7 +90,7 @@ namespace Beer::System
     protected:
         void InitializeManager() override
         {
-            manager = std::make_unique<ColorMixerManager>();
+            manager = std::make_unique<ColorMixerManager>([this]() -> void { MarkDirty(); });
             InitializePigments();
             MarkDirty();
         }
@@ -116,9 +122,20 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(colorDisplay.get(), colorDisplayMaterial.get()));
             }
 
+            if (selectSpriteEntity->GetTransform()->Parent != nullptr)
+            {
+                renderItems.push_back(UIRenderItem(selectSpriteEntity->GetTransform(), selectSpriteMaterial.get()));
+            }
+
+            if (pigmentsBgEntity != nullptr)
+            {
+                renderItems.push_back(UIRenderItem(pigmentsBgEntity->GetTransform(), pigmentsBgMaterial.get()));
+            }
+
             return renderItems;
         }
 
         void InitializePigments();
+        void InitializeSelectSpriteEntity();
     };
 } // namespace Beer::System

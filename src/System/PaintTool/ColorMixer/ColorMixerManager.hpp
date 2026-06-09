@@ -11,14 +11,24 @@ namespace Beer::System
 {
     class ColorMixerManager : public IEntityManager
     {
+    public:
+        BeerEvent<void()> OnPigmentClicked;
+
     private:
         std::vector<std::unique_ptr<PigmentButton>> pigmentButtons;
         PigmentType currentPigment = PigmentType::QuinacridoneRose;
         std::unique_ptr<Button> clearButton = nullptr;
         Function<void> clearColorMixer = nullptr;
         std::unique_ptr<ColorPicker> colorPicker = nullptr;
+        Function<void> markDirty = nullptr;
+        UITransform* selectSpriteTransform = nullptr;
 
     public:
+        ColorMixerManager(Function<void> markDirty)
+            : markDirty(markDirty)
+        {
+        }
+
         void Update() override;
 
         void AddPigmentButton(UITransform* transform,
@@ -40,6 +50,11 @@ namespace Beer::System
             Rendering::Material* paintPigmentMaterial,
             UITransform* canvasTransform);
 
+        void SetSelectButton(UITransform* selectTransform)
+        {
+            selectSpriteTransform = selectTransform;
+        }
+
         bool ClearButtonInitialized() const
         {
             return clearButton != nullptr;
@@ -56,6 +71,19 @@ namespace Beer::System
                 return nullptr;
 
             return colorPicker.get();
+        }
+
+        void DeselectPigments()
+        {
+            UITransform* selectParent = selectSpriteTransform->Parent;
+
+            if (selectParent == nullptr)
+            {
+                return;
+            }
+
+            selectParent->UnbindChild(selectSpriteTransform);
+            markDirty();
         }
 
     private:
