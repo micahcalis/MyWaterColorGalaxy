@@ -4,8 +4,10 @@
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
 #include "System/Components/General/Transform.hpp"
+#include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
 #include "System/Galaxy/Player/PlayerController.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
+#include <print>
 
 namespace Beer::System
 {
@@ -13,7 +15,10 @@ namespace Beer::System
         Function<PlayerInput> getPlayerInput,
         BeerEvent<void(bool)>* onSetPhotoMode,
         Rendering::Material* playerMaterial)
-        : getPlayerInput(getPlayerInput), onSetPhotoMode(onSetPhotoMode), playerMaterial(playerMaterial)
+        : player(player)
+        , getPlayerInput(getPlayerInput)
+        , onSetPhotoMode(onSetPhotoMode)
+        , playerMaterial(playerMaterial)
     {
         playerController = std::make_unique<PlayerController>(player);
         cameraEntity = std::make_unique<GameSubEntity>(Transform());
@@ -68,5 +73,12 @@ namespace Beer::System
         {
             playerMaterial->SetFloat("_CutoffTime", cutoffValue);
         }
+    }
+
+    void PlayerManager::LoadFromSerialized(const SerializableExplorer& serializableExplorer)
+    {
+        glm::vec3 scaledPos = serializableExplorer.PlayerPosition * GalaxyObjectBuffer::GALAXY_POS_SCALE;
+        player->GetTransform()->Position = scaledPos;
+        std::println("sdf");
     }
 } // namespace Beer::System

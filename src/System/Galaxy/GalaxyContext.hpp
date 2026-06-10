@@ -13,6 +13,7 @@
 #include "System/Galaxy/WatercolorSubPipeline.hpp"
 #include "System/Light/LightEntity.hpp"
 #include "System/Serialization/MapHandler.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <vector>
 
@@ -40,6 +41,7 @@ namespace Beer::System
         Rendering::DrawTransparentPass* transparentPass = nullptr;
 
         MapHandler mapHandler;
+        SerializableGalaxyMap serializedMap{};
 
     public:
         GalaxyContext(Function<PlayerInput> getPlayerInput,
@@ -62,5 +64,7 @@ namespace Beer::System
         void InitializeRenderPasses();
         void TryLoadMap();
         void HandleReturn();
+        SerializableExplorer SerializeExplorer();
+        glm::vec3 GetScaledPlayerPosition() const;
     };
 } // namespace Beer::System

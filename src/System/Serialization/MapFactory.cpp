@@ -1,5 +1,6 @@
 #include "System/Serialization/MapFactory.hpp"
 #include "Core/Application/Utilities/AssetUtilities.hpp"
+#include "SerializableGalaxy.hpp"
 #include <format>
 #include <fstream>
 #include <filesystem>
@@ -19,7 +20,7 @@ namespace Beer::System
         CollectSavedGalaxyPaths();
     }
 
-    SerializablePaintSession MapFactory::LoadMap(const std::string& name)
+    SerializableGalaxyMap MapFactory::LoadMap(const std::string& name)
     {
         std::filesystem::path filepath = Core::AssetUtilities::GetMapAssetPath(name);
         std::ifstream file(filepath);
@@ -32,10 +33,10 @@ namespace Beer::System
         json j;
         file >> j;
 
-        return j.get<SerializablePaintSession>();
+        return j.get<SerializableGalaxyMap>();
     }
 
-    void MapFactory::SaveMap(const std::string& name, const SerializablePaintSession& galaxy)
+    void MapFactory::SaveMap(const std::string& name, const SerializableGalaxyMap& galaxy)
     {
         std::filesystem::path filepath = Core::AssetUtilities::GetMapAssetPath(name);
         std::ofstream file(filepath);

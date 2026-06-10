@@ -15,24 +15,34 @@ namespace Beer::System
         Quaternary = 3
     };
 
+    enum class ColorBarType
+    {
+        Planet,
+        Galaxy
+    };
+
     class ColorBarController
     {
     public:
         BeerEvent<void(ColorBarController*)> OnButtonClicked;
-        BeerEvent<void(glm::vec4, ColorBarLevel)> OnNewColor;
 
     private:
         std::unique_ptr<Button> button = nullptr;
         Rendering::Material* material = nullptr;
         glm::vec4 color;
         ColorBarLevel level;
+        ColorBarType type;
 
     public:
         ColorBarController(UITransform* transform,
             Rendering::Material* material,
             glm::vec4 startColor,
-            ColorBarLevel level)
-            : color(startColor), level(level), material(material)
+            ColorBarLevel level,
+            ColorBarType type)
+            : color(startColor)
+            , level(level)
+            , type(type)
+            , material(material)
         {
             button = std::make_unique<Button>(transform, material);
             button->SetOnClick([this]() -> void { ButtonClicked(); });
@@ -47,18 +57,13 @@ namespace Beer::System
         }
 
         [[nodiscard]] UITransform* GetTransform() const { return button->GetTransform(); }
+        ColorBarLevel GetLevel() const { return level; }
+        ColorBarType GetType() const { return type; }
 
     private:
         void ButtonClicked()
         {
             OnButtonClicked.Invoke(this);
-        }
-
-        void ColorPickerCallback(glm::vec4 newColor)
-        {
-            color = newColor;
-            material->SetColor("_TintColor", newColor);
-            OnNewColor.Invoke(newColor, level);
         }
     };
 } // namespace Beer::System

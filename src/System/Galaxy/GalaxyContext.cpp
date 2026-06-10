@@ -1,4 +1,5 @@
 #include "System/Galaxy/GalaxyContext.hpp"
+#include "General/Buffer/GalaxyObjectBuffer.hpp"
 #include "General/GalaxyEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
@@ -124,10 +125,11 @@ namespace Beer::System
             throw std::runtime_error("Trying to Load Map that doesn't exist!");
         }
 
-        SerializablePaintSession serializedPaintSession = mapHandler.Load();
-        galaxyEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
-        sunEntity->LoadFromSerialized(serializedPaintSession.Galaxy);
-        skyboxPass->InitializeNoiseCubemaps(serializedPaintSession.Galaxy);
+        serializedMap = mapHandler.Load();
+        galaxyEntity->LoadFromSerialized(serializedMap.Galaxy);
+        sunEntity->LoadFromSerialized(serializedMap.Galaxy);
+        skyboxPass->InitializeNoiseCubemaps(serializedMap.Galaxy);
+        playerEntity->GetPlayerManager()->LoadFromSerialized(serializedMap.ExplorerHistory);
     }
 
     void GalaxyContext::HandleReturn()
@@ -136,7 +138,23 @@ namespace Beer::System
 
         if (returnPressed)
         {
+            serializedMap.ExplorerHistory = SerializeExplorer();
+            mapHandler.Save(serializedMap);
             OnReturnToPainting.Invoke();
         }
+    }
+
+    SerializableExplorer GalaxyContext::SerializeExplorer()
+    {
+        SerializableExplorer serializedExplorer{};
+        serializedExplorer.PlayerPosition = GetScaledPlayerPosition();
+
+        return serializedExplorer;
+    }
+
+    glm::vec3 GalaxyContext::GetScaledPlayerPosition() const
+    {
+        glm::vec3 scaledPos = (playerEntity->GetTransform()->Position) / GalaxyObjectBuffer::GALAXY_POS_SCALE;
+        return glm::clamp(scaledPos, glm::vec3(0.0f), glm::vec3(1.0f));
     }
 } // namespace Beer::System

@@ -43,6 +43,7 @@ namespace Beer::System
         Function<ButtonInput> getTabKeyInput = nullptr;
         bool toggle = false;
         MapHandler mapHandler;
+        SerializableGalaxyMap serializedGalaxyMap{};
 
     public:
         PaintToolContext(Function<MouseInput> getMouseInput,
@@ -56,7 +57,7 @@ namespace Beer::System
         {
         }
 
-        SerializablePaintSession GetSerializedData() const;
+        SerializableGalaxyMap GetSerializedData() const;
 
         void Load() override;
         void Update() override;

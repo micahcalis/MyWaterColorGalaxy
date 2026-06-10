@@ -73,34 +73,10 @@ namespace Beer::System
         std::unique_ptr<ColorBarController> controller = std::make_unique<ColorBarController>(transform,
             material,
             initialColor,
-            level);
-
-        Function<SubscriptionToken, Function<void, glm::vec4>> subscribeToColorPicker =
-            [this](Function<void, glm::vec4> func) -> SubscriptionToken {
-            return onColorPicked->Subscribe(func);
-        };
-
-        Function unsubscribeToColorPicker = [this](SubscriptionToken token) -> void {
-            onColorPicked->Unsubscribe(token);
-        };
+            level,
+            type);
 
         controller->OnButtonClicked.Subscribe([this](ColorBarController* controller) -> void { OnColorBarButtonPressed(controller); });
-
-        if (type == ColorBarType::Galaxy)
-        {
-            controller->OnNewColor.Subscribe(
-                [this](glm::vec4 color, ColorBarLevel level) -> void {
-                    setGalaxyBufferColor(color, level);
-                    UpdateDisplayMaterials();
-                });
-        } else
-        {
-            controller->OnNewColor.Subscribe(
-                [this](glm::vec4 color, ColorBarLevel level) -> void {
-                    UpdateDisplayMaterials();
-                });
-        }
-
         controllersMap[level] = std::move(controller);
     }
 
@@ -115,6 +91,12 @@ namespace Beer::System
             return;
 
         currentController->SetColor(color);
+
+        if (currentController->GetType() == ColorBarType::Galaxy)
+        {
+            setGalaxyBufferColor(color, currentController->GetLevel());
+        }
+
         UpdateDisplayMaterials();
     }
 

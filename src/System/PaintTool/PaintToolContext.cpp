@@ -47,11 +47,12 @@ namespace Beer::System
         Cursor::SetCursorMode(CursorMode::Unlocked);
     }
 
-    SerializablePaintSession PaintToolContext::GetSerializedData() const
+    SerializableGalaxyMap PaintToolContext::GetSerializedData() const
     {
-        SerializablePaintSession serializedData{};
+        SerializableGalaxyMap serializedData{};
         serializedData.Galaxy = galaxyMapBuffer->GetSerializableGalaxy();
         serializedData.ToolHistory = SerializePaintTool();
+        serializedData.ExplorerHistory = serializedGalaxyMap.ExplorerHistory;
         return serializedData;
     }
 
@@ -202,8 +203,8 @@ namespace Beer::System
         Function<void> clearHistory = [this]() -> void { toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory(); };
 
         Function<void> saveMap = [this]() -> void {
-            SerializablePaintSession paintSession = GetSerializedData();
-            mapHandler.Save(paintSession);
+            SerializableGalaxyMap serializedGalaxyMap = GetSerializedData();
+            mapHandler.Save(serializedGalaxyMap);
             OnGalaxyFly.Invoke();
         };
 
@@ -329,11 +330,11 @@ namespace Beer::System
         if (!mapHandler.IsSaved())
             return;
 
-        SerializablePaintSession serializedData = mapHandler.Load();
-        galaxyMapEntity->GetMapManager()->ReloadFromSerialized(serializedData);
-        colorBarEntity->GetColorBarManager()->ReloadFromSerialized(serializedData.ToolHistory);
+        serializedGalaxyMap = mapHandler.Load();
+        galaxyMapEntity->GetMapManager()->ReloadFromSerialized(serializedGalaxyMap);
+        colorBarEntity->GetColorBarManager()->ReloadFromSerialized(serializedGalaxyMap.ToolHistory);
         toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory();
-        toolBarEntity->GetToolBarManager()->SetCurrentBrush(static_cast<GalaxyBrushType>(serializedData.ToolHistory.SelectedType));
+        toolBarEntity->GetToolBarManager()->SetCurrentBrush(static_cast<GalaxyBrushType>(serializedGalaxyMap.ToolHistory.SelectedType));
 
         float normalizedSize = galaxyMapEntity->GetMapManager()->GetCursor()->GetNormalizedSize();
         brushSizeBarEntity->GetBrushSizeBarManager()->GetSlider()->ForceUpdate(normalizedSize);

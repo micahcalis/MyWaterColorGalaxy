@@ -16,10 +16,24 @@ namespace glm
         j.at("x").get_to(v.x);
         j.at("y").get_to(v.y);
     }
+
+    inline void to_json(nlohmann::json& j, const vec3& v)
+    {
+        j = nlohmann::json{{"x", v.x}, {"y", v.y}, {"z", v.z}};
+    }
+
+    inline void from_json(const nlohmann::json& j, vec3& v)
+    {
+        j.at("x").get_to(v.x);
+        j.at("y").get_to(v.y);
+        j.at("z").get_to(v.z);
+    }
+
     inline void to_json(nlohmann::json& j, const vec4& v)
     {
         j = nlohmann::json{{"x", v.x}, {"y", v.y}, {"z", v.z}, {"w", v.w}};
     }
+
     inline void from_json(const nlohmann::json& j, vec4& v)
     {
         j.at("x").get_to(v.x);
@@ -73,15 +87,23 @@ namespace Beer::System
         glm::vec2 ZoomPanning = glm::vec2(0);
     };
 
-    struct SerializablePaintSession
+    struct SerializableExplorer
+    {
+    public:
+        glm::vec3 PlayerPosition = glm::vec3(0.5f, 0.0f, 0.5f);
+    };
+
+    struct SerializableGalaxyMap
     {
     public:
         SerializableGalaxy Galaxy{};
         SerializablePaintTool ToolHistory{};
+        SerializableExplorer ExplorerHistory{};
     };
 
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxyComponent, Id, TypeIndex, Colors, Scale, Position, Tilt);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxy, StarSeed, ColorSeed, StarColor, StarPosition, StarSize, ColorA, ColorB, ColorC, OrbitShear, Components)
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializablePaintTool, ComponentColors, GalaxyColors, BrushSize, SelectedType, ZoomScale, ZoomPanning);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializablePaintSession, Galaxy, ToolHistory);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableExplorer, PlayerPosition);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxyMap, Galaxy, ToolHistory, ExplorerHistory);
 } // namespace Beer::System

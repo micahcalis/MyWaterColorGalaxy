@@ -46,7 +46,7 @@ namespace Beer::System
         GalaxyMapZoomer* GetZoomer() const { return zoomer.get(); }
 
         void SetBrushType(GalaxyBrushType type);
-        void ReloadFromSerialized(const SerializablePaintSession& serializedData);
+        void ReloadFromSerialized(const SerializableGalaxyMap& serializedData);
 
         CursorState GetCursorState() const
         {

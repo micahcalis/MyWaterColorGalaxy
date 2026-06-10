@@ -10,7 +10,6 @@ namespace Beer::System
         float MaxSpeed{};
         float Drag{};
         float Sensitivity{};
-        glm::vec3 StartPos{};
         float TurnSpeed{};
         float RollSpeed{};
         float YawSpeed{};
@@ -22,7 +21,7 @@ namespace Beer::System
         200.0f,
         0.65f,
         0.3f,
-        glm::vec3(500, 0, 500),
+        // glm::vec3(500, 0, 500),
         10.0f,
         16.0f,
         8.0f,

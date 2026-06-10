@@ -59,7 +59,7 @@ namespace Beer::System
         OnNewBrush.Invoke(cursor->Brush);
     }
 
-    void GalaxyMapManager::ReloadFromSerialized(const SerializablePaintSession& serializedData)
+    void GalaxyMapManager::ReloadFromSerialized(const SerializableGalaxyMap& serializedData)
     {
         galaxyBuffer->ApplySerializableGalaxy(serializedData.Galaxy);
 

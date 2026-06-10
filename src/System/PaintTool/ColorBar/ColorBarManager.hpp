@@ -13,12 +13,6 @@
 
 namespace Beer::System
 {
-    enum class ColorBarType
-    {
-        Planet,
-        Galaxy
-    };
-
     class ColorBarManager : public IEntityManager
     {
     public:
