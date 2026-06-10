@@ -4,6 +4,7 @@
 #include <SDL3/SDL_events.h>
 #include <cassert>
 #include <iostream>
+#include <print>
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 
@@ -60,12 +61,26 @@ namespace Beer::Core
                 {
                     gameManager.OnMouseScrolled(event.wheel.y);
                 }
+
+                if (event.type == SDL_EVENT_KEY_DOWN)
+                {
+                    std::println("key down");
+                    if (event.key.key == SDLK_F11)
+                    {
+                        windowManager.ToggleFullscreen();
+                    }
+                }
             }
 
             if (isResized)
             {
                 renderer.SetFrameBufferResized(true);
                 isResized = false;
+
+                if (!windowManager.GetFullscreen())
+                {
+                    windowManager.UpdateWindowedResolution();
+                }
             }
 
             if (isRunning)
@@ -74,6 +89,8 @@ namespace Beer::Core
                 renderer.PreDraw();
                 renderer.Draw();
             }
+
+            const bool* keyboardState = SDL_GetKeyboardState(nullptr);
         }
 
         renderer.GetDevice().GetLogicalDevice().waitIdle();
