@@ -64,7 +64,6 @@ namespace Beer::Core
 
                 if (event.type == SDL_EVENT_KEY_DOWN)
                 {
-                    std::println("key down");
                     if (event.key.key == SDLK_F11)
                     {
                         windowManager.ToggleFullscreen();

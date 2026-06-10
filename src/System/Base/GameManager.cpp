@@ -14,6 +14,7 @@
 #include "System/Galaxy/UI/GalaxyUserIntContext.hpp"
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
+#include "System/Menus/Background/GalaxyBackgroundContext.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/MapSerializationManager.hpp"
@@ -36,8 +37,9 @@ namespace Beer::System
         InitializeContext();
         InitializeContextFactory();
         InitializeColliders();
-        // temporary, we dont start gaming immediately
-        InitializePaintTool();
+
+        // InitializePaintTool();
+        InitializeMainMenu();
     }
 
     void GameManager::PreUpdate()
@@ -96,6 +98,11 @@ namespace Beer::System
             [this, getMouseInput, getDebugKeyInput, getTabKeyInput]() -> std::shared_ptr<PaintToolContext> {
                 MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
                 return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, getTabKeyInput, handler);
+            });
+
+        contextHandler->RegisterContextFactory(ContextType::GalaxyBackground,
+            [this]() -> std::shared_ptr<GalaxyBackgroundContext> {
+                return std::make_shared<GalaxyBackgroundContext>();
             });
     }
 
@@ -157,6 +164,11 @@ namespace Beer::System
         };
 
         context->OnGalaxyFly.Subscribe(onGalaxyFly);
+    }
+
+    void GameManager::InitializeMainMenu()
+    {
+        contextHandler->LoadContext(ContextType::GalaxyBackground);
     }
 
     void GameManager::UpdateBase()

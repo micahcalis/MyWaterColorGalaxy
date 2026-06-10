@@ -40,6 +40,7 @@ namespace Beer::System
         void InitializeSerialization();
         void InitializeGalaxy();
         void InitializePaintTool();
+        void InitializeMainMenu();
 
         void UpdateBase();
         void UpdateColliders();
