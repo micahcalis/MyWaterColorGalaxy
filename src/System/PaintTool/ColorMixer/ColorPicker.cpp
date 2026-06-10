@@ -13,8 +13,6 @@ namespace Beer::System
         case ColorPickingState::Waiting: break;
         case ColorPickingState::Picking: TryPickColor(); break;
         }
-
-        UpdateButtonMaterials();
     }
 
     void ColorPicker::SelectColor()
@@ -95,14 +93,5 @@ namespace Beer::System
         float x = (mousePos.x - rect.BotLeft.x) / (rect.BotRight.x - rect.BotLeft.x);
         float y = (mousePos.y - rect.BotLeft.y) / (rect.TopLeft.y - rect.BotLeft.y);
         return glm::vec2(x, y);
-    }
-
-    void ColorPicker::UpdateButtonMaterials()
-    {
-        bool isSelectActive = state == ColorPickingState::Picking || state == ColorPickingState::Waiting;
-        colorPickerButtonMaterial->SetColor("_TintColor", isSelectActive ? glm::vec4(0.5f, 0.5f, 0.5f, 1) : glm::vec4(1));
-
-        bool isPaintActive = state == ColorPickingState::Idle;
-        paintPigmentButtonMaterial->SetColor("_TintColor", isPaintActive ? glm::vec4(0.5f, 0.5f, 0.5f, 1) : glm::vec4(1));
     }
 } // namespace Beer::System

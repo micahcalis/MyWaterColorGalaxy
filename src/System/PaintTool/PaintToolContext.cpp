@@ -3,6 +3,7 @@
 #include "ColorBar/ColorBarEntity.hpp"
 #include "ColorBar/ColorBarLevel.hpp"
 #include "ColorBar/ColorBarManager.hpp"
+#include "ColorMixer/ColorMixerCursor.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
@@ -115,7 +116,7 @@ namespace Beer::System
 
     void PaintToolContext::InitializeColorPicker()
     {
-        colorMixerEntity = registry.CreateEntity<ColorMixerEntity>();
+        colorMixerEntity = registry.CreateEntity<ColorMixerEntity>(getMouseInput);
 
         paintSimSubPipeline = std::make_unique<PaintSimSubPipeline>(
             colorMixerEntity->GetColorMixerMat(),
@@ -140,6 +141,8 @@ namespace Beer::System
         paintSimSubPipeline->SetGetColorPickerState([this]() -> ColorPickingState {
             return colorMixerEntity->GetMixerManager()->GetColorPicker()->GetState();
         });
+
+        colorMixerEntity->GetMixerManager()->SetCurrentPigmentByIndex(0);
     }
 
     void PaintToolContext::InitializeColorBar()
@@ -176,11 +179,17 @@ namespace Beer::System
             colorBarEntity->GetColorBarManager()->UpdateDisplayMaterials();
         });
 
-        Function<void> deselectColorBar = [this]() -> void { colorBarEntity->GetColorBarManager()->DeselectColors(); };
-        Function<void> deselectPigments = [this]() -> void { colorMixerEntity->GetMixerManager()->DeselectPigments(); };
+        Function<void, PigmentType> deselectColorBar = [this](PigmentType pigment) -> void { colorBarEntity->GetColorBarManager()->DeselectColors(); };
+        Function<void, glm::vec4> deselectPigments = [this](glm::vec4 color) -> void { colorMixerEntity->GetMixerManager()->DeselectPigments(); };
 
         colorMixerEntity->GetMixerManager()->OnPigmentClicked.Subscribe(deselectColorBar);
         colorBarEntity->GetColorBarManager()->OnColorClicked.Subscribe(deselectPigments);
+
+        Function<void, glm::vec4> setMixerCursor = [this](glm::vec4 color) -> void {
+            colorMixerEntity->GetMixerManager()->GetMixerCursor()->SetCursor(MixerCursorType::Picker, color);
+        };
+
+        colorBarEntity->GetColorBarManager()->OnColorClicked.Subscribe(setMixerCursor);
     }
 
     void PaintToolContext::InitializeMenuBar()

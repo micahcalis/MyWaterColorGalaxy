@@ -137,12 +137,9 @@ namespace Beer::System
                 Parent->UnbindChild(this);
             }
 
-            for (auto& child : children)
+            while (!children.empty())
             {
-                if (child != nullptr)
-                {
-                    UnbindChild(child);
-                }
+                UnbindChild(children.back());
             }
         }
 

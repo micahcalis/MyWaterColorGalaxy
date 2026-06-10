@@ -3,13 +3,10 @@
 #include "ColorBarLevel.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
-#include "StackAnimator.hpp"
 #include "System/Base/Input/MouseInput.hpp"
-#include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/BeerEvent.hpp"
-#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <unordered_map>
@@ -25,7 +22,7 @@ namespace Beer::System
     class ColorBarManager : public IEntityManager
     {
     public:
-        BeerEvent<void()> OnColorClicked;
+        BeerEvent<void(glm::vec4 color)> OnColorClicked;
 
     private:
         UITransform* colorBarTransform = nullptr;

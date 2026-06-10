@@ -25,10 +25,6 @@ namespace Beer::System
     private:
         Function<void, Function<void, ImagePixelData>> subscribeToReadback = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
-        std::unique_ptr<Button> colorPickerButton = nullptr;
-        Rendering::Material* colorPickerButtonMaterial = nullptr;
-        std::unique_ptr<Button> paintPigmentButton = nullptr;
-        Rendering::Material* paintPigmentButtonMaterial = nullptr;
         UITransform* canvasTransform = nullptr;
         ColorPickingState state = ColorPickingState::Idle;
         glm::vec2 currentPickingPos = glm::vec2(0);
@@ -37,18 +33,9 @@ namespace Beer::System
     public:
         ColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
             Function<MouseInput> getMouseInput,
-            UITransform* colorPickerTransform,
-            Rendering::Material* colorPickerButtonMaterial,
-            UITransform* canvasTransform,
-            UITransform* paintPigmentTransform,
-            Rendering::Material* paintPigmentMaterial)
-            : subscribeToReadback(subscribeToReadback), getMouseInput(getMouseInput), canvasTransform(canvasTransform), colorPickerButtonMaterial(colorPickerButtonMaterial), paintPigmentButtonMaterial(paintPigmentMaterial)
+            UITransform* canvasTransform)
+            : subscribeToReadback(subscribeToReadback), getMouseInput(getMouseInput), canvasTransform(canvasTransform)
         {
-            colorPickerButton = std::make_unique<Button>(colorPickerTransform, colorPickerButtonMaterial);
-            colorPickerButton->SetOnClick([this]() -> void { SelectColor(); });
-
-            paintPigmentButton = std::make_unique<Button>(paintPigmentTransform, paintPigmentMaterial);
-            paintPigmentButton->SetOnClick([this]() -> void { PaintPigment(); });
         }
 
         void Update();
@@ -61,6 +48,5 @@ namespace Beer::System
         void TryPickColor();
         void SelectColorReadback(ImagePixelData imageData);
         glm::vec2 GetNormalizedCanvasPos(const PixelRect& rect, const glm::vec2 mousePos) const;
-        void UpdateButtonMaterials();
     };
 } // namespace Beer::System

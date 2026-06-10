@@ -35,6 +35,8 @@ namespace Beer::System
 
         void Update() override
         {
+            manager->Update();
+
             if (NeedsUpdate())
             {
                 rootTransform.HierarchalUpdate();
@@ -43,8 +45,6 @@ namespace Beer::System
                 screenVersion = Core::Screen::Version();
                 Rendering::Shader::Globals()->SetGalaxyMapRect(rootTransform.Rect);
             }
-
-            manager->Update();
         }
 
         GalaxyMapManager* GetMapManager() const { return static_cast<GalaxyMapManager*>(manager.get()); }

@@ -74,7 +74,7 @@ namespace Beer::System
             buttonHandle->SetOnClick([this]() -> void { ClickedCallback(); });
         }
 
-    private:
+    public:
         void ClickedCallback()
         {
             if (pigmentCallback == nullptr)

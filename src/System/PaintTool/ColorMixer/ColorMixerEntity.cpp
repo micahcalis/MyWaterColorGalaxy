@@ -3,12 +3,14 @@
 #include "PigmentButton.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "glm/fwd.hpp"
 #include <array>
+#include <memory>
 
 namespace Beer::System
 {
@@ -41,8 +43,12 @@ namespace Beer::System
     static const float SELECT_BORDER_THICKNESS = 0.02f;
     static const glm::vec4 SELECT_COLOR = glm::vec4(0, 0, 0, 1);
 
-    ColorMixerEntity::ColorMixerEntity()
-        : QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+    static const glm::vec2 CURSOR_SIZE = glm::vec2(0.1f);
+    static const glm::vec2 CURSOR_OFFSET = glm::vec2(-0.025f, -0.025f);
+
+    ColorMixerEntity::ColorMixerEntity(Function<MouseInput> getMouseInput)
+        : getMouseInput(getMouseInput)
+        , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         colorMixerDisplayMat = std::make_shared<Rendering::Material>("UI/ColorMixerSprite");
         colorMixerDisplayMat->SetColor("_CanvasColor", Rendering::CANVAS_COLOR);
@@ -145,35 +151,6 @@ namespace Beer::System
         Function<MouseInput> getMouseInput)
     {
         ColorMixerManager* mixerManager = GetMixerManager();
-        UITransform colorPickerTransform{};
-        colorPickerTransform.Scale = glm::vec2(PICKER_BUTTON_SCALE, PICKER_BUTTON_SCALE);
-        colorPickerTransform.Pivot = AnchorMode::BottomRight;
-        colorPickerTransform.Anchor = AnchorMode::BottomLeft;
-        colorPickerTransform.Position = glm::vec2(0, CLEAR_BUTTON_SCALE);
-
-        colorPickerIcon = std::make_unique<UISubEntity>(colorPickerTransform);
-        rootTransform.BindChild(colorPickerIcon->GetTransform());
-
-        colorPickerIconTexture = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_ColorPickIcon");
-        colorPickerIconMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        colorPickerIconMaterial->SetColor("_TintColor", glm::vec4(1.0f, 1.0f, 1.0f, 1));
-        colorPickerIconMaterial->SetTexture("_SpriteTex", colorPickerIconTexture.get());
-        colorPickerIconMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
-
-        UITransform paintPigmentTransform{};
-        paintPigmentTransform.Scale = glm::vec2(PAINT_BUTTON_SCALE, PAINT_BUTTON_SCALE);
-        paintPigmentTransform.Pivot = AnchorMode::BottomRight;
-        paintPigmentTransform.Anchor = AnchorMode::BottomLeft;
-        paintPigmentTransform.Position = glm::vec2(0, CLEAR_BUTTON_SCALE + PICKER_BUTTON_SCALE);
-
-        paintPigmentIcon = std::make_unique<UISubEntity>(paintPigmentTransform);
-        rootTransform.BindChild(paintPigmentIcon->GetTransform());
-
-        paintPigmentIconTexture = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_PaintIcon");
-        paintPigmentIconMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        paintPigmentIconMaterial->SetColor("_TintColor", glm::vec4(1));
-        paintPigmentIconMaterial->SetTexture("_SpriteTex", paintPigmentIconTexture.get());
-        paintPigmentIconMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
         UITransform displayTransform{};
         displayTransform.Scale = glm::vec2(COLOR_DISPLAY_SCALE, COLOR_DISPLAY_SCALE);
@@ -181,25 +158,11 @@ namespace Beer::System
         displayTransform.Anchor = AnchorMode::BottomLeft;
         displayTransform.Position = glm::vec2(0, CLEAR_BUTTON_SCALE + PICKER_BUTTON_SCALE + PAINT_BUTTON_SCALE);
 
-        colorDisplay = std::make_unique<UISubEntity>(displayTransform);
-        rootTransform.BindChild(colorDisplay->GetTransform());
-
-        colorDisplayMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        colorDisplayMaterial->SetColor("_TintColor", glm::vec4(1));
-        colorDisplayMaterial->SetTexture("_SpriteTex", circleTexture.get());
-        colorDisplayMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
-
         mixerManager->SetColorPicker(subscribeToReadback,
             getMouseInput,
-            colorPickerIcon->GetTransform(),
-            colorPickerIconMaterial.get(),
-            paintPigmentIcon->GetTransform(),
-            paintPigmentIconMaterial.get(),
             &rootTransform);
 
-        mixerManager->GetColorPicker()->OnColorPicked.Subscribe([this](glm::vec4 color) -> void {
-            colorDisplayMaterial->SetColor("_TintColor", color);
-        });
+        InitializeCursorSprite();
 
         MarkDirty();
     }
@@ -220,5 +183,40 @@ namespace Beer::System
         selectSpriteMaterial->SetColor("_TintColor", SELECT_COLOR);
 
         GetMixerManager()->SetSelectButton(selectSpriteEntity->GetTransform());
+    }
+
+    void ColorMixerEntity::InitializeCursorSprite()
+    {
+        UITransform cursorTransform{};
+        cursorTransform.Scale = glm::vec2(0.001f);
+        cursorTransform.Anchor = AnchorMode::BottomLeft;
+        cursorTransform.Pivot = AnchorMode::Center;
+
+        cursorAnchorEntity = std::make_unique<UISubEntity>(cursorTransform);
+        rootTransform.BindChild(cursorAnchorEntity->GetTransform());
+
+        cursorTransform.Scale = CURSOR_SIZE;
+        cursorTransform.Position = CURSOR_OFFSET;
+        cursorTransform.Pivot = AnchorMode::BottomLeft;
+        cursorTransform.Depth = 0.1f;
+
+        cursorSpriteEntity = std::make_unique<UISubEntity>(cursorTransform);
+        cursorAnchorEntity->GetTransform()->BindChild(cursorSpriteEntity->GetTransform());
+
+        pickerSprite = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_PickerMouse");
+        pickerSpriteMask = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_PickerMouseMask");
+
+        brushSprite = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_BrushMouse");
+        brushSpriteMask = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_BrushMouseMask");
+
+        cursorSpriteMaterial = std::make_shared<Rendering::Material>("UI/MixerCursorSprite");
+
+        GetMixerManager()->SetColorMixerCursor(&rootTransform,
+            cursorAnchorEntity->GetTransform(),
+            cursorSpriteMaterial.get(),
+            brushSprite.get(),
+            brushSpriteMask.get(),
+            pickerSprite.get(),
+            pickerSpriteMask.get());
     }
 } // namespace Beer::System

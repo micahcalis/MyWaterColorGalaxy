@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ColorMixerManager.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
@@ -9,6 +10,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/Delegates/Delegate.hpp"
+#include <memory>
 
 namespace Beer::System
 {
@@ -18,6 +20,7 @@ namespace Beer::System
         BeerEvent<void()> OnColorMixerClosed;
 
     private:
+        Function<MouseInput> getMouseInput = nullptr;
         std::shared_ptr<Rendering::Material> colorMixerDisplayMat;
 
         std::vector<std::unique_ptr<UISubEntity>> pigmentEntities;
@@ -29,26 +32,23 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> clearIconMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> clearIconTexture = nullptr;
 
-        std::unique_ptr<UISubEntity> colorPickerIcon = nullptr;
-        std::shared_ptr<Rendering::Material> colorPickerIconMaterial = nullptr;
-        std::shared_ptr<Rendering::Texture2D> colorPickerIconTexture = nullptr;
-
-        std::unique_ptr<UISubEntity> paintPigmentIcon = nullptr;
-        std::shared_ptr<Rendering::Material> paintPigmentIconMaterial = nullptr;
-        std::shared_ptr<Rendering::Texture2D> paintPigmentIconTexture = nullptr;
-
         std::unique_ptr<UISubEntity> pigmentsBgEntity = nullptr;
         std::shared_ptr<Rendering::Material> pigmentsBgMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> pigmentsBgTex = nullptr;
 
-        std::unique_ptr<UISubEntity> colorDisplay = nullptr;
-        std::shared_ptr<Rendering::Material> colorDisplayMaterial = nullptr;
-
         std::unique_ptr<UISubEntity> selectSpriteEntity = nullptr;
         std::shared_ptr<Rendering::Material> selectSpriteMaterial = nullptr;
 
+        std::unique_ptr<UISubEntity> cursorSpriteEntity = nullptr;
+        std::unique_ptr<UISubEntity> cursorAnchorEntity = nullptr;
+        std::shared_ptr<Rendering::Texture2D> pickerSprite = nullptr;
+        std::shared_ptr<Rendering::Texture2D> pickerSpriteMask = nullptr;
+        std::shared_ptr<Rendering::Texture2D> brushSprite = nullptr;
+        std::shared_ptr<Rendering::Texture2D> brushSpriteMask = nullptr;
+        std::shared_ptr<Rendering::Material> cursorSpriteMaterial = nullptr;
+
     public:
-        ColorMixerEntity();
+        ColorMixerEntity(Function<MouseInput> getMouseInput);
         Rendering::Material* GetColorMixerMat() const { return colorMixerDisplayMat.get(); }
         ColorMixerManager* GetMixerManager() const { return static_cast<ColorMixerManager*>(manager.get()); }
         void InitializeClearButton(Function<void> markCanvasClear);
@@ -83,14 +83,17 @@ namespace Beer::System
         {
             if (!GetMixerManager()->ColorPickerInitialized())
                 return;
-
-            colorDisplayMaterial->SetColor("_TintColor", displayColor);
         }
 
     protected:
         void InitializeManager() override
         {
-            manager = std::make_unique<ColorMixerManager>([this]() -> void { MarkDirty(); });
+            Function<void> markDirty = [this]() -> void { MarkDirty(); };
+
+            manager = std::make_unique<ColorMixerManager>(&rootTransform,
+                markDirty,
+                getMouseInput);
+
             InitializePigments();
             MarkDirty();
         }
@@ -115,13 +118,6 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(clearButtonIcon.get(), clearIconMaterial.get()));
             }
 
-            if (GetMixerManager()->ColorPickerInitialized())
-            {
-                renderItems.push_back(UIRenderItem(colorPickerIcon.get(), colorPickerIconMaterial.get()));
-                renderItems.push_back(UIRenderItem(paintPigmentIcon.get(), paintPigmentIconMaterial.get()));
-                renderItems.push_back(UIRenderItem(colorDisplay.get(), colorDisplayMaterial.get()));
-            }
-
             if (selectSpriteEntity->GetTransform()->Parent != nullptr)
             {
                 renderItems.push_back(UIRenderItem(selectSpriteEntity->GetTransform(), selectSpriteMaterial.get()));
@@ -132,10 +128,16 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(pigmentsBgEntity->GetTransform(), pigmentsBgMaterial.get()));
             }
 
+            if (GetMixerManager()->GetMixerCursor() != nullptr)
+            {
+                renderItems.push_back(UIRenderItem(cursorSpriteEntity->GetTransform(), cursorSpriteMaterial.get()));
+            }
+
             return renderItems;
         }
 
         void InitializePigments();
         void InitializeSelectSpriteEntity();
+        void InitializeCursorSprite();
     };
 } // namespace Beer::System

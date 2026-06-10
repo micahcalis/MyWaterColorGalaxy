@@ -192,7 +192,7 @@ namespace Beer::System
 
         pickerSelectColor();
         markQuadTreeDirty();
-        OnColorClicked.Invoke();
+        OnColorClicked.Invoke(controller->GetColor());
     }
 
     void ColorBarManager::SetGalaxyColorsFromSeed()
