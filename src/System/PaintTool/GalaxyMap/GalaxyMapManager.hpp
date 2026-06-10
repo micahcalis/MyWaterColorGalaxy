@@ -28,6 +28,7 @@ namespace Beer::System
         GalaxyMapBuffer* galaxyBuffer = nullptr;
         UITransform* mapTransform = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
+        UITransform* playerIndicatorTransform = nullptr;
         std::unique_ptr<GalaxyMapCursor> cursor = nullptr;
         std::unique_ptr<GalaxyMapZoomer> zoomer = nullptr;
         bool isActive = false;
@@ -35,7 +36,8 @@ namespace Beer::System
     public:
         GalaxyMapManager(GalaxyMapBuffer* galaxyMapBuffer,
             UITransform* mapTransform,
-            Function<MouseInput> getMouseInput);
+            Function<MouseInput> getMouseInput,
+            UITransform* playerIndicatorTransform);
 
         void InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor,
             UITransform* sunTranform);

@@ -41,6 +41,7 @@ namespace glm
         j.at("z").get_to(v.z);
         j.at("w").get_to(v.w);
     }
+
 } // namespace glm
 
 namespace Beer::System
@@ -91,6 +92,7 @@ namespace Beer::System
     {
     public:
         glm::vec3 PlayerPosition = glm::vec3(0.5f, 0.0f, 0.5f);
+        glm::vec4 PlayerRotation = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     };
 
     struct SerializableGalaxyMap
@@ -104,6 +106,6 @@ namespace Beer::System
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxyComponent, Id, TypeIndex, Colors, Scale, Position, Tilt);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxy, StarSeed, ColorSeed, StarColor, StarPosition, StarSize, ColorA, ColorB, ColorC, OrbitShear, Components)
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializablePaintTool, ComponentColors, GalaxyColors, BrushSize, SelectedType, ZoomScale, ZoomPanning);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableExplorer, PlayerPosition);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableExplorer, PlayerPosition, PlayerRotation);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializableGalaxyMap, Galaxy, ToolHistory, ExplorerHistory);
 } // namespace Beer::System

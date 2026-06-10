@@ -79,6 +79,8 @@ namespace Beer::System
     {
         glm::vec3 scaledPos = serializableExplorer.PlayerPosition * GalaxyObjectBuffer::GALAXY_POS_SCALE;
         player->GetTransform()->Position = scaledPos;
-        std::println("sdf");
+
+        glm::vec4 rotation = serializableExplorer.PlayerRotation;
+        player->GetTransform()->Rotation = glm::quat(rotation.x, rotation.y, rotation.z, rotation.w);
     }
 } // namespace Beer::System

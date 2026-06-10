@@ -27,6 +27,10 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> starMaterial = nullptr;
         std::unique_ptr<UISubEntity> starEntity = nullptr;
 
+        std::shared_ptr<Rendering::Texture2D> playerIndicatorTexture = nullptr;
+        std::shared_ptr<Rendering::Material> playerIndicatorMaterial = nullptr;
+        std::unique_ptr<UISubEntity> playerIndicatorEntity = nullptr;
+
         Function<MouseInput> getMouseInput = nullptr;
 
     public:
@@ -55,13 +59,15 @@ namespace Beer::System
         {
             manager = std::make_unique<GalaxyMapManager>(galaxyMapBuffer,
                 &rootTransform,
-                getMouseInput);
+                getMouseInput,
+                playerIndicatorEntity->GetTransform());
         }
 
         std::vector<UIRenderItem> GetRenderItems() override
         {
             std::vector<UIRenderItem> renderItems;
             renderItems.push_back(UIRenderItem(&rootTransform, galaxyMaterial.get()));
+            renderItems.push_back(UIRenderItem(playerIndicatorEntity->GetTransform(), playerIndicatorMaterial.get()));
 
             if (starEntity != nullptr)
             {
@@ -77,6 +83,7 @@ namespace Beer::System
         void InitializePerlinWorleyTex();
         void InitializeStar();
         void InitializePerlinTex();
+        void InitializePlayerIndicator();
         void UpdateStarPosition(glm::vec2 position);
     };
 } // namespace Beer::System

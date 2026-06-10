@@ -14,8 +14,12 @@ namespace Beer::System
 {
     GalaxyMapManager::GalaxyMapManager(GalaxyMapBuffer* galaxyMapBuffer,
         UITransform* mapTransform,
-        Function<MouseInput> getMouseInput)
-        : galaxyBuffer(galaxyMapBuffer), mapTransform(mapTransform), getMouseInput(getMouseInput)
+        Function<MouseInput> getMouseInput,
+        UITransform* playerIndicatorTransform)
+        : galaxyBuffer(galaxyMapBuffer)
+        , mapTransform(mapTransform)
+        , getMouseInput(getMouseInput)
+        , playerIndicatorTransform(playerIndicatorTransform)
     {
     }
 
@@ -80,5 +84,7 @@ namespace Beer::System
 
         zoomer->Zoom = serializedData.ToolHistory.ZoomScale;
         zoomer->Panning = serializedData.ToolHistory.ZoomPanning;
+
+        playerIndicatorTransform->Position = glm::vec2(serializedData.ExplorerHistory.PlayerPosition.x, serializedData.ExplorerHistory.PlayerPosition.z) * mapTransform->Scale;
     }
 } // namespace Beer::System

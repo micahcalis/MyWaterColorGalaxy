@@ -49,7 +49,7 @@ float4 Get4ColorGradient(float gradient)
     return color;
 }
 
-FRAG float4 GalaxyCompFrag(Sprite.VertData input)
+FRAG float4 GalaxyCompFrag(Sprite.VertData input) : SV_Target
 {
     if (_OverrideMapClip == 0)
     {

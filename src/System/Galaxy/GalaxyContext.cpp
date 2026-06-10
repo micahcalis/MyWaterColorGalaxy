@@ -149,6 +149,9 @@ namespace Beer::System
         SerializableExplorer serializedExplorer{};
         serializedExplorer.PlayerPosition = GetScaledPlayerPosition();
 
+        glm::quat playerRot = playerEntity->GetTransform()->Rotation;
+        serializedExplorer.PlayerRotation = glm::vec4(playerRot.w, playerRot.x, playerRot.y, playerRot.z);
+
         return serializedExplorer;
     }
 

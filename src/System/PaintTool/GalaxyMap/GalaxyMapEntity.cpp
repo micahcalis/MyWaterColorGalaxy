@@ -2,6 +2,7 @@
 #include "Core/Application/Renderer/Screen.hpp"
 #include "GalaxyComponent.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -29,6 +30,7 @@ namespace Beer::System
     static const float CENTER_STAR_GRAD_INTENSITY = 2.0f;
     static const float EDGE_RING_INTENSITY = 0.5f;
     static const int CENTER_STAR_GRAD_STEPS = 6;
+    static const float PLAYER_INDICATOR_SCALE = 0.1f;
 
     GalaxyMapEntity::GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
         Function<MouseInput> getMouseInput)
@@ -58,6 +60,7 @@ namespace Beer::System
         InitializePerlinWorleyTex();
         InitializeStar();
         InitializePerlinTex();
+        InitializePlayerIndicator();
         MarkDirty();
     }
 
@@ -143,5 +146,22 @@ namespace Beer::System
         mapManager->InitializeCursor(getColor, starEntity->GetTransform());
         mapManager->GetCursor()->OnComponentPlaced.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
         mapManager->GetCursor()->OnComponentErased.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
+    }
+
+    void GalaxyMapEntity::InitializePlayerIndicator()
+    {
+        UITransform indicatorTransform{};
+        indicatorTransform.Anchor = AnchorMode::BottomLeft;
+        indicatorTransform.Pivot = AnchorMode::Center;
+        indicatorTransform.Scale = glm::vec2(PLAYER_INDICATOR_SCALE);
+        indicatorTransform.Depth = 0.1f;
+
+        playerIndicatorEntity = std::make_unique<UISubEntity>(indicatorTransform);
+        rootTransform.BindChild(playerIndicatorEntity->GetTransform());
+
+        playerIndicatorTexture = std::make_shared<Rendering::Texture2D>("UI/GalaxyMap/Tex_PlayerIndicator");
+        playerIndicatorMaterial = std::make_shared<Rendering::Material>("UI/PlayerIndicatorSprite");
+        playerIndicatorMaterial->SetTexture("_SpriteTex", playerIndicatorTexture.get());
+        playerIndicatorMaterial->SetColor("_TintColor", glm::vec4(1));
     }
 } // namespace Beer::System
