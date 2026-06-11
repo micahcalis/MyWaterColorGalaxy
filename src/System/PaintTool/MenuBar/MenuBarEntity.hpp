@@ -5,6 +5,7 @@
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
+#include "System/Delegates/Delegate.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include <memory>
 namespace Beer::System
@@ -25,13 +26,19 @@ namespace Beer::System
         std::shared_ptr<Rendering::Texture2D> flyButtonTexture = nullptr;
         std::unique_ptr<UISubEntity> flyButtonEntity = nullptr;
 
+        std::shared_ptr<Rendering::Material> backButtonMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> backButtonTexture = nullptr;
+        std::unique_ptr<UISubEntity> backButtonEntity = nullptr;
+
         Function<void> clearHistory = nullptr;
         Function<void> saveMap = nullptr;
+        Function<void> onBackToTitle = nullptr;
 
     public:
         MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
             Function<void> clearHistory,
-            Function<void> saveMap);
+            Function<void> saveMap,
+            Function<void> onBackToTitle);
 
         void InitializeButtonEntities();
         MenuBarManager* GetMenuBarManager() const { return static_cast<MenuBarManager*>(manager.get()); };
@@ -41,7 +48,8 @@ namespace Beer::System
         {
             manager = std::make_unique<MenuBarManager>(galaxyMapBuffer,
                 clearHistory,
-                saveMap);
+                saveMap,
+                onBackToTitle);
         }
 
         std::vector<UIRenderItem> GetRenderItems() override
@@ -50,6 +58,7 @@ namespace Beer::System
             renderItems.push_back(UIRenderItem(&rootTransform, backgroundMaterial.get()));
             renderItems.push_back(UIRenderItem(seedButtonEntity->GetTransform(), seedButtonMaterial.get()));
             renderItems.push_back(UIRenderItem(flyButtonEntity->GetTransform(), flyButtonMaterial.get()));
+            renderItems.push_back(UIRenderItem(backButtonEntity->GetTransform(), backButtonMaterial.get()));
             return renderItems;
         }
     };

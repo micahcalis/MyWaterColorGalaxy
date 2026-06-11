@@ -2,6 +2,7 @@
 #include "Input/ButtonInput.hpp"
 #include "Input/MouseInput.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
+#include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/InputManager.hpp"
 #include "System/Components/Colliders/QuadColliderManager.hpp"
 #include "System/Context/ContextHandler.hpp"
@@ -15,13 +16,12 @@
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/Menus/Background/GalaxyBackgroundContext.hpp"
+#include "System/Menus/UI/SelectionUserIntContext.hpp"
 #include "System/Menus/UI/TitleUserIntContext.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/MapSerializationManager.hpp"
 #include <memory>
-
-static const std::string TEST_MAP = "TestMap";
 
 namespace Beer::System
 {
@@ -44,7 +44,7 @@ namespace Beer::System
         InitializeContextFactory();
         InitializeColliders();
 
-        // InitializePaintTool();
+        //  InitializePaintTool();
         InitializeMainMenu();
     }
 
@@ -88,10 +88,11 @@ namespace Beer::System
         Function<ButtonInput> getDebugKeyInput = [this]() -> ButtonInput { return inputManager->GetDebugButtonInput(); };
         Function<bool> getReturnPressed = [this]() -> bool { return inputManager->GetTabButtonInput().ButtonExit; };
         Function<ButtonInput> getTabKeyInput = [this]() -> ButtonInput { return inputManager->GetTabButtonInput(); };
+        Function<ButtonInput> getEscKeyInput = [this]() -> ButtonInput { return inputManager->GetEscButtonInput(); };
 
         contextHandler->RegisterContextFactory(ContextType::Galaxy,
             [this, getPlayerInput, getReturnPressed]() -> std::shared_ptr<IContext> {
-                MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
+                MapHandler handler = mapSerializationManager->GetMapHandler(currentMapName);
                 return std::make_shared<GalaxyContext>(getPlayerInput, getReturnPressed, handler);
             });
 
@@ -102,7 +103,7 @@ namespace Beer::System
 
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
             [this, getMouseInput, getDebugKeyInput, getTabKeyInput]() -> std::shared_ptr<PaintToolContext> {
-                MapHandler handler = mapSerializationManager->GetMapHandler(TEST_MAP);
+                MapHandler handler = mapSerializationManager->GetMapHandler(currentMapName);
                 return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, getTabKeyInput, handler);
             });
 
@@ -114,6 +115,11 @@ namespace Beer::System
         contextHandler->RegisterContextFactory(ContextType::MainMenu,
             [this]() -> std::shared_ptr<TitleUserIntContext> {
                 return std::make_shared<TitleUserIntContext>();
+            });
+
+        contextHandler->RegisterContextFactory(ContextType::SelectionMenu,
+            [this, getEscKeyInput]() -> std::shared_ptr<SelectionUserIntContext> {
+                return std::make_shared<SelectionUserIntContext>(getEscKeyInput);
             });
     }
 
@@ -175,6 +181,17 @@ namespace Beer::System
         };
 
         context->OnGalaxyFly.Subscribe(onGalaxyFly);
+
+        Function<void> toMainMenu = [this]() -> void {
+            contextHandler->DestroyContext(ContextType::PaintTool);
+            InitializeMainMenu();
+        };
+
+        Function<void> onBackToTitle = [this, toMainMenu]() -> void {
+            contextHandler->QueueOperation(toMainMenu);
+        };
+
+        context->OnBackToTitle.Subscribe(onBackToTitle);
     }
 
     void GameManager::InitializeMainMenu()
@@ -188,6 +205,53 @@ namespace Beer::System
 
         TitleUserIntContext* userIntContext = contextHandler->GetContext<TitleUserIntContext>(ContextType::MainMenu);
         userIntContext->OnCloseApplication.Subscribe(quitApplication);
+
+        Function<void> toSelectMenu = [this]() -> void {
+            contextHandler->DestroyContext(ContextType::MainMenu);
+            InitializeSelectMenu();
+        };
+
+        Function<void> onSelectMenu = [this, toSelectMenu] -> void {
+            contextHandler->QueueOperation(toSelectMenu);
+        };
+
+        userIntContext->OnOpenSelection.Subscribe(onSelectMenu);
+    }
+
+    void GameManager::InitializeSelectMenu()
+    {
+        if (!contextHandler->ContextExists(ContextType::GalaxyBackground))
+        {
+            contextHandler->LoadContext(ContextType::GalaxyBackground);
+        }
+
+        contextHandler->LoadContext(ContextType::SelectionMenu);
+
+        SelectionUserIntContext* userIntContext = contextHandler->GetContext<SelectionUserIntContext>(ContextType::SelectionMenu);
+
+        Function<void> toMainMenu = [this]() -> void {
+            contextHandler->DestroyContext(ContextType::SelectionMenu);
+            InitializeMainMenu();
+        };
+
+        Function<void> onReturnToTitle = [this, toMainMenu]() -> void {
+            contextHandler->QueueOperation(toMainMenu);
+        };
+
+        userIntContext->OnReturnToTitle.Subscribe(onReturnToTitle);
+
+        Function<void> toPaintTool = [this]() -> void {
+            contextHandler->DestroyContext(ContextType::SelectionMenu);
+            contextHandler->DestroyContext(ContextType::GalaxyBackground);
+            InitializePaintTool();
+        };
+
+        Function<void, const std::string&> onSelectMap = [this, toPaintTool](const std::string& mapName) -> void {
+            currentMapName = mapName;
+            contextHandler->QueueOperation(toPaintTool);
+        };
+
+        userIntContext->OnSelectMap.Subscribe(onSelectMap);
     }
 
     void GameManager::UpdateBase()

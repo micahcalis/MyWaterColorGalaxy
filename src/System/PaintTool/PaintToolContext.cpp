@@ -208,7 +208,15 @@ namespace Beer::System
             OnGalaxyFly.Invoke();
         };
 
-        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(), clearHistory, saveMap);
+        Function<void> onBackToTitle = [this]() -> void {
+            OnBackToTitle.Invoke();
+        };
+
+        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(),
+            clearHistory,
+            saveMap,
+            onBackToTitle);
+
         menuBarEntity->InitializeButtonEntities();
     }
 

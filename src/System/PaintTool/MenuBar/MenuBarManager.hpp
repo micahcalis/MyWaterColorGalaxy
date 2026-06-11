@@ -24,21 +24,31 @@ namespace Beer::System
         std::unique_ptr<Button> flyButton = nullptr;
         Function<void> saveMap = nullptr;
 
+        std::unique_ptr<Button> backButton = nullptr;
+        Function<void> onBackToTitle = nullptr;
+
     public:
         MenuBarManager(GalaxyMapBuffer* galaxyMapBuffer,
             Function<void> clearHistory,
-            Function<void> saveMap)
-            : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory), saveMap(saveMap)
+            Function<void> saveMap,
+            Function<void> onBackToTitle)
+            : galaxyMapBuffer(galaxyMapBuffer)
+            , clearHistory(clearHistory)
+            , saveMap(saveMap)
+            , onBackToTitle(onBackToTitle)
         {
         }
 
         void InitializeButtons(UITransform* newSeedTransform,
             Rendering::Material* newSeedMaterial,
             UITransform* flyTransform,
-            Rendering::Material* flyMaterial)
+            Rendering::Material* flyMaterial,
+            UITransform* backTransform,
+            Rendering::Material* backMaterial)
         {
             InitializeNewSeed(newSeedTransform, newSeedMaterial);
             InitializeFly(flyTransform, flyMaterial);
+            InitializeBack(backTransform, backMaterial);
         }
 
         void Update() override
@@ -51,6 +61,9 @@ namespace Beer::System
 
         void InitializeFly(UITransform* flyTransform,
             Rendering::Material* flyMaterial);
+
+        void InitializeBack(UITransform* backTransform,
+            Rendering::Material* backMaterial);
 
         void InvokeFly();
     };

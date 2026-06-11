@@ -27,6 +27,8 @@ namespace Beer::System
         std::unique_ptr<LightManager> lightManager = nullptr;
         std::unique_ptr<MapSerializationManager> mapSerializationManager = nullptr;
 
+        std::string currentMapName = "FallbackMap";
+
     public:
         ~GameManager();
         GameManager(Function<void> quitApplication);
@@ -44,6 +46,7 @@ namespace Beer::System
         void InitializeGalaxy();
         void InitializePaintTool();
         void InitializeMainMenu();
+        void InitializeSelectMenu();
 
         void UpdateBase();
         void UpdateColliders();

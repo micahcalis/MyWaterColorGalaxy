@@ -12,6 +12,7 @@ namespace Beer::System
 {
     class MainMenuEntity : public QuadTreeEntity
     {
+    private:
         std::shared_ptr<Rendering::Texture2D> logoTexture = nullptr;
         std::shared_ptr<Rendering::Material> logoMaterial = nullptr;
         std::unique_ptr<UISubEntity> logoEntity = nullptr;

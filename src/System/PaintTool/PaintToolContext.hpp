@@ -25,6 +25,7 @@ namespace Beer::System
     {
     public:
         BeerEvent<void()> OnGalaxyFly;
+        BeerEvent<void()> OnBackToTitle;
 
     private:
         std::unique_ptr<GalaxyMapBuffer> galaxyMapBuffer = nullptr;

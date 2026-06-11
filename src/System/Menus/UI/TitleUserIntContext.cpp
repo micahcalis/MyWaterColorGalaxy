@@ -33,7 +33,7 @@ namespace Beer::System
         mainMenuEntity = registry.CreateEntity<MainMenuEntity>();
         mainMenuEntity->InitializeButtons();
 
-        Function<void> onStart = [this]() -> void { std::println("start"); };
+        Function<void> onStart = [this]() -> void { OnOpenSelection.Invoke(); };
         mainMenuEntity->GetMainMenuManager()->OnStart.Subscribe(onStart);
 
         Function<void> onExit = [this]() -> void { OnCloseApplication.Invoke(); };

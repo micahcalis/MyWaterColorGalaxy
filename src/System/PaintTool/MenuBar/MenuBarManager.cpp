@@ -20,6 +20,13 @@ namespace Beer::System
         flyButton->SetOnClick([this]() -> void { InvokeFly(); });
     }
 
+    void MenuBarManager::InitializeBack(UITransform* backTransform,
+        Rendering::Material* backMaterial)
+    {
+        backButton = std::make_unique<Button>(backTransform, backMaterial);
+        backButton->SetOnClick(onBackToTitle);
+    }
+
     void MenuBarManager::InvokeFly()
     {
         saveMap();

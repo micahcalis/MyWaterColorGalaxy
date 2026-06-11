@@ -32,7 +32,6 @@ namespace Beer::Core
 
         if (!isFullscreen)
         {
-            std::println("set thibng");
             SDL_SetWindowSize(window, windowedWidth, windowedHeight);
         }
     }

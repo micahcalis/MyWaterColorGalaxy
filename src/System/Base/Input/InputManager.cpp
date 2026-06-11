@@ -110,4 +110,9 @@ namespace Beer::System
         return pKeyCache.UpdateInput();
     }
 
+    ButtonInput InputManager::GetEscButtonInput()
+    {
+        return escKeyCache.UpdateInput();
+    }
+
 } // namespace Beer::System
