@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #define SDL_MAIN_HANDLED
 
 #include <vulkan/vulkan_raii.hpp>
@@ -16,7 +17,7 @@ namespace Beer::Core
     private:
         WindowManager windowManager = {};
         Renderer renderer = {};
-        System::GameManager gameManager = {};
+        std::unique_ptr<System::GameManager> gameManager = nullptr;
 
     public:
         void Run();

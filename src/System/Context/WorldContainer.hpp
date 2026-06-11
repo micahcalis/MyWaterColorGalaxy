@@ -18,9 +18,9 @@ namespace Beer::System
         std::vector<IContext*> GetActiveContexts() const;
         void UpdateContexts();
         void DestroyContext(const ContextType type);
+        bool ContextExists(const ContextType type) const { return contextMap.contains(type); }
 
     private:
         void CleanupDirty();
-        bool ContextExists(const ContextType type) const { return contextMap.contains(type); }
     };
 } // namespace Beer::System

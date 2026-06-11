@@ -21,6 +21,11 @@ namespace Beer::System
         throw std::runtime_error("SetContextActive is not implemented in ContextHandler!");
     }
 
+    bool ContextHandler::ContextExists(ContextType type) const
+    {
+        return worldContainer->ContextExists(type);
+    }
+
     std::shared_ptr<IContext> ContextHandler::GetContextFromType(const ContextType type)
     {
         auto factory = contextFactories.find(type);

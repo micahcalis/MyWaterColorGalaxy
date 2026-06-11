@@ -21,6 +21,7 @@ namespace Beer::Core
         void Cleanup();
         void UpdateWindowedResolution();
         void ToggleFullscreen();
+        void QuitApplication();
         SDL_Window* GetWindow() const;
         bool GetFullscreen() const { return isFullscreen; };
     };

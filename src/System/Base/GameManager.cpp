@@ -15,6 +15,7 @@
 #include "System/Light/ILight.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/Menus/Background/GalaxyBackgroundContext.hpp"
+#include "System/Menus/UI/TitleUserIntContext.hpp"
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/MapSerializationManager.hpp"
@@ -28,6 +29,11 @@ namespace Beer::System
     {
         Camera::SetCameraManager(nullptr);
         ILight::SetLightManager(nullptr);
+    }
+
+    GameManager::GameManager(Function<void> quitApplication)
+        : quitApplication(quitApplication)
+    {
     }
 
     void GameManager::Initialize()
@@ -104,6 +110,11 @@ namespace Beer::System
             [this]() -> std::shared_ptr<GalaxyBackgroundContext> {
                 return std::make_shared<GalaxyBackgroundContext>();
             });
+
+        contextHandler->RegisterContextFactory(ContextType::MainMenu,
+            [this]() -> std::shared_ptr<TitleUserIntContext> {
+                return std::make_shared<TitleUserIntContext>();
+            });
     }
 
     void GameManager::InitializeContext()
@@ -168,7 +179,15 @@ namespace Beer::System
 
     void GameManager::InitializeMainMenu()
     {
-        contextHandler->LoadContext(ContextType::GalaxyBackground);
+        if (!contextHandler->ContextExists(ContextType::GalaxyBackground))
+        {
+            contextHandler->LoadContext(ContextType::GalaxyBackground);
+        }
+
+        contextHandler->LoadContext(ContextType::MainMenu);
+
+        TitleUserIntContext* userIntContext = contextHandler->GetContext<TitleUserIntContext>(ContextType::MainMenu);
+        userIntContext->OnCloseApplication.Subscribe(quitApplication);
     }
 
     void GameManager::UpdateBase()

@@ -6,6 +6,7 @@
 #include "System/Context/ContextHandler.hpp"
 #include "System/Context/WorldContainer.hpp"
 #include "System/Camera/CameraManager.hpp"
+#include "System/Delegates/Delegate.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
 #include "System/Light/LightManager.hpp"
 #include "System/Serialization/MapSerializationManager.hpp"
@@ -16,6 +17,7 @@ namespace Beer::System
     class GameManager
     {
     private:
+        Function<void> quitApplication = nullptr;
         std::unique_ptr<ClockManager> clockManager = nullptr;
         std::unique_ptr<QuadColliderManager> quadColliderManager = nullptr;
         std::unique_ptr<WorldContainer> worldContainer = nullptr;
@@ -27,6 +29,7 @@ namespace Beer::System
 
     public:
         ~GameManager();
+        GameManager(Function<void> quitApplication);
         void Initialize();
         void PreUpdate();
         void Update();

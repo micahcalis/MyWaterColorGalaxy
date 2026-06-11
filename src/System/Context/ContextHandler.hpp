@@ -59,6 +59,8 @@ namespace Beer::System
             }
         }
 
+        bool ContextExists(ContextType type) const;
+
     private:
         std::shared_ptr<IContext> GetContextFromType(const ContextType type);
         void FlushOperations();

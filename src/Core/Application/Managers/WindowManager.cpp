@@ -43,6 +43,13 @@ namespace Beer::Core
         SDL_Quit();
     }
 
+    void WindowManager::QuitApplication()
+    {
+        SDL_Event quitEvent;
+        quitEvent.type = SDL_EVENT_QUIT;
+        SDL_PushEvent(&quitEvent);
+    }
+
     SDL_Window* WindowManager::GetWindow() const
     {
         return window;
