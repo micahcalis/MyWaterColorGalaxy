@@ -103,7 +103,7 @@ void InjectPaint(uint3 id : SV_DispatchThreadID)
     float2 brushPos = screenCanvas.AlignToCanvas(_MousePos);
     brushPos.y = 1.0f - brushPos.y;
 
-    float2 diff = (threadPos - brushPos) * _PaintResolution;
+    float2 diff = (threadPos - brushPos);
     float distSq = dot(diff, diff);
     float radiusSq = _BrushRadius * _BrushRadius;
 

@@ -9,6 +9,11 @@ namespace Beer::System
 {
     void ColorMixerManager::Update()
     {
+        if (!enabled)
+        {
+            return;
+        }
+
         if (colorPicker != nullptr)
         {
             colorPicker->Update();

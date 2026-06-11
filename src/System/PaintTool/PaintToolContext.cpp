@@ -209,6 +209,8 @@ namespace Beer::System
         };
 
         Function<void> onBackToTitle = [this]() -> void {
+            SerializableGalaxyMap serializedGalaxyMap = GetSerializedData();
+            mapHandler.Save(serializedGalaxyMap);
             OnBackToTitle.Invoke();
         };
 
@@ -320,6 +322,7 @@ namespace Beer::System
         Function<void, bool> setColorModeActive = [this](bool enabled) -> void {
             colorBarEntity->SetTreeEnabled(enabled);
             colorMixerEntity->SetTreeEnabled(enabled);
+            colorMixerEntity->GetMixerManager()->SetEnabled(enabled);
         };
 
         Function<void, bool> setBrushModeActive = [this](bool enabled) -> void {

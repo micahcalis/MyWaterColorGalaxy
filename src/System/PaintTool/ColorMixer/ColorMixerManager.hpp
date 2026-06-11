@@ -27,6 +27,7 @@ namespace Beer::System
         std::unique_ptr<ColorPicker> colorPicker = nullptr;
         std::unique_ptr<ColorMixerCursor> colorMixerCursor = nullptr;
         UITransform* selectSpriteTransform = nullptr;
+        bool enabled = false;
 
     public:
         ColorMixerManager(UITransform* canvasTransform,
@@ -107,6 +108,11 @@ namespace Beer::System
 
             selectParent->UnbindChild(selectSpriteTransform);
             markDirty();
+        }
+
+        void SetEnabled(bool enabled)
+        {
+            this->enabled = enabled;
         }
 
     private:

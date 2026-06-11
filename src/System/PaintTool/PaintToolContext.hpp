@@ -42,7 +42,7 @@ namespace Beer::System
         Function<MouseInput> getMouseInput = nullptr;
         Function<ButtonInput> getDebugKeyInput = nullptr;
         Function<ButtonInput> getTabKeyInput = nullptr;
-        bool toggle = false;
+
         MapHandler mapHandler;
         SerializableGalaxyMap serializedGalaxyMap{};
 

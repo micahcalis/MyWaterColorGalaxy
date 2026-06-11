@@ -31,6 +31,8 @@ namespace Beer::System
     static const float EDGE_RING_INTENSITY = 0.5f;
     static const int CENTER_STAR_GRAD_STEPS = 6;
     static const float PLAYER_INDICATOR_SCALE = 0.1f;
+    static const float ZOOM_INDICATOR_SCALE = 0.2f;
+    static const glm::vec2 ZOOM_INDICATOR_OFFSET = glm::vec2(0.05f, 0);
 
     GalaxyMapEntity::GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
         Function<MouseInput> getMouseInput)
@@ -61,6 +63,7 @@ namespace Beer::System
         InitializeStar();
         InitializePerlinTex();
         InitializePlayerIndicator();
+        InitializeZoomIndicator();
         MarkDirty();
     }
 
@@ -163,5 +166,23 @@ namespace Beer::System
         playerIndicatorMaterial = std::make_shared<Rendering::Material>("UI/PlayerIndicatorSprite");
         playerIndicatorMaterial->SetTexture("_SpriteTex", playerIndicatorTexture.get());
         playerIndicatorMaterial->SetColor("_TintColor", glm::vec4(1));
+    }
+
+    void GalaxyMapEntity::InitializeZoomIndicator()
+    {
+        UITransform zoomTransform{};
+        zoomTransform.Anchor = AnchorMode::TopRight;
+        zoomTransform.Pivot = AnchorMode::TopLeft;
+        zoomTransform.Scale = glm::vec2(ZOOM_INDICATOR_SCALE);
+        zoomTransform.Position = ZOOM_INDICATOR_OFFSET;
+
+        zoomIndicatorEntity = std::make_unique<UISubEntity>(zoomTransform);
+        rootTransform.BindChild(zoomIndicatorEntity->GetTransform());
+
+        zoomIndicatorTexture = std::make_shared<Rendering::Texture2D>("UI/GalaxyMap/Tex_ZoomIndicator");
+        zoomIndicatorMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        zoomIndicatorMaterial->SetTexture("_SpriteTex", zoomIndicatorTexture.get());
+        zoomIndicatorMaterial->SetColor("_TintColor", glm::vec4(1));
+        zoomIndicatorMaterial->SetVector("_Scale", glm::vec4(1));
     }
 } // namespace Beer::System

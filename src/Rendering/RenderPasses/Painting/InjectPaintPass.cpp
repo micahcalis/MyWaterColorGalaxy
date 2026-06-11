@@ -41,7 +41,7 @@ namespace Beer::Rendering
         simulationBuffers->SimulationContext->SetTexture("_ShallowWater", simulationBuffers->ShallowWater);
         simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentSource", simulationBuffers->GetSuspendedPong(true));
         simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentTarget", simulationBuffers->GetSuspendedPong(false));
-        simulationBuffers->SimulationContext->SetFloat("_BrushRadius", 30.0f);
+        simulationBuffers->SimulationContext->SetFloat("_BrushRadius", 0.075f);
         simulationBuffers->SimulationContext->SetFloat("_BrushIntensity", 5.0f);
         simulationBuffers->SimulationContext->SetFloat("_BrushSmoothness", 0.5f);
         simulationBuffers->SimulationContext->SetInt("_BrushPigment", static_cast<int>(currentPigment));
