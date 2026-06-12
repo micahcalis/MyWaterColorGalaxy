@@ -1,4 +1,6 @@
 #include "Core/Application/Application.hpp"
+#include "Managers/AudioManager.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/GameManager.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include <SDL3/SDL_video.h>
@@ -32,6 +34,9 @@ namespace Beer::Core
     {
         gameManager = std::make_unique<System::GameManager>([this]() -> void { windowManager.QuitApplication(); });
         gameManager->Initialize();
+
+        audioManager = std::make_unique<AudioManager>();
+        System::AudioClip::SetAudioManager(audioManager.get());
     }
 
     void Application::MainLoop()
@@ -87,6 +92,7 @@ namespace Beer::Core
             if (isRunning)
             {
                 gameManager->Update();
+                audioManager->Update();
                 renderer.PreDraw();
                 renderer.Draw();
             }

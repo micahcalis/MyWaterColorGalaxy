@@ -18,6 +18,7 @@
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
@@ -35,6 +36,9 @@ namespace Beer::System
 
     void PaintToolContext::Load()
     {
+        std::shared_ptr<System::AudioClip> audioClip = std::make_shared<System::AudioClip>("Tracks/Audio_SpinningCat", AudioSettings());
+        audioClip->PlayAsBackground();
+
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));
 

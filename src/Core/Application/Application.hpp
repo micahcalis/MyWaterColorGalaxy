@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Managers/AudioManager.hpp"
 #include <memory>
 #define SDL_MAIN_HANDLED
 
@@ -18,6 +19,7 @@ namespace Beer::Core
         WindowManager windowManager = {};
         Renderer renderer = {};
         std::unique_ptr<System::GameManager> gameManager = nullptr;
+        std::unique_ptr<Core::AudioManager> audioManager = nullptr;
 
     public:
         void Run();
