@@ -18,11 +18,13 @@ namespace Beer::System
     MenuBarEntity::MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
         Function<void> clearHistory,
         Function<void> saveMap,
-        Function<void> onBackToTitle)
+        Function<void> onBackToTitle,
+        Function<void> enableBlock)
         : galaxyMapBuffer(galaxyMapBuffer)
         , clearHistory(clearHistory)
         , saveMap(saveMap)
         , onBackToTitle(onBackToTitle)
+        , enableBlock(enableBlock)
         , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         rootTransform.Anchor = AnchorMode::BottomRight;

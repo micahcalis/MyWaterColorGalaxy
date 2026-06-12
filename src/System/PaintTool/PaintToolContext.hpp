@@ -1,8 +1,10 @@
 #pragma once
 
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
+#include "ButtonBlocker/ButtonBlockerEntity.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
 #include "ModeButton/ModeButtonEntity.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Delegates/BeerEvent.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapEntity.hpp"
@@ -37,24 +39,30 @@ namespace Beer::System
         BrushSizeBarEntity* brushSizeBarEntity = nullptr;
         HologramCursorEntity* hologramCursorEntity = nullptr;
         ModeButtonEntity* modeButtonEntity = nullptr;
+        ButtonBlockerEntity* buttonBlockerEntity = nullptr;
+
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
+        Rendering::FullscreenTransitionPass* transitionPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
         Function<ButtonInput> getDebugKeyInput = nullptr;
         Function<ButtonInput> getTabKeyInput = nullptr;
 
         MapHandler mapHandler;
         SerializableGalaxyMap serializedGalaxyMap{};
+        Rendering::FadeState initialFadeState;
 
     public:
         PaintToolContext(Function<MouseInput> getMouseInput,
             Function<ButtonInput> getDebugKeyInput,
             Function<ButtonInput> getTabKeyInput,
-            MapHandler mapHandler)
+            MapHandler mapHandler,
+            Rendering::FadeState initialFadeState)
             : getMouseInput(getMouseInput)
             , getDebugKeyInput(getDebugKeyInput)
             , getTabKeyInput(getTabKeyInput)
             , mapHandler(mapHandler)
+            , initialFadeState(initialFadeState)
         {
         }
 
@@ -73,6 +81,7 @@ namespace Beer::System
         void InitializeBrushSizeBar();
         void InitializeHoloCursor();
         void InitializeModeButton();
+        void InitializeButtonBlocker();
         void TryOpenMap();
         SerializablePaintTool SerializePaintTool() const;
     };

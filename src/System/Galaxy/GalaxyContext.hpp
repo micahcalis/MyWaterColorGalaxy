@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Galaxy/General/GalaxyEntity.hpp"
 #include "System/Galaxy/General/SunEntity.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
@@ -33,12 +34,14 @@ namespace Beer::System
 
         Function<PlayerInput> getPlayerInput = nullptr;
         Function<bool> getReturnPressed = nullptr;
+        bool isReturning = false;
 
         std::unique_ptr<WatercolorSubPipeline> watercolorSubPipeline = nullptr;
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;
         Rendering::DrawTransparentPass* transparentPass = nullptr;
+        Rendering::FullscreenTransitionPass* transitionPass = nullptr;
 
         MapHandler mapHandler;
         SerializableGalaxyMap serializedMap{};

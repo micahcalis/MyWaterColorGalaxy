@@ -33,12 +33,14 @@ namespace Beer::System
         Function<void> clearHistory = nullptr;
         Function<void> saveMap = nullptr;
         Function<void> onBackToTitle = nullptr;
+        Function<void> enableBlock = nullptr;
 
     public:
         MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
             Function<void> clearHistory,
             Function<void> saveMap,
-            Function<void> onBackToTitle);
+            Function<void> onBackToTitle,
+            Function<void> enableBlock);
 
         void InitializeButtonEntities();
         MenuBarManager* GetMenuBarManager() const { return static_cast<MenuBarManager*>(manager.get()); };
@@ -49,7 +51,8 @@ namespace Beer::System
             manager = std::make_unique<MenuBarManager>(galaxyMapBuffer,
                 clearHistory,
                 saveMap,
-                onBackToTitle);
+                onBackToTitle,
+                enableBlock);
         }
 
         std::vector<UIRenderItem> GetRenderItems() override

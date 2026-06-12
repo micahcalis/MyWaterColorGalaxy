@@ -1,5 +1,6 @@
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
+#include "ButtonBlocker/ButtonBlockerEntity.hpp"
 #include "ColorBar/ColorBarEntity.hpp"
 #include "ColorBar/ColorBarLevel.hpp"
 #include "ColorBar/ColorBarManager.hpp"
@@ -14,10 +15,12 @@
 #include "MenuBar/MenuBarEntity.hpp"
 #include "ModeButton/ModeButtonEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/Context/ContextType.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
@@ -28,14 +31,31 @@
 
 namespace Beer::System
 {
+    static const float FADE_DURATION = 1.0f;
+
     void PaintToolContext::Load()
     {
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));
 
+        transitionPass = Rendering::IRenderPass::FetchFromRegister<Rendering::FullscreenTransitionPass>(
+            std::string(Rendering::TRANSITION_PASS));
+
+        if (!transitionPass->HasMaterial())
+        {
+            auto transitionMaterial = std::make_shared<Rendering::Material>("Blit/SpaceTransitionBlit");
+            transitionPass->SetMaterial(transitionMaterial);
+        }
+
+        if (initialFadeState == Rendering::FadeState::In)
+        {
+            transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_DURATION);
+        }
+
         InitializeColorPicker();
         InitializeGalaxyMap();
         InitializeToolBar();
+        InitializeButtonBlocker();
         InitializeMenuBar();
         InitializeColorBar();
         InitializeBrushSizeBar();
@@ -99,12 +119,18 @@ namespace Beer::System
         {
             modeButtonEntity->Update();
         }
+
+        if (buttonBlockerEntity != nullptr)
+        {
+            buttonBlockerEntity->Update();
+        }
     }
 
     std::vector<Rendering::IRenderPass*> PaintToolContext::GetRenderPasses()
     {
         std::vector<Rendering::IRenderPass*> passes;
         passes.push_back(drawUIPass);
+        passes.push_back(transitionPass);
 
         if (colorMixerEntity != nullptr)
         {
@@ -195,9 +221,9 @@ namespace Beer::System
 
     void PaintToolContext::InitializeMenuBar()
     {
-        if (galaxyMapEntity == nullptr || toolBarEntity == nullptr)
+        if (galaxyMapEntity == nullptr || toolBarEntity == nullptr || buttonBlockerEntity == nullptr)
         {
-            throw std::runtime_error("Trying to Initialize Menu Bar when Galaxy Map or Tool Bar Entity is null!");
+            throw std::runtime_error("Trying to Initialize Menu Bar when Galaxy Map or Tool Bar Entity or Button Blocker is null!");
         }
 
         Function<void> clearHistory = [this]() -> void { toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory(); };
@@ -214,10 +240,15 @@ namespace Beer::System
             OnBackToTitle.Invoke();
         };
 
+        Function<void> enableBlock = [this]() -> void {
+            buttonBlockerEntity->SetTreeEnabled(true);
+        };
+
         menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(),
             clearHistory,
             saveMap,
-            onBackToTitle);
+            onBackToTitle,
+            enableBlock);
 
         menuBarEntity->InitializeButtonEntities();
     }
@@ -334,6 +365,13 @@ namespace Beer::System
             getTabKeyInput);
 
         modeButtonEntity->InitializeModeButton();
+    }
+
+    void PaintToolContext::InitializeButtonBlocker()
+    {
+        buttonBlockerEntity = registry.CreateEntity<ButtonBlockerEntity>(ContextType::PaintTool);
+        buttonBlockerEntity->InitializeBlocker();
+        buttonBlockerEntity->SetTreeEnabled(false);
     }
 
     void PaintToolContext::TryOpenMap()

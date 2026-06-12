@@ -6,6 +6,8 @@
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
 #include "Rendering/RenderPasses/DrawSkyboxPass.hpp"
 #include "Rendering/RenderPasses/DrawTransparentPass.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
+#include "System/Base/Clock/Clock.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Context/IContext.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
@@ -19,6 +21,7 @@ namespace Beer::System
 {
     static const uint32_t STAR_COUNT = 15'000;
     static const float STAR_BOX_SIZE = 100.0f;
+    static const float FADE_DURATION = 1.0f;
 
     void GalaxyContext::Load()
     {
@@ -58,6 +61,7 @@ namespace Beer::System
         passes.push_back(deferredShadePass);
         passes.push_back(skyboxPass);
         passes.push_back(transparentPass);
+        passes.push_back(transitionPass);
 
         return passes;
     }
@@ -98,19 +102,30 @@ namespace Beer::System
         }
 
         opaquePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawOpaquePass>(
-            std::string(Rendering::OPAQUE_PASS));
+            Rendering::OPAQUE_PASS);
 
         skyboxPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawSkyboxPass>(
-            std::string(Rendering::SKYBOX_PASS),
+            Rendering::SKYBOX_PASS,
             galaxyEntity->GetContainer()->GetControlNoiseVolume());
 
         deferredShadePass = Rendering::IRenderPass::FetchFromRegister<Rendering::DeferredShadePass>(
-            std::string(Rendering::DEFERRED_SHADE_PASS));
+            Rendering::DEFERRED_SHADE_PASS);
 
         transparentPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawTransparentPass>(
-            std::string(Rendering::TRANSPARENT_PASS));
+            Rendering::TRANSPARENT_PASS);
+
+        transitionPass = Rendering::IRenderPass::FetchFromRegister<Rendering::FullscreenTransitionPass>(
+            Rendering::TRANSITION_PASS);
 
         watercolorSubPipeline = std::make_unique<WatercolorSubPipeline>();
+
+        if (!transitionPass->HasMaterial())
+        {
+            auto transitionMaterial = std::make_shared<Rendering::Material>("Blit/SpaceTransitionBlit");
+            transitionPass->SetMaterial(transitionMaterial);
+        }
+
+        transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_DURATION);
     }
 
     void GalaxyContext::TryLoadMap()
@@ -136,11 +151,21 @@ namespace Beer::System
     {
         bool returnPressed = getReturnPressed();
 
-        if (returnPressed)
+        if (returnPressed && isReturning == false)
         {
-            serializedMap.ExplorerHistory = SerializeExplorer();
-            mapHandler.Save(serializedMap);
-            OnReturnToPainting.Invoke();
+            Function<void> onFadeIn = [this]() -> void {
+                serializedMap.ExplorerHistory = SerializeExplorer();
+                mapHandler.Save(serializedMap);
+                OnReturnToPainting.Invoke();
+            };
+
+            transitionPass->SetFade(Rendering::FadeState::In, 1.0f / FADE_DURATION);
+
+            auto returnTimer = Clock::Timer(FADE_DURATION);
+            returnTimer->OnTimerComplete.Subscribe(onFadeIn);
+            returnTimer->Start();
+
+            isReturning = true;
         }
     }
 

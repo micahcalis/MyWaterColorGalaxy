@@ -1,6 +1,7 @@
 #include "System/Base/GameManager.hpp"
 #include "Input/ButtonInput.hpp"
 #include "Input/MouseInput.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/InputManager.hpp"
@@ -44,7 +45,6 @@ namespace Beer::System
         InitializeContextFactory();
         InitializeColliders();
 
-        //  InitializePaintTool();
         InitializeMainMenu();
     }
 
@@ -104,7 +104,7 @@ namespace Beer::System
         contextHandler->RegisterContextFactory(ContextType::PaintTool,
             [this, getMouseInput, getDebugKeyInput, getTabKeyInput]() -> std::shared_ptr<PaintToolContext> {
                 MapHandler handler = mapSerializationManager->GetMapHandler(currentMapName);
-                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, getTabKeyInput, handler);
+                return std::make_shared<PaintToolContext>(getMouseInput, getDebugKeyInput, getTabKeyInput, handler, fadeState);
             });
 
         contextHandler->RegisterContextFactory(ContextType::GalaxyBackground,
@@ -159,6 +159,7 @@ namespace Beer::System
         };
 
         Function<void> onReturnToPainting = [this, toPaintTool]() -> void {
+            fadeState = Rendering::FadeState::In;
             contextHandler->QueueOperation(toPaintTool);
         };
 
@@ -243,6 +244,7 @@ namespace Beer::System
         Function<void> toPaintTool = [this]() -> void {
             contextHandler->DestroyContext(ContextType::SelectionMenu);
             contextHandler->DestroyContext(ContextType::GalaxyBackground);
+            fadeState = Rendering::FadeState::Out;
             InitializePaintTool();
         };
 

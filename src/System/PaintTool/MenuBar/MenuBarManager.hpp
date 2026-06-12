@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
+#include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -18,6 +21,7 @@ namespace Beer::System
 
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;
+
         std::unique_ptr<Button> newSeedButton = nullptr;
         Function<void> clearHistory = nullptr;
 
@@ -27,16 +31,25 @@ namespace Beer::System
         std::unique_ptr<Button> backButton = nullptr;
         Function<void> onBackToTitle = nullptr;
 
+        Function<void> enableBlock = nullptr;
+
+        Rendering::FullscreenTransitionPass* transitionPass = nullptr;
+
+        bool canFade = true;
+
     public:
         MenuBarManager(GalaxyMapBuffer* galaxyMapBuffer,
             Function<void> clearHistory,
             Function<void> saveMap,
-            Function<void> onBackToTitle)
+            Function<void> onBackToTitle,
+            Function<void> enableBlock)
             : galaxyMapBuffer(galaxyMapBuffer)
             , clearHistory(clearHistory)
             , saveMap(saveMap)
             , onBackToTitle(onBackToTitle)
+            , enableBlock(enableBlock)
         {
+            transitionPass = Rendering::IRenderPass::FetchFromRegister<Rendering::FullscreenTransitionPass>(Rendering::TRANSITION_PASS);
         }
 
         void InitializeButtons(UITransform* newSeedTransform,

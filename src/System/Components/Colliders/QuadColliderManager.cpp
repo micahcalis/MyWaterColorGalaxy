@@ -52,7 +52,7 @@ namespace Beer::System
         {
             if (collider->Hit(mousePixelPos))
             {
-                if (bestHit == nullptr || collider->GetDepth() < bestHit->GetDepth())
+                if (bestHit == nullptr || collider->GetDepth() > bestHit->GetDepth())
                 {
                     bestHit = collider;
                 }

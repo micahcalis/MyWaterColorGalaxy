@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Timer.hpp"
 namespace Beer::System
 {
     class ClockManager;
@@ -21,6 +22,7 @@ namespace Beer::System
         static void SetClockManager(ClockManager* clockManager);
         static double Time();
         static double DeltaTime();
+        static std::shared_ptr<Timer> Timer(float duration);
 
         Clock(double startTime);
         double GetTime() const { return time; }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "System/Base/Clock/Clock.hpp"
+#include "System/Base/Clock/Timer.hpp"
 #include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include <print>

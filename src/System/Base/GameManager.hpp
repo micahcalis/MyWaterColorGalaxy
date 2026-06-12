@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/InputManager.hpp"
 #include "System/Components/Colliders/QuadColliderManager.hpp"
@@ -28,6 +29,7 @@ namespace Beer::System
         std::unique_ptr<MapSerializationManager> mapSerializationManager = nullptr;
 
         std::string currentMapName = "FallbackMap";
+        Rendering::FadeState fadeState = Rendering::FadeState::Out;
 
     public:
         ~GameManager();
