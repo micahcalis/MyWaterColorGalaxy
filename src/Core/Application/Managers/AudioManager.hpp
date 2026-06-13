@@ -2,6 +2,7 @@
 
 #include "Core/Application/Managers/IAssetManager.hpp"
 #include "SDL3/SDL_audio.h"
+#include "SDL3/SDL_init.h"
 #include "System/Audio/AudioAsset.hpp"
 #include "System/Audio/AudioClip.hpp"
 
@@ -40,20 +41,7 @@ namespace Beer::Core
         std::unique_ptr<BackgroundPlayer> bgPlayer = nullptr;
 
     public:
-        ~AudioManager()
-        {
-            for (SDL_AudioStream* stream : clipStreams)
-            {
-                if (stream != nullptr)
-                {
-                    SDL_DestroyAudioStream(stream);
-                }
-            }
-            clipStreams.clear();
-
-            Clear();
-        }
-
+        ~AudioManager();
         AudioManager();
         std::shared_ptr<System::AudioAsset> Load(const std::filesystem::path& path) override;
         void Update();

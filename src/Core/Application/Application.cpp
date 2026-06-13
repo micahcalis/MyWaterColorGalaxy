@@ -106,6 +106,12 @@ namespace Beer::Core
     void Application::Cleanup()
     {
         std::cout << "cleanup" << '\n';
+
+        if (audioManager != nullptr)
+        {
+            audioManager.reset();
+        }
+
         windowManager.Cleanup();
         renderer.GetSwapchain()->CleanupSwapchain();
     }

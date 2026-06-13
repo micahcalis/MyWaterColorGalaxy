@@ -57,6 +57,29 @@ namespace Beer::Core
         bgAsset = nullptr;
     }
 
+    AudioManager::~AudioManager()
+    {
+        bgPlayer.reset();
+
+        for (SDL_AudioStream* stream : clipStreams)
+        {
+            if (stream != nullptr)
+            {
+                SDL_DestroyAudioStream(stream);
+            }
+        }
+        clipStreams.clear();
+
+        Clear();
+
+        if (audioDevice != 0)
+        {
+            SDL_CloseAudioDevice(audioDevice);
+        }
+
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    }
+
     AudioManager::AudioManager()
     {
         SDL_InitSubSystem(SDL_INIT_AUDIO);
