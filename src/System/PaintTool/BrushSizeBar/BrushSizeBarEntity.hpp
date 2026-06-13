@@ -5,6 +5,7 @@
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -26,6 +27,8 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> sizeIconMaterial = nullptr;
         std::unique_ptr<UISubEntity> smallSizeEntity = nullptr;
         std::unique_ptr<UISubEntity> bigSizeEntity = nullptr;
+
+        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
 
         Function<void, float> setBrushSize = nullptr;
 
@@ -65,7 +68,14 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(bigSizeEntity->GetTransform(), sizeIconMaterial.get()));
             }
 
+            if (helpButtonSubEntity != nullptr)
+            {
+                renderItems.append_range(helpButtonSubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
+
+        void InitializeHelpButton();
     };
 } // namespace Beer::System

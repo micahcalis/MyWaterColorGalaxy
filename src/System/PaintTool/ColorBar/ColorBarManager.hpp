@@ -7,6 +7,9 @@
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/BeerEvent.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
+#include "System/PaintTool/HelpToggle/HelpToggle.hpp"
+#include "System/PaintTool/HelpToggle/HelpContainer.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <unordered_map>
@@ -14,6 +17,7 @@
 namespace Beer::System
 {
     class ColorBarManager : public IEntityManager
+        , public HelpContainer
     {
     public:
         BeerEvent<void(glm::vec4 color)> OnColorClicked;

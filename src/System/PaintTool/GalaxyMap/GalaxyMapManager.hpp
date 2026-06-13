@@ -7,7 +7,11 @@
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
+#include "System/PaintTool/HelpToggle/HelpContainer.hpp"
+#include "System/PaintTool/HelpToggle/HelpToggle.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+
 namespace Beer::System
 {
     struct CursorState
@@ -20,6 +24,7 @@ namespace Beer::System
     };
 
     class GalaxyMapManager : public IEntityManager
+        , public HelpContainer
     {
     public:
         BeerEvent<void(GalaxyBrushType)> OnNewBrush;

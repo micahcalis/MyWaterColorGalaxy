@@ -5,6 +5,7 @@
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 #include <print>
 
 namespace Beer::System
@@ -28,6 +29,7 @@ namespace Beer::System
 
         std::shared_ptr<Rendering::Material> selectSpriteMaterial = nullptr;
         std::unique_ptr<UISubEntity> selectSpriteEntity = nullptr;
+        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
         Function<void> markQuadTreeDirty = nullptr;
@@ -100,6 +102,13 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(selectSpriteEntity->GetTransform(), selectSpriteMaterial.get()));
             }
 
+            if (helpButtonSubEntity != nullptr)
+            {
+                helpButtonSubEntity->GetRenderItems();
+            }
+
+            renderItems.append_range(helpButtonSubEntity->GetRenderItems());
+
             return renderItems;
         }
 
@@ -107,5 +116,6 @@ namespace Beer::System
         void InitializeDisplays();
         void InitializeBackgrounds();
         void InitializeSelectSpriteEntity();
+        void InitialzeHelpButton();
     };
 } // namespace Beer::System

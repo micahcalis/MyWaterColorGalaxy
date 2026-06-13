@@ -35,6 +35,12 @@ namespace Beer::System
         glm::vec4(0.2f, 0.7f, 0.7f, 1),
         glm::vec4(0.3f, 0.4f, 0.8f, 1)};
 
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.05f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(0.05f, 0);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.8f, 0.45f);
+    static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
+    static const std::string HELP_TEXT = "This is your Color Palette! The colors you capture here will change the look of your Galaxy. Select a color in your palette, then use the Eye Dropper on the canvas above to capture your painted colors. The top row changes the colors of the Galaxy Objects you place. The bottom row changes the Sun and Stardust colors.";
+
     ColorBarEntity::ColorBarEntity(Function<MouseInput> getMouseInput,
         Function<void, glm::vec4> setColorDisplayColor,
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
@@ -76,6 +82,7 @@ namespace Beer::System
         InitializeDisplays();
         InitializeBackgrounds();
         InitializeSelectSpriteEntity();
+        InitialzeHelpButton();
 
         colorLayerSprite = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_ColorLayer");
         glm::vec2 startPos = glm::vec2(0.1, 0.025f);
@@ -219,5 +226,31 @@ namespace Beer::System
         selectSpriteMaterial->SetColor("_TintColor", SELECT_COLOR);
 
         GetColorBarManager()->SetSelectSpriteTransform(selectSpriteEntity->GetTransform());
+    }
+
+    void ColorBarEntity::InitialzeHelpButton()
+    {
+        UITransform helpButtonTransform{};
+        helpButtonTransform.Anchor = AnchorMode::MiddleRight;
+        helpButtonTransform.Pivot = AnchorMode::MiddleLeft;
+        helpButtonTransform.Scale = HELP_BUTTON_SCALE;
+        helpButtonTransform.Position = HELP_BUTTON_OFFSET;
+        helpButtonTransform.Depth = 0.5f;
+
+        UITransform helpPopupTransform{};
+        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
+        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
+        helpPopupTransform.Scale = HELP_POPUP_SCALE;
+        helpPopupTransform.Position = HELP_POPUP_OFFSET;
+        helpPopupTransform.Depth = 0.6f;
+
+        helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
+            &rootTransform,
+            helpButtonTransform,
+            HELP_TEXT,
+            helpPopupTransform);
+
+        GetColorBarManager()->SetHelpToggle(helpButtonSubEntity.get(),
+            [this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

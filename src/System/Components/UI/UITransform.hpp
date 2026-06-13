@@ -122,15 +122,13 @@ namespace Beer::System
         glm::vec2 Scale = glm::vec2(1);
         PixelRect Rect{};
 
-    private:
+    protected:
         bool enabled = true;
         bool enabledInHierarchy = true;
-
-    private:
         std::vector<UITransform*> children;
 
     public:
-        ~UITransform()
+        virtual ~UITransform()
         {
             if (Parent != nullptr)
             {
@@ -175,7 +173,7 @@ namespace Beer::System
             }
         }
 
-        void HierarchalUpdate()
+        virtual void HierarchalUpdate()
         {
             CalculatePixelRect();
 
@@ -190,7 +188,7 @@ namespace Beer::System
         void SetEnabled(bool enabled) { this->enabled = enabled; }
         void SetEnabledInHierarchy(bool enabled) { enabledInHierarchy = enabled; }
 
-    private:
+    protected:
         static glm::vec2
         GetPivotOffset(AnchorMode pivot);
         bool IsDescendantOf(UITransform* potentialParent) const;

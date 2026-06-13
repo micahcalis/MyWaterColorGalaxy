@@ -7,11 +7,14 @@
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/Delegate.hpp"
+#include "System/PaintTool/HelpToggle/HelpContainer.hpp"
+#include "System/PaintTool/HelpToggle/HelpToggle.hpp"
 #include <vector>
 
 namespace Beer::System
 {
     class ColorMixerManager : public IEntityManager
+        , public HelpContainer
     {
     public:
         BeerEvent<void(PigmentType)> OnPigmentClicked;

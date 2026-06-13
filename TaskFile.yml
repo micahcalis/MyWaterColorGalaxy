@@ -45,7 +45,7 @@ tasks:
     cmds:
       - echo "Generating MSDF Font Atlas for {{.FONT}} in root assets folder..."
       # Added -imageout to explicitly place the PNG next to the JSON
-      - tools/msdf-atlas-gen/msdf-atlas-gen.exe -font {{.FONT_DIR}}/{{.FONT}}.ttf -type msdf -size 32 -format png -imageout {{.FONT_DIR}}/{{.FONT}}.png -json {{.FONT_DIR}}/{{.FONT}}.json
+      - tools/msdf-atlas-gen/msdf-atlas-gen.exe -font {{.FONT_DIR}}/{{.FONT}}.ttf -type msdf -size 48 -pxrange 8 -format png -imageout {{.FONT_DIR}}/{{.FONT}}.png -json {{.FONT_DIR}}/{{.FONT}}.json
       - echo "Successfully generated {{.FONT}}.png and {{.FONT}}.json in {{.FONT_DIR}}!"
 
   slangreload:

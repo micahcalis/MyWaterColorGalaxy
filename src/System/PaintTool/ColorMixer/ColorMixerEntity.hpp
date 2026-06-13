@@ -10,6 +10,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/Delegates/Delegate.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -46,6 +47,8 @@ namespace Beer::System
         std::shared_ptr<Rendering::Texture2D> brushSprite = nullptr;
         std::shared_ptr<Rendering::Texture2D> brushSpriteMask = nullptr;
         std::shared_ptr<Rendering::Material> cursorSpriteMaterial = nullptr;
+
+        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
 
     public:
         ColorMixerEntity(Function<MouseInput> getMouseInput);
@@ -133,11 +136,17 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(cursorSpriteEntity->GetTransform(), cursorSpriteMaterial.get()));
             }
 
+            if (helpButtonSubEntity != nullptr)
+            {
+                renderItems.append_range(helpButtonSubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
 
         void InitializePigments();
         void InitializeSelectSpriteEntity();
         void InitializeCursorSprite();
+        void InitializeHelpButton();
     };
 } // namespace Beer::System

@@ -46,6 +46,12 @@ namespace Beer::System
     static const glm::vec2 CURSOR_SIZE = glm::vec2(0.1f);
     static const glm::vec2 CURSOR_OFFSET = glm::vec2(-0.025f, -0.025f);
 
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.05f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(0.05f, 0);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.75f, 0.4f);
+    static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
+    static const std::string HELP_TEXT = "This is your Color Mixing Canvas! Select a pigment and then paint on the canvas. Mix different pigments for new color possibilities. You can clear the canvas using the bin icon. When you are happy with the colors, you can capture them on your palette below.";
+
     ColorMixerEntity::ColorMixerEntity(Function<MouseInput> getMouseInput)
         : getMouseInput(getMouseInput)
         , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
@@ -118,6 +124,7 @@ namespace Beer::System
         pigmentsBgMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
         InitializeSelectSpriteEntity();
+        InitializeHelpButton();
 
         MarkDirty();
     }
@@ -218,5 +225,31 @@ namespace Beer::System
             brushSpriteMask.get(),
             pickerSprite.get(),
             pickerSpriteMask.get());
+    }
+
+    void ColorMixerEntity::InitializeHelpButton()
+    {
+        UITransform helpButtonTransform{};
+        helpButtonTransform.Anchor = AnchorMode::TopRight;
+        helpButtonTransform.Pivot = AnchorMode::TopLeft;
+        helpButtonTransform.Scale = HELP_BUTTON_SCALE;
+        helpButtonTransform.Position = HELP_BUTTON_OFFSET;
+        helpButtonTransform.Depth = 0.5f;
+
+        UITransform helpPopupTransform{};
+        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
+        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
+        helpPopupTransform.Scale = HELP_POPUP_SCALE;
+        helpPopupTransform.Position = HELP_POPUP_OFFSET;
+        helpPopupTransform.Depth = 0.6f;
+
+        helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
+            &rootTransform,
+            helpButtonTransform,
+            HELP_TEXT,
+            helpPopupTransform);
+
+        GetMixerManager()->SetHelpToggle(helpButtonSubEntity.get(),
+            [this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

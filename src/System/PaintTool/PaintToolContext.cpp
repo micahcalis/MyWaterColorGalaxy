@@ -36,9 +36,6 @@ namespace Beer::System
 
     void PaintToolContext::Load()
     {
-        std::shared_ptr<System::AudioClip> audioClip = std::make_shared<System::AudioClip>("Tracks/Audio_SpinningCat", AudioSettings());
-        audioClip->PlayAsBackground();
-
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));
 

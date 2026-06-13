@@ -8,14 +8,20 @@
 
 namespace Beer::System
 {
-    static const glm::vec2 PANEL_SIZE = glm::vec2(0.25f, 0.8f);
-    static const glm::vec2 PANEL_OFFSET = glm::vec2(0.6f, -0.02f);
+    static const glm::vec2 PANEL_SIZE = glm::vec2(0.25f, 1.2f);
+    static const glm::vec2 PANEL_OFFSET = glm::vec2(0.6f, 0);
 
-    static const glm::vec2 SLIDER_CONTAINER_SIZE = glm::vec2(0.1f, 0.4f);
+    static const glm::vec2 SLIDER_CONTAINER_SIZE = glm::vec2(0.1f, 0.8f);
     static const glm::vec2 SLIDER_BUTTON_SIZE = glm::vec2(0.1f, 0.05f);
     static const glm::vec2 SMALL_ICON_SIZE = glm::vec2(0.05f, 0.05f);
     static const glm::vec2 BIG_ICON_SIZE = glm::vec2(0.085f, 0.085f);
     static const float ICON_OFFSET = 0.02f;
+
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.05f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(0.05f, 0);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.8f, 0.4f);
+    static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
+    static const std::string HELP_TEXT = "This is your Tool Bar! Select your Galaxy Object type, and use them to paint on the map. You can also select the Eraser to remove unwanted Objects. Change the size of your Objects using the Slider. Made a mistake? Use the Undo and Redo buttons to correct them.";
 
     BrushSizeBarEntity::BrushSizeBarEntity(Function<void, float> setBrushSize)
         : setBrushSize(setBrushSize), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
@@ -98,6 +104,34 @@ namespace Beer::System
             sliderButtonMaterial.get(),
             sliderButtonEntity->GetTransform());
 
+        InitializeHelpButton();
+
         MarkDirty();
+    }
+
+    void BrushSizeBarEntity::InitializeHelpButton()
+    {
+        UITransform helpButtonTransform{};
+        helpButtonTransform.Anchor = AnchorMode::MiddleRight;
+        helpButtonTransform.Pivot = AnchorMode::MiddleLeft;
+        helpButtonTransform.Scale = HELP_BUTTON_SCALE;
+        helpButtonTransform.Position = HELP_BUTTON_OFFSET;
+        helpButtonTransform.Depth = 0.5f;
+
+        UITransform helpPopupTransform{};
+        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
+        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
+        helpPopupTransform.Scale = HELP_POPUP_SCALE;
+        helpPopupTransform.Position = HELP_POPUP_OFFSET;
+        helpPopupTransform.Depth = 0.6f;
+
+        helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
+            &rootTransform,
+            helpButtonTransform,
+            HELP_TEXT,
+            helpPopupTransform);
+
+        GetBrushSizeBarManager()->SetHelpToggle(helpButtonSubEntity.get(),
+            [this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

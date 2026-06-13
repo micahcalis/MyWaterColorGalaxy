@@ -8,6 +8,7 @@
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 
 namespace Beer::System
 {
@@ -34,6 +35,8 @@ namespace Beer::System
         std::shared_ptr<Rendering::Texture2D> zoomIndicatorTexture = nullptr;
         std::shared_ptr<Rendering::Material> zoomIndicatorMaterial = nullptr;
         std::unique_ptr<UISubEntity> zoomIndicatorEntity = nullptr;
+
+        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
 
@@ -81,6 +84,11 @@ namespace Beer::System
 
             renderItems.append_range(galaxyMapBuffer->GetRenderItems());
 
+            if (helpButtonSubEntity != nullptr)
+            {
+                renderItems.append_range(helpButtonSubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
 
@@ -90,6 +98,7 @@ namespace Beer::System
         void InitializePerlinTex();
         void InitializePlayerIndicator();
         void InitializeZoomIndicator();
+        void InitializeHelpButton();
         void UpdateStarPosition(glm::vec2 position);
     };
 } // namespace Beer::System
