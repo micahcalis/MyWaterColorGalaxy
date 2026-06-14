@@ -29,22 +29,29 @@ namespace Beer::System
 
     void PlayerManager::Update()
     {
-        PlayerInput input = getPlayerInput();
+        PlayerInput rawInput = getPlayerInput();
 
-        if (input.PhotoTogglePressed)
+        if (rawInput.PhotoTogglePressed)
         {
             photoMode = !photoMode;
             onSetPhotoMode->Invoke(photoMode);
         }
 
+        PlayerInput cameraInput = rawInput;
+        PlayerInput controllerInput = rawInput;
+
         if (photoMode)
         {
-            input.IsBoosting = false;
-            input.MovementVec = glm::vec2(0);
+            controllerInput.MouseVec = glm::vec2(0.0f);
+            controllerInput.IsBoosting = false;
+        } else
+        {
+            cameraInput.MouseVec = glm::vec2(0.0f);
         }
 
-        playerController->Update(input);
-        playerCamera->Update(input);
+        playerCamera->Update(cameraInput);
+        playerController->Update(controllerInput);
+
         HandleFade();
     }
 

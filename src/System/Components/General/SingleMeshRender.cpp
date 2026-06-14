@@ -6,6 +6,7 @@
 #include "System/Drawing/BindHistory.hpp"
 #include "System/Drawing/BindMask.hpp"
 #include "System/Drawing/BindType.hpp"
+#include <print>
 
 namespace Beer::System
 {

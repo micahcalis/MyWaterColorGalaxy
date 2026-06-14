@@ -269,7 +269,7 @@ namespace Beer::System
         PlayerInput input{};
         input.MovementVec = inputManager->GetMovementVector();
         input.MouseVec = inputManager->GetMouseVector();
-        input.IsBoosting = inputManager->GetSpaceButtonInput().ButtonHold;
+        input.IsBoosting = inputManager->GetMouseInput().LeftClickHold;
         input.PhotoTogglePressed = inputManager->GetPButtonInput().ButtonExit;
         return input;
     }

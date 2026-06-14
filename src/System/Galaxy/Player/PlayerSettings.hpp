@@ -14,18 +14,21 @@ namespace Beer::System
         float RollSpeed{};
         float YawSpeed{};
         float FadeSpeed{};
+        float TeleportThreshold{};
+        float MaxTurnRatePerSecond{};
     };
 
     static const PlayerSettings PLAYER_SETTINGS = {
-        30.0f,
-        200.0f,
+        25.0f,
+        40.0f,
         0.65f,
         0.3f,
-        // glm::vec3(500, 0, 500),
-        10.0f,
-        16.0f,
-        8.0f,
-        2.75f};
+        1.75f,
+        1.75f,
+        1.75f,
+        2.75f,
+        12500.0f,
+        2500.0f};
 
     struct PlayerCameraSettings
     {

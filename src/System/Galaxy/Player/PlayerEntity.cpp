@@ -54,8 +54,8 @@ namespace Beer::System
                 ContextType::Galaxy,
                 playerMaterial,
                 playerMesh,
-                &transform,
-                &layer);
+                &this->transform,
+                &this->layer);
 
         this->renderComponent = (std::move(singleMeshRender));
     }
