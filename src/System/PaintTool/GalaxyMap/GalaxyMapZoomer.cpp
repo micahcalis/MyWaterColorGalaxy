@@ -9,26 +9,40 @@ namespace Beer::System
     static const float MIN_ZOOM = 1.0f;
     static const float MAX_ZOOM = 5.0f;
 
-    void GalaxyMapZoomer::Update()
+    void GalaxyMapZoomer::Update(bool insideRect)
     {
         MouseInput input = getMouseInput();
-        glm::vec2 screenSize = glm::vec2(Core::Screen::Width(), Core::Screen::Height());
-        glm::vec2 normalizedMousePos = input.PixelPos / screenSize;
 
-        if (input.ScrollVector != 0.0f)
-        {
-            CalculateZoom(normalizedMousePos, input.ScrollVector);
-        }
+        UpdateZoom(input.PixelPos, insideRect ? input.ScrollVector : 0);
 
-        if (input.MiddleClickHold)
-        {
-            CalculatePanning(input.PixelPos, screenSize);
-        }
+        glm::vec2 mouseDelta = input.PixelPos - previousMousePos;
+        UpdatePanning(mouseDelta, input.MiddleClickHold && insideRect);
 
         ClampBounds();
 
         Rendering::Shader::Globals()->SetGalaxyZoom(Zoom, Panning);
         previousMousePos = input.PixelPos;
+    }
+
+    void GalaxyMapZoomer::UpdateZoom(glm::vec2 pixelPos, float scrollVector)
+    {
+        glm::vec2 screenSize = glm::vec2(Core::Screen::Width(), Core::Screen::Height());
+        glm::vec2 normalizedMousePos = pixelPos / screenSize;
+
+        if (scrollVector != 0.0f)
+        {
+            CalculateZoom(normalizedMousePos, scrollVector);
+        }
+    }
+
+    void GalaxyMapZoomer::UpdatePanning(glm::vec2 mouseDelta, bool middleClickHold)
+    {
+        glm::vec2 screenSize = glm::vec2(Core::Screen::Width(), Core::Screen::Height());
+
+        if (middleClickHold)
+        {
+            CalculatePanning(mouseDelta, screenSize);
+        }
     }
 
     void GalaxyMapZoomer::CalculateZoom(glm::vec2 normalizedMousePos, float scrollVector)
@@ -43,9 +57,8 @@ namespace Beer::System
         }
     }
 
-    void GalaxyMapZoomer::CalculatePanning(glm::vec2 mousePos, glm::vec2 screenSize)
+    void GalaxyMapZoomer::CalculatePanning(glm::vec2 mouseDelta, glm::vec2 screenSize)
     {
-        glm::vec2 mouseDelta = mousePos - previousMousePos;
         glm::vec2 normMouseDelta = mouseDelta / screenSize;
         Panning += normMouseDelta;
     }

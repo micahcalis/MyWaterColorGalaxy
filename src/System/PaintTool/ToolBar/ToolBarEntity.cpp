@@ -13,14 +13,16 @@ namespace Beer::System
     static const glm::vec2 BUTTON_SIZE = glm::vec2(0.25f, 0.25f);
     static const float BUTTON_PADDING = 0.02f;
 
-    static const uint32_t BRUSH_COUNT = 6;
+    static const uint32_t BRUSH_COUNT = 8;
     static const std::array<std::string, BRUSH_COUNT> BRUSH_TEXTURE_PATHS = {
         "UI/ToolBar/Tex_PlanetButton",
         "UI/ToolBar/Tex_AsteroidsButton",
         "UI/ToolBar/Tex_SpacegooButton",
         "UI/ToolBar/Tex_BlackholeButton",
         "UI/ToolBar/Tex_StardustButton",
-        "UI/ToolBar/Tex_EraserButton"};
+        "UI/ToolBar/Tex_EraserButton",
+        "UI/HelpToggle/Tex_HelpIcon",
+        "UI/HelpToggle/Tex_HelpIcon"};
 
     static const std::array<std::string, 2> HISTORY_BUTTON_TEXTURE_PATHS = {
         "UI/ToolBar/Tex_UndoButton",

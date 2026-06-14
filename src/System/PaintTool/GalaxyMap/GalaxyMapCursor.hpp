@@ -28,15 +28,26 @@ namespace Beer::System
         std::unique_ptr<GalaxySpriteFactory> factory = nullptr;
         Function<glm::vec4, ColorBarLevel> getColor = nullptr;
 
+        Function<void, glm::vec2, float> setZoom = nullptr;
+        glm::vec2 zoomAnchor{};
+        bool zooming = false;
+
+        Function<void, glm::vec2> setPanning = nullptr;
+        bool isPanning = false;
+        glm::vec2 lastMousePos{};
+
     public:
         GalaxyMapCursor(GalaxyMapBuffer* galaxyMapBuffer,
             UITransform* mapTransform,
             UITransform* sunTransform,
-            Function<glm::vec4, ColorBarLevel> getColor);
+            Function<glm::vec4, ColorBarLevel> getColor,
+            Function<void, glm::vec2, float> setZoom,
+            Function<void, glm::vec2> setPanning);
 
         void Update(MouseInput input,
             float zoomScale,
-            glm::vec2 panning);
+            glm::vec2 panning,
+            bool insideRect);
 
         uint32_t Place(const GalaxyComponentData& data, bool fromHistory = false);
         void Erase(uint32_t index, bool fromHistory = false);
@@ -55,5 +66,8 @@ namespace Beer::System
         glm::vec2 ToPixelSpace(glm::vec2 mapPoint) const;
         glm::vec2 ScaleToPixelSize(glm::vec2 mapVec) const;
         GalaxyComponentData GetNewData(glm::vec2 mousePos) const;
+        void SetZoomAnchor(glm::vec2 zoomAnchor);
+        void Zoom(glm::vec2 pixelPos);
+        void Pan(glm::vec2 pixelPos);
     };
 } // namespace Beer::System

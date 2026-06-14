@@ -27,7 +27,9 @@
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
+#include "Vendor/magic_enum/magic_enum.hpp"
 #include <memory>
+#include <print>
 #include <stdexcept>
 
 namespace Beer::System
@@ -188,6 +190,14 @@ namespace Beer::System
         Function<Rendering::Texture2D*> getBrushTexture =
             [this]() -> Rendering::Texture2D* {
             GalaxyBrushType brushType = galaxyMapEntity->GetMapManager()->GetCursor()->Brush;
+
+            if (!IsGalaxyComponent(brushType))
+            {
+                brushType = GalaxyBrushType::Planet;
+            }
+
+            std::println("Get Brush Texture: {}", magic_enum::enum_name(brushType));
+
             return galaxyMapEntity->GetMapManager()->GetCursor()->GetFactory()->GetTexture(brushType);
         };
 

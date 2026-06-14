@@ -28,10 +28,20 @@ namespace Beer::System
     {
         zoomer = std::make_unique<GalaxyMapZoomer>(getMouseInput);
 
+        Function<void, glm::vec2, float> setZoom = [this](glm::vec2 pixelPos, float offset) -> void {
+            zoomer->UpdateZoom(pixelPos, -offset);
+        };
+
+        Function<void, glm::vec2> setPanning = [this](glm::vec2 mouseDelta) -> void {
+            zoomer->UpdatePanning(mouseDelta, true);
+        };
+
         cursor = std::make_unique<GalaxyMapCursor>(galaxyBuffer,
             mapTransform,
             sunTranform,
-            getColor);
+            getColor,
+            setZoom,
+            setPanning);
     }
 
     void GalaxyMapManager::Update()
@@ -39,15 +49,16 @@ namespace Beer::System
         if (cursor != nullptr)
         {
             MouseInput mouseInput = getMouseInput();
-            if (QuadCollider::Hit(mapTransform, mouseInput.PixelPos))
-            {
-                zoomer->Update();
-                cursor->Update(mouseInput, zoomer->Zoom, zoomer->Panning);
-                isActive = true;
-            } else
-            {
-                isActive = false;
-            }
+
+            isActive = QuadCollider::Hit(mapTransform, mouseInput.PixelPos);
+
+            cursor->Update(mouseInput,
+                zoomer->Zoom,
+                zoomer->Panning,
+                isActive);
+
+            zoomer->Update(isActive);
+
             return;
         }
 

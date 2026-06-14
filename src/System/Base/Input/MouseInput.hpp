@@ -10,10 +10,13 @@ namespace Beer::System
         glm::vec2 PixelPos;
         bool leftClickStart;
         bool LeftClickHold;
+        bool LeftClickEnd;
         bool RightClickStart;
         bool RightClickHold;
+        bool RightClickEnd;
         bool MiddleClickStart;
         bool MiddleClickHold;
+        bool MiddleClickEnd;
         float ScrollVector;
     };
 } // namespace Beer::System

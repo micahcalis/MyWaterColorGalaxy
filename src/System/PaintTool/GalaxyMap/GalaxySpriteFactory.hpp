@@ -17,13 +17,15 @@ namespace Beer::System
 {
     static const uint32_t BRUSH_TYPES = 5;
 
-    static const std::array<std::string, BRUSH_TYPES + 1> SPRITE_PATHS = {
+    static const std::array<std::string, BRUSH_TYPES + 3> SPRITE_PATHS = {
         "UI/ToolBar/Tex_PlanetButton",
         "UI/ToolBar/Tex_AsteroidsButton",
         "UI/ToolBar/Tex_SpacegooButton",
         "UI/ToolBar/Tex_BlackholeButton",
         "UI/ToolBar/Tex_StardustButton",
-        "UI/ToolBar/Tex_EraserButton"};
+        "UI/ToolBar/Tex_EraserButton",
+        "UI/HelpToggle/Tex_HelpIcon",
+        "UI/HelpToggle/Tex_HelpIcon"};
 
     static const std::array<std::string, BRUSH_TYPES> SHADER_PATHS = {
         "UI/GalaxyComponentSprite",
@@ -58,7 +60,7 @@ namespace Beer::System
 
             if (it1 == spriteMap.end() || it2 == shaderMap.end())
             {
-                throw std::runtime_error(std::format("Brush Type Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(data.Brush)));
+                throw std::runtime_error(std::format("Brush Type Shader Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(data.Brush)));
             }
 
             std::shared_ptr<Rendering::Material> newMaterial = std::make_shared<Rendering::Material>(shaderMap.at(data.Brush));
@@ -78,7 +80,7 @@ namespace Beer::System
 
             if (it == spriteMap.end())
             {
-                throw std::runtime_error(std::format("Brush Type Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(type)));
+                throw std::runtime_error(std::format("Brush Type Texture Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(type)));
             }
 
             return spriteMap.at(type).get();
@@ -87,7 +89,7 @@ namespace Beer::System
     private:
         void InitializeSpriteMap()
         {
-            for (uint32_t i = 0; i < BRUSH_TYPES + 1; i++)
+            for (uint32_t i = 0; i < BRUSH_TYPES + 3; i++)
             {
                 GalaxyBrushType type = static_cast<GalaxyBrushType>(i);
                 spriteMap[type] = std::make_shared<Rendering::Texture2D>(SPRITE_PATHS[i]);

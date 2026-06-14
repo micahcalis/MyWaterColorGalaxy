@@ -22,11 +22,14 @@ namespace Beer::System
             previousMousePos = getMouseInput().PixelPos;
         }
 
-        void Update();
+        void Update(bool insideRect);
+        void UpdateZoom(glm::vec2 pixelPos, float scrollVector);
+        void UpdatePanning(glm::vec2 mouseDelta, bool middleClickHold);
 
     private:
-        void CalculateZoom(glm::vec2 normalizedMousePos, float scrollVector);
-        void CalculatePanning(glm::vec2 mousePos, glm::vec2 screenSize);
+        void
+        CalculatePanning(glm::vec2 mouseDelta, glm::vec2 screenSize);
         void ClampBounds();
+        void CalculateZoom(glm::vec2 normalizedMousePos, float scrollVector);
     };
 } // namespace Beer::System

@@ -1,5 +1,6 @@
 #include "System/PaintTool/ColorBar/ColorBarManager.hpp"
 #include "ColorBarLevel.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -204,7 +205,12 @@ namespace Beer::System
                 planetDisplayMaterial->SetColor(P_DISPLAY_PROP[i], planetColors[i]);
             }
 
-            planetDisplayMaterial->SetTexture("_SpriteTex", getBrushTexture(), false);
+            Rendering::Texture2D* brushTexture = getBrushTexture();
+
+            if (brushTexture != nullptr)
+            {
+                planetDisplayMaterial->SetTexture("_SpriteTex", getBrushTexture(), false);
+            }
         }
 
         if (galaxyDisplayMaterial != nullptr)
