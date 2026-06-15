@@ -9,7 +9,7 @@
 
 namespace Beer::System
 {
-    static const glm::vec2 PANEL_SIZE = glm::vec2(0.6f, 1.2f);
+    static const glm::vec2 PANEL_SIZE = glm::vec2(0.6f, 1.5f);
     static const glm::vec2 BUTTON_SIZE = glm::vec2(0.25f, 0.25f);
     static const float BUTTON_PADDING = 0.02f;
 
