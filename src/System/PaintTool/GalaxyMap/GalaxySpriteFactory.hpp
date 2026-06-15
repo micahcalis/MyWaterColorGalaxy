@@ -23,9 +23,9 @@ namespace Beer::System
         "UI/ToolBar/Tex_SpacegooButton",
         "UI/ToolBar/Tex_BlackholeButton",
         "UI/ToolBar/Tex_StardustButton",
-        "UI/ToolBar/Tex_EraserButton",
-        "UI/HelpToggle/Tex_HelpIcon",
-        "UI/HelpToggle/Tex_HelpIcon"};
+        "UI/GalaxyMap/Tex_EraserCursor",
+        "UI/GalaxyMap/Tex_HandCursor",
+        "UI/GalaxyMap/Tex_ZoomCursor"};
 
     static const std::array<std::string, BRUSH_TYPES> SHADER_PATHS = {
         "UI/GalaxyComponentSprite",

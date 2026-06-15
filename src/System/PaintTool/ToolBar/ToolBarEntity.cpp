@@ -21,8 +21,8 @@ namespace Beer::System
         "UI/ToolBar/Tex_BlackholeButton",
         "UI/ToolBar/Tex_StardustButton",
         "UI/ToolBar/Tex_EraserButton",
-        "UI/HelpToggle/Tex_HelpIcon",
-        "UI/HelpToggle/Tex_HelpIcon"};
+        "UI/ToolBar/Tex_HandButton",
+        "UI/ToolBar/Tex_MagnifyingGlassButton"};
 
     static const std::array<std::string, 2> HISTORY_BUTTON_TEXTURE_PATHS = {
         "UI/ToolBar/Tex_UndoButton",

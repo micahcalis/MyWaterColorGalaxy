@@ -196,8 +196,6 @@ namespace Beer::System
                 brushType = GalaxyBrushType::Planet;
             }
 
-            std::println("Get Brush Texture: {}", magic_enum::enum_name(brushType));
-
             return galaxyMapEntity->GetMapManager()->GetCursor()->GetFactory()->GetTexture(brushType);
         };
 
