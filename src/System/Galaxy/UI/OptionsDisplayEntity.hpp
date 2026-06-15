@@ -1,5 +1,6 @@
 #pragma once
 
+#include "OptionsDisplayManager.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include <memory>
@@ -20,9 +21,26 @@ namespace Beer::System
     public:
         OptionsDisplayEntity();
 
+        void InitializeButtons(Function<void> invokeReturn,
+            Function<void> invokePhotoModeToggle)
+        {
+            GetOptionsDisplayManager()->InitializeButtons(returnDisplayEntity->GetTransform(),
+                returnDisplayMaterial.get(),
+                photoDisplayEntity->GetTransform(),
+                photoDisplayMaterial.get(),
+                invokeReturn,
+                invokePhotoModeToggle);
+        }
+
+        OptionsDisplayManager* GetOptionsDisplayManager() const
+        {
+            return static_cast<OptionsDisplayManager*>(manager.get());
+        }
+
     protected:
         void InitializeManager() override
         {
+            manager = std::make_unique<OptionsDisplayManager>();
         }
 
         std::vector<UIRenderItem> GetRenderItems() override

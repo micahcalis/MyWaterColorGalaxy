@@ -66,6 +66,31 @@ namespace Beer::System
         return passes;
     }
 
+    void GalaxyContext::FadeReturn()
+    {
+        if (isReturning == false)
+        {
+            Function<void> onFadeIn = [this]() -> void {
+                serializedMap.ExplorerHistory = SerializeExplorer();
+                mapHandler.Save(serializedMap);
+                OnReturnToPainting.Invoke();
+            };
+
+            transitionPass->SetFade(Rendering::FadeState::In, 1.0f / FADE_DURATION);
+
+            auto returnTimer = Clock::Timer(FADE_DURATION);
+            returnTimer->OnTimerComplete.Subscribe(onFadeIn);
+            returnTimer->Start();
+
+            isReturning = true;
+        }
+    }
+
+    void GalaxyContext::TogglePhotoMode()
+    {
+        playerEntity->GetPlayerManager()->TogglePhotoMode();
+    }
+
     void GalaxyContext::InitializePlayer()
     {
         if (galaxyEntity == nullptr)
@@ -151,21 +176,9 @@ namespace Beer::System
     {
         bool returnPressed = getReturnPressed();
 
-        if (returnPressed && isReturning == false)
+        if (returnPressed)
         {
-            Function<void> onFadeIn = [this]() -> void {
-                serializedMap.ExplorerHistory = SerializeExplorer();
-                mapHandler.Save(serializedMap);
-                OnReturnToPainting.Invoke();
-            };
-
-            transitionPass->SetFade(Rendering::FadeState::In, 1.0f / FADE_DURATION);
-
-            auto returnTimer = Clock::Timer(FADE_DURATION);
-            returnTimer->OnTimerComplete.Subscribe(onFadeIn);
-            returnTimer->Start();
-
-            isReturning = true;
+            FadeReturn();
         }
     }
 

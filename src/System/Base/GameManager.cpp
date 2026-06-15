@@ -1,5 +1,6 @@
 #include "System/Base/GameManager.hpp"
 #include "Input/ButtonInput.hpp"
+#include "Input/Input.hpp"
 #include "Input/MouseInput.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
@@ -72,7 +73,7 @@ namespace Beer::System
     void GameManager::InitializeBase()
     {
         clockManager = std::make_unique<ClockManager>();
-        inputManager = std::make_unique<InputManager>();
+        inputManager = std::make_unique<InputManager>(InputMode::PenDisplay);
 
         cameraManager = std::make_unique<CameraManager>();
         Camera::SetCameraManager(cameraManager.get());
@@ -164,6 +165,21 @@ namespace Beer::System
         };
 
         galaxyContext->OnReturnToPainting.Subscribe(onReturnToPainting);
+
+        if (Input::Mode() == InputMode::PenDisplay)
+        {
+            Function<void> fadeReturn = [galaxyContext]() -> void {
+                galaxyContext->FadeReturn();
+            };
+
+            uiContext->OnReturnClicked.Subscribe(fadeReturn);
+
+            Function<void> togglePhotoMode = [galaxyContext]() -> void {
+                galaxyContext->TogglePhotoMode();
+            };
+
+            uiContext->OnPhotoModeToggled.Subscribe(togglePhotoMode);
+        }
     }
 
     void GameManager::InitializePaintTool()

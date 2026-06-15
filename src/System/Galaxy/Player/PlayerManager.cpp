@@ -33,8 +33,7 @@ namespace Beer::System
 
         if (rawInput.PhotoTogglePressed)
         {
-            photoMode = !photoMode;
-            onSetPhotoMode->Invoke(photoMode);
+            TogglePhotoMode();
         }
 
         PlayerInput cameraInput = rawInput;
@@ -89,5 +88,11 @@ namespace Beer::System
 
         glm::vec4 rotation = serializableExplorer.PlayerRotation;
         player->GetTransform()->Rotation = glm::quat(rotation.x, rotation.y, rotation.z, rotation.w);
+    }
+
+    void PlayerManager::TogglePhotoMode()
+    {
+        photoMode = !photoMode;
+        onSetPhotoMode->Invoke(photoMode);
     }
 } // namespace Beer::System

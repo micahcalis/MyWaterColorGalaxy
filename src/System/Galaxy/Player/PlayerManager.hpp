@@ -37,6 +37,7 @@ namespace Beer::System
         void Update() override;
         void HandleFade();
         void LoadFromSerialized(const SerializableExplorer& serializableExplorer);
+        void TogglePhotoMode();
 
         bool GetPhotoMode() const { return photoMode; }
     };

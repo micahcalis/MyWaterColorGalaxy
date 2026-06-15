@@ -59,6 +59,8 @@ namespace Beer::System
         void Load() override;
         void Update() override;
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
+        void FadeReturn();
+        void TogglePhotoMode();
 
     private:
         void InitializePlayer();

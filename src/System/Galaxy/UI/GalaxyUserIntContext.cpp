@@ -2,6 +2,7 @@
 #include "ControlsDisplayEntity.hpp"
 #include "OptionsDisplayEntity.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include "System/Base/Input/Input.hpp"
 #include <print>
 
 namespace Beer::System
@@ -13,6 +14,7 @@ namespace Beer::System
 
         InitializeControlsDisplay();
         InitializeOptionsDisplay();
+        InitializeExitPhotoMode();
     }
 
     void GalaxyUserIntContext::Update()
@@ -26,6 +28,11 @@ namespace Beer::System
         {
             optionsDisplayEntity->Update();
         }
+
+        if (exitPhotoModeEntity != nullptr)
+        {
+            exitPhotoModeEntity->Update();
+        }
     }
 
     void GalaxyUserIntContext::SetDisplaysEnabled(bool enabled)
@@ -38,6 +45,11 @@ namespace Beer::System
         if (optionsDisplayEntity != nullptr)
         {
             optionsDisplayEntity->SetTreeEnabled(enabled);
+        }
+
+        if (exitPhotoModeEntity != nullptr)
+        {
+            exitPhotoModeEntity->SetTreeEnabled(!enabled);
         }
     }
 
@@ -54,5 +66,34 @@ namespace Beer::System
     void GalaxyUserIntContext::InitializeOptionsDisplay()
     {
         optionsDisplayEntity = registry.CreateEntity<OptionsDisplayEntity>();
+
+        if (Input::Mode() == InputMode::PenDisplay)
+        {
+            Function<void> invokeReturn = [this]() -> void {
+                OnReturnClicked.Invoke();
+            };
+
+            Function<void> invokePhotoModeToggle = [this]() -> void {
+                OnPhotoModeToggled.Invoke();
+            };
+
+            optionsDisplayEntity->InitializeButtons(invokeReturn, invokePhotoModeToggle);
+        }
+    }
+
+    void GalaxyUserIntContext::InitializeExitPhotoMode()
+    {
+        exitPhotoModeEntity = registry.CreateEntity<ExitPhotoModeEntity>();
+
+        if (Input::Mode() == InputMode::PenDisplay)
+        {
+            Function<void> invokePhotoModeToggle = [this]() -> void {
+                OnPhotoModeToggled.Invoke();
+            };
+
+            exitPhotoModeEntity->InitializeButton(invokePhotoModeToggle);
+        }
+
+        exitPhotoModeEntity->SetTreeEnabled(false);
     }
 } // namespace Beer::System
