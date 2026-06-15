@@ -26,6 +26,11 @@ namespace Beer::System
         return clockManager->GetDeltaTime();
     }
 
+    std::shared_ptr<Timer> Clock::Timer(float duration)
+    {
+        return clockManager->CreateTimer(duration);
+    }
+
     Clock::Clock(double startTime)
         : startTime(startTime)
     {

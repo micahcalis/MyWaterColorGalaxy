@@ -8,13 +8,18 @@
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
 #include <memory>
+#include <print>
 
 namespace Beer::System
 {
     GalaxyMapManager::GalaxyMapManager(GalaxyMapBuffer* galaxyMapBuffer,
         UITransform* mapTransform,
-        Function<MouseInput> getMouseInput)
-        : galaxyBuffer(galaxyMapBuffer), mapTransform(mapTransform), getMouseInput(getMouseInput)
+        Function<MouseInput> getMouseInput,
+        UITransform* playerIndicatorTransform)
+        : galaxyBuffer(galaxyMapBuffer)
+        , mapTransform(mapTransform)
+        , getMouseInput(getMouseInput)
+        , playerIndicatorTransform(playerIndicatorTransform)
     {
     }
 
@@ -23,10 +28,20 @@ namespace Beer::System
     {
         zoomer = std::make_unique<GalaxyMapZoomer>(getMouseInput);
 
+        Function<void, glm::vec2, float> setZoom = [this](glm::vec2 pixelPos, float offset) -> void {
+            zoomer->UpdateZoom(pixelPos, -offset);
+        };
+
+        Function<void, glm::vec2> setPanning = [this](glm::vec2 mouseDelta) -> void {
+            zoomer->UpdatePanning(mouseDelta, true);
+        };
+
         cursor = std::make_unique<GalaxyMapCursor>(galaxyBuffer,
             mapTransform,
             sunTranform,
-            getColor);
+            getColor,
+            setZoom,
+            setPanning);
     }
 
     void GalaxyMapManager::Update()
@@ -34,15 +49,16 @@ namespace Beer::System
         if (cursor != nullptr)
         {
             MouseInput mouseInput = getMouseInput();
-            if (QuadCollider::Hit(mapTransform, mouseInput.PixelPos))
-            {
-                zoomer->Update();
-                cursor->Update(mouseInput, zoomer->Zoom, zoomer->Panning);
-                isActive = true;
-            } else
-            {
-                isActive = false;
-            }
+
+            isActive = QuadCollider::Hit(mapTransform, mouseInput.PixelPos);
+
+            cursor->Update(mouseInput,
+                zoomer->Zoom,
+                zoomer->Panning,
+                isActive);
+
+            zoomer->Update(isActive);
+
             return;
         }
 
@@ -58,7 +74,7 @@ namespace Beer::System
         OnNewBrush.Invoke(cursor->Brush);
     }
 
-    void GalaxyMapManager::ReloadFromSerialized(const SerializablePaintSession& serializedData)
+    void GalaxyMapManager::ReloadFromSerialized(const SerializableGalaxyMap& serializedData)
     {
         galaxyBuffer->ApplySerializableGalaxy(serializedData.Galaxy);
 
@@ -79,5 +95,7 @@ namespace Beer::System
 
         zoomer->Zoom = serializedData.ToolHistory.ZoomScale;
         zoomer->Panning = serializedData.ToolHistory.ZoomPanning;
+
+        playerIndicatorTransform->Position = glm::vec2(serializedData.ExplorerHistory.PlayerPosition.x, serializedData.ExplorerHistory.PlayerPosition.z) * mapTransform->Scale;
     }
 } // namespace Beer::System

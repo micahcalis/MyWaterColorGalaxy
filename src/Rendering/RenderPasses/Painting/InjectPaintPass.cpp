@@ -41,7 +41,7 @@ namespace Beer::Rendering
         simulationBuffers->SimulationContext->SetTexture("_ShallowWater", simulationBuffers->ShallowWater);
         simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentSource", simulationBuffers->GetSuspendedPong(true));
         simulationBuffers->SimulationContext->SetTexture("_SuspendedPigmentTarget", simulationBuffers->GetSuspendedPong(false));
-        simulationBuffers->SimulationContext->SetFloat("_BrushRadius", 0.1f);
+        simulationBuffers->SimulationContext->SetFloat("_BrushRadius", 0.075f);
         simulationBuffers->SimulationContext->SetFloat("_BrushIntensity", 5.0f);
         simulationBuffers->SimulationContext->SetFloat("_BrushSmoothness", 0.5f);
         simulationBuffers->SimulationContext->SetInt("_BrushPigment", static_cast<int>(currentPigment));
@@ -80,7 +80,7 @@ namespace Beer::Rendering
     void InjectPaintPass::SetMouseInput() const
     {
         System::MouseInput mouseInput = getMouseInput();
-        simulationBuffers->SimulationContext->SetVector("_MousePos", glm::vec4(mouseInput.PixelPos.x, Core::Screen::Height() - mouseInput.PixelPos.y, 0, 0));
+        simulationBuffers->SimulationContext->SetVector("_MousePos", glm::vec4(mouseInput.PixelPos.x, mouseInput.PixelPos.y, 0, 0));
         simulationBuffers->SimulationContext->SetInt("_MouseClick", mouseInput.LeftClickHold ? 1 : 0);
     }
 

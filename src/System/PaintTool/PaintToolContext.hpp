@@ -1,7 +1,10 @@
 #pragma once
 
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
+#include "ButtonBlocker/ButtonBlockerEntity.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
+#include "ModeButton/ModeButtonEntity.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Delegates/BeerEvent.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapEntity.hpp"
@@ -24,6 +27,7 @@ namespace Beer::System
     {
     public:
         BeerEvent<void()> OnGalaxyFly;
+        BeerEvent<void()> OnBackToTitle;
 
     private:
         std::unique_ptr<GalaxyMapBuffer> galaxyMapBuffer = nullptr;
@@ -34,24 +38,35 @@ namespace Beer::System
         ToolBarEntity* toolBarEntity = nullptr;
         BrushSizeBarEntity* brushSizeBarEntity = nullptr;
         HologramCursorEntity* hologramCursorEntity = nullptr;
+        ModeButtonEntity* modeButtonEntity = nullptr;
+        ButtonBlockerEntity* buttonBlockerEntity = nullptr;
+
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
+        Rendering::FullscreenTransitionPass* transitionPass = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
         Function<ButtonInput> getDebugKeyInput = nullptr;
-        bool toggle = false;
+        Function<ButtonInput> getTabKeyInput = nullptr;
+
         MapHandler mapHandler;
+        SerializableGalaxyMap serializedGalaxyMap{};
+        Rendering::FadeState initialFadeState;
 
     public:
         PaintToolContext(Function<MouseInput> getMouseInput,
             Function<ButtonInput> getDebugKeyInput,
-            MapHandler mapHandler)
+            Function<ButtonInput> getTabKeyInput,
+            MapHandler mapHandler,
+            Rendering::FadeState initialFadeState)
             : getMouseInput(getMouseInput)
             , getDebugKeyInput(getDebugKeyInput)
+            , getTabKeyInput(getTabKeyInput)
             , mapHandler(mapHandler)
+            , initialFadeState(initialFadeState)
         {
         }
 
-        SerializablePaintSession GetSerializedData() const;
+        SerializableGalaxyMap GetSerializedData() const;
 
         void Load() override;
         void Update() override;
@@ -65,6 +80,8 @@ namespace Beer::System
         void InitializeToolBar();
         void InitializeBrushSizeBar();
         void InitializeHoloCursor();
+        void InitializeModeButton();
+        void InitializeButtonBlocker();
         void TryOpenMap();
         SerializablePaintTool SerializePaintTool() const;
     };

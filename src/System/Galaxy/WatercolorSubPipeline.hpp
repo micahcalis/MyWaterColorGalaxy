@@ -13,12 +13,12 @@ namespace Beer::System
     {
     private:
         std::unique_ptr<Rendering::WatercolorProcessingBuffers> processingBuffers = nullptr;
-        Rendering::BlitMainColorPass* waterColorLowerResBlitPass = nullptr;
-        Rendering::GaussianBlurPass* blurHorizontalPass = nullptr;
-        Rendering::GaussianBlurPass* blurVerticalPass = nullptr;
-        Rendering::OffsetEdgeBlurPass* edgeBlurHorizontalPass = nullptr;
-        Rendering::OffsetEdgeBlurPass* edgeBlurVerticalPass = nullptr;
-        Rendering::WatercolorPostProcessingPass* watercolorPostProcessingPass = nullptr;
+        std::unique_ptr<Rendering::BlitMainColorPass> waterColorLowerResBlitPass = nullptr;
+        std::unique_ptr<Rendering::GaussianBlurPass> blurHorizontalPass = nullptr;
+        std::unique_ptr<Rendering::GaussianBlurPass> blurVerticalPass = nullptr;
+        std::unique_ptr<Rendering::OffsetEdgeBlurPass> edgeBlurHorizontalPass = nullptr;
+        std::unique_ptr<Rendering::OffsetEdgeBlurPass> edgeBlurVerticalPass = nullptr;
+        std::unique_ptr<Rendering::WatercolorPostProcessingPass> watercolorPostProcessingPass = nullptr;
 
     public:
         WatercolorSubPipeline();

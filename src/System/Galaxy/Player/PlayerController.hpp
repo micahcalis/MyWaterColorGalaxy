@@ -21,6 +21,7 @@ namespace Beer::System
         void Update(PlayerInput playerInput);
         void Move(PlayerInput playerInput);
         float GetNormalizedSpeed() const;
+        static void SanitizeMouseInput(glm::vec2& mouseVec);
 
     private:
         void HandleSpeed(bool isBoosting);

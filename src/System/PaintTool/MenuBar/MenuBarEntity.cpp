@@ -17,8 +17,15 @@ namespace Beer::System
 
     MenuBarEntity::MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
         Function<void> clearHistory,
-        Function<void> saveMap)
-        : galaxyMapBuffer(galaxyMapBuffer), clearHistory(clearHistory), saveMap(saveMap), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+        Function<void> saveMap,
+        Function<void> onBackToTitle,
+        Function<void> enableBlock)
+        : galaxyMapBuffer(galaxyMapBuffer)
+        , clearHistory(clearHistory)
+        , saveMap(saveMap)
+        , onBackToTitle(onBackToTitle)
+        , enableBlock(enableBlock)
+        , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         rootTransform.Anchor = AnchorMode::BottomRight;
         rootTransform.Pivot = AnchorMode::BottomRight;
@@ -68,10 +75,27 @@ namespace Beer::System
         flyButtonEntity = std::make_unique<UISubEntity>(flyTransform);
         rootTransform.BindChild(flyButtonEntity->GetTransform());
 
+        UITransform backTransform{};
+        backTransform.Anchor = AnchorMode::TopMiddle;
+        backTransform.Pivot = AnchorMode::TopMiddle;
+        backTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
+        backTransform.Position = glm::vec2(0, -BUTTON_PADDING - (SEED_BUTTON_SIZE * 2.0f));
+
+        backButtonTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_Back");
+        backButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        backButtonMaterial->SetColor("_TintColor", glm::vec4(1.0f));
+        backButtonMaterial->SetVector("_Scale", glm::vec4(1));
+        backButtonMaterial->SetTexture("_SpriteTex", backButtonTexture.get());
+
+        backButtonEntity = std::make_unique<UISubEntity>(backTransform);
+        rootTransform.BindChild(backButtonEntity->GetTransform());
+
         menuBarManager->InitializeButtons(seedButtonEntity->GetTransform(),
             seedButtonMaterial.get(),
             flyButtonEntity->GetTransform(),
-            flyButtonMaterial.get());
+            flyButtonMaterial.get(),
+            backButtonEntity->GetTransform(),
+            backButtonMaterial.get());
 
         MarkDirty();
     }

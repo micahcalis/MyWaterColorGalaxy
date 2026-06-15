@@ -30,7 +30,6 @@ namespace Beer::System
         , controlNoiseVolume(controlNoiseVolume)
         , GameEntity(layer)
     {
-        transform.Position = PLAYER_SETTINGS.StartPos;
         transform.Scale = glm::vec3(PLAYER_SCALE);
 
         playerMaterial = std::make_shared<Rendering::Material>("Galaxy/UFO");
@@ -55,8 +54,8 @@ namespace Beer::System
                 ContextType::Galaxy,
                 playerMaterial,
                 playerMesh,
-                &transform,
-                &layer);
+                &this->transform,
+                &this->layer);
 
         this->renderComponent = (std::move(singleMeshRender));
     }

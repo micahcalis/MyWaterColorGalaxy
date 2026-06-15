@@ -3,6 +3,7 @@
 #include "PlayerSettings.hpp"
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Camera/CameraSettings.hpp"
+#include "System/Galaxy/Player/PlayerController.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
 #include "glm/ext/quaternion_geometric.hpp"
 #include "glm/ext/vector_common.hpp"
@@ -29,6 +30,7 @@ namespace Beer::System
 
     void PlayerCamera::Update(PlayerInput input)
     {
+        PlayerController::SanitizeMouseInput(input.MouseVec);
         RotateCamera(input.MouseVec);
         FollowPlayer();
     }
@@ -88,9 +90,8 @@ namespace Beer::System
             return false;
         }
 
-        float deadzoneRadians = glm::radians(PLAYER_CAM_SETTINGS.SpringDeadzone);
         float rotationOffsetLength = glm::length(glm::vec2(currentPitchOffset, currentYawOffset));
 
-        return glm::length(mouseVec) < 0.1f && rotationOffsetLength > deadzoneRadians;
+        return glm::length(mouseVec) < 0.1f;
     }
 } // namespace Beer::System

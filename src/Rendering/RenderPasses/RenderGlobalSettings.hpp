@@ -31,6 +31,7 @@ namespace Beer::Rendering
     static const std::string DEFERRED_SHADE_PASS = "DeferredShade";
     static const std::string TRANSPARENT_PASS = "Transparent";
     static const std::string UI_PASS = "UserInterface";
+    static const std::string TRANSITION_PASS = "TransitionPass";
     static const std::string INTERACTIVE_PAINT_PASS = "InteractivePaint";
     static const std::string WC_PROCESSING_PASS = "WatercolorProcessing";
     static const std::string WC_BLIT_PASS = "WatercolorBlit";

@@ -3,11 +3,15 @@
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/Slider.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
+#include "System/PaintTool/HelpToggle/HelpContainer.hpp"
+#include "System/PaintTool/HelpToggle/HelpToggle.hpp"
 #include <memory>
 
 namespace Beer::System
 {
     class BrushSizeBarManager : public IEntityManager
+        , public HelpContainer
     {
     private:
         std::unique_ptr<Slider> brushSizeSlider = nullptr;

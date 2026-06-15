@@ -10,14 +10,14 @@ namespace Beer::System
     {
     private:
         std::string mapName;
-        Function<SerializablePaintSession, const std::string&> loadFunc = nullptr;
-        Function<void, const std::string&, const SerializablePaintSession&> saveFunc = nullptr;
+        Function<SerializableGalaxyMap, const std::string&> loadFunc = nullptr;
+        Function<void, const std::string&, const SerializableGalaxyMap&> saveFunc = nullptr;
         Function<bool, const std::string&> isMapSaved = nullptr;
 
     public:
         MapHandler(const std::string& mapName,
-            Function<SerializablePaintSession, const std::string&> loadFunc,
-            Function<void, const std::string&, const SerializablePaintSession&> saveFunc,
+            Function<SerializableGalaxyMap, const std::string&> loadFunc,
+            Function<void, const std::string&, const SerializableGalaxyMap&> saveFunc,
             Function<bool, const std::string&> isMapSaved)
             : mapName(mapName)
             , loadFunc(loadFunc)
@@ -26,12 +26,12 @@ namespace Beer::System
         {
         }
 
-        SerializablePaintSession Load()
+        SerializableGalaxyMap Load()
         {
             return loadFunc(mapName);
         }
 
-        void Save(const SerializablePaintSession& map)
+        void Save(const SerializableGalaxyMap& map)
         {
             saveFunc(mapName, map);
         }

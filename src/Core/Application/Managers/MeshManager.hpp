@@ -24,7 +24,6 @@ namespace Beer::Core
             Clear();
         }
 
-    public:
         std::shared_ptr<Rendering::Mesh> Load(const std::filesystem::path& path) override;
         std::shared_ptr<Rendering::Mesh> CreateProcedural(const Core::MeshAsset meshAsset);
 

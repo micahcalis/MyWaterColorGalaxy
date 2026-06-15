@@ -1,14 +1,32 @@
 #include "System/PaintTool/ColorMixer/ColorMixerManager.hpp"
+#include "ColorMixerCursor.hpp"
 #include "PigmentButton.hpp"
+#include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include <memory>
 
 namespace Beer::System
 {
     void ColorMixerManager::Update()
     {
+        if (!enabled)
+        {
+            return;
+        }
+
         if (colorPicker != nullptr)
         {
             colorPicker->Update();
+        }
+
+        if (colorMixerCursor != nullptr)
+        {
+            colorMixerCursor->Update(getMouseInput().PixelPos);
+
+            if (colorMixerCursor->IsActive())
+            {
+                markDirty();
+            }
         }
     }
 
@@ -16,19 +34,29 @@ namespace Beer::System
         Rendering::Material* spriteMaterial,
         PigmentType pigment)
     {
-        Function<void, PigmentType> setPigment = [this](PigmentType pigmentParam) -> void {
-            SetCurrentPigment(pigmentParam);
+        Function<void, PigmentType, UITransform*> pigmentCallback = [this](PigmentType pigment, UITransform* transform) -> void {
+            SetCurrentPigment(pigment, transform);
         };
 
         pigmentButtons.emplace_back(std::make_unique<PigmentButton>(transform,
             spriteMaterial,
             pigment,
-            setPigment));
+            pigmentCallback));
     }
 
-    void ColorMixerManager::SetCurrentPigment(PigmentType pigment)
+    void ColorMixerManager::SetCurrentPigment(PigmentType pigment, UITransform* transform)
     {
         currentPigment = pigment;
+        colorPicker->PaintPigment();
+        transform->BindChild(selectSpriteTransform);
+        markDirty();
+        OnPigmentClicked.Invoke(pigment);
+    }
+
+    void ColorMixerManager::SetCurrentPigmentByIndex(uint32_t index)
+    {
+        index = std::clamp<uint32_t>(index, 0, pigmentButtons.size());
+        pigmentButtons[index]->ClickedCallback();
     }
 
     void ColorMixerManager::SetClearButton(Function<void> clearColorMixer,
@@ -41,31 +69,43 @@ namespace Beer::System
         clearButton->SetOnClick([this]() -> void { ClearColorMixer(); });
     }
 
-    void ColorMixerManager::SetCloseButton(Function<void> closeColorMixer,
-        UITransform* closeTransform,
-        Rendering::Material* closeMaterial)
-    {
-        this->closeColorMixer = closeColorMixer;
-
-        closeButton = std::make_unique<Button>(closeTransform, closeMaterial);
-        closeButton->SetOnClick([this]() -> void { CloseColorMixer(); });
-    }
-
     void ColorMixerManager::SetColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,
         Function<MouseInput> getMouseInput,
-        UITransform* colorPickerTransform,
-        Rendering::Material* colorPickerMaterial,
-        UITransform* paintPigmentTransform,
-        Rendering::Material* paintPigmentMaterial,
         UITransform* canvasTransform)
     {
         colorPicker = std::make_unique<ColorPicker>(subscribeToReadback,
             getMouseInput,
-            colorPickerTransform,
-            colorPickerMaterial,
-            canvasTransform,
-            paintPigmentTransform,
-            paintPigmentMaterial);
+            canvasTransform);
+    }
+
+    void ColorMixerManager::SetColorMixerCursor(UITransform* canvasTransform,
+        UITransform* cursorTransform,
+        Rendering::Material* cursorMaterial,
+        Rendering::Texture2D* brushTexture,
+        Rendering::Texture2D* brushMask,
+        Rendering::Texture2D* pickerTexture,
+        Rendering::Texture2D* pickerMask)
+    {
+        colorMixerCursor = std::make_unique<ColorMixerCursor>(canvasTransform,
+            cursorTransform,
+            cursorMaterial,
+            brushTexture,
+            brushMask,
+            pickerTexture,
+            pickerMask);
+
+        colorMixerCursor->SetCursor(MixerCursorType::Picker, GetPigmentColor(currentPigment));
+
+        Function<void, PigmentType> setBrushCursor = [this](PigmentType pigment) -> void {
+            colorMixerCursor->SetCursor(MixerCursorType::Brush, GetPigmentColor(pigment));
+        };
+
+        Function<void, glm::vec4> setPickerCursor = [this](glm::vec4 color) -> void {
+            colorMixerCursor->SetCursor(MixerCursorType::Picker, color);
+        };
+
+        OnPigmentClicked.Subscribe(setBrushCursor);
+        colorPicker->OnColorPicked.Subscribe(setPickerCursor);
     }
 
     void ColorMixerManager::ClearColorMixer()
@@ -74,13 +114,5 @@ namespace Beer::System
             return;
 
         clearColorMixer();
-    }
-
-    void ColorMixerManager::CloseColorMixer()
-    {
-        if (closeColorMixer == nullptr)
-            return;
-
-        closeColorMixer();
     }
 } // namespace Beer::System

@@ -3,28 +3,28 @@
 #include "ColorBarLevel.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
-#include "StackAnimator.hpp"
 #include "System/Base/Input/MouseInput.hpp"
-#include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
-#include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
+#include "System/Delegates/BeerEvent.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
+#include "System/PaintTool/HelpToggle/HelpToggle.hpp"
+#include "System/PaintTool/HelpToggle/HelpContainer.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <unordered_map>
 
 namespace Beer::System
 {
-    enum class ColorBarType
-    {
-        Planet,
-        Galaxy
-    };
-
     class ColorBarManager : public IEntityManager
+        , public HelpContainer
     {
+    public:
+        BeerEvent<void(glm::vec4 color)> OnColorClicked;
+
     private:
         UITransform* colorBarTransform = nullptr;
+        UITransform* selectSpriteTransform = nullptr;
         std::unordered_map<ColorBarLevel, std::unique_ptr<ColorBarController>> planetColorControllers;
         std::unordered_map<ColorBarLevel, std::unique_ptr<ColorBarController>> galaxyColorControllers;
         Rendering::Material* planetDisplayMaterial = nullptr;
@@ -32,16 +32,13 @@ namespace Beer::System
 
         Function<MouseInput> getMouseInput = nullptr;
         Function<void> markQuadTreeDirty = nullptr;
-        Function<void> openColorPicker = nullptr;
         Function<void, glm::vec4> setColorDisplayColor = nullptr;
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = nullptr;
         Function<std::array<glm::vec4, 4>> getGalaxyColors = nullptr;
         Function<Rendering::Texture2D*> getBrushTexture = nullptr;
+        Function<void> pickerSelectColor = nullptr;
 
         ColorBarController* currentController = nullptr;
-
-        std::unique_ptr<StackAnimator> planetLayersAnimator = nullptr;
-        std::unique_ptr<StackAnimator> galaxyLayersAnimator = nullptr;
 
         BeerEvent<void(glm::vec4)>* onColorPicked = nullptr;
         BeerEvent<void()>* onColorPickerClosed = nullptr;
@@ -51,12 +48,11 @@ namespace Beer::System
         ColorBarManager(UITransform* colorBarTransform,
             Function<MouseInput> getMouseInput,
             Function<void> markQuadTreeDirty,
-            Function<void> openColorPicker,
             Function<void, glm::vec4> setColorDisplayColor,
             Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
             Function<std::array<glm::vec4, 4>> getGalaxyColors,
             Function<Rendering::Texture2D*> getBrushTexture,
-            BeerEvent<void(glm::vec4)>* onColorPicked,
+            Function<void> pickerSelectColor,
             BeerEvent<void()>* onColorPickerClosed,
             BeerEvent<void()>* onNewSeed);
 
@@ -75,8 +71,8 @@ namespace Beer::System
             Rendering::Material* material,
             glm::vec4 initialColor);
 
-        void CreateAnimator(ColorBarType type);
         void ForceSetColorsFromSeed();
+        void TrySetColor(glm::vec4 color);
 
         void ReloadFromSerialized(const SerializablePaintTool& serializedPaintTool);
         void UpdateDisplayMaterials();
@@ -84,10 +80,27 @@ namespace Beer::System
         glm::vec4 GetBarColor(ColorBarLevel level, ColorBarType type) const;
         std::vector<glm::vec4> GetColors(ColorBarType type) const;
 
+        void SetSelectSpriteTransform(UITransform* spriteTransform)
+        {
+            this->selectSpriteTransform = spriteTransform;
+        }
+
+        void DeselectColors()
+        {
+            UITransform* selectParent = selectSpriteTransform->Parent;
+
+            if (selectParent == nullptr)
+            {
+                return;
+            }
+
+            selectParent->UnbindChild(selectSpriteTransform);
+            markQuadTreeDirty();
+        }
+
     private:
         bool MouseInContainer(glm::vec2 mousePos);
-        void AnimateColorLevels(ColorBarType type);
-        void TryOpenColorPicker(ColorBarController* controller);
+        void OnColorBarButtonPressed(ColorBarController* controller);
         void SetGalaxyColorsFromSeed();
     };
 } // namespace Beer::System

@@ -28,8 +28,9 @@ namespace Painting
 
         public bool InCanvas(float2 position)
         {
-            bool2 posCheck = position >= botLeft && position < topRight;
-            return posCheck.x && posCheck.y;
+
+            return position.x >= botLeft.x && position.x < topRight.x &&
+                position.y >= botLeft.y && position.y < topRight.y;
         }
 
         public float2 AlignToCanvas(float2 pixelPos)

@@ -19,7 +19,10 @@ namespace Beer::Rendering
         System::DrawRequest drawRequest = System::DrawRequest(commandBuffer,
             context,
             Rendering::ShaderPassType::UserInterface,
-            System::ContextMask(System::CTXT_PAINT_TOOL_BITS | System::CTXT_GALAXY_UI_BITS),
+            System::ContextMask(System::CTXT_PAINT_TOOL_BITS
+                | System::CTXT_GALAXY_UI_BITS
+                | System::CTXT_MAIN_MENU_BITS
+                | System::CTXT_SELECTION_MENU_BITS),
             System::LayerMask(System::LAYER_UI_BITS));
 
         Core::DrawCallPool drawPool = context.Register->GetDrawCallPool(drawRequest);

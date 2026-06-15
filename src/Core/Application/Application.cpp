@@ -1,9 +1,13 @@
 #include "Core/Application/Application.hpp"
+#include "Managers/AudioManager.hpp"
+#include "System/Audio/AudioClip.hpp"
+#include "System/Base/GameManager.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 #include <cassert>
 #include <iostream>
+#include <memory>
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 
@@ -28,7 +32,11 @@ namespace Beer::Core
 
     void Application::InitializeGame()
     {
-        gameManager.Initialize();
+        gameManager = std::make_unique<System::GameManager>([this]() -> void { windowManager.QuitApplication(); });
+        gameManager->Initialize();
+
+        audioManager = std::make_unique<AudioManager>();
+        System::AudioClip::SetAudioManager(audioManager.get());
     }
 
     void Application::MainLoop()
@@ -41,7 +49,7 @@ namespace Beer::Core
         {
             if (isRunning)
             {
-                gameManager.PreUpdate();
+                gameManager->PreUpdate();
             }
 
             while (SDL_PollEvent(&event))
@@ -58,7 +66,15 @@ namespace Beer::Core
 
                 if (event.type == SDL_EVENT_MOUSE_WHEEL)
                 {
-                    gameManager.OnMouseScrolled(event.wheel.y);
+                    gameManager->OnMouseScrolled(event.wheel.y);
+                }
+
+                if (event.type == SDL_EVENT_KEY_DOWN)
+                {
+                    if (event.key.key == SDLK_F11)
+                    {
+                        windowManager.ToggleFullscreen();
+                    }
                 }
             }
 
@@ -66,14 +82,22 @@ namespace Beer::Core
             {
                 renderer.SetFrameBufferResized(true);
                 isResized = false;
+
+                if (!windowManager.GetFullscreen())
+                {
+                    windowManager.UpdateWindowedResolution();
+                }
             }
 
             if (isRunning)
             {
-                gameManager.Update();
+                gameManager->Update();
+                audioManager->Update();
                 renderer.PreDraw();
                 renderer.Draw();
             }
+
+            const bool* keyboardState = SDL_GetKeyboardState(nullptr);
         }
 
         renderer.GetDevice().GetLogicalDevice().waitIdle();
@@ -82,6 +106,12 @@ namespace Beer::Core
     void Application::Cleanup()
     {
         std::cout << "cleanup" << '\n';
+
+        if (audioManager != nullptr)
+        {
+            audioManager.reset();
+        }
+
         windowManager.Cleanup();
         renderer.GetSwapchain()->CleanupSwapchain();
     }

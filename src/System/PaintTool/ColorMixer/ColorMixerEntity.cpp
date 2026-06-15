@@ -1,20 +1,23 @@
 #include "ColorMixerEntity.hpp"
 #include "ColorMixerManager.hpp"
 #include "PigmentButton.hpp"
+#include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "glm/fwd.hpp"
 #include <array>
+#include <memory>
 
 namespace Beer::System
 {
-    const static uint32_t NUM_PIGMENTS = 10;
-    const static uint32_t NUM_ROWS = 2;
+    static const uint32_t NUM_PIGMENTS = 10;
+    static const uint32_t NUM_ROWS = 2;
 
-    const static std::array<PigmentType, NUM_PIGMENTS> BUTTON_PIGMENTS = {
+    static const std::array<PigmentType, NUM_PIGMENTS> BUTTON_PIGMENTS = {
         PigmentType::QuinacridoneRose,
         PigmentType::CadmiumRed,
         PigmentType::HansaYellow,
@@ -26,22 +29,44 @@ namespace Beer::System
         PigmentType::BurntUmber,
         PigmentType::IndianRed};
 
-    const static float PIGMENT_BUTTON_SCALE = 0.2f;
-    const static float CLEAR_BUTTON_SCALE = 0.25f;
-    const static float PICKER_BUTTON_SCALE = 0.25f;
-    const static float PAINT_BUTTON_SCALE = 0.25f;
-    const static float COLOR_DISPLAY_SCALE = 0.25f;
-    const static float CLOSE_BUTTON_SCALE = 0.1f;
+    static const float DISPLAY_SCALE = 0.75f;
+    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.22f, 0.35f);
+    static const float PIGMENT_BUTTON_SCALE = 0.15f;
+    static const float CLEAR_BUTTON_SCALE = 0.2f;
+    static const float PICKER_BUTTON_SCALE = 0.2f;
+    static const float PAINT_BUTTON_SCALE = 0.2f;
+    static const float COLOR_DISPLAY_SCALE = 0.2f;
+    static const float CLOSE_BUTTON_SCALE = 0.1f;
+    static const glm::vec2 PIGMENT_BG_SCALE = glm::vec2(0.85f, 0.4f);
+    static const glm::vec2 PIGMENT_BG_POS = glm::vec2(0, -0.05f);
 
-    ColorMixerEntity::ColorMixerEntity()
-        : QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+    static const float SELECT_BORDER_THICKNESS = 0.02f;
+    static const glm::vec4 SELECT_COLOR = glm::vec4(0, 0, 0, 1);
+
+    static const glm::vec2 CURSOR_SIZE = glm::vec2(0.1f);
+    static const glm::vec2 CURSOR_OFFSET = glm::vec2(-0.025f, -0.025f);
+
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.05f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(0.05f, 0);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.75f, 0.4f);
+    static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
+    static const std::string HELP_TEXT = "This is your Color Mixing Canvas! Select a pigment and then paint on the canvas. Mix different pigments for new color possibilities. You can clear the canvas using the bin icon. When you are happy with the colors, you can capture them on your palette below.";
+
+    ColorMixerEntity::ColorMixerEntity(Function<MouseInput> getMouseInput)
+        : getMouseInput(getMouseInput)
+        , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         colorMixerDisplayMat = std::make_shared<Rendering::Material>("UI/ColorMixerSprite");
-        colorMixerDisplayMat->SetColor("_CanvasColor", glm::vec4(0.969f, 0.969f, 0.914, 1));
+        colorMixerDisplayMat->SetColor("_CanvasColor", Rendering::CANVAS_COLOR);
 
-        rootTransform.Anchor = AnchorMode::Center;
-        rootTransform.Pivot = AnchorMode::Center;
+        rootTransform.Anchor = AnchorMode::MiddleLeft;
+        rootTransform.Pivot = AnchorMode::MiddleLeft;
+        rootTransform.Scale = glm::vec2(DISPLAY_SCALE);
+        rootTransform.Position = DISPLAY_OFFSET;
         rootTransform.Depth = 0.1f;
+
+        squareTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
+
         MarkDirty();
     }
 
@@ -50,7 +75,6 @@ namespace Beer::System
         ColorMixerManager* mixerManager = GetMixerManager();
 
         uint32_t rowCount = NUM_PIGMENTS / NUM_ROWS;
-        squareTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
         circleTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_CircleSprite");
         pigmentEntities.reserve(NUM_PIGMENTS);
         pigmentMaterials.reserve(NUM_PIGMENTS);
@@ -61,6 +85,7 @@ namespace Beer::System
             transform.Anchor = AnchorMode::TopRight;
             transform.Pivot = AnchorMode::BottomRight;
             transform.Scale = glm::vec2(PIGMENT_BUTTON_SCALE, PIGMENT_BUTTON_SCALE);
+            transform.Depth = 0.1f;
 
             float offsetX = static_cast<float>(i % rowCount);
             float offsetY = static_cast<float>(i / rowCount);
@@ -81,6 +106,25 @@ namespace Beer::System
                 pigmentMaterials[i].get(),
                 type);
         }
+
+        UITransform bgTransform{};
+        bgTransform.Anchor = AnchorMode::TopMiddle;
+        bgTransform.Pivot = AnchorMode::BottomMiddle;
+        bgTransform.Scale = PIGMENT_BG_SCALE;
+        bgTransform.Position = PIGMENT_BG_POS;
+
+        pigmentsBgEntity = std::make_unique<UISubEntity>(bgTransform);
+        rootTransform.BindChild(pigmentsBgEntity->GetTransform());
+
+        pigmentsBgTex = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
+
+        pigmentsBgMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        pigmentsBgMaterial->SetColor("_TintColor", Rendering::CANVAS_COLOR);
+        pigmentsBgMaterial->SetTexture("_SpriteTex", pigmentsBgTex.get());
+        pigmentsBgMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+
+        InitializeSelectSpriteEntity();
+        InitializeHelpButton();
 
         MarkDirty();
     }
@@ -114,35 +158,6 @@ namespace Beer::System
         Function<MouseInput> getMouseInput)
     {
         ColorMixerManager* mixerManager = GetMixerManager();
-        UITransform colorPickerTransform{};
-        colorPickerTransform.Scale = glm::vec2(PICKER_BUTTON_SCALE, PICKER_BUTTON_SCALE);
-        colorPickerTransform.Pivot = AnchorMode::BottomRight;
-        colorPickerTransform.Anchor = AnchorMode::BottomLeft;
-        colorPickerTransform.Position = glm::vec2(0, CLEAR_BUTTON_SCALE);
-
-        colorPickerIcon = std::make_unique<UISubEntity>(colorPickerTransform);
-        rootTransform.BindChild(colorPickerIcon->GetTransform());
-
-        colorPickerIconTexture = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_ColorPickIcon");
-        colorPickerIconMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        colorPickerIconMaterial->SetColor("_TintColor", glm::vec4(1.0f, 1.0f, 1.0f, 1));
-        colorPickerIconMaterial->SetTexture("_SpriteTex", colorPickerIconTexture.get());
-        colorPickerIconMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
-
-        UITransform paintPigmentTransform{};
-        paintPigmentTransform.Scale = glm::vec2(PAINT_BUTTON_SCALE, PAINT_BUTTON_SCALE);
-        paintPigmentTransform.Pivot = AnchorMode::BottomRight;
-        paintPigmentTransform.Anchor = AnchorMode::BottomLeft;
-        paintPigmentTransform.Position = glm::vec2(0, CLEAR_BUTTON_SCALE + PICKER_BUTTON_SCALE);
-
-        paintPigmentIcon = std::make_unique<UISubEntity>(paintPigmentTransform);
-        rootTransform.BindChild(paintPigmentIcon->GetTransform());
-
-        paintPigmentIconTexture = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_PaintIcon");
-        paintPigmentIconMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        paintPigmentIconMaterial->SetColor("_TintColor", glm::vec4(1));
-        paintPigmentIconMaterial->SetTexture("_SpriteTex", paintPigmentIconTexture.get());
-        paintPigmentIconMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
         UITransform displayTransform{};
         displayTransform.Scale = glm::vec2(COLOR_DISPLAY_SCALE, COLOR_DISPLAY_SCALE);
@@ -150,48 +165,91 @@ namespace Beer::System
         displayTransform.Anchor = AnchorMode::BottomLeft;
         displayTransform.Position = glm::vec2(0, CLEAR_BUTTON_SCALE + PICKER_BUTTON_SCALE + PAINT_BUTTON_SCALE);
 
-        colorDisplay = std::make_unique<UISubEntity>(displayTransform);
-        rootTransform.BindChild(colorDisplay->GetTransform());
-
-        colorDisplayMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        colorDisplayMaterial->SetColor("_TintColor", glm::vec4(1));
-        colorDisplayMaterial->SetTexture("_SpriteTex", circleTexture.get());
-        colorDisplayMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
-
         mixerManager->SetColorPicker(subscribeToReadback,
             getMouseInput,
-            colorPickerIcon->GetTransform(),
-            colorPickerIconMaterial.get(),
-            paintPigmentIcon->GetTransform(),
-            paintPigmentIconMaterial.get(),
             &rootTransform);
 
-        mixerManager->GetColorPicker()->OnColorPicked.Subscribe([this](glm::vec4 color) -> void {
-            colorDisplayMaterial->SetColor("_TintColor", color);
-        });
+        InitializeCursorSprite();
 
         MarkDirty();
     }
 
-    void ColorMixerEntity::InitializeCloseButton()
+    void ColorMixerEntity::InitializeSelectSpriteEntity()
     {
-        ColorMixerManager* mixerManager = GetMixerManager();
-        UITransform closeButtonTransform{};
-        closeButtonTransform.Anchor = AnchorMode::TopRight;
-        closeButtonTransform.Pivot = AnchorMode::BottomLeft;
-        closeButtonTransform.Scale = glm::vec2(CLOSE_BUTTON_SCALE, CLOSE_BUTTON_SCALE);
+        UITransform selectTransform{};
+        selectTransform.Anchor = AnchorMode::Center;
+        selectTransform.Pivot = AnchorMode::Center;
+        selectTransform.Scale = glm::vec2(PIGMENT_BUTTON_SCALE + SELECT_BORDER_THICKNESS);
+        selectTransform.Depth = 0.05f;
 
-        closeButton = std::make_unique<UISubEntity>(closeButtonTransform);
-        rootTransform.BindChild(closeButton->GetTransform());
+        selectSpriteEntity = std::make_unique<UISubEntity>(selectTransform);
 
-        closeButtonTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_CloseButton");
-        closeButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        closeButtonMaterial->SetColor("_TintColor", glm::vec4(1));
-        closeButtonMaterial->SetTexture("_SpriteTex", closeButtonTexture.get());
-        closeButtonMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+        selectSpriteMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        selectSpriteMaterial->SetTexture("_SpriteTex", squareTexture.get());
+        selectSpriteMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+        selectSpriteMaterial->SetColor("_TintColor", SELECT_COLOR);
 
-        mixerManager->SetCloseButton([this]() -> void { Close(); },
-            closeButton->GetTransform(),
-            closeButtonMaterial.get());
+        GetMixerManager()->SetSelectButton(selectSpriteEntity->GetTransform());
+    }
+
+    void ColorMixerEntity::InitializeCursorSprite()
+    {
+        UITransform cursorTransform{};
+        cursorTransform.Scale = glm::vec2(0.001f);
+        cursorTransform.Anchor = AnchorMode::BottomLeft;
+        cursorTransform.Pivot = AnchorMode::Center;
+
+        cursorAnchorEntity = std::make_unique<UISubEntity>(cursorTransform);
+        rootTransform.BindChild(cursorAnchorEntity->GetTransform());
+
+        cursorTransform.Scale = CURSOR_SIZE;
+        cursorTransform.Position = CURSOR_OFFSET;
+        cursorTransform.Pivot = AnchorMode::BottomLeft;
+        cursorTransform.Depth = 0.1f;
+
+        cursorSpriteEntity = std::make_unique<UISubEntity>(cursorTransform);
+        cursorAnchorEntity->GetTransform()->BindChild(cursorSpriteEntity->GetTransform());
+
+        pickerSprite = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_PickerMouse");
+        pickerSpriteMask = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_PickerMouseMask");
+
+        brushSprite = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_BrushMouse");
+        brushSpriteMask = std::make_shared<Rendering::Texture2D>("UI/ColorMixer/Tex_BrushMouseMask");
+
+        cursorSpriteMaterial = std::make_shared<Rendering::Material>("UI/MixerCursorSprite");
+
+        GetMixerManager()->SetColorMixerCursor(&rootTransform,
+            cursorAnchorEntity->GetTransform(),
+            cursorSpriteMaterial.get(),
+            brushSprite.get(),
+            brushSpriteMask.get(),
+            pickerSprite.get(),
+            pickerSpriteMask.get());
+    }
+
+    void ColorMixerEntity::InitializeHelpButton()
+    {
+        UITransform helpButtonTransform{};
+        helpButtonTransform.Anchor = AnchorMode::TopRight;
+        helpButtonTransform.Pivot = AnchorMode::TopLeft;
+        helpButtonTransform.Scale = HELP_BUTTON_SCALE;
+        helpButtonTransform.Position = HELP_BUTTON_OFFSET;
+        helpButtonTransform.Depth = 0.5f;
+
+        UITransform helpPopupTransform{};
+        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
+        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
+        helpPopupTransform.Scale = HELP_POPUP_SCALE;
+        helpPopupTransform.Position = HELP_POPUP_OFFSET;
+        helpPopupTransform.Depth = 0.6f;
+
+        helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
+            &rootTransform,
+            helpButtonTransform,
+            HELP_TEXT,
+            helpPopupTransform);
+
+        GetMixerManager()->SetHelpToggle(helpButtonSubEntity.get(),
+            [this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

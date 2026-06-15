@@ -4,8 +4,10 @@
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
 #include "System/Components/General/Transform.hpp"
+#include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
 #include "System/Galaxy/Player/PlayerController.hpp"
 #include "System/Galaxy/Player/PlayerSettings.hpp"
+#include <print>
 
 namespace Beer::System
 {
@@ -13,7 +15,10 @@ namespace Beer::System
         Function<PlayerInput> getPlayerInput,
         BeerEvent<void(bool)>* onSetPhotoMode,
         Rendering::Material* playerMaterial)
-        : getPlayerInput(getPlayerInput), onSetPhotoMode(onSetPhotoMode), playerMaterial(playerMaterial)
+        : player(player)
+        , getPlayerInput(getPlayerInput)
+        , onSetPhotoMode(onSetPhotoMode)
+        , playerMaterial(playerMaterial)
     {
         playerController = std::make_unique<PlayerController>(player);
         cameraEntity = std::make_unique<GameSubEntity>(Transform());
@@ -24,22 +29,28 @@ namespace Beer::System
 
     void PlayerManager::Update()
     {
-        PlayerInput input = getPlayerInput();
+        PlayerInput rawInput = getPlayerInput();
 
-        if (input.PhotoTogglePressed)
+        if (rawInput.PhotoTogglePressed)
         {
-            photoMode = !photoMode;
-            onSetPhotoMode->Invoke(photoMode);
+            TogglePhotoMode();
         }
+
+        PlayerInput cameraInput = rawInput;
+        PlayerInput controllerInput = rawInput;
 
         if (photoMode)
         {
-            input.IsBoosting = false;
-            input.MovementVec = glm::vec2(0);
+            controllerInput.MouseVec = glm::vec2(0.0f);
+            controllerInput.IsBoosting = false;
+        } else
+        {
+            cameraInput.MouseVec = glm::vec2(0.0f);
         }
 
-        playerController->Update(input);
-        playerCamera->Update(input);
+        playerCamera->Update(cameraInput);
+        playerController->Update(controllerInput);
+
         HandleFade();
     }
 
@@ -68,5 +79,20 @@ namespace Beer::System
         {
             playerMaterial->SetFloat("_CutoffTime", cutoffValue);
         }
+    }
+
+    void PlayerManager::LoadFromSerialized(const SerializableExplorer& serializableExplorer)
+    {
+        glm::vec3 scaledPos = serializableExplorer.PlayerPosition * GalaxyObjectBuffer::GALAXY_POS_SCALE;
+        player->GetTransform()->Position = scaledPos;
+
+        glm::vec4 rotation = serializableExplorer.PlayerRotation;
+        player->GetTransform()->Rotation = glm::quat(rotation.x, rotation.y, rotation.z, rotation.w);
+    }
+
+    void PlayerManager::TogglePhotoMode()
+    {
+        photoMode = !photoMode;
+        onSetPhotoMode->Invoke(photoMode);
     }
 } // namespace Beer::System

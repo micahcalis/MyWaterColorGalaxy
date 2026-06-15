@@ -7,7 +7,11 @@
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
+#include "System/PaintTool/HelpToggle/HelpContainer.hpp"
+#include "System/PaintTool/HelpToggle/HelpToggle.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+
 namespace Beer::System
 {
     struct CursorState
@@ -20,6 +24,7 @@ namespace Beer::System
     };
 
     class GalaxyMapManager : public IEntityManager
+        , public HelpContainer
     {
     public:
         BeerEvent<void(GalaxyBrushType)> OnNewBrush;
@@ -28,6 +33,7 @@ namespace Beer::System
         GalaxyMapBuffer* galaxyBuffer = nullptr;
         UITransform* mapTransform = nullptr;
         Function<MouseInput> getMouseInput = nullptr;
+        UITransform* playerIndicatorTransform = nullptr;
         std::unique_ptr<GalaxyMapCursor> cursor = nullptr;
         std::unique_ptr<GalaxyMapZoomer> zoomer = nullptr;
         bool isActive = false;
@@ -35,7 +41,8 @@ namespace Beer::System
     public:
         GalaxyMapManager(GalaxyMapBuffer* galaxyMapBuffer,
             UITransform* mapTransform,
-            Function<MouseInput> getMouseInput);
+            Function<MouseInput> getMouseInput,
+            UITransform* playerIndicatorTransform);
 
         void InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor,
             UITransform* sunTranform);
@@ -46,7 +53,7 @@ namespace Beer::System
         GalaxyMapZoomer* GetZoomer() const { return zoomer.get(); }
 
         void SetBrushType(GalaxyBrushType type);
-        void ReloadFromSerialized(const SerializablePaintSession& serializedData);
+        void ReloadFromSerialized(const SerializableGalaxyMap& serializedData);
 
         CursorState GetCursorState() const
         {

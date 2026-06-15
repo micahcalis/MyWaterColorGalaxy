@@ -1,11 +1,10 @@
 #include "Core/Application/Managers/WindowManager.hpp"
 #include "Core/Application/Utilities/SDLUtilities.hpp"
+#include "SDL3/SDL_video.h"
+#include <print>
 
 namespace Beer::Core
 {
-    constexpr uint32_t APP_WIDTH = 800;
-    constexpr uint32_t APP_HEIGHT = 600;
-
     void WindowManager::InitializeWindow()
     {
         if (!SDLUtilities::SDLInitialize())
@@ -13,11 +12,27 @@ namespace Beer::Core
             throw std::runtime_error("SDL_Init failed: " + std::string(SDL_GetError()));
         }
 
-        window = SDLUtilities::CreateWindow(APP_WIDTH, APP_HEIGHT);
+        window = SDLUtilities::CreateWindow(APP_WINDOWED_WIDTH, APP_WINDOWED_HEIGHT);
 
         if (window == nullptr)
         {
             throw std::runtime_error("Window Creation Failed: " + std::string(SDL_GetError()));
+        }
+    }
+
+    void WindowManager::UpdateWindowedResolution()
+    {
+        SDL_GetWindowSizeInPixels(window, &windowedWidth, &windowedHeight);
+    }
+
+    void WindowManager::ToggleFullscreen()
+    {
+        isFullscreen = !isFullscreen;
+        SDL_SetWindowFullscreen(window, isFullscreen);
+
+        if (!isFullscreen)
+        {
+            SDL_SetWindowSize(window, windowedWidth, windowedHeight);
         }
     }
 
@@ -27,8 +42,16 @@ namespace Beer::Core
         SDL_Quit();
     }
 
+    void WindowManager::QuitApplication()
+    {
+        SDL_Event quitEvent;
+        quitEvent.type = SDL_EVENT_QUIT;
+        SDL_PushEvent(&quitEvent);
+    }
+
     SDL_Window* WindowManager::GetWindow() const
     {
         return window;
     }
+
 } // namespace Beer::Core

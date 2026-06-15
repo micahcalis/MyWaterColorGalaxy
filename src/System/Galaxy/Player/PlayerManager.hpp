@@ -8,6 +8,7 @@
 #include "System/Delegates/Delegate.hpp"
 #include "System/Galaxy/Player/PlayerController.hpp"
 #include "System/Galaxy/Player/PlayerInput.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 
 namespace Beer::System
 {
@@ -35,6 +36,8 @@ namespace Beer::System
 
         void Update() override;
         void HandleFade();
+        void LoadFromSerialized(const SerializableExplorer& serializableExplorer);
+        void TogglePhotoMode();
 
         bool GetPhotoMode() const { return photoMode; }
     };

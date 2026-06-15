@@ -21,15 +21,13 @@ namespace Beer::System
     {
         processingBuffers = std::make_unique<Rendering::WatercolorProcessingBuffers>();
 
-        waterColorLowerResBlitPass = Rendering::IRenderPass::FetchFromRegister<Rendering::BlitMainColorPass>(
-            Rendering::WC_BLIT_PASS,
+        waterColorLowerResBlitPass = std::make_unique<Rendering::BlitMainColorPass>(
             Rendering::WC_COLORBLIT_TEX_A,
             Rendering::WC_BLIT_RESOLUTION,
             Rendering::RenderPassEvent::WATERCOLOR,
             0);
 
-        blurHorizontalPass = Rendering::IRenderPass::FetchFromRegister<Rendering::GaussianBlurPass>(
-            Rendering::WC_BLUR_PASS_A,
+        blurHorizontalPass = std::make_unique<Rendering::GaussianBlurPass>(
             Rendering::WC_COLORBLIT_TEX_A,
             Rendering::WC_COLORBLIT_TEX_B,
             Rendering::WC_BLIT_RESOLUTION,
@@ -39,8 +37,7 @@ namespace Beer::System
             Rendering::RenderPassEvent::WATERCOLOR,
             1);
 
-        blurVerticalPass = Rendering::IRenderPass::FetchFromRegister<Rendering::GaussianBlurPass>(
-            Rendering::WC_BLUR_PASS_B,
+        blurVerticalPass = std::make_unique<Rendering::GaussianBlurPass>(
             Rendering::WC_COLORBLIT_TEX_B,
             Rendering::WC_COLORBLIT_TEX_A,
             Rendering::WC_BLIT_RESOLUTION,
@@ -50,8 +47,7 @@ namespace Beer::System
             Rendering::RenderPassEvent::WATERCOLOR,
             2);
 
-        edgeBlurHorizontalPass = Rendering::IRenderPass::FetchFromRegister<Rendering::OffsetEdgeBlurPass>(
-            Rendering::WC_EDGE_BLUR_PASS_A,
+        edgeBlurHorizontalPass = std::make_unique<Rendering::OffsetEdgeBlurPass>(
             Rendering::GaussDirection::Horizontal,
             EDGE_BLUR_DEPTH,
             EDGE_BLUR_SPREAD,
@@ -59,8 +55,7 @@ namespace Beer::System
             Rendering::RenderPassEvent::WATERCOLOR,
             3);
 
-        edgeBlurVerticalPass = Rendering::IRenderPass::FetchFromRegister<Rendering::OffsetEdgeBlurPass>(
-            Rendering::WC_EDGE_BLUR_PASS_B,
+        edgeBlurVerticalPass = std::make_unique<Rendering::OffsetEdgeBlurPass>(
             Rendering::GaussDirection::Vertical,
             EDGE_BLUR_DEPTH,
             EDGE_BLUR_SPREAD,
@@ -68,19 +63,18 @@ namespace Beer::System
             Rendering::RenderPassEvent::WATERCOLOR,
             4);
 
-        watercolorPostProcessingPass = Rendering::IRenderPass::FetchFromRegister<Rendering::WatercolorPostProcessingPass>(
-            Rendering::WC_PROCESSING_PASS,
+        watercolorPostProcessingPass = std::make_unique<Rendering::WatercolorPostProcessingPass>(
             processingBuffers.get());
     }
 
     std::vector<Rendering::IRenderPass*> WatercolorSubPipeline::GetRenderPasses()
     {
-        return {waterColorLowerResBlitPass,
-            blurHorizontalPass,
-            blurVerticalPass,
-            edgeBlurHorizontalPass,
-            edgeBlurVerticalPass,
-            watercolorPostProcessingPass};
+        return {waterColorLowerResBlitPass.get(),
+            blurHorizontalPass.get(),
+            blurVerticalPass.get(),
+            edgeBlurHorizontalPass.get(),
+            edgeBlurVerticalPass.get(),
+            watercolorPostProcessingPass.get()};
     }
 
 } // namespace Beer::System

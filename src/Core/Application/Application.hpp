@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Managers/AudioManager.hpp"
+#include <memory>
 #define SDL_MAIN_HANDLED
 
 #include <vulkan/vulkan_raii.hpp>
@@ -16,7 +18,8 @@ namespace Beer::Core
     private:
         WindowManager windowManager = {};
         Renderer renderer = {};
-        System::GameManager gameManager = {};
+        std::unique_ptr<System::GameManager> gameManager = nullptr;
+        std::unique_ptr<Core::AudioManager> audioManager = nullptr;
 
     public:
         void Run();

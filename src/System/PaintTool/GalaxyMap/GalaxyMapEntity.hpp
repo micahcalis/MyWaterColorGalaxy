@@ -8,6 +8,7 @@
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 
 namespace Beer::System
 {
@@ -27,18 +28,25 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> starMaterial = nullptr;
         std::unique_ptr<UISubEntity> starEntity = nullptr;
 
+        std::shared_ptr<Rendering::Texture2D> playerIndicatorTexture = nullptr;
+        std::shared_ptr<Rendering::Material> playerIndicatorMaterial = nullptr;
+        std::unique_ptr<UISubEntity> playerIndicatorEntity = nullptr;
+
+        std::shared_ptr<Rendering::Texture2D> zoomIndicatorTexture = nullptr;
+        std::shared_ptr<Rendering::Material> zoomIndicatorMaterial = nullptr;
+        std::unique_ptr<UISubEntity> zoomIndicatorEntity = nullptr;
+
+        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
+
         Function<MouseInput> getMouseInput = nullptr;
-        Function<bool> isColorMixerOpen = nullptr;
 
     public:
         GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
-            Function<MouseInput> getMouseInput,
-            Function<bool> isColorPickerOpen);
+            Function<MouseInput> getMouseInput);
 
         void Update() override
         {
-            if (!isColorMixerOpen())
-                manager->Update();
+            manager->Update();
 
             if (NeedsUpdate())
             {
@@ -58,13 +66,16 @@ namespace Beer::System
         {
             manager = std::make_unique<GalaxyMapManager>(galaxyMapBuffer,
                 &rootTransform,
-                getMouseInput);
+                getMouseInput,
+                playerIndicatorEntity->GetTransform());
         }
 
         std::vector<UIRenderItem> GetRenderItems() override
         {
             std::vector<UIRenderItem> renderItems;
             renderItems.push_back(UIRenderItem(&rootTransform, galaxyMaterial.get()));
+            renderItems.push_back(UIRenderItem(playerIndicatorEntity->GetTransform(), playerIndicatorMaterial.get()));
+            renderItems.push_back(UIRenderItem(zoomIndicatorEntity->GetTransform(), zoomIndicatorMaterial.get()));
 
             if (starEntity != nullptr)
             {
@@ -73,6 +84,11 @@ namespace Beer::System
 
             renderItems.append_range(galaxyMapBuffer->GetRenderItems());
 
+            if (helpButtonSubEntity != nullptr)
+            {
+                renderItems.append_range(helpButtonSubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
 
@@ -80,6 +96,9 @@ namespace Beer::System
         void InitializePerlinWorleyTex();
         void InitializeStar();
         void InitializePerlinTex();
+        void InitializePlayerIndicator();
+        void InitializeZoomIndicator();
+        void InitializeHelpButton();
         void UpdateStarPosition(glm::vec2 position);
     };
 } // namespace Beer::System

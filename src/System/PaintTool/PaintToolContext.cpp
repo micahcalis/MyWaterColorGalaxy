@@ -1,8 +1,10 @@
 #include "System/PaintTool/PaintToolContext.hpp"
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
+#include "ButtonBlocker/ButtonBlockerEntity.hpp"
 #include "ColorBar/ColorBarEntity.hpp"
 #include "ColorBar/ColorBarLevel.hpp"
 #include "ColorBar/ColorBarManager.hpp"
+#include "ColorMixer/ColorMixerCursor.hpp"
 #include "ColorMixer/ColorMixerEntity.hpp"
 #include "ColorMixer/PaintSimSubPipeline.hpp"
 #include "ColorMixer/PigmentButton.hpp"
@@ -11,44 +13,69 @@
 #include "GalaxyMap/GalaxySeed.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
 #include "MenuBar/MenuBarEntity.hpp"
+#include "ModeButton/ModeButtonEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/Context/ContextType.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
+#include "Vendor/magic_enum/magic_enum.hpp"
 #include <memory>
+#include <print>
 #include <stdexcept>
 
 namespace Beer::System
 {
+    static const float FADE_DURATION = 1.0f;
+
     void PaintToolContext::Load()
     {
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
             std::string(Rendering::UI_PASS));
 
+        transitionPass = Rendering::IRenderPass::FetchFromRegister<Rendering::FullscreenTransitionPass>(
+            std::string(Rendering::TRANSITION_PASS));
+
+        if (!transitionPass->HasMaterial())
+        {
+            auto transitionMaterial = std::make_shared<Rendering::Material>("Blit/SpaceTransitionBlit");
+            transitionPass->SetMaterial(transitionMaterial);
+        }
+
+        if (initialFadeState == Rendering::FadeState::In)
+        {
+            transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_DURATION);
+        }
+
         InitializeColorPicker();
         InitializeGalaxyMap();
         InitializeToolBar();
+        InitializeButtonBlocker();
         InitializeMenuBar();
         InitializeColorBar();
         InitializeBrushSizeBar();
         InitializeHoloCursor();
+        InitializeModeButton();
 
         TryOpenMap();
 
         Cursor::SetCursorMode(CursorMode::Unlocked);
     }
 
-    SerializablePaintSession PaintToolContext::GetSerializedData() const
+    SerializableGalaxyMap PaintToolContext::GetSerializedData() const
     {
-        SerializablePaintSession serializedData{};
+        SerializableGalaxyMap serializedData{};
         serializedData.Galaxy = galaxyMapBuffer->GetSerializableGalaxy();
         serializedData.ToolHistory = SerializePaintTool();
+        serializedData.ExplorerHistory = serializedGalaxyMap.ExplorerHistory;
         return serializedData;
     }
 
@@ -90,12 +117,23 @@ namespace Beer::System
         {
             hologramCursorEntity->Update();
         }
+
+        if (modeButtonEntity != nullptr)
+        {
+            modeButtonEntity->Update();
+        }
+
+        if (buttonBlockerEntity != nullptr)
+        {
+            buttonBlockerEntity->Update();
+        }
     }
 
     std::vector<Rendering::IRenderPass*> PaintToolContext::GetRenderPasses()
     {
         std::vector<Rendering::IRenderPass*> passes;
         passes.push_back(drawUIPass);
+        passes.push_back(transitionPass);
 
         if (colorMixerEntity != nullptr)
         {
@@ -108,7 +146,7 @@ namespace Beer::System
 
     void PaintToolContext::InitializeColorPicker()
     {
-        colorMixerEntity = registry.CreateEntity<ColorMixerEntity>();
+        colorMixerEntity = registry.CreateEntity<ColorMixerEntity>(getMouseInput);
 
         paintSimSubPipeline = std::make_unique<PaintSimSubPipeline>(
             colorMixerEntity->GetColorMixerMat(),
@@ -134,8 +172,7 @@ namespace Beer::System
             return colorMixerEntity->GetMixerManager()->GetColorPicker()->GetState();
         });
 
-        colorMixerEntity->InitializeCloseButton();
-        colorMixerEntity->Close();
+        colorMixerEntity->GetMixerManager()->SetCurrentPigmentByIndex(0);
     }
 
     void PaintToolContext::InitializeColorBar()
@@ -145,23 +182,29 @@ namespace Beer::System
             throw std::runtime_error("Trying to Initialize Color Bar when Color Mixer or Menu Bar is null!");
         }
 
-        Function<void> openColorPicker = [this]() -> void { colorMixerEntity->Open(); };
         Function<void, glm::vec4> setColorDisplayColor = [this](glm::vec4 color) -> void { colorMixerEntity->SetColorDisplayColor(color); };
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = [this](glm::vec4 newColor, ColorBarLevel level) -> void { galaxyMapBuffer->SetColorByLevel(newColor, level); };
         Function<std::array<glm::vec4, 4>> getGalaxyColors = [this]() -> std::array<glm::vec4, 4> { return galaxyMapBuffer->GetGalaxyColors(); };
+        Function<void> pickerSelectColor = [this]() -> void { colorMixerEntity->GetMixerManager()->GetColorPicker()->SelectColor(); };
 
         Function<Rendering::Texture2D*> getBrushTexture =
             [this]() -> Rendering::Texture2D* {
             GalaxyBrushType brushType = galaxyMapEntity->GetMapManager()->GetCursor()->Brush;
+
+            if (!IsGalaxyComponent(brushType))
+            {
+                brushType = GalaxyBrushType::Planet;
+            }
+
             return galaxyMapEntity->GetMapManager()->GetCursor()->GetFactory()->GetTexture(brushType);
         };
 
         colorBarEntity = registry.CreateEntity<ColorBarEntity>(getMouseInput,
-            openColorPicker,
             setColorDisplayColor,
             setGalaxyBufferColor,
             getGalaxyColors,
             getBrushTexture,
+            pickerSelectColor,
             &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
             &colorMixerEntity->OnColorMixerClosed,
             &menuBarEntity->GetMenuBarManager()->OnNewSeed);
@@ -171,24 +214,51 @@ namespace Beer::System
         galaxyMapEntity->GetMapManager()->OnNewBrush.Subscribe([this](GalaxyBrushType type) -> void {
             colorBarEntity->GetColorBarManager()->UpdateDisplayMaterials();
         });
+
+        Function<void, PigmentType> deselectColorBar = [this](PigmentType pigment) -> void { colorBarEntity->GetColorBarManager()->DeselectColors(); };
+        Function<void, glm::vec4> deselectPigments = [this](glm::vec4 color) -> void { colorMixerEntity->GetMixerManager()->DeselectPigments(); };
+
+        colorMixerEntity->GetMixerManager()->OnPigmentClicked.Subscribe(deselectColorBar);
+        colorBarEntity->GetColorBarManager()->OnColorClicked.Subscribe(deselectPigments);
+
+        Function<void, glm::vec4> setMixerCursor = [this](glm::vec4 color) -> void {
+            colorMixerEntity->GetMixerManager()->GetMixerCursor()->SetCursor(MixerCursorType::Picker, color);
+        };
+
+        colorBarEntity->GetColorBarManager()->OnColorClicked.Subscribe(setMixerCursor);
     }
 
     void PaintToolContext::InitializeMenuBar()
     {
-        if (galaxyMapEntity == nullptr || toolBarEntity == nullptr)
+        if (galaxyMapEntity == nullptr || toolBarEntity == nullptr || buttonBlockerEntity == nullptr)
         {
-            throw std::runtime_error("Trying to Initialize Menu Bar when Galaxy Map or Tool Bar Entity is null!");
+            throw std::runtime_error("Trying to Initialize Menu Bar when Galaxy Map or Tool Bar Entity or Button Blocker is null!");
         }
 
         Function<void> clearHistory = [this]() -> void { toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory(); };
 
         Function<void> saveMap = [this]() -> void {
-            SerializablePaintSession paintSession = GetSerializedData();
-            mapHandler.Save(paintSession);
+            SerializableGalaxyMap serializedGalaxyMap = GetSerializedData();
+            mapHandler.Save(serializedGalaxyMap);
             OnGalaxyFly.Invoke();
         };
 
-        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(), clearHistory, saveMap);
+        Function<void> onBackToTitle = [this]() -> void {
+            SerializableGalaxyMap serializedGalaxyMap = GetSerializedData();
+            mapHandler.Save(serializedGalaxyMap);
+            OnBackToTitle.Invoke();
+        };
+
+        Function<void> enableBlock = [this]() -> void {
+            buttonBlockerEntity->SetTreeEnabled(true);
+        };
+
+        menuBarEntity = registry.CreateEntity<MenuBarEntity>(galaxyMapBuffer.get(),
+            clearHistory,
+            saveMap,
+            onBackToTitle,
+            enableBlock);
+
         menuBarEntity->InitializeButtonEntities();
     }
 
@@ -201,9 +271,7 @@ namespace Beer::System
 
         galaxyMapBuffer = std::make_unique<GalaxyMapBuffer>(GalaxySeed());
 
-        Function<bool> isColorMixerOpen = [this]() -> bool { return colorMixerEntity->GetEnabled(); };
-
-        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get(), getMouseInput, isColorMixerOpen);
+        galaxyMapEntity = registry.CreateEntity<GalaxyMapEntity>(galaxyMapBuffer.get(), getMouseInput);
 
         galaxyMapEntity->InitializeCursor(
             [this](ColorBarLevel level)
@@ -274,16 +342,57 @@ namespace Beer::System
             getBrushTexture);
     }
 
+    void PaintToolContext::InitializeModeButton()
+    {
+        if (colorMixerEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Mode Button when Color Mixer is null!");
+        }
+
+        if (brushSizeBarEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Mode Button when Brush Size Bar is null!");
+        }
+
+        if (toolBarEntity == nullptr)
+        {
+            throw std::runtime_error("Trying to Mode Button when Tool Bar is null!");
+        }
+
+        Function<void, bool> setColorModeActive = [this](bool enabled) -> void {
+            colorBarEntity->SetTreeEnabled(enabled);
+            colorMixerEntity->SetTreeEnabled(enabled);
+            colorMixerEntity->GetMixerManager()->SetEnabled(enabled);
+        };
+
+        Function<void, bool> setBrushModeActive = [this](bool enabled) -> void {
+            toolBarEntity->SetTreeEnabled(enabled);
+            brushSizeBarEntity->SetTreeEnabled(enabled); };
+
+        modeButtonEntity = registry.CreateEntity<ModeButtonEntity>(setColorModeActive,
+            setBrushModeActive,
+            getTabKeyInput);
+
+        modeButtonEntity->InitializeModeButton();
+    }
+
+    void PaintToolContext::InitializeButtonBlocker()
+    {
+        buttonBlockerEntity = registry.CreateEntity<ButtonBlockerEntity>(ContextType::PaintTool);
+        buttonBlockerEntity->InitializeBlocker();
+        buttonBlockerEntity->SetTreeEnabled(false);
+    }
+
     void PaintToolContext::TryOpenMap()
     {
         if (!mapHandler.IsSaved())
             return;
 
-        SerializablePaintSession serializedData = mapHandler.Load();
-        galaxyMapEntity->GetMapManager()->ReloadFromSerialized(serializedData);
-        colorBarEntity->GetColorBarManager()->ReloadFromSerialized(serializedData.ToolHistory);
+        serializedGalaxyMap = mapHandler.Load();
+        galaxyMapEntity->GetMapManager()->ReloadFromSerialized(serializedGalaxyMap);
+        colorBarEntity->GetColorBarManager()->ReloadFromSerialized(serializedGalaxyMap.ToolHistory);
         toolBarEntity->GetToolBarManager()->GetHistoryController()->ClearHistory();
-        toolBarEntity->GetToolBarManager()->SetCurrentBrush(static_cast<GalaxyBrushType>(serializedData.ToolHistory.SelectedType));
+        toolBarEntity->GetToolBarManager()->SetCurrentBrush(static_cast<GalaxyBrushType>(serializedGalaxyMap.ToolHistory.SelectedType));
 
         float normalizedSize = galaxyMapEntity->GetMapManager()->GetCursor()->GetNormalizedSize();
         brushSizeBarEntity->GetBrushSizeBarManager()->GetSlider()->ForceUpdate(normalizedSize);

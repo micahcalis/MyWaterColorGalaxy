@@ -14,6 +14,8 @@ namespace Beer::System
         PaintTool = 1 << 3,
         Galaxy = 1 << 4,
         GalaxyUserInt = 1 << 5,
+        GalaxyBackground = 1 << 6,
+        SelectionMenu = 1 << 7,
         All = ~0u
     };
 
@@ -34,6 +36,8 @@ namespace Beer::System
     constexpr uint32_t CTXT_PAINT_TOOL_BITS = static_cast<uint32_t>(ContextType::PaintTool);
     constexpr uint32_t CTXT_GALAXY_BITS = static_cast<uint32_t>(ContextType::Galaxy);
     constexpr uint32_t CTXT_GALAXY_UI_BITS = static_cast<uint32_t>(ContextType::GalaxyUserInt);
+    constexpr uint32_t CTXT_GALAXY_BG_BITS = static_cast<uint32_t>(ContextType::GalaxyBackground);
+    constexpr uint32_t CTXT_SELECTION_MENU_BITS = static_cast<uint32_t>(ContextType::SelectionMenu);
     constexpr uint32_t CTXT_ALL_BITS = static_cast<uint32_t>(ContextType::All);
 
     constexpr std::array<ContextType, 5> AVAILABLE_CONTEXTS = {

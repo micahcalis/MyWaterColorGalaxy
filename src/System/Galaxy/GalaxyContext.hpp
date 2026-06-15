@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Galaxy/General/GalaxyEntity.hpp"
 #include "System/Galaxy/General/SunEntity.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
@@ -13,6 +14,7 @@
 #include "System/Galaxy/WatercolorSubPipeline.hpp"
 #include "System/Light/LightEntity.hpp"
 #include "System/Serialization/MapHandler.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <vector>
 
@@ -32,14 +34,17 @@ namespace Beer::System
 
         Function<PlayerInput> getPlayerInput = nullptr;
         Function<bool> getReturnPressed = nullptr;
+        bool isReturning = false;
 
         std::unique_ptr<WatercolorSubPipeline> watercolorSubPipeline = nullptr;
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;
         Rendering::DrawTransparentPass* transparentPass = nullptr;
+        Rendering::FullscreenTransitionPass* transitionPass = nullptr;
 
         MapHandler mapHandler;
+        SerializableGalaxyMap serializedMap{};
 
     public:
         GalaxyContext(Function<PlayerInput> getPlayerInput,
@@ -54,6 +59,8 @@ namespace Beer::System
         void Load() override;
         void Update() override;
         std::vector<Rendering::IRenderPass*> GetRenderPasses() override;
+        void FadeReturn();
+        void TogglePhotoMode();
 
     private:
         void InitializePlayer();
@@ -62,5 +69,7 @@ namespace Beer::System
         void InitializeRenderPasses();
         void TryLoadMap();
         void HandleReturn();
+        SerializableExplorer SerializeExplorer();
+        glm::vec3 GetScaledPlayerPosition() const;
     };
 } // namespace Beer::System

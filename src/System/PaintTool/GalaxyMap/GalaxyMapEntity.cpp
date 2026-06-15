@@ -2,6 +2,7 @@
 #include "Core/Application/Renderer/Screen.hpp"
 #include "GalaxyComponent.hpp"
 #include "Rendering/Compute/ComputeContext.hpp"
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -12,6 +13,7 @@
 namespace Beer::System
 {
     static const float MAP_SCALE = 2.0f;
+    static const glm::vec2 MAP_OFFSET = glm::vec2(0.25f, 0);
     static const float STARS_FREQUENCY = 10.0f;
     static const float STARS_SCALE = 0.2f;
     static const glm::vec4 STARS_COLOR = glm::vec4(0.97f, 0.97f, 0.7f, 1.0f);
@@ -28,11 +30,19 @@ namespace Beer::System
     static const float CENTER_STAR_GRAD_INTENSITY = 2.0f;
     static const float EDGE_RING_INTENSITY = 0.5f;
     static const int CENTER_STAR_GRAD_STEPS = 6;
+    static const float PLAYER_INDICATOR_SCALE = 0.1f;
+    static const float ZOOM_INDICATOR_SCALE = 0.2f;
+    static const glm::vec2 ZOOM_INDICATOR_OFFSET = glm::vec2(0.05f, 0);
+
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.075f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(0.0f, -0.05f);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.7f, 0.4f);
+    static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
+    static const std::string HELP_TEXT = "This is your Galaxy Map! Here you can place and erase all your galaxy objects. Want to start over? Select ‘New’, which will replace your current map with a new empty map. Ready to explore your galaxy? Press ‘Fly’ to enter your generated creation!";
 
     GalaxyMapEntity::GalaxyMapEntity(GalaxyMapBuffer* galaxyMapBuffer,
-        Function<MouseInput> getMouseInput,
-        Function<bool> isColorMixerOpen)
-        : galaxyMapBuffer(galaxyMapBuffer), getMouseInput(getMouseInput), isColorMixerOpen(isColorMixerOpen), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
+        Function<MouseInput> getMouseInput)
+        : galaxyMapBuffer(galaxyMapBuffer), getMouseInput(getMouseInput), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         galaxyMaterial = std::make_shared<Rendering::Material>("UI/GalaxyMapSprite");
         galaxyMapBuffer->SetMapMaterial(galaxyMaterial);
@@ -53,10 +63,13 @@ namespace Beer::System
         rootTransform.Anchor = AnchorMode::Center;
         rootTransform.Pivot = AnchorMode::Center;
         rootTransform.Scale = glm::vec2(MAP_SCALE);
+        rootTransform.Position = MAP_OFFSET;
 
         InitializePerlinWorleyTex();
         InitializeStar();
         InitializePerlinTex();
+        InitializePlayerIndicator();
+        InitializeZoomIndicator();
         MarkDirty();
     }
 
@@ -142,5 +155,68 @@ namespace Beer::System
         mapManager->InitializeCursor(getColor, starEntity->GetTransform());
         mapManager->GetCursor()->OnComponentPlaced.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
         mapManager->GetCursor()->OnComponentErased.Subscribe([this](uint32_t, GalaxyComponentData, bool) -> void { MarkDirty(); });
+
+        InitializeHelpButton();
+    }
+
+    void GalaxyMapEntity::InitializePlayerIndicator()
+    {
+        UITransform indicatorTransform{};
+        indicatorTransform.Anchor = AnchorMode::BottomLeft;
+        indicatorTransform.Pivot = AnchorMode::Center;
+        indicatorTransform.Scale = glm::vec2(PLAYER_INDICATOR_SCALE);
+        indicatorTransform.Depth = 0.1f;
+
+        playerIndicatorEntity = std::make_unique<UISubEntity>(indicatorTransform);
+        rootTransform.BindChild(playerIndicatorEntity->GetTransform());
+
+        playerIndicatorTexture = std::make_shared<Rendering::Texture2D>("UI/GalaxyMap/Tex_PlayerIndicator");
+        playerIndicatorMaterial = std::make_shared<Rendering::Material>("UI/PlayerIndicatorSprite");
+        playerIndicatorMaterial->SetTexture("_SpriteTex", playerIndicatorTexture.get());
+        playerIndicatorMaterial->SetColor("_TintColor", glm::vec4(1));
+    }
+
+    void GalaxyMapEntity::InitializeZoomIndicator()
+    {
+        UITransform zoomTransform{};
+        zoomTransform.Anchor = AnchorMode::TopRight;
+        zoomTransform.Pivot = AnchorMode::TopLeft;
+        zoomTransform.Scale = glm::vec2(ZOOM_INDICATOR_SCALE);
+        zoomTransform.Position = ZOOM_INDICATOR_OFFSET;
+
+        zoomIndicatorEntity = std::make_unique<UISubEntity>(zoomTransform);
+        rootTransform.BindChild(zoomIndicatorEntity->GetTransform());
+
+        zoomIndicatorTexture = std::make_shared<Rendering::Texture2D>("UI/GalaxyMap/Tex_ZoomIndicator");
+        zoomIndicatorMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        zoomIndicatorMaterial->SetTexture("_SpriteTex", zoomIndicatorTexture.get());
+        zoomIndicatorMaterial->SetColor("_TintColor", glm::vec4(1));
+        zoomIndicatorMaterial->SetVector("_Scale", glm::vec4(1));
+    }
+
+    void GalaxyMapEntity::InitializeHelpButton()
+    {
+        UITransform helpButtonTransform{};
+        helpButtonTransform.Anchor = AnchorMode::BottomMiddle;
+        helpButtonTransform.Pivot = AnchorMode::TopMiddle;
+        helpButtonTransform.Scale = HELP_BUTTON_SCALE;
+        helpButtonTransform.Position = HELP_BUTTON_OFFSET;
+        helpButtonTransform.Depth = 0.5f;
+
+        UITransform helpPopupTransform{};
+        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
+        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
+        helpPopupTransform.Scale = HELP_POPUP_SCALE;
+        helpPopupTransform.Position = HELP_POPUP_OFFSET;
+        helpPopupTransform.Depth = 0.6f;
+
+        helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
+            zoomIndicatorEntity->GetTransform(),
+            helpButtonTransform,
+            HELP_TEXT,
+            helpPopupTransform);
+
+        GetMapManager()->SetHelpToggle(helpButtonSubEntity.get(),
+            [this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

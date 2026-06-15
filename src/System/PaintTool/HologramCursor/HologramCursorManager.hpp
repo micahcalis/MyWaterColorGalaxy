@@ -25,6 +25,7 @@ namespace Beer::System
         Function<MouseInput> getMouseInput = nullptr;
         Function<Rendering::Texture2D*, GalaxyBrushType> getBrushTexture = nullptr;
         CursorState prevState{};
+        glm::vec2 prevMousePos{};
 
     public:
         HologramCursorManager(UITransform* cursorTransform,
@@ -40,24 +41,33 @@ namespace Beer::System
         void Update() override
         {
             CursorState currentState = getCursorState();
+            MouseInput currentMouse = getMouseInput();
+            bool isDirty = false;
 
             if (prevState.IsActive != currentState.IsActive)
             {
-                SetMaterial(currentState.IsActive, currentState.Brush);
                 cursorTransform->SetEnabled(currentState.IsActive);
-                OnDirty.Invoke();
+                isDirty = true;
             }
 
             if (currentState.IsActive)
             {
-                SetTransform(getMouseInput().PixelPos, currentState.BrushCanvasSize);
-                OnDirty.Invoke();
+                if (prevState.CanUseCursor != currentState.CanUseCursor || prevState.Brush != currentState.Brush || prevState.IsActive != currentState.IsActive)
+                {
+                    SetMaterial(currentState.CanUseCursor, currentState.Brush);
+                    isDirty = true;
+                }
+                if (prevMousePos != currentMouse.PixelPos || prevState.BrushCanvasSize != currentState.BrushCanvasSize)
+                {
+                    SetTransform(currentMouse.PixelPos, currentState.BrushCanvasSize);
+                    prevMousePos = currentMouse.PixelPos;
+                    isDirty = true;
+                }
             }
 
-            if (prevState.CanUseCursor != currentState.CanUseCursor
-                || prevState.Brush != currentState.Brush)
+            if (isDirty)
             {
-                SetMaterial(currentState.CanUseCursor, currentState.Brush);
+                OnDirty.Invoke();
             }
 
             prevState = currentState;

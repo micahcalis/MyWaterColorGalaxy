@@ -83,10 +83,13 @@ namespace Beer::System
             GetMousePosition(),
             isLeftDown && !wasLeftDown,
             isLeftDown,
+            wasLeftDown && !isLeftDown,
             isRightDown && !wasRightDown,
             isRightDown,
+            wasRightDown && !isRightDown,
             isMiddleDown && !wasMiddleDown,
             isMiddleDown,
+            wasMiddleDown && !isMiddleDown,
             scrollY};
     }
 
@@ -108,6 +111,11 @@ namespace Beer::System
     ButtonInput InputManager::GetPButtonInput()
     {
         return pKeyCache.UpdateInput();
+    }
+
+    ButtonInput InputManager::GetEscButtonInput()
+    {
+        return escKeyCache.UpdateInput();
     }
 
 } // namespace Beer::System

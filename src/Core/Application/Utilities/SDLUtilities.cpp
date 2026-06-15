@@ -8,10 +8,14 @@ namespace Beer::Core
 {
     SDL_Window* SDLUtilities::CreateWindow(int width, int height)
     {
-        return SDL_CreateWindow("Vulkan",
+        SDL_Window* window = SDL_CreateWindow("My Watercolor Galaxy",
             width,
             height,
-            SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+            SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_RESIZABLE);
+
+        SDL_SetWindowFullscreen(window, true);
+
+        return window;
     }
 
     bool SDLUtilities::SDLInitialize()

@@ -150,6 +150,15 @@ namespace Beer::Core
         return GetBasePath(subPath);
     }
 
+    static constexpr std::string_view WAV_HEAD = "assets/audio/";
+    static constexpr std::string_view WAV_TAIL = ".wav";
+
+    std::filesystem::path AssetUtilities::GetAudioAssetPath(const std::string& wavName)
+    {
+        std::string subPath = std::string(WAV_HEAD) + wavName + std::string(WAV_TAIL);
+        return GetBasePath(subPath);
+    }
+
     [[nodiscard]] vk::raii::ShaderModule AssetUtilities::CreateShaderModule(const std::vector<char>& code,
         const vk::raii::Device& device)
     {

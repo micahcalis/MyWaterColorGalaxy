@@ -1,6 +1,9 @@
 #pragma once
 
+#include "System/Base/Clock/Clock.hpp"
+#include "System/Base/Clock/Timer.hpp"
 #include "System/Components/UI/Button.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include <print>
 
 namespace Beer::System
@@ -57,28 +60,31 @@ namespace Beer::System
     class PigmentButton
     {
     private:
-        std::unique_ptr<Button> buttonHandle;
+        std::unique_ptr<Button> buttonHandle = nullptr;
         PigmentType pigment;
-        Function<void, PigmentType> setPigment;
+        Function<void, PigmentType, UITransform*> pigmentCallback = nullptr;
 
     public:
         PigmentButton(UITransform* transform,
             Rendering::Material* spriteMaterial,
             PigmentType pigment,
-            Function<void, PigmentType> setPigment)
-            : pigment(pigment), setPigment(setPigment)
+            Function<void, PigmentType, UITransform*> pigmentCallback)
+            : pigment(pigment)
+            , pigmentCallback(pigmentCallback)
         {
             buttonHandle = std::make_unique<Button>(transform, spriteMaterial);
             buttonHandle->SetOnClick([this]() -> void { ClickedCallback(); });
         }
 
-    private:
+    public:
         void ClickedCallback()
         {
-            if (setPigment == nullptr)
+            if (pigmentCallback == nullptr)
+            {
                 return;
+            }
 
-            setPigment(pigment);
+            pigmentCallback(pigment, buttonHandle->GetTransform());
         }
     };
 } // namespace Beer::System

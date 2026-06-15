@@ -49,10 +49,8 @@ namespace Text
         {
             float3 msd = atlas.Sample(uv).rgb;
             float sd = Math.Median(msd.r, msd.g, msd.b);
-            float2 dx = ddx(uv);
-            float2 dy = ddy(uv);
-            float toPixels = 8.0 * rsqrt(max(dot(dx, dx), dot(dy, dy)));
-            float screenPxDistance = toPixels * (sd - 0.5);
+            float screenPxDistance = (sd - 0.5) / max(fwidth(sd), 0.0001);
+    
             return clamp(screenPxDistance + 0.5, 0.0, 1.0);
         }
     };

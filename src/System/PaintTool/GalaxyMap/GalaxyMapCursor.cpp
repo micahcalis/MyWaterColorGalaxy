@@ -1,5 +1,6 @@
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
 #include "Core/Application/Renderer/Screen.hpp"
+#include "GalaxyBrushType.hpp"
 #include "GalaxyComponent.hpp"
 #include "GalaxyMapBuffer.hpp"
 #include "GalaxyMapCursor.hpp"
@@ -18,12 +19,20 @@ namespace Beer::System
     static const float CURSOR_MIN = 0.02f;
     static const float CURSOR_MAX = 0.15f;
     static const float TILT_SCALE = glm::radians(50.0f);
+    static const float ZOOM_SENSITIVITY = 6.0f;
 
     GalaxyMapCursor::GalaxyMapCursor(GalaxyMapBuffer* galaxyMapBuffer,
         UITransform* mapTransform,
         UITransform* sunTransform,
-        Function<glm::vec4, ColorBarLevel> getColor)
-        : galaxyMapBuffer(galaxyMapBuffer), mapTransform(mapTransform), sunTransform(sunTransform), getColor(getColor)
+        Function<glm::vec4, ColorBarLevel> getColor,
+        Function<void, glm::vec2, float> setZoom,
+        Function<void, glm::vec2> setPanning)
+        : galaxyMapBuffer(galaxyMapBuffer)
+        , mapTransform(mapTransform)
+        , sunTransform(sunTransform)
+        , getColor(getColor)
+        , setZoom(setZoom)
+        , setPanning(setPanning)
     {
         factory = std::make_unique<GalaxySpriteFactory>();
         SetSize(0.5f);
@@ -31,14 +40,20 @@ namespace Beer::System
 
     void GalaxyMapCursor::Update(MouseInput input,
         float zoomScale,
-        glm::vec2 panning)
+        glm::vec2 panning,
+        bool insideRect)
     {
         glm::vec2 zoomedMousePos = ApplyZoom(input.PixelPos, zoomScale, panning);
 
         PixelRect cursorRect = GetCursorRect(zoomedMousePos);
         GalaxyComponentHitInfo hitInfo = galaxyMapBuffer->CollisionCheck(cursorRect);
 
-        if (cursorRect.Intersects(sunTransform->Rect))
+        bool overSun = cursorRect.Intersects(sunTransform->Rect);
+
+        if (Brush == GalaxyBrushType::Hand || Brush == GalaxyBrushType::MagnifyingGlass)
+        {
+            CanUseCursor = true;
+        } else if (overSun)
         {
             CanUseCursor = false;
             return;
@@ -46,7 +61,7 @@ namespace Beer::System
 
         bool hit = hitInfo.Hit;
 
-        if (Brush != GalaxyBrushType::Eraser)
+        if (IsGalaxyComponent(Brush))
         {
             if (!hit && input.leftClickStart)
             {
@@ -54,13 +69,39 @@ namespace Beer::System
                 Place(GetNewData(mapSpacePosition));
             }
             CanUseCursor = !hit;
-        } else
+        } else if (Brush == GalaxyBrushType::Eraser)
         {
             if (hit && input.leftClickStart)
             {
                 Erase(hitInfo.Index);
             }
             CanUseCursor = hit;
+        } else if (Brush == GalaxyBrushType::MagnifyingGlass)
+        {
+            if (insideRect && input.leftClickStart)
+            {
+                SetZoomAnchor(input.PixelPos);
+                zooming = true;
+            } else if (input.LeftClickHold && zooming)
+            {
+                Zoom(input.PixelPos);
+            } else if (input.LeftClickEnd)
+            {
+                zooming = false;
+            }
+        } else if (Brush == GalaxyBrushType::Hand)
+        {
+            if (insideRect && input.leftClickStart)
+            {
+                isPanning = true;
+                lastMousePos = input.PixelPos;
+            } else if (input.LeftClickHold && isPanning)
+            {
+                Pan(input.PixelPos);
+            } else if (input.LeftClickEnd)
+            {
+                isPanning = false;
+            }
         }
     }
 
@@ -188,5 +229,27 @@ namespace Beer::System
         data.Tilt *= TILT_SCALE;
 
         return data;
+    }
+
+    void GalaxyMapCursor::SetZoomAnchor(glm::vec2 initialPos)
+    {
+        zoomAnchor = initialPos;
+        lastMousePos = initialPos;
+    }
+
+    void GalaxyMapCursor::Zoom(glm::vec2 pixelPos)
+    {
+        float offset = lastMousePos.x - pixelPos.x;
+        float normalizedOffset = offset / Core::Screen::RectUnitLength();
+
+        setZoom(zoomAnchor, normalizedOffset * ZOOM_SENSITIVITY);
+        lastMousePos = pixelPos;
+    }
+
+    void GalaxyMapCursor::Pan(glm::vec2 pixelPos)
+    {
+        glm::vec2 delta = pixelPos - lastMousePos;
+        setPanning(delta);
+        lastMousePos = pixelPos;
     }
 } // namespace Beer::System
