@@ -1,6 +1,7 @@
 #include "System/Galaxy/GalaxyContext.hpp"
 #include "General/Buffer/GalaxyObjectBuffer.hpp"
 #include "General/GalaxyEntity.hpp"
+#include "Player/PlayerVFXEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
@@ -43,6 +44,11 @@ namespace Beer::System
         if (playerEntity != nullptr)
         {
             playerEntity->Update();
+        }
+
+        if (playerVFXEntity != nullptr)
+        {
+            playerVFXEntity->Update();
         }
 
         if (galaxyEntity != nullptr)
@@ -100,6 +106,18 @@ namespace Beer::System
 
         playerEntity = registry.CreateEntity<PlayerEntity>(getPlayerInput,
             &OnSetPhotoMode,
+            galaxyEntity->GetContainer()->GetControlNoiseVolume());
+
+        Function<Transform> getPlayerTransformData = [this]() -> Transform {
+            return *playerEntity->GetTransform();
+        };
+
+        Function<bool> isBoosting = [this]() -> bool {
+            return getPlayerInput().IsBoosting;
+        };
+
+        playerVFXEntity = registry.CreateEntity<PlayerVFXEntity>(getPlayerTransformData,
+            isBoosting,
             galaxyEntity->GetContainer()->GetControlNoiseVolume());
     }
 

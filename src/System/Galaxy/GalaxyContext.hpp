@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Player/PlayerVFXEntity.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Galaxy/General/GalaxyEntity.hpp"
 #include "System/Galaxy/General/SunEntity.hpp"
@@ -28,6 +29,7 @@ namespace Beer::System
 
     private:
         PlayerEntity* playerEntity = nullptr;
+        PlayerVFXEntity* playerVFXEntity = nullptr;
         GalaxyEntity* galaxyEntity = nullptr;
         SunEntity* sunEntity = nullptr;
         StarsEntity* starsEntity = nullptr;
