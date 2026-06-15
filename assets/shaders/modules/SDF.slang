@@ -89,6 +89,13 @@ namespace SDF
             return dot(position, normal) + height;
         }
 
+        public float Line(float3 position, float3 a, float3 b)
+        {
+            float3 p = position;
+            float k = dot(p - a, b - a) / dot(b - a, b - a);
+            return distance(p, lerp(a, b, saturate(k)));
+        }
+
         public float Star2D(float2 position, float radius, int number, float sharpness)
         {
             float an = 3.14159265359 / float(number);

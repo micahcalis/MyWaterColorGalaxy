@@ -16,6 +16,8 @@ BIND_MATERIAL_DATA
 cbuffer MaterialData
 {
     float4 _SaucerColor;
+    float4 _FinsColor;
+    float4 _AlienColor;
     float _SaucerMetallic;
     float _SaucerSmoothness;
     float4 _CockPitColor;
@@ -77,7 +79,13 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool isFrontFace : SV_IsFron
 
     SphereTracing.Ray ray = rayAligner.GetAlignedRay();
 
-    SDF.Saucer saucerSDF = SDF.Saucer(center, scale.x * 0.8f, transform.objToWorldDirMat, _CutoffTime);
+    SDF.Saucer saucerSDF = SDF.Saucer(center, 
+        scale.x * 0.8f, 
+        transform.objToWorldDirMat, 
+        _CutoffTime,
+        _SaucerColor.rgb,
+        _FinsColor.rgb,
+        _AlienColor.rgb);
 
     SphereTracing.SphereTracer<SDF.Saucer> tracer = SphereTracing.SphereTracer<SDF.Saucer>(
         saucerSDF,
@@ -98,7 +106,7 @@ FRAG Deferred.FragData SaucerFrag(VertexData input, bool isFrontFace : SV_IsFron
         viewDirWS,
         _Hardness);
  
-    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(_SaucerColor.rgb,
+    Deferred.DeferredShadeData shadeData = Deferred.DeferredShadeData(saucerSDF.GetColor(result.Material),
         2,
         result.Position,
         result.Normal,
