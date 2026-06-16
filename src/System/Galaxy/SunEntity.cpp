@@ -17,7 +17,7 @@ namespace Beer::System
     static const float GRANULATION_NOISE_INTENSITY = 1.0f;
     static const float DEPTH_BLEED_MIN = 200.0f;
     static const float DEPTH_BLEED_MAX = 600.0f;
-    static const float GRADIENT_INTENSITY = 2.0f;
+    static const float GRADIENT_INTENSITY = 4.0f;
 
     static const uint32_t SUN_NOISE_RES = 256;
     static const VkFormat SUN_NOISE_FORMAT = VK_FORMAT_R8G8_UNORM;

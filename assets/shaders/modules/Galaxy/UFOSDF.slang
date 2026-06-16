@@ -1,6 +1,8 @@
 #include "Core/BeerMacros.slang"
 
 import SDF;
+import Noise.Hash;
+import Core.BeerCore;
 
 module UFOSDF;
 
@@ -28,7 +30,7 @@ namespace SDF
     static const float ALIEN_BODY_RADIUS = 0.07f;
     static const float ALIEN_HEAD_HEIGHT = 0.35f;
     static const float ALIEN_HEAD_RADIUS = 0.12f;
-    static const float ALIEN_ANTENNA_OFFSET = 0.135f;
+    static const float ALIEN_ANTENNA_OFFSET = 0.15f;
     static const float ALIEN_ANTENNA_TAIL_RADIUS = 0.03f;
 
     static const float COCKPIT_RADIUS = 0.35f;
@@ -102,7 +104,7 @@ namespace SDF
 
             float rim = GetRim(rotatedPos);
 
-            float base = Functions.SmoothMin(FieldOut(saucer), FieldOut(rim), 0.01f).SignedDist; 
+            float base = Functions.SmoothMin(FieldOut(saucer, SAUCER_MAT), FieldOut(rim, FINS_MAT), 0.01f).SignedDist; 
             float cockpit = Cockpit.GetCockpit(rotatedPos);
             float fins = GetFins(rotatedPos);
             float alien = GetAlien(rotatedPos);
@@ -167,8 +169,8 @@ namespace SDF
 
             float3 antennaOffset = float3(ALIEN_ANTENNA_OFFSET, ALIEN_ANTENNA_OFFSET, 0);
             float antennaBase = Functions.Line(antennaCoord, 0, antennaOffset);
-            float antennaTail = Functions.Sphere(antennaCoord - ALIEN_ANTENNA_OFFSET, ALIEN_ANTENNA_TAIL_RADIUS);
-            float antenna = Functions.SmoothMin(FieldOut(antennaBase), FieldOut(antennaTail), 0.03f).SignedDist;
+            float antennaTail = Functions.Sphere(antennaCoord - antennaOffset, ALIEN_ANTENNA_TAIL_RADIUS);
+            float antenna = Functions.SmoothMin(FieldOut(antennaBase), FieldOut(antennaTail), 0.01f).SignedDist;
 
             float headBody = Functions.SmoothMin(FieldOut(body), FieldOut(head), 0.01f).SignedDist;
             float alien = Functions.Union(FieldOut(headBody), FieldOut(antenna)).SignedDist;
@@ -246,6 +248,10 @@ namespace SDF
     static const float3 FLAME_OFFSET = float3(0.18f, 0.1f, -0.27f);
     static const float FLAME_TAPER = 4.0f;
     static const float FLAME_LENGTH = 3.0f;
+    static const float FLICKER_POS_INTENSITY = 0.015f;
+    static const float FLICKER_POS_SPEED = 20.0f;
+    static const float FLICKER_RAD_INTENSITY = 0.015f;
+    static const float FLICKER_RAD_SPEED = 30.0f;
 
     public struct Flame : SDF
     {
@@ -282,6 +288,9 @@ namespace SDF
         public FieldOut Flame(float3 localPos)
         {
             float3 flameCoord = localPos;
+            float flameRadius = FLAME_RADIUS;
+            ApplyFlicker(flameCoord, flameRadius, sign(flameCoord.x));
+
             flameCoord.x = abs(flameCoord.x);
             flameCoord -= FLAME_OFFSET;
 
@@ -289,9 +298,18 @@ namespace SDF
             float taper = 1.0 + pow(max(0.0, flameCoord.z), 2.0) * FLAME_TAPER;
             flameCoord.xy *= taper;
 
-            float flame = Functions.Sphere(flameCoord, FLAME_RADIUS);
+            float flame = Functions.Sphere(flameCoord, flameRadius);
 
             return FieldOut(flame);
+        }
+
+        private void ApplyFlicker(inout float3 coord, inout float radius, int seed)
+        {
+            float3 timeHash = Noise.Functions.Hash13(int(_Time * FLICKER_POS_SPEED), 23 + seed) - 0.5f;
+            coord += timeHash * FLICKER_POS_INTENSITY;
+
+            float radiusHash = Noise.Functions.Hash11(int(_Time * FLICKER_RAD_SPEED), 3490 + seed) - 0.5f;
+            radius += radiusHash * FLICKER_RAD_INTENSITY;
         }
 
         public float4 GetColor(float3 viewDirWS, float3 normal)
