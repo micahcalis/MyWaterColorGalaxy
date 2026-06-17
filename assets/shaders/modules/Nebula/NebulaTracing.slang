@@ -5,6 +5,7 @@ import Nebula.NebulaUtlities;
 import SphereTracing;
 import Core.Beer3D;
 import SDF;
+import Math.BeerMath;
 
 module NebulaTracing;
 
@@ -52,6 +53,70 @@ namespace Nebula
         public uint Seed;
     }
 
+    const static float3 SHAPE_WEIGHTS = float3(0.625f, 0.25f, 0.125f);
+    const static float3 DETAIL_WEIGHTS = float3(0.625f, 0.25f, 0.125f);
+
+    
+    public struct TraceInput
+    {
+        public uint MaxSteps;
+        public float StepSize;
+        public float Coverage;
+        public float DetailIntensity;
+    }
+
+    public struct TraceResult
+    {
+        public float Transmittance;
+        public float3 Color;
+        public float3 Position;
+        public float TotalDistance;
+        public bool Hit;
+
+        public __init(float3 startPos)
+        {
+            Transmittance = 1;
+            Color = (float3)0;
+            TotalDistance = 0;
+            Position = startPos;
+            Hit = false;
+        }
+    }
+
+    public interface INebulaNoiseSampler
+    {
+        public float4 GetShape(float3 uvw, float3 offset);
+        public float4 GetDetail(float3 uvw, float3 offset);
+        public float3 GetDistortion(float3 uvw, float3 offset);
+
+        public float GetShapeDensity(float3 uvw,
+            float3 offset,
+            TraceInput input)
+        {
+            float4 sample = GetShape(uvw, offset);
+            float densityBase = sample.r;
+
+            float weightedDensity = dot(sample.gba, SHAPE_WEIGHTS);
+            weightedDensity *= 1.0f - input.Coverage;
+
+            return Math.Remap(densityBase, float2(weightedDensity, 1.0f), float2(0.0f, 1.0f));
+        }
+
+        public float GetDetailDensity(float3 uvw,
+            float3 offset,
+            TraceInput input)
+        {
+            float4 sample = GetDetail(uvw, offset);
+            float densityBase = sample.r;
+
+            float weightedDensity = dot(sample.gba, SHAPE_WEIGHTS);
+            weightedDensity *= 1.0f - input.DetailIntensity;
+
+            return Math.Remap(densityBase, float2(weightedDensity, 1.0f), float2(0.0f, 1.0f));
+        }
+    }
+
+
     public interface INebulaObjectGetter
     {
         public ObjectPair GetObject(uint index);
@@ -59,17 +124,23 @@ namespace Nebula
         public bool IsValid(uint index);
     }
 
-    public struct NebulaContainer<TObjectGetter : INebulaObjectGetter>
+    const static float DENS_EPS = 1e-3f;
+
+    public struct NebulaContainer<TObjectGetter : INebulaObjectGetter,
+        TNoiseSampler : INebulaNoiseSampler>
     {
         private NebulaTile tile;
         private TObjectGetter getter;
+        private TNoiseSampler noiseSampler;
 
         public __init(NebulaTile _tile,
-            TObjectGetter _getter)
+            TObjectGetter _getter,
+            TNoiseSampler _noiseSampler)
         {
             tile = _tile;
             tile.NebulaCount = min(tile.NebulaCount, MAX_NEBULA_TILES);
             getter = _getter;
+            noiseSampler = _noiseSampler;
         }
 
         public float GetSignedDistance(float3 position)
@@ -90,42 +161,81 @@ namespace Nebula
 
             return minDist;
         }
-    }
 
-    public struct TraceInput
-    {
-        public uint MaxSteps;
-        public float StepSize;
-    }
-
-    public struct TraceResult
-    {
-        public float Density;
-        public float4 Color;
-        public float3 Position;
-        public float TotalDistance;
-        public bool Hit;
-
-        public __init(float3 startPos)
+        public float GetTotalDensity(float3 position,
+            float3 offset,
+            TraceInput input,
+            out bool insideVolumes)
         {
-            Density = 0;
-            Color = (float4)0;
-            TotalDistance = 0;
-            Position = startPos;
-            Hit = false;
+            float totalDensity = 0;
+
+            for (int i = 0; i < tile.NebulaCount; i++)
+            {
+                uint index = tile.NebulaIndices[i];
+            
+                if (!getter.IsValid(index)) 
+                    continue; 
+
+                ObjectPair object = getter.GetObject(index);
+                float sphereDist = SDF.Functions.Sphere(position - object.Position, object.Scale);
+
+                if (sphereDist > 0)
+                    continue;
+
+                insideVolumes = true;
+
+                totalDensity += GetObjDensity(object,
+                    position,
+                    offset,
+                    input);
+            }
+
+            return totalDensity;
         }
-    };
 
-    static float DST_EPS = 0.05f;
+        inline private float GetObjDensity(ObjectPair object,
+            float3 position,
+            float3 offset,
+            TraceInput input)
+        {
+            float3 uvw = position - object.Position;
 
-    public struct Tracer<TObjectGetter: INebulaObjectGetter>
+            float density = noiseSampler.GetShapeDensity(uvw,
+                offset,
+                input);
+
+            density *= GetSphereGrad(uvw, object.Scale);
+
+            if (density > DENS_EPS)
+            {
+                density *= noiseSampler.GetDetailDensity(uvw,
+                    offset,
+                    input);
+            }
+
+            return density;
+        }
+
+        inline private static float GetSphereGrad(float3 centerPos,
+            float scale)
+        {
+            float linearGrad = length(centerPos) / scale;
+            return smoothstep(1.0f, 0.5f, linearGrad);
+        }
+    }
+
+    const static float DST_EPS = 0.05f;
+    const static float TRANS_THRESH = 0.01f;
+
+    public struct Tracer<TObjectGetter: INebulaObjectGetter,
+        TNoiseSampler : INebulaNoiseSampler>
     {
         private SphereTracing.Ray ray;
-        private NebulaContainer<TObjectGetter> container;
+        private NebulaContainer<TObjectGetter, TNoiseSampler> container;
         private TraceInput input;
 
         public __init(SphereTracing.Ray _ray,
-            NebulaContainer<TObjectGetter> _container,
+            NebulaContainer<TObjectGetter, TNoiseSampler> _container,
             TraceInput _input)
         {
             ray = _ray;
@@ -137,6 +247,7 @@ namespace Nebula
         {
             TraceResult result = TraceResult(ray.GetOrigin());
 
+            [loop]
             for (int i = 0; i < input.MaxSteps; i++)
             {
                 float signedDist = container.GetSignedDistance(result.Position);
@@ -150,7 +261,7 @@ namespace Nebula
 
                     VolumetricRaymarch(result);
 
-                    if (result.Density >= 1.0f)
+                    if (result.Transmittance < TRANS_THRESH)
                     {
                         break;
                     }
@@ -176,7 +287,36 @@ namespace Nebula
 
         private void VolumetricRaymarch(inout TraceResult result)
         {
-            result.Density = 2.0f;
+            float3 distortionOffset = float3(0, 0, 0);
+
+            [loop]
+            for (int i = 0; i < input.MaxSteps; i++)
+            {
+                bool insideVolumes = false;
+                
+                float stepDensity = container.GetTotalDensity(
+                    result.Position, 
+                    distortionOffset, 
+                    input, 
+                    insideVolumes);
+
+                if (!insideVolumes) 
+                    break;
+
+                if (stepDensity > DENS_EPS)
+                {
+                    float stepTransmittance = exp(-stepDensity * input.StepSize);
+                    result.Transmittance *= stepTransmittance;
+                }
+
+                result.Position += ray.GetDirection() * input.StepSize;
+                result.TotalDistance += input.StepSize;
+
+                if (result.Transmittance < TRANS_THRESH || result.TotalDistance > ray.GetMaxLength())
+                {
+                    break; 
+                }
+            }
         }
     };
 }

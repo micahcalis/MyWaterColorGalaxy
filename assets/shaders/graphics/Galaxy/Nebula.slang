@@ -15,6 +15,10 @@ cbuffer MaterialData
     int _MaxRaySteps;
     float _RayStepSize;
     int _StardustCount;
+    float _ShapeNoiseScale;
+    float _DetailNoiseScale;
+    float _Coverage;
+    float _DetailIntensity;
 }
 
 BIND_MATERIAL_BUFFER(1) StructuredBuffer<float4> _DynamicStardustPositions;
@@ -82,6 +86,26 @@ public struct NebulaObjectGetter : Nebula.INebulaObjectGetter
     }
 }
 
+public struct NebulaNoiseSampler : Nebula.INebulaNoiseSampler
+{
+    public float4 GetShape(float3 uvw, float3 offset)
+    {
+        float3 sampleCoord = (uvw + offset) * _ShapeNoiseScale;
+        return _NebulaShapeNoise.SampleLevel(sampleCoord, 0);
+    }
+
+    public float4 GetDetail(float3 uvw, float3 offset)
+    {
+        float3 sampleCoord = (uvw + offset) * _DetailNoiseScale;
+        return _NebulaDetailNoise.SampleLevel(sampleCoord, 0);
+    }
+
+    public float3 GetDistortion(float3 uvw, float3 offset)
+    {
+        return 0;
+    }
+}
+
 FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
 {
     uint tileID = Nebula.GetTileId(input.uv, _TileDimensions);
@@ -96,14 +120,19 @@ FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
     float depth = _DepthBuffer.Sample(input.uv);
     SphereTracing.Ray ray = Nebula.GetRay(input.uv, depth, _MaxRayLength);
 
-    Nebula.NebulaContainer<NebulaObjectGetter> container = Nebula.NebulaContainer<NebulaObjectGetter>(tile,
-        NebulaObjectGetter());
+    Nebula.NebulaContainer<NebulaObjectGetter, NebulaNoiseSampler> container = Nebula.NebulaContainer<NebulaObjectGetter, NebulaNoiseSampler>(
+        tile,
+        NebulaObjectGetter(),
+        NebulaNoiseSampler());
 
     Nebula.TraceInput traceInput;
     traceInput.MaxSteps = _MaxRaySteps;
     traceInput.StepSize = _RayStepSize;
+    traceInput.Coverage = _Coverage;
+    traceInput.DetailIntensity = _DetailIntensity;
 
-    Nebula.Tracer<NebulaObjectGetter> tracer = Nebula.Tracer<NebulaObjectGetter>(ray,
+    Nebula.Tracer<NebulaObjectGetter, NebulaNoiseSampler> tracer = Nebula.Tracer<NebulaObjectGetter, NebulaNoiseSampler>(
+        ray,
         container,
         traceInput);
 
@@ -114,11 +143,7 @@ FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
         discard;
     }
 
-    float3 debugVolume = _NebulaShapeNoise.SampleLevel(0, 0).rgb * 0.01f 
-        + _NebulaDetailNoise.SampleLevel(0, 0).rgb * 0.01f
-        + _NebulaDistortionNoise.SampleLevel(0, 0).rgb * 0.01f;
-
-    return _TestColor + debugVolume.r;
+    return float4(_TestColor.rgb, 1.0f - result.Transmittance);
 }
 
 //$ Pass BlitColor

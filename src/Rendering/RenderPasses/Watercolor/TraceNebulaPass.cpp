@@ -13,47 +13,54 @@ namespace Beer::Rendering
 {
     static const int32_t MAX_STEPS = 100;
     static const float MAX_LENGTH = 3000.0f;
-    static const float STEP_SIZE = 1.0f;
+    static const float STEP_SIZE = 5.0f;
+    static const float SHAPE_NOISE_SCALE = 1.0f / 100.0f;
+    static const float DETAIL_NOISE_SCALE = 1.0f / 50.0f;
+    static const float COVERAGE = 0.8f;
+    static const float DETAIL_INTENSITY = 0.5f;
 
     static const uint32_t NOISE_GROUP_SIZE = 8;
     static const uint32_t SHAPE_NOISE_RES = 128;
     static const VkFormat SHAPE_NOISE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
     static const uint32_t SHAPE_NOISE_KERNEL = 0;
-    static const float SHAPE_NOISE_DEPTH = 5;
+    static const float SHAPE_NOISE_DEPTH = 7;
     static const float SHAPE_NOISE_SEED = 2823;
     static const float SHAPE_NOISE_FREQ = 2.0f;
     static const float SHAPE_NOISE_FREQ_MUL = 1.5f;
     static const float SHAPE_NOISE_AMPL_MUL = 0.8f;
-    static const float SHAPE_NOISE_BALANCE = 0.5f;
-    static const float SHAPE_NOISE_EXP = 1.0f;
-    static const float SHAPE_NOISE_EDGE_MIN = 0.0f;
-    static const float SHAPE_NOISE_EDGE_MAX = 1.0f;
+    static const float SHAPE_NOISE_BALANCE = 0.75f;
+    static const float SHAPE_NOISE_EXP = 1.25f;
+    static const float SHAPE_NOISE_EDGE_MIN = 0.14f;
+    static const float SHAPE_NOISE_EDGE_MAX = 0.7f;
 
     static const uint32_t DETAIL_NOISE_RES = 64;
     static const VkFormat DETAIL_NOISE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
     static const uint32_t DETAIL_NOISE_KERNEL = 0;
-    static const float DETAIL_NOISE_DEPTH = 5;
+    static const float DETAIL_NOISE_DEPTH = 7;
     static const float DETAIL_NOISE_SEED = 709;
     static const float DETAIL_NOISE_FREQ = 1.5f;
     static const float DETAIL_NOISE_FREQ_MUL = 1.5f;
     static const float DETAIL_NOISE_AMPL_MUL = 0.8f;
     static const float DETAIL_NOISE_BALANCE = 0.5f;
-    static const float DETAIL_NOISE_EXP = 1.0f;
-    static const float DETAIL_NOISE_EDGE_MIN = 0.0f;
-    static const float DETAIL_NOISE_EDGE_MAX = 1.0f;
+    static const float DETAIL_NOISE_EXP = 1.25f;
+    static const float DETAIL_NOISE_EDGE_MIN = 0.14f;
+    static const float DETAIL_NOISE_EDGE_MAX = 0.7f;
 
     static const uint32_t DIST_NOISE_RES = 128;
     static const VkFormat DIST_NOISE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
     static const uint32_t DIST_NOISE_BASE_KERNEL = 1;
     static const uint32_t DIST_NOISE_CURL_KERNEL = 2;
-    static const float DIST_NOISE_DEPTH = 6;
+    static const float DIST_NOISE_DEPTH = 4;
     static const float DIST_NOISE_SEED = 709;
     static const float DIST_NOISE_FREQ = 2.0f;
     static const float DIST_NOISE_FREQ_MUL = 2.0f;
-    static const float DIST_NOISE_AMPL_MUL = 0.9f;
+    static const float DIST_NOISE_AMPL_MUL = 0.5f;
     static const float DIST_NOISE_EXP = 1.0f;
     static const float DIST_NOISE_EDGE_MIN = 0.0f;
     static const float DIST_NOISE_EDGE_MAX = 1.0f;
+
+    static const float DIST_NOISE_CURL_EDGE_MIN = 0.415f;
+    static const float DIST_NOISE_CURL_EDGE_MAX = 0.63f;
 
     TraceNebulaPass::TraceNebulaPass(NebulaBuffer* nebulaBuffer,
         System::GalaxyObjectBuffer* stardustBuffer)
@@ -66,6 +73,10 @@ namespace Beer::Rendering
         traceMaterial->SetFloat("_MaxRayLength", MAX_LENGTH);
         traceMaterial->SetFloat("_RayStepSize", STEP_SIZE);
         traceMaterial->SetColor("_TestColor", glm::vec4(1, 0, 0, 0.2f));
+        traceMaterial->SetFloat("_ShapeNoiseScale", SHAPE_NOISE_SCALE);
+        traceMaterial->SetFloat("_DetailNoiseScale", DETAIL_NOISE_SCALE);
+        traceMaterial->SetFloat("_Coverage", COVERAGE);
+        traceMaterial->SetFloat("_DetailIntensity", DETAIL_INTENSITY);
 
         InitializeNoiseVolumes();
 
@@ -245,6 +256,8 @@ namespace Beer::Rendering
 
         distortionContextCurl = std::make_shared<ComputeContext>("Watercolor/NebulaNoise");
         distortionContextCurl->SetTexture("_CurlSource", distortionBase.get());
+        distortionContextCurl->SetFloat("_EdgeMinR", DIST_NOISE_CURL_EDGE_MIN);
+        distortionContextCurl->SetFloat("_EdgeMaxR", DIST_NOISE_CURL_EDGE_MAX);
 
         distortionNoise = std::make_shared<Texture3D>(Texture3D::Make(makeSettings,
             distortionContextCurl.get()));
