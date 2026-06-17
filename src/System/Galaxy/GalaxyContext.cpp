@@ -1,6 +1,7 @@
 #include "System/Galaxy/GalaxyContext.hpp"
 #include "General/Buffer/GalaxyObjectBuffer.hpp"
 #include "General/GalaxyEntity.hpp"
+#include "NebulaSubPipeline.hpp"
 #include "Player/PlayerVFXEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
@@ -11,6 +12,8 @@
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Context/IContext.hpp"
+#include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
+#include "System/Galaxy/General/GalaxyObjectType.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Galaxy/WatercolorSubPipeline.hpp"
@@ -68,6 +71,11 @@ namespace Beer::System
         passes.push_back(skyboxPass);
         passes.push_back(transparentPass);
         passes.push_back(transitionPass);
+
+        if (nebulaSubPipeline != nullptr)
+        {
+            passes.append_range(nebulaSubPipeline->GetRenderPasses());
+        }
 
         return passes;
     }
@@ -188,6 +196,14 @@ namespace Beer::System
         sunEntity->LoadFromSerialized(serializedMap.Galaxy);
         skyboxPass->InitializeNoiseCubemaps(serializedMap.Galaxy);
         playerEntity->GetPlayerManager()->LoadFromSerialized(serializedMap.ExplorerHistory);
+
+        GalaxyObjectBuffer* stardustBuffer = galaxyEntity->GetContainer()->TryGetBuffer(GalaxyObjectType::StarDust);
+
+        if (stardustBuffer != nullptr)
+        {
+            nebulaSubPipeline = std::make_unique<NebulaSubPipeline>(stardustBuffer);
+            std::println("make stardust pipeline");
+        }
     }
 
     void GalaxyContext::HandleReturn()

@@ -1,5 +1,4 @@
-#include "Rendering/RenderPasses/Watercolor/ComputeNebulaTiles.hpp"
-#include "ComputeNebulaTiles.hpp"
+#include "Rendering/RenderPasses/Watercolor/ComputeNebulaTilesPass.hpp"
 #include "NebulaBuffer.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependency.hpp"
 #include "Rendering/Pipeline/Frame/Dependency/PassDependencyList.hpp"
@@ -12,7 +11,7 @@ namespace Beer::Rendering
     static const uint32_t COMPUTE_TILES_GROUPSIZE = 8;
     static const uint32_t COMPUTE_TILES_KERNEL = 0;
 
-    ComputeNebulaTiles::ComputeNebulaTiles(NebulaBuffer* nebulaBuffer,
+    ComputeNebulaTilesPass::ComputeNebulaTilesPass(NebulaBuffer* nebulaBuffer,
         System::GalaxyObjectBuffer* stardustBuffer)
         : nebulaBuffer(nebulaBuffer)
         , stardustBuffer(stardustBuffer)
@@ -20,7 +19,7 @@ namespace Beer::Rendering
     {
     }
 
-    void ComputeNebulaTiles::OnRenderSetup(const RenderContext& context)
+    void ComputeNebulaTilesPass::OnRenderSetup(const RenderContext& context)
     {
         nebulaBuffer->ReallocateTiles(context);
 
@@ -36,7 +35,7 @@ namespace Beer::Rendering
         nebulaBuffer->ComputeTilesContext->Update();
     }
 
-    void ComputeNebulaTiles::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
+    void ComputeNebulaTilesPass::Execute(CommandBuffer* commandBuffer, const RenderContext& context)
     {
         glm::uvec2 tileCount = NebulaBuffer::GetDispatchTileCount();
 
@@ -46,15 +45,17 @@ namespace Beer::Rendering
             COMPUTE_TILES_GROUPSIZE);
 
         commandBuffer->BindComputeKernel(nebulaBuffer->ComputeTilesContext->GetCompute()->GetKernel(COMPUTE_TILES_KERNEL));
-        commandBuffer->BindComputeContext(nebulaBuffer->ComputeTilesContext.get());
+        commandBuffer->BindComputeContext(nebulaBuffer->ComputeTilesContext.get(),
+            {stardustBuffer->GetPositionOffset()});
+
         commandBuffer->Dispatch(threads);
     }
 
-    PassDependencyList ComputeNebulaTiles::GetDependencies() const
+    PassDependencyList ComputeNebulaTilesPass::GetDependencies() const
     {
         PassDependencyList dependenices = PassDependencyList(name);
         dependenices.AddDependency(PassDependency(NEBULA_TILES_NAME,
-            ResourceAction::BufferReadWrite));
+            ResourceAction::ComputeBufferReadWrite));
 
         return dependenices;
     }

@@ -16,6 +16,7 @@
 #include "System/Light/LightEntity.hpp"
 #include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include "System/Galaxy/NebulaSubPipeline.hpp"
 #include <memory>
 #include <vector>
 
@@ -39,6 +40,7 @@ namespace Beer::System
         bool isReturning = false;
 
         std::unique_ptr<WatercolorSubPipeline> watercolorSubPipeline = nullptr;
+        std::unique_ptr<NebulaSubPipeline> nebulaSubPipeline = nullptr;
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;

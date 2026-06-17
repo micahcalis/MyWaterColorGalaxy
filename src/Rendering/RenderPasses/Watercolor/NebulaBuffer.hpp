@@ -36,8 +36,8 @@ namespace Beer::Rendering
 
         static glm::vec2 GetExactTileResolution()
         {
-            float halfWidth = (float)Core::Screen::Width() / 2.0f;
-            float halfHeight = (float)Core::Screen::Height() / 2.0f;
+            float halfWidth = (float)Core::Screen::Width() / static_cast<float>(NEBULA_RESOLUTION);
+            float halfHeight = (float)Core::Screen::Height() / static_cast<float>(NEBULA_RESOLUTION);
             return glm::vec2(halfWidth / NEBULA_TILE_RES, halfHeight / NEBULA_TILE_RES);
         }
 

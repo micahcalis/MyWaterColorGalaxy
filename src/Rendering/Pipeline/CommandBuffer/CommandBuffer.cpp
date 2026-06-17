@@ -267,12 +267,14 @@ namespace Beer::Rendering
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, kernel->Pipeline);
     }
 
-    void CommandBuffer::BindComputeContext(const ComputeContext* context)
+    void CommandBuffer::BindComputeContext(const ComputeContext* context,
+        const std::vector<uint32_t>& dynamicOffsets)
     {
         BindDescriptorSets(vk::PipelineBindPoint::eCompute,
             context->GetCompute()->GetPipelineLayout(),
             MaterialData::SET,
-            {context->GetDescriptorSet()});
+            {context->GetDescriptorSet()},
+            dynamicOffsets);
     }
 
     void CommandBuffer::DrawMeshSingle(const MeshDrawInfo& info)
@@ -331,14 +333,19 @@ namespace Beer::Rendering
     void CommandBuffer::Blit(RenderTexture* source,
         Material* material,
         const ShaderPassType pass,
-        const FragmentOutput& output)
+        const FragmentOutput& output,
+        const std::vector<uint32_t>& dynamicOffsets)
     {
         const Rendering::Shader* shader = material->GetShader();
         const Rendering::ShaderPass* shaderPass = shader->GetPass(pass);
 
-        material->SetTexture("_BlitSource", source);
+        if (source != nullptr)
+        {
+            material->SetTexture("_BlitSource", source);
+        }
+
         BindShaderPass(shader, shaderPass, output);
-        BindMaterial(material);
+        BindMaterial(material, dynamicOffsets);
 
         commandBuffer.draw(3, 1, 0, 0);
     }

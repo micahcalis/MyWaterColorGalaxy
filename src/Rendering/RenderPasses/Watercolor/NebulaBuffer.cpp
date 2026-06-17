@@ -15,23 +15,23 @@ namespace Beer::Rendering
 
     void NebulaBuffer::ReallocateTiles(const RenderContext& context)
     {
-        uint32_t totalTilesX = (Core::Screen::Width() / 2) / NEBULA_TILE_RES;
-        uint32_t totalTilesY = (Core::Screen::Height() / 2) / NEBULA_TILE_RES;
+        glm::uvec2 tileCount = GetDispatchTileCount();
 
         NebulaTilesBuffer = static_cast<PhaseBuffer*>(
             context.BlackBox->ReallocateIfNeeded(NEBULA_TILES_NAME,
-                                sizeof(NebulaTile) * totalTilesX * totalTilesY)
+                                sizeof(NebulaTile) * tileCount.x * tileCount.y)
                 .AllocPointer);
     }
 
     void NebulaBuffer::ReallocateTarget(const RenderContext& context)
     {
-        glm::uvec2 tileCount = GetDispatchTileCount();
+        uint32_t width = Core::Screen::Width() / static_cast<uint32_t>(NEBULA_RESOLUTION);
+        uint32_t height = Core::Screen::Height() / static_cast<uint32_t>(NEBULA_RESOLUTION);
 
         NebulaMarchingTarget = static_cast<RenderTexture*>(
             context.BlackBox->ReallocateIfNeeded(NEBULA_TARGET_NAME,
-                                (uint32_t)tileCount.x,
-                                (uint32_t)tileCount.y,
+                                width,
+                                height,
                                 static_cast<VkFormat>(NEBULA_TARGET_FORMAT))
                 .AllocPointer);
     }

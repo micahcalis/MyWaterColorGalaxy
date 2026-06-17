@@ -7,14 +7,14 @@
 
 namespace Beer::Rendering
 {
-    class ComputeNebulaTiles : public IRenderPass
+    class ComputeNebulaTilesPass : public IRenderPass
     {
     private:
         NebulaBuffer* nebulaBuffer = nullptr;
         System::GalaxyObjectBuffer* stardustBuffer = nullptr;
 
     public:
-        ComputeNebulaTiles(NebulaBuffer* nebulaBuffer,
+        ComputeNebulaTilesPass(NebulaBuffer* nebulaBuffer,
             System::GalaxyObjectBuffer* stardustBuffer);
 
         void OnRenderSetup(const RenderContext& context) override;

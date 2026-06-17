@@ -2,16 +2,6 @@
 
 import Nebula.NebulaUtlities;
 
-public struct ObjectData
-{
-    public float4 ColorA;
-    public float4 ColorB;
-    public float4 ColorC;
-    public float4 ColorD;
-    public float Scale;
-    public uint Id;
-}
-
 BIND_MATERIAL_DATA
 cbuffer ComputeData
 {
@@ -46,7 +36,7 @@ void ComputeNebulaTiles(uint3 id : SV_DispatchThreadID)
     if (Nebula.ThreadOutOfBounds(id.xy, tileResolution))
     {
         return;
-    }
+    }   
 
     Nebula.NebulaTileComputer<ObjectReader> tileComputer = Nebula.NebulaTileComputer<ObjectReader>(
         id.xy,

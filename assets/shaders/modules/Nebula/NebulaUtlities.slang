@@ -2,6 +2,16 @@
 
 import Core.BeerCore;
 
+public struct ObjectData
+{
+    public float4 ColorA;
+    public float4 ColorB;
+    public float4 ColorC;
+    public float4 ColorD;
+    public float Scale;
+    public uint Id;
+}
+
 namespace Nebula
 {
     #define MAX_NEBULA_TILES 32

@@ -85,7 +85,8 @@ namespace Beer::Rendering
         void BindTextBuffer(const TextBuffer* textBuffer);
         void BindQuadBuffer(const QuadBuffer* quadBuffer);
         void BindComputeKernel(const ComputeKernel* compute);
-        void BindComputeContext(const ComputeContext* context);
+        void BindComputeContext(const ComputeContext* context,
+            const std::vector<uint32_t>& dynamicOffsets = {});
 
         void DrawMeshSingle(const MeshDrawInfo& info);
         void DrawMeshMultiple(const MeshDrawInfo& info, const uint32_t count);
@@ -95,7 +96,8 @@ namespace Beer::Rendering
         void Blit(RenderTexture* source,
             Material* material,
             const ShaderPassType pass,
-            const FragmentOutput& output);
+            const FragmentOutput& output,
+            const std::vector<uint32_t>& dynamicOffsets = {});
 
         void CopyImgToBuffer(Rendering::RenderTexture* texture, Rendering::Buffer* buffer);
     };
