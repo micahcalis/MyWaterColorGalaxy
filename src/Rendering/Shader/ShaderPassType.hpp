@@ -13,7 +13,8 @@ namespace Beer::Rendering
         DeferredShade = 1 << 3,
         UserInterface = 1 << 4,
         WatercolorProcessing = 1 << 5,
-        BlitColor = 1 << 6
+        BlitColor = 1 << 6,
+        Volumetrics = 1 << 7,
     };
 
     inline constexpr uint32_t operator|(ShaderPassType a, ShaderPassType b)
@@ -34,4 +35,6 @@ namespace Beer::Rendering
     constexpr uint32_t PASS_UI_BITS = static_cast<uint32_t>(ShaderPassType::UserInterface);
     constexpr uint32_t PASS_WTRCLRPRCSSING_BITS = static_cast<uint32_t>(ShaderPassType::WatercolorProcessing);
     constexpr uint32_t PASS_BLITCOLOR_BITS = static_cast<uint32_t>(ShaderPassType::BlitColor);
+    constexpr uint32_t PASS_VOLUMETRICS_BITS = static_cast<uint32_t>(ShaderPassType::Volumetrics);
+
 } // namespace Beer::Rendering

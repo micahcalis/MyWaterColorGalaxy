@@ -55,7 +55,7 @@ namespace Beer::System
                       "Galaxy/BlackHole",
                       std::make_shared<BlackHoleBuferSettings>()),
                   GalaxyBufferDefinition(GalaxyObjectType::StarDust,
-                      "Galaxy/Planet",
+                      "",
                       std::make_shared<UnimplementedBufferSettings>(0.02f,
                           200.0f,
                           600.0f,

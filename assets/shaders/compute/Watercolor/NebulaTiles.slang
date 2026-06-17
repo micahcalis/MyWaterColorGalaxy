@@ -6,6 +6,7 @@ BIND_MATERIAL_DATA
 cbuffer ComputeData
 {
     float2 _TileResolution;
+    float2 _TileGrid;
     int _StardustCount;
 }
 
@@ -31,9 +32,9 @@ COMP
 [numthreads(8, 8, 1)]
 void ComputeNebulaTiles(uint3 id : SV_DispatchThreadID)
 {
-    uint2 tileResolution = (uint2)ceil(_TileResolution);
+    uint2 tileGrid = (uint2)_TileGrid;
     
-    if (Nebula.ThreadOutOfBounds(id.xy, tileResolution))
+    if (Nebula.ThreadOutOfBounds(id.xy, tileGrid))
     {
         return;
     }   
@@ -44,6 +45,6 @@ void ComputeNebulaTiles(uint3 id : SV_DispatchThreadID)
         _TileResolution,
         ObjectReader());
 
-    uint tileId = Nebula.FlattenTileId(id.xy, tileResolution);
+    uint tileId = Nebula.FlattenTileId(id.xy, tileGrid);
     _NebulaTileBuffer[tileId] = tileComputer.Compute();
 }

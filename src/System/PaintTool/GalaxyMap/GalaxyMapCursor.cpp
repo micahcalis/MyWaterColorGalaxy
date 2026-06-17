@@ -71,7 +71,7 @@ namespace Beer::System
             CanUseCursor = !hit;
         } else if (Brush == GalaxyBrushType::Eraser)
         {
-            if (hit && input.leftClickStart)
+            if (hit && input.LeftClickHold)
             {
                 Erase(hitInfo.Index);
             }

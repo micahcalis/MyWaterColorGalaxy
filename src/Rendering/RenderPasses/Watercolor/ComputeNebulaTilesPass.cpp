@@ -23,10 +23,12 @@ namespace Beer::Rendering
     {
         nebulaBuffer->ReallocateTiles(context);
 
-        glm::vec2 tileCount = NebulaBuffer::GetExactTileResolution();
+        glm::vec2 exactCount = NebulaBuffer::GetExactTileResolution();
+        glm::uvec2 gridCount = NebulaBuffer::GetDispatchTileCount();
         uint32_t stardustCount = stardustBuffer->GetInstanceCount();
 
-        nebulaBuffer->ComputeTilesContext->SetVector("_TileResolution", glm::vec4(tileCount, 0, 0));
+        nebulaBuffer->ComputeTilesContext->SetVector("_TileResolution", glm::vec4(exactCount, 0, 0));
+        nebulaBuffer->ComputeTilesContext->SetVector("_TileGrid", glm::vec4(gridCount.x, gridCount.y, 0, 0));
         nebulaBuffer->ComputeTilesContext->SetInt("_StardustCount", stardustCount);
 
         nebulaBuffer->ComputeTilesContext->SetStructuredBuffer("_DynamicStardustPositions", stardustBuffer->GetPositionBuffer());

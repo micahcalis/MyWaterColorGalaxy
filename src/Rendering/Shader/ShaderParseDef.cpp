@@ -168,6 +168,7 @@ namespace Beer::Rendering
         case Hash(PASS_UI): return ShaderPassType::UserInterface;
         case Hash(PASS_WC_PROCESSING): return ShaderPassType::WatercolorProcessing;
         case Hash(PASS_BLITCOLOR): return ShaderPassType::BlitColor;
+        case Hash(PASS_VOLUMETRICS): return ShaderPassType::Volumetrics;
         default: return ShaderPassType::Unknown;
         }
     }

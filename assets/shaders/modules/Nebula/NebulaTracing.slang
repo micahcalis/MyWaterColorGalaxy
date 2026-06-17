@@ -10,28 +10,37 @@ module NebulaTracing;
 
 namespace Nebula
 {
-    #define MAX_NEBULA_TILES 32
+    #define MAX_NEBULA_TILES 31
 
     public uint GetTileId(float2 uv, float2 tileDimensions)
     {
-        uint2 tileExactRes = (uint2)tileDimensions;
-        uint2 tileCoord = uint2(uv * tileDimensions);
+        float2 safeDims = max(tileDimensions, float2(1.0f, 1.0f)); 
+            
+        uint2 tileExactRes = (uint2)safeDims;
+        uint2 tileCoord = uint2(uv * safeDims);
         tileCoord = min(tileCoord, tileExactRes - 1);
+
+        uint tileId = FlattenTileId(tileCoord, tileExactRes);
+        uint maxTileID = (uint)(safeDims.x * safeDims.y) - 1;
         
-        return FlattenTileId(tileCoord, tileExactRes);
-}
+        return min(tileId, maxTileID);
+    }
 
     public bool ShouldTraceTile(NebulaTile tile)
     {
         return tile.NebulaCount > 0;
     }
 
-    public SphereTracing.Ray GetRay(float2 uv, float maxLength)
+    public SphereTracing.Ray GetRay(float2 uv, 
+        float depth,
+        float maxLength)
     {
-        float3 dirPosition = UVDepthToWorld(uv, 0.5f);
-        float3 viewDirWS = GetViewDirectionWS(dirPosition);
+        float3 pixelPosition = UVDepthToWorld(uv, depth);
+        float3 cameraVec = pixelPosition - _CameraPos;
+        float exactDist = length(cameraVec);
+        float3 viewDirWS = cameraVec / exactDist;
 
-        return SphereTracing.Ray(_CameraPos, viewDirWS, maxLength);
+        return SphereTracing.Ray(_CameraPos, viewDirWS, min(exactDist, maxLength));
     }
 
     public struct NebulaMaterial
@@ -47,6 +56,7 @@ namespace Nebula
     {
         public ObjectPair GetObject(uint index);
         public NebulaMaterial GetMaterial(uint index);
+        public bool IsValid(uint index);
     }
 
     public struct NebulaContainer<TObjectGetter : INebulaObjectGetter>
@@ -58,6 +68,7 @@ namespace Nebula
             TObjectGetter _getter)
         {
             tile = _tile;
+            tile.NebulaCount = min(tile.NebulaCount, MAX_NEBULA_TILES);
             getter = _getter;
         }
 
@@ -67,7 +78,12 @@ namespace Nebula
 
             for (int i = 0; i < tile.NebulaCount; i++)
             {
-                ObjectPair object = getter.GetObject(tile.NebulaIndices[i]);
+                uint index = tile.NebulaIndices[i];
+            
+                if (!getter.IsValid(index)) 
+                    continue; 
+
+                ObjectPair object = getter.GetObject(index);
                 float sphereDist = SDF.Functions.Sphere(position - object.Position, object.Scale);
                 minDist = min(minDist, sphereDist);
             }
@@ -100,7 +116,7 @@ namespace Nebula
         }
     };
 
-    static float DST_EPS = 0.5f;
+    static float DST_EPS = 0.05f;
 
     public struct Tracer<TObjectGetter: INebulaObjectGetter>
     {

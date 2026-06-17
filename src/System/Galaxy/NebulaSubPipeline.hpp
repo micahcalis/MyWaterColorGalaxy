@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/RenderPasses/Watercolor/BlendNebulaPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/ComputeNebulaTilesPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/NebulaBuffer.hpp"
 #include "Rendering/RenderPasses/Watercolor/ComputeNebulaTilesPass.hpp"
@@ -17,6 +18,7 @@ namespace Beer::System
         std::unique_ptr<Rendering::NebulaBuffer> nebulaBuffer = nullptr;
         std::unique_ptr<Rendering::ComputeNebulaTilesPass> computeNebulaTilesPass = nullptr;
         std::unique_ptr<Rendering::TraceNebulaPass> traceNebulaPass = nullptr;
+        std::unique_ptr<Rendering::BlendNebulaPass> blendNebulaPass = nullptr;
 
     public:
         NebulaSubPipeline(GalaxyObjectBuffer* stardustBuffer)
@@ -29,12 +31,16 @@ namespace Beer::System
 
             traceNebulaPass = std::make_unique<Rendering::TraceNebulaPass>(nebulaBuffer.get(),
                 stardustBuffer);
+
+            blendNebulaPass = std::make_unique<Rendering::BlendNebulaPass>(nebulaBuffer.get(),
+                stardustBuffer);
         }
 
         std::vector<Rendering::IRenderPass*> GetRenderPasses()
         {
             return {computeNebulaTilesPass.get(),
-                traceNebulaPass.get()};
-        }
+                traceNebulaPass.get(),
+                blendNebulaPass.get()};
+        };
     };
 } // namespace Beer::System

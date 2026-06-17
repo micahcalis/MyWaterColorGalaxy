@@ -21,9 +21,14 @@ namespace Beer::System
         : settings(settings)
         , controlNoiseVolume(controlNoiseVolume)
     {
-        material = std::make_shared<Rendering::Material>(shaderPath);
-        settings->ApplyMaterialSettings(material.get());
-        material->SetTexture("_ControlNoiseVolume", controlNoiseVolume);
+        bool nullShader = shaderPath == nullptr || shaderPath[0] == '\0';
+
+        if (!nullShader)
+        {
+            material = std::make_shared<Rendering::Material>(shaderPath);
+            settings->ApplyMaterialSettings(material.get());
+            material->SetTexture("_ControlNoiseVolume", controlNoiseVolume);
+        }
 
         mesh = settings->GetMesh();
 
@@ -55,7 +60,11 @@ namespace Beer::System
 
         InitializeDataBuffer();
         InitializeDynamicPositions(serializedData, components);
-        InitializeMaterialData(serializedData);
+
+        if (!nullShader)
+        {
+            InitializeMaterialData(serializedData);
+        }
     }
 
     void GalaxyObjectBuffer::Update()
@@ -82,6 +91,11 @@ namespace Beer::System
     {
         if (instanceCount == 0)
             return;
+
+        if (material == nullptr)
+        {
+            return;
+        }
 
         const Rendering::Shader* shader = material->GetShader();
 

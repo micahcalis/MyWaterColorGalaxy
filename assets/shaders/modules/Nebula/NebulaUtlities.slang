@@ -14,7 +14,7 @@ public struct ObjectData
 
 namespace Nebula
 {
-    #define MAX_NEBULA_TILES 32
+    #define MAX_NEBULA_TILES 31
 
     public struct NebulaTile
     {

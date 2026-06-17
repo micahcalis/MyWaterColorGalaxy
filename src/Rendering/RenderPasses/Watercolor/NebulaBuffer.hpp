@@ -4,6 +4,7 @@
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Pipeline/CommandBuffer/RenderContext.hpp"
 #include "Rendering/RenderPasses/Watercolor/BlitMainColorPass.hpp"
+#include "Rendering/Shader/Globals/PaddingMacros.hpp"
 #include "Rendering/Texture/RenderTexture.hpp"
 
 namespace Beer::Rendering
@@ -13,10 +14,10 @@ namespace Beer::Rendering
     static const std::string NEBULA_TARGET_NAME = "_NebulaTarget";
 
     static const uint32_t NEBULA_TILE_RES = 16;
-    static const uint32_t MAX_NEBULA_PER_TILE = 32;
+    static const uint32_t MAX_NEBULA_PER_TILE = 31;
     static const std::string NEBULA_TILES_NAME = "_NebulaTiles";
 
-    struct NebulaTile
+    struct ALIGN_16 NebulaTile
     {
         uint32_t Count;
         std::array<uint32_t, MAX_NEBULA_PER_TILE> Indices;
