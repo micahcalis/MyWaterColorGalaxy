@@ -19,6 +19,11 @@ cbuffer MaterialData
     float _DetailNoiseScale;
     float _Coverage;
     float _DetailIntensity;
+    float _ShapeAbsorption;
+    float _LightAbsorption;
+    float _HenyeyG;
+    float _HenyeyK;
+    float _LightMultiplier;
 }
 
 BIND_MATERIAL_BUFFER(1) StructuredBuffer<float4> _DynamicStardustPositions;
@@ -125,11 +130,17 @@ FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
         NebulaObjectGetter(),
         NebulaNoiseSampler());
 
-    Nebula.TraceInput traceInput;
-    traceInput.MaxSteps = _MaxRaySteps;
-    traceInput.StepSize = _RayStepSize;
-    traceInput.Coverage = _Coverage;
-    traceInput.DetailIntensity = _DetailIntensity;
+    Nebula.TraceInput traceInput = Nebula.TraceInput(_MaxRaySteps,
+        _RayStepSize,
+        _Coverage,
+        _DetailIntensity,
+        _ShapeAbsorption,
+        _LightAbsorption,
+        _LightMultiplier,
+        _HenyeyG,
+        _HenyeyK,
+        ray.GetDirection(),
+        normalize(_MainLightPos - ray.GetOrigin()));
 
     Nebula.Tracer<NebulaObjectGetter, NebulaNoiseSampler> tracer = Nebula.Tracer<NebulaObjectGetter, NebulaNoiseSampler>(
         ray,
@@ -143,7 +154,10 @@ FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
         discard;
     }
 
-    return float4(_TestColor.rgb, 1.0f - result.Transmittance);
+    float alpha = saturate(1.0f - result.Transmittance);
+    alpha += _NebulaDistortionNoise.SampleLevel(0, 0).a * 0.01f;
+
+    return float4(result.Color, alpha);
 }
 
 //$ Pass BlitColor

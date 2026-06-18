@@ -11,13 +11,18 @@
 
 namespace Beer::Rendering
 {
-    static const int32_t MAX_STEPS = 100;
+    static const int32_t MAX_STEPS = 200;
     static const float MAX_LENGTH = 3000.0f;
     static const float STEP_SIZE = 5.0f;
     static const float SHAPE_NOISE_SCALE = 1.0f / 100.0f;
     static const float DETAIL_NOISE_SCALE = 1.0f / 50.0f;
     static const float COVERAGE = 0.8f;
     static const float DETAIL_INTENSITY = 0.5f;
+    static const float SHAPE_ABSORPTION = 1.0f;
+    static const float LIGHT_ABSORPTION = 1.0f;
+    static const float HENYEYK = 0.2f;
+    static const float HENYEYG = 0.5f;
+    static const float LIGHT_MUL = 6.0f;
 
     static const uint32_t NOISE_GROUP_SIZE = 8;
     static const uint32_t SHAPE_NOISE_RES = 128;
@@ -62,6 +67,24 @@ namespace Beer::Rendering
     static const float DIST_NOISE_CURL_EDGE_MIN = 0.415f;
     static const float DIST_NOISE_CURL_EDGE_MAX = 0.63f;
 
+    static const float COL_B_NOISE_DEPTH = 2;
+    static const float COL_B_NOISE_SEED = 456;
+    static const float COL_B_NOISE_FREQ = 4.0f;
+    static const float COL_B_NOISE_FREQ_MUL = 2.0f;
+    static const float COL_B_NOISE_AMPL_MUL = 0.5f;
+    static const float COL_B_NOISE_EXP = 1.0f;
+    static const float COL_B_NOISE_EDGE_MIN = 0.0f;
+    static const float COL_B_NOISE_EDGE_MAX = 1.0f;
+
+    static const float COL_S_NOISE_DEPTH = 1;
+    static const float COL_S_NOISE_SEED = 456;
+    static const float COL_S_NOISE_FREQ = 4.0f;
+    static const float COL_S_NOISE_FREQ_MUL = 2.0f;
+    static const float COL_S_NOISE_AMPL_MUL = 0.5f;
+    static const float COL_S_NOISE_EXP = 1.5f;
+    static const float COL_S_NOISE_EDGE_MIN = 0.0f;
+    static const float COL_S_NOISE_EDGE_MAX = 1.0f;
+
     TraceNebulaPass::TraceNebulaPass(NebulaBuffer* nebulaBuffer,
         System::GalaxyObjectBuffer* stardustBuffer)
         : nebulaBuffer(nebulaBuffer)
@@ -72,11 +95,16 @@ namespace Beer::Rendering
         traceMaterial->SetInt("_MaxRaySteps", MAX_STEPS);
         traceMaterial->SetFloat("_MaxRayLength", MAX_LENGTH);
         traceMaterial->SetFloat("_RayStepSize", STEP_SIZE);
-        traceMaterial->SetColor("_TestColor", glm::vec4(1, 0, 0, 0.2f));
+        traceMaterial->SetColor("_TestColor", glm::vec4(0.25, 0.05, 0.4, 0.2f));
         traceMaterial->SetFloat("_ShapeNoiseScale", SHAPE_NOISE_SCALE);
         traceMaterial->SetFloat("_DetailNoiseScale", DETAIL_NOISE_SCALE);
         traceMaterial->SetFloat("_Coverage", COVERAGE);
         traceMaterial->SetFloat("_DetailIntensity", DETAIL_INTENSITY);
+        traceMaterial->SetFloat("_ShapeAbsorption", SHAPE_ABSORPTION);
+        traceMaterial->SetFloat("_LightAbsorption", LIGHT_ABSORPTION);
+        traceMaterial->SetFloat("_HenyeyG", HENYEYG);
+        traceMaterial->SetFloat("_HenyeyK", HENYEYK);
+        traceMaterial->SetFloat("_LightMultiplier", LIGHT_MUL);
 
         InitializeNoiseVolumes();
 
@@ -258,6 +286,24 @@ namespace Beer::Rendering
         distortionContextCurl->SetTexture("_CurlSource", distortionBase.get());
         distortionContextCurl->SetFloat("_EdgeMinR", DIST_NOISE_CURL_EDGE_MIN);
         distortionContextCurl->SetFloat("_EdgeMaxR", DIST_NOISE_CURL_EDGE_MAX);
+
+        distortionContextBase->SetInt("_DepthR", COL_B_NOISE_DEPTH);
+        distortionContextBase->SetInt("_SeedR", COL_B_NOISE_SEED);
+        distortionContextBase->SetFloat("_FrequencyR", COL_B_NOISE_FREQ);
+        distortionContextBase->SetFloat("_FrequencyMultiplierR", COL_B_NOISE_FREQ_MUL);
+        distortionContextBase->SetFloat("_AmplitudeMultiplierR", COL_B_NOISE_AMPL_MUL);
+        distortionContextBase->SetFloat("_ExponentR", COL_B_NOISE_EXP);
+        distortionContextBase->SetFloat("_EdgeMinR", COL_B_NOISE_EDGE_MIN);
+        distortionContextBase->SetFloat("_EdgeMaxR", COL_B_NOISE_EDGE_MAX);
+
+        distortionContextBase->SetInt("_DepthG", COL_S_NOISE_DEPTH);
+        distortionContextBase->SetInt("_SeedG", COL_S_NOISE_SEED);
+        distortionContextBase->SetFloat("_FrequencyG", COL_S_NOISE_FREQ);
+        distortionContextBase->SetFloat("_FrequencyMultiplierG", COL_S_NOISE_FREQ_MUL);
+        distortionContextBase->SetFloat("_AmplitudeMultiplierG", COL_S_NOISE_AMPL_MUL);
+        distortionContextBase->SetFloat("_ExponentG", COL_S_NOISE_EXP);
+        distortionContextBase->SetFloat("_EdgeMinG", COL_S_NOISE_EDGE_MIN);
+        distortionContextBase->SetFloat("_EdgeMaxG", COL_S_NOISE_EDGE_MAX);
 
         distortionNoise = std::make_shared<Texture3D>(Texture3D::Make(makeSettings,
             distortionContextCurl.get()));

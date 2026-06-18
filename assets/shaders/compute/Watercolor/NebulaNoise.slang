@@ -279,7 +279,35 @@ void ComputeDistortionCurl(uint3 id : SV_DispatchThreadID)
     Noise.Curl<CurlSampler> curl = Noise.Curl<CurlSampler>(curlSampler);
     float3 rawCurl = curl.Compute();
     float3 shiftedCurl = rawCurl + 0.5f;
-    float3 finalNoise = smoothstep(_EdgeMinR, _EdgeMaxR, shiftedCurl);
+    float3 curlNoise = smoothstep(_EdgeMinR, _EdgeMaxR, shiftedCurl);
 
-    GENERATION_TARGET[id] = float4(finalNoise, 0);
+    float3 uvw = (((float3)id + 0.5f) / _Resolution);
+    float layeredPerlin = GetLayeredPerlin(uvw);
+
+    GENERATION_TARGET[id] = float4(curlNoise, 0);
+}
+
+float GetLayeredPerlin(float3 uvw)
+{
+    float base = ComputePerlinFBM(uvw,
+        _DepthR,
+        _SeedR,
+        _FrequencyR,
+        _FrequencyMultiplierR,
+        _AmplitudeMultiplierR,
+        _ExponentR,
+        _EdgeMinR,
+        _EdgeMaxR);
+
+    float secondary = ComputePerlinFBM(float3(base),
+        _DepthG,
+        _SeedG,
+        _FrequencyG,
+        _FrequencyMultiplierG,
+        _AmplitudeMultiplierG,
+        _ExponentG,
+        _EdgeMinG,
+        _EdgeMaxG);
+
+    return secondary;
 }
