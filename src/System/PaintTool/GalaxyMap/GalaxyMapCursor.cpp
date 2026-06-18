@@ -63,7 +63,7 @@ namespace Beer::System
 
         if (IsGalaxyComponent(Brush))
         {
-            if (!hit && input.leftClickStart)
+            if (!hit && input.leftClickStart && insideRect)
             {
                 glm::vec2 mapSpacePosition = ToMapSpace(zoomedMousePos);
                 Place(GetNewData(mapSpacePosition));
@@ -71,7 +71,7 @@ namespace Beer::System
             CanUseCursor = !hit;
         } else if (Brush == GalaxyBrushType::Eraser)
         {
-            if (hit && input.LeftClickHold)
+            if (hit && input.LeftClickHold && insideRect)
             {
                 Erase(hitInfo.Index);
             }

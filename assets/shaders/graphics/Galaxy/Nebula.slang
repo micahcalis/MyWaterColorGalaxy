@@ -5,6 +5,7 @@ import Blit.BlitUtils;
 import Nebula.NebulaUtlities;
 import Nebula.NebulaTracing;
 import SphereTracing;
+import Noise.Hash;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -17,6 +18,8 @@ cbuffer MaterialData
     int _StardustCount;
     float _ShapeNoiseScale;
     float _DetailNoiseScale;
+    float _DistortionNoiseScale;
+    float _ColorNoiseScale;
     float _Coverage;
     float _DetailIntensity;
     float _ShapeAbsorption;
@@ -24,6 +27,7 @@ cbuffer MaterialData
     float _HenyeyG;
     float _HenyeyK;
     float _LightMultiplier;
+    float _DistortionIntensity;
 }
 
 BIND_MATERIAL_BUFFER(1) StructuredBuffer<float4> _DynamicStardustPositions;
@@ -70,6 +74,7 @@ public struct NebulaObjectGetter : Nebula.INebulaObjectGetter
         Nebula.ObjectPair pair;
         pair.Position = _DynamicStardustPositions[index].xyz;
         pair.Scale = _StardustObjectData[index].Scale;
+        pair.Id = _StardustObjectData[index].Id;
         return pair;
     }
 
@@ -93,21 +98,40 @@ public struct NebulaObjectGetter : Nebula.INebulaObjectGetter
 
 public struct NebulaNoiseSampler : Nebula.INebulaNoiseSampler
 {
-    public float4 GetShape(float3 uvw, float3 offset)
+    public float4 GetShape(float3 uvw, float3 offset, int id)
     {
-        float3 sampleCoord = (uvw + offset) * _ShapeNoiseScale;
+        offset += GetOffsetHash(id, 493);
+        float3 scale = _ShapeNoiseScale * GetScaleHash(id, 292);
+        float3 sampleCoord = (uvw + offset) * scale;
         return _NebulaShapeNoise.SampleLevel(sampleCoord, 0);
     }
 
-    public float4 GetDetail(float3 uvw, float3 offset)
+    public float4 GetDetail(float3 uvw, float3 offset, int id)
     {
-        float3 sampleCoord = (uvw + offset) * _DetailNoiseScale;
+        offset += GetOffsetHash(id, 89312);
+        float3 scale = _DetailNoiseScale * GetScaleHash(id, 594);
+        float3 sampleCoord = (uvw + offset) * scale;
         return _NebulaDetailNoise.SampleLevel(sampleCoord, 0);
     }
 
-    public float3 GetDistortion(float3 uvw, float3 offset)
+    public float3 GetDistortion(float3 uvw, float3 offset, int id)
     {
-        return 0;
+        offset += GetOffsetHash(id, 3);
+        float3 scale = _DistortionNoiseScale * GetScaleHash(id, 22);
+        float3 sampleCoord = (uvw + offset) * scale;
+        return _NebulaDistortionNoise.SampleLevel(sampleCoord, 0).rgb * 2.0f - 1.0f;
+    }
+
+    public float3 GetScaleHash(int id, int seed)
+    {
+        float3 rawHash = Noise.Functions.Hash13(id, seed);
+        return ((rawHash - 0.5f) * 0.2f) + 1.0f;
+    }
+
+    public float3 GetOffsetHash(int id, int seed)
+    {
+        float3 rawHash = Noise.Functions.Hash13(id, seed);
+        return rawHash * 100;
     }
 }
 
@@ -137,6 +161,7 @@ FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
         _ShapeAbsorption,
         _LightAbsorption,
         _LightMultiplier,
+        _DistortionIntensity,
         _HenyeyG,
         _HenyeyK,
         ray.GetDirection(),
@@ -173,7 +198,7 @@ FRAG float4 BlendNebulaFrag(VertexData input) : SV_Target
 {
     float4 source = _BlitSource.Sample(input.uv);
     float4 nebula = _NebulaColorBuffer.Sample(input.uv);
-    float3 blendColor = lerp(source.rgb, nebula.rgb, nebula.a);
+    float3 blendColor = (source.rgb * (1.0f - nebula.a)) + nebula.rgb;
 
     return float4(blendColor, source.a);
 }

@@ -37,6 +37,7 @@ namespace Nebula
     {
         public float3 Position;
         public float Scale;
+        public int Id;
     }
 
     enum FrustumPlane : uint

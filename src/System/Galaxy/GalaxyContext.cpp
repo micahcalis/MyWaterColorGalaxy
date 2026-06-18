@@ -201,7 +201,10 @@ namespace Beer::System
 
         if (stardustBuffer != nullptr)
         {
-            nebulaSubPipeline = std::make_unique<NebulaSubPipeline>(stardustBuffer);
+            if (stardustBuffer->GetInstanceCount() > 0)
+            {
+                nebulaSubPipeline = std::make_unique<NebulaSubPipeline>(stardustBuffer);
+            }
         }
     }
 

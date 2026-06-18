@@ -261,7 +261,7 @@ public struct CurlSampler : Noise.ICurlSampler
     public float3 Sample(int3 offset)
     {
         int3 res = (int3)_Resolution; 
-    int3 wrappedCoord = (coord + offset + res) % res;
+        int3 wrappedCoord = (coord + offset + res) % res;
     
         float3 uvw = ((float3)wrappedCoord + 0.5f) / _Resolution;
 
@@ -284,7 +284,7 @@ void ComputeDistortionCurl(uint3 id : SV_DispatchThreadID)
     float3 uvw = (((float3)id + 0.5f) / _Resolution);
     float layeredPerlin = GetLayeredPerlin(uvw);
 
-    GENERATION_TARGET[id] = float4(curlNoise, 0);
+    GENERATION_TARGET[id] = float4(curlNoise, layeredPerlin);
 }
 
 float GetLayeredPerlin(float3 uvw)

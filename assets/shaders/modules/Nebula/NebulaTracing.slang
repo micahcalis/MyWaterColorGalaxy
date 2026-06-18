@@ -7,6 +7,8 @@ import Core.Beer3D;
 import SDF;
 import Math.BeerMath;
 import Lights;
+import Noise.Hash;
+import Math.Gradient;
 
 module NebulaTracing;
 
@@ -82,6 +84,7 @@ namespace Nebula
         public float LightAbsorption;
         public float LightMultiplier;
         public float Phase;
+        public float DistortionIntensity;
 
         public __init(uint _maxSteps,
             float _stepSize,
@@ -90,6 +93,7 @@ namespace Nebula
             float _shapeAbsorption,
             float _lightAbsorption,
             float _lightMultiplier,
+            float _distortionIntensity,
             float _henyeyG,
             float _henyeyK,
             float3 _viewDirWS,
@@ -104,6 +108,7 @@ namespace Nebula
             LightMultiplier = _lightMultiplier;
             float rawPhase = GetPhase(_henyeyG, _henyeyK, _viewDirWS, _lightDirWS);
             Phase = min(rawPhase, 1.0f);
+            DistortionIntensity = _distortionIntensity;
         }
     }
 
@@ -127,15 +132,18 @@ namespace Nebula
 
     public interface INebulaNoiseSampler
     {
-        public float4 GetShape(float3 uvw, float3 offset);
-        public float4 GetDetail(float3 uvw, float3 offset);
-        public float3 GetDistortion(float3 uvw, float3 offset);
+        public float4 GetShape(float3 uvw, float3 offset, int id);
+        public float4 GetDetail(float3 uvw, float3 offset, int id);
+        public float3 GetDistortion(float3 uvw, float3 offset, int id);
+        public float3 GetScaleHash(int id, int seed);
+        public float3 GetOffsetHash(int id, int seed);
 
         public float GetShapeDensity(float3 uvw,
             float3 offset,
+            int id,
             TraceInput input)
         {
-            float4 sample = GetShape(uvw, offset);
+            float4 sample = GetShape(uvw, offset, id);
             float densityBase = sample.r;
 
             float weightedDensity = dot(sample.gba, SHAPE_WEIGHTS);
@@ -146,9 +154,10 @@ namespace Nebula
 
         public float GetDetailDensity(float3 uvw,
             float3 offset,
+            int id,
             TraceInput input)
         {
-            float4 sample = GetDetail(uvw, offset);
+            float4 sample = GetDetail(uvw, offset, id);
             float densityBase = sample.r;
 
             float weightedDensity = dot(sample.gba, SHAPE_WEIGHTS);
@@ -244,6 +253,7 @@ namespace Nebula
 
             float density = noiseSampler.GetShapeDensity(uvw,
                 offset,
+                object.Id,
                 input);
 
             density *= GetSphereGrad(uvw, object.Scale);
@@ -252,31 +262,34 @@ namespace Nebula
             {
                 density *= noiseSampler.GetDetailDensity(uvw,
                     offset,
+                    object.Id,
                     input);
             }
 
             return density;
         }
 
-        public ObjectPair GetClosestObject(float3 position)
+        public ObjectPair GetClosestObject(float3 position, out uint outIndex)
         {
             ObjectPair closestObject = ObjectPair(1e+8f, 1e-8f);
             float minDist = 1e+8f;
+            outIndex = 0; 
 
             for (int i = 0; i < tile.NebulaCount; i++)
             {
-                uint index = tile.NebulaIndices[i];
+                uint objIndex = tile.NebulaIndices[i]; 
 
-                if (!getter.IsValid(index))
+                if (!getter.IsValid(objIndex))
                     continue;
 
-                ObjectPair compareObject = getter.GetObject(index);
+                ObjectPair compareObject = getter.GetObject(objIndex);
                 float compareDist = SDF.Functions.Sphere(position - compareObject.Position, compareObject.Scale);
 
                 if (compareDist < minDist)
                 {
                     closestObject = compareObject;
                     minDist = compareDist;
+                    outIndex = objIndex; 
                 }
             }
             
@@ -292,6 +305,7 @@ namespace Nebula
 
             float density = noiseSampler.GetShapeDensity(uvw,
                 offset,
+                object.Id,
                 input);
 
             density *= GetSphereGrad(uvw, object.Scale);
@@ -304,6 +318,36 @@ namespace Nebula
         {
             float linearGrad = length(centerPos) / scale;
             return smoothstep(1.0f, 0.5f, linearGrad);
+        }
+
+        public NebulaMaterial GetMaterial(uint index)
+        {
+            if (!getter.IsValid(index))
+                return (NebulaMaterial)0;
+
+            return getter.GetMaterial(index);
+        }
+
+        public float3 GetObjColor(ObjectPair object, NebulaMaterial material, float stepDensity)
+        {
+            float normalizedDensity = saturate(stepDensity * 5.0f); 
+
+            return Color.Sample4ColorGrad({material.ColorA, 
+                material.ColorB, 
+                material.ColorC, 
+                material.ColorD}, 
+                normalizedDensity).rgb;
+        }
+
+        public float3 GetDistortion(float3 position,
+            int id,
+            TraceInput input)
+        {
+            float3 rawDistortion = noiseSampler.GetDistortion(position,
+                0,
+                id);
+
+            return rawDistortion * input.DistortionIntensity;
         }
     }
 
@@ -378,6 +422,13 @@ namespace Nebula
             for (int i = 0; i < input.MaxSteps; i++)
             {
                 bool insideVolumes = false;
+
+                uint objectIndex;
+                ObjectPair lightObject = container.GetClosestObject(result.Position, objectIndex);
+
+                distortionOffset = container.GetDistortion(result.Position,
+                    lightObject.Id,
+                    input);
                 
                 float stepDensity = container.GetTotalDensity(
                     result.Position, 
@@ -391,12 +442,17 @@ namespace Nebula
                 if (stepDensity > DENS_EPS)
                 {
                     float stepTransmittance = exp(-stepDensity * input.StepSize * input.ShapeAbsorption);
+                    NebulaMaterial lightMaterial = container.GetMaterial(objectIndex);
+
+                    float3 directLight = MarchLightColor(lightObject, result.Position, distortionOffset, stepDensity);
+                    float3 albedo = container.GetObjColor(lightObject, lightMaterial, stepDensity);
+
+                    float baseVibrancy = 0.7f; 
+                    float3 totalIncomingLight = baseVibrancy + directLight; 
+                    float3 stepColor = totalIncomingLight * albedo;
+                    result.Color += result.Transmittance * stepColor * (stepDensity * input.StepSize);;
+
                     result.Transmittance *= stepTransmittance;
-
-                    float3 lightColor = MarchLightColor(result.Position,
-                        stepDensity);
-
-                    result.Color += (result.Transmittance) * lightColor;
                 }
 
                 result.Position += ray.GetDirection() * input.StepSize;
@@ -409,14 +465,15 @@ namespace Nebula
             }
         }
 
-        private float3 MarchLightColor(float3 origin,
+        private float3 MarchLightColor(ObjectPair lightObject,
+            float3 origin,
+            float3 offset,
             float shapeDensity)
         {
             float transmittance = 1;
             float previousDist = 0;
 
             Light light = GetMainLight(origin);
-            ObjectPair lightObject = container.GetClosestObject(origin);
 
             [unroll(LIGHT_MARCH_STEPS)]
             for (int i = 0; i < LIGHT_MARCH_STEPS; i++)
@@ -431,7 +488,7 @@ namespace Nebula
 
                 float lightDensity = container.GetObjLightDensity(lightObject,
                     position,
-                    0,
+                    offset,
                     input);
 
                 transmittance *= CalculateLightTransmittance(lightDensity,
