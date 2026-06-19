@@ -6,6 +6,9 @@ import Nebula.NebulaUtlities;
 import Nebula.NebulaTracing;
 import SphereTracing;
 import Noise.Hash;
+import Core.Samplers;
+import Blit.Upsampling;
+import Deferred.DeferredUtils;
 
 BIND_MATERIAL_DATA
 cbuffer MaterialData
@@ -28,6 +31,12 @@ cbuffer MaterialData
     float _HenyeyK;
     float _LightMultiplier;
     float _DistortionIntensity;
+    float _BaseVibrance;
+    float _DepthTolerance;
+    float _Wetness;
+    float _GranulationNoiseIntensity;
+    float _ColorBleed;
+    float _AlphaThreshold;
 }
 
 BIND_MATERIAL_BUFFER(1) StructuredBuffer<float4> _DynamicStardustPositions;
@@ -39,6 +48,7 @@ BIND_MATERIAL_TEX(6) Sampler2D<float4> _NebulaColorBuffer;
 BIND_MATERIAL_TEX(7) Sampler3D<float4> _NebulaShapeNoise;
 BIND_MATERIAL_TEX(8) Sampler3D<float4> _NebulaDetailNoise;
 BIND_MATERIAL_TEX(9) Sampler3D<float4> _NebulaDistortionNoise;
+BIND_MATERIAL_TEX(10) Sampler2D<float> _NebulaVolumeAlpha;
 
 struct MeshData
 {
@@ -162,6 +172,7 @@ FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
         _LightAbsorption,
         _LightMultiplier,
         _DistortionIntensity,
+        _BaseVibrance,
         _HenyeyG,
         _HenyeyK,
         ray.GetDirection(),
@@ -194,11 +205,93 @@ FRAG float4 TraceNebulaFrag(VertexData input) : SV_Target
 //$ ZWrite Off
 //$ ZMode Always
 
-FRAG float4 BlendNebulaFrag(VertexData input) : SV_Target
+public struct DepthSampler : ISampler2DFloat
+{
+    public float Sample(float2 uv)
+    {
+        return _DepthBuffer.SampleLevel(saturate(uv), 0);
+    }
+}
+
+public struct NebulaSampler : ISampler2DFloat4
+{
+    public float4 Sample(float2 uv)
+    {
+        return _NebulaColorBuffer.SampleLevel(saturate(uv), 0);
+    }
+}
+
+struct BlendNebulaOutput
+{
+    float4 color : SV_Target0;
+    float volumeAlpha : SV_Target1;
+}
+
+FRAG BlendNebulaOutput BlendNebulaFrag(VertexData input)
 {
     float4 source = _BlitSource.Sample(input.uv);
-    float4 nebula = _NebulaColorBuffer.Sample(input.uv);
+
+    uint width, height, numberOfLevels;
+    _DepthBuffer.GetDimensions(0, width, height, numberOfLevels);
+    float2 texelSize = rcp(float2(width, height));
+
+    Blit.Upsampler<DepthSampler> upSampler = Blit.Upsampler<DepthSampler>(DepthSampler(),
+        _DepthTolerance,
+        input.uv,
+        texelSize);
+
+    upSampler.ComputeWeights();
+    float4 nebula = upSampler.Upsample<NebulaSampler>(NebulaSampler());
+
     float3 blendColor = (source.rgb * (1.0f - nebula.a)) + nebula.rgb;
 
-    return float4(blendColor, source.a);
+    BlendNebulaOutput output;
+    output.color = float4(blendColor, nebula.a);
+    output.volumeAlpha = nebula.a;
+    return output;
+}
+
+//$ Pass DeferredShade
+//$ Vertex NebulaVert
+//$ Fragment CompNebulaNormalFrag
+//$ Cull None
+//$ ZTest Off
+//$ ZWrite Off
+//$ ZMode Always
+
+//$ Blend On
+//$ SrcOp DstColor
+//$ DstOp Zero
+//$ ColorOp Add
+
+FRAG float4 CompNebulaNormalFrag(VertexData input) : SV_Target
+{
+    float volumeAlpha = _NebulaVolumeAlpha.SampleLevel(input.uv, 0);
+    float multiplier = 1.0f - volumeAlpha;
+  //  multiplier = volumeAlpha > _AlphaThreshold : multp
+
+    return float4(1, 1, multiplier, multiplier);
+}
+
+//$ Pass Opaque
+//$ Vertex NebulaVert
+//$ Fragment CompNebulaWCFrag
+//$ Cull None
+//$ ZTest Off
+//$ ZWrite Off
+//$ ZMode Always
+
+//$ Blend On
+//$ SrcOp SrcAlpha
+//$ DstOp InvSrcAlpha
+//$ ColorOp Add
+
+FRAG float4 CompNebulaWCFrag(VertexData input) : SV_Target
+{
+    float volumeAlpha = _NebulaVolumeAlpha.SampleLevel(input.uv, 0);
+
+    return float4(Nebula.GetDistortion(_Wetness),
+        _GranulationNoiseIntensity,
+        _ColorBleed,
+        volumeAlpha);
 }

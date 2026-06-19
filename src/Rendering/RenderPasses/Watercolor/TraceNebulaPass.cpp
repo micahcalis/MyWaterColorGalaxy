@@ -26,6 +26,7 @@ namespace Beer::Rendering
     static const float HENYEYG = 0.5f;
     static const float LIGHT_MUL = 6.0f;
     static const float DISTORTION_INTENSITY = 0.1f;
+    static const float BASE_VIBRANCE = 0.8f;
 
     static const uint32_t NOISE_GROUP_SIZE = 8;
     static const uint32_t SHAPE_NOISE_RES = 128;
@@ -112,6 +113,7 @@ namespace Beer::Rendering
         traceMaterial->SetFloat("_ColorNoiseScale", COLOR_NOISE_SCALE);
         traceMaterial->SetFloat("_ColorNoiseScale", COLOR_NOISE_SCALE);
         traceMaterial->SetFloat("_DistortionIntensity", DISTORTION_INTENSITY);
+        traceMaterial->SetFloat("_BaseVibrance", BASE_VIBRANCE);
 
         InitializeNoiseVolumes();
 

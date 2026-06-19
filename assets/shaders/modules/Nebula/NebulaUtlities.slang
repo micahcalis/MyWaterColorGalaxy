@@ -150,4 +150,9 @@ namespace Nebula
             return viewSpace.xyz / viewSpace.w;
         }
     }
+
+    public float GetDistortion(float wetness)
+    {
+        return pow(wetness, 0.75f) * 0.5f + 0.5f;
+    }
 }

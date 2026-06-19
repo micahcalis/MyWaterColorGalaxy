@@ -6,9 +6,7 @@
 
 namespace Beer::Rendering
 {
-    static const float NEBULA_DEPTH_TOLERANCE = 0.005f;
-
-    class BlendNebulaPass : public IRenderPass
+    class BlendNebulaWCPass : public IRenderPass
     {
     private:
         NebulaBuffer* nebulaBuffer = nullptr;
@@ -16,16 +14,11 @@ namespace Beer::Rendering
         std::shared_ptr<Rendering::Material> blendMaterial = nullptr;
 
     public:
-        BlendNebulaPass(NebulaBuffer* nebulaBuffer,
+        BlendNebulaWCPass(NebulaBuffer* nebulaBuffer,
             System::GalaxyObjectBuffer* stardustBuffer);
 
         void OnRenderSetup(const RenderContext& context) override;
         void Execute(CommandBuffer* commandBuffer, const RenderContext& context) override;
         PassDependencyList GetDependencies() const override;
-
-        bool BlitsMainTarget() const override
-        {
-            return true;
-        }
     };
 } // namespace Beer::Rendering

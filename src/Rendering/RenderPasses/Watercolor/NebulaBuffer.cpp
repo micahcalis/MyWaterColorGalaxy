@@ -35,4 +35,14 @@ namespace Beer::Rendering
                                 static_cast<VkFormat>(NEBULA_TARGET_FORMAT))
                 .AllocPointer);
     }
+
+    void NebulaBuffer::ReallocateVolumeAlpha(const RenderContext& context)
+    {
+        NebulaVolumeAlpha = static_cast<RenderTexture*>(
+            context.BlackBox->ReallocateIfNeeded(NEBULA_VOLUME_ALPHA_NAME,
+                                Core::Screen::Width(),
+                                Core::Screen::Height(),
+                                static_cast<VkFormat>(NEBULA_VOLUME_ALPHA_FORMAT))
+                .AllocPointer);
+    }
 } // namespace Beer::Rendering

@@ -13,6 +13,9 @@ namespace Beer::Rendering
     static const vk::Format NEBULA_TARGET_FORMAT = vk::Format::eR8G8B8A8Unorm;
     static const std::string NEBULA_TARGET_NAME = "_NebulaTarget";
 
+    static const vk::Format NEBULA_VOLUME_ALPHA_FORMAT = vk::Format::eR8Unorm;
+    static const std::string NEBULA_VOLUME_ALPHA_NAME = "_NebulaVolumeAlpha";
+
     static const uint32_t NEBULA_TILE_RES = 16;
     static const uint32_t MAX_NEBULA_PER_TILE = 31;
     static const std::string NEBULA_TILES_NAME = "_NebulaTiles";
@@ -28,12 +31,14 @@ namespace Beer::Rendering
     public:
         PhaseBuffer* NebulaTilesBuffer = nullptr;
         RenderTexture* NebulaMarchingTarget = nullptr;
+        RenderTexture* NebulaVolumeAlpha = nullptr;
         std::shared_ptr<ComputeContext> ComputeTilesContext = nullptr;
 
     public:
         NebulaBuffer();
         void ReallocateTiles(const RenderContext& context);
         void ReallocateTarget(const RenderContext& context);
+        void ReallocateVolumeAlpha(const RenderContext& context);
 
         static glm::vec2 GetExactTileResolution()
         {

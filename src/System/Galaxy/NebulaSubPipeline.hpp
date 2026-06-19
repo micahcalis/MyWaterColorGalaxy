@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Rendering/RenderPasses/Watercolor/BlendNebulaNormalPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/BlendNebulaPass.hpp"
+#include "Rendering/RenderPasses/Watercolor/BlendNebulaWCPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/ComputeNebulaTilesPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/NebulaBuffer.hpp"
 #include "Rendering/RenderPasses/Watercolor/ComputeNebulaTilesPass.hpp"
@@ -19,6 +21,7 @@ namespace Beer::System
         std::unique_ptr<Rendering::ComputeNebulaTilesPass> computeNebulaTilesPass = nullptr;
         std::unique_ptr<Rendering::TraceNebulaPass> traceNebulaPass = nullptr;
         std::unique_ptr<Rendering::BlendNebulaPass> blendNebulaPass = nullptr;
+        std::unique_ptr<Rendering::BlendNebulaWCPass> blendNebulaWCPass = nullptr;
 
     public:
         NebulaSubPipeline(GalaxyObjectBuffer* stardustBuffer)
@@ -34,13 +37,17 @@ namespace Beer::System
 
             blendNebulaPass = std::make_unique<Rendering::BlendNebulaPass>(nebulaBuffer.get(),
                 stardustBuffer);
+
+            blendNebulaWCPass = std::make_unique<Rendering::BlendNebulaWCPass>(nebulaBuffer.get(),
+                stardustBuffer);
         }
 
         std::vector<Rendering::IRenderPass*> GetRenderPasses()
         {
             return {computeNebulaTilesPass.get(),
                 traceNebulaPass.get(),
-                blendNebulaPass.get()};
+                blendNebulaPass.get(),
+                blendNebulaWCPass.get()};
         };
     };
 } // namespace Beer::System

@@ -6,6 +6,7 @@
 #include "Rendering/Shader/Globals/GalaxyGlobals.hpp"
 #include "Rendering/Shader/Globals/LightingGlobals.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "Rendering/Shader/VertexInput.hpp"
 #include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "glm/ext/quaternion_common.hpp"
 #include "glm/matrix.hpp"
@@ -94,6 +95,7 @@ namespace Beer::Rendering
         engineGlobalsData.CameraPos = cameraPos;
         engineGlobalsData.CameraDir = cameraForward;
         engineGlobalsData.ViewMat = viewMat;
+        engineGlobalsData.InvViewMat = glm::inverse(viewMat);
         engineGlobalsData.ViewDirMat = glm::mat4(glm::mat3(viewMat));
         engineGlobalsData.ProjMat = projMat;
         engineGlobalsData.InvProjMat = glm::inverse(projMat);

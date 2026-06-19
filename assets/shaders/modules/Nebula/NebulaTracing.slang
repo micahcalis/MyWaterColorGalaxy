@@ -35,14 +35,15 @@ namespace Nebula
         return tile.NebulaCount > 0;
     }
 
-    public SphereTracing.Ray GetRay(float2 uv, 
-        float depth,
-        float maxLength)
+    public SphereTracing.Ray GetRay(float2 uv, float depth, float maxLength)
     {
-        float3 pixelPosition = UVDepthToWorld(uv, depth);
-        float3 cameraVec = pixelPosition - _CameraPos;
-        float exactDist = length(cameraVec);
-        float3 viewDirWS = cameraVec / exactDist;
+        float2 ndc = uv * 2.0f - 1.0f;
+        float4 clipPos = float4(ndc, 1.0f, 1.0f);
+        float4 viewPos = mul(_InvProjMat, clipPos);
+        float3 viewDirVS = normalize(viewPos.xyz / viewPos.w);
+        float3 viewDirWS = normalize(mul((float3x3)_InvViewMat, viewDirVS));
+        float3 actualPos = UVDepthToWorld(uv, depth);
+        float exactDist = length(actualPos - _CameraPos);
 
         return SphereTracing.Ray(_CameraPos, viewDirWS, min(exactDist, maxLength));
     }
@@ -85,6 +86,7 @@ namespace Nebula
         public float LightMultiplier;
         public float Phase;
         public float DistortionIntensity;
+        public float BaseVibrancy;
 
         public __init(uint _maxSteps,
             float _stepSize,
@@ -94,6 +96,7 @@ namespace Nebula
             float _lightAbsorption,
             float _lightMultiplier,
             float _distortionIntensity,
+            float _baseVibrancy,
             float _henyeyG,
             float _henyeyK,
             float3 _viewDirWS,
@@ -109,6 +112,7 @@ namespace Nebula
             float rawPhase = GetPhase(_henyeyG, _henyeyK, _viewDirWS, _lightDirWS);
             Phase = min(rawPhase, 1.0f);
             DistortionIntensity = _distortionIntensity;
+            BaseVibrancy = _baseVibrancy;
         }
     }
 
@@ -351,7 +355,7 @@ namespace Nebula
         }
     }
 
-    const static float DST_EPS = 0.05f;
+    const static float DST_EPS = 0.01f;
     const static float TRANS_THRESH = 0.01f;
     const static int LIGHT_MARCH_STEPS = 10;
     const static float LIGHT_MARCH_LENGTH = 300.0f;
@@ -444,11 +448,13 @@ namespace Nebula
                     float stepTransmittance = exp(-stepDensity * input.StepSize * input.ShapeAbsorption);
                     NebulaMaterial lightMaterial = container.GetMaterial(objectIndex);
 
-                    float3 directLight = MarchLightColor(lightObject, result.Position, distortionOffset, stepDensity);
+                    // note: lighting not adding enough value to justify -100fps
+
+                    // float3 directLight = MarchLightColor(lightObject, result.Position, distortionOffset, stepDensity);
                     float3 albedo = container.GetObjColor(lightObject, lightMaterial, stepDensity);
 
-                    float baseVibrancy = 0.7f; 
-                    float3 totalIncomingLight = baseVibrancy + directLight; 
+                    float baseVibrancy = 0.75f; 
+                    float3 totalIncomingLight = baseVibrancy;//+ directLight; 
                     float3 stepColor = totalIncomingLight * albedo;
                     result.Color += result.Transmittance * stepColor * (stepDensity * input.StepSize);;
 
