@@ -36,21 +36,15 @@ namespace Beer::System
         Rendering::FullscreenTransitionPass* transitionPass = nullptr;
 
         bool canFade = true;
+        bool isFadingIn = true;
 
     public:
         MenuBarManager(GalaxyMapBuffer* galaxyMapBuffer,
             Function<void> clearHistory,
             Function<void> saveMap,
             Function<void> onBackToTitle,
-            Function<void> enableBlock)
-            : galaxyMapBuffer(galaxyMapBuffer)
-            , clearHistory(clearHistory)
-            , saveMap(saveMap)
-            , onBackToTitle(onBackToTitle)
-            , enableBlock(enableBlock)
-        {
-            transitionPass = Rendering::IRenderPass::FetchFromRegister<Rendering::FullscreenTransitionPass>(Rendering::TRANSITION_PASS);
-        }
+            Function<void> enableBlock,
+            Rendering::FadeState initialFadeState);
 
         void InitializeButtons(UITransform* newSeedTransform,
             Rendering::Material* newSeedMaterial,

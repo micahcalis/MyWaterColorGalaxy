@@ -18,6 +18,7 @@
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Galaxy/WatercolorSubPipeline.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include "System/PaintTool/TransitionMaterialGetter.hpp"
 #include <print>
 #include <stdexcept>
 
@@ -25,7 +26,8 @@ namespace Beer::System
 {
     static const uint32_t STAR_COUNT = 15'000;
     static const float STAR_BOX_SIZE = 100.0f;
-    static const float FADE_DURATION = 1.0f;
+    static const float FADE_OUT_DURATION = 2.0f;
+    static const float FADE_IN_DURATION = 1.0f;
 
     void GalaxyContext::Load()
     {
@@ -82,7 +84,7 @@ namespace Beer::System
 
     void GalaxyContext::FadeReturn()
     {
-        if (isReturning == false)
+        if (isReturning == false && isFadingIn == false)
         {
             Function<void> onFadeIn = [this]() -> void {
                 serializedMap.ExplorerHistory = SerializeExplorer();
@@ -90,9 +92,9 @@ namespace Beer::System
                 OnReturnToPainting.Invoke();
             };
 
-            transitionPass->SetFade(Rendering::FadeState::In, 1.0f / FADE_DURATION);
+            transitionPass->SetFade(Rendering::FadeState::In, 1.0f / FADE_OUT_DURATION);
 
-            auto returnTimer = Clock::Timer(FADE_DURATION);
+            auto returnTimer = Clock::Timer(FADE_OUT_DURATION);
             returnTimer->OnTimerComplete.Subscribe(onFadeIn);
             returnTimer->Start();
 
@@ -172,11 +174,14 @@ namespace Beer::System
 
         if (!transitionPass->HasMaterial())
         {
-            auto transitionMaterial = std::make_shared<Rendering::Material>("Blit/SpaceTransitionBlit");
-            transitionPass->SetMaterial(transitionMaterial);
+            auto transitionInitializationFunc = TransitionMaterialGetter::GetHyperspaceInitialization();
+            transitionPass->Initialize(transitionInitializationFunc);
         }
 
-        transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_DURATION);
+        transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_IN_DURATION);
+        auto timer = Clock::Timer(FADE_IN_DURATION);
+        timer->OnTimerComplete.Subscribe([this]() -> void { isFadingIn = false; });
+        timer->Start();
     }
 
     void GalaxyContext::TryLoadMap()

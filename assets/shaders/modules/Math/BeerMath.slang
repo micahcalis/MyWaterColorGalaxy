@@ -63,4 +63,14 @@ namespace Math
         
         return (d < c) ? f : G; 
     }
+
+    public static const float ATAN5 = 1.37340076695f;
+
+    public float JumpStep(float a, float b, float x)
+    {
+        float fTerm = 8.0f * (x - a) / (b - a) - 5.0f;
+        float f1 = saturate(atan(fTerm) / (2.0f * ATAN5) + 0.5f);
+        float f2 = fTerm / (2.0f * ATAN5) + 0.5f;
+        return max(f1, f2);
+    }
 }

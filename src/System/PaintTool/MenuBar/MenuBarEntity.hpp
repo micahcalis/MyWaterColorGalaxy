@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MenuBarManager.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
@@ -34,13 +35,15 @@ namespace Beer::System
         Function<void> saveMap = nullptr;
         Function<void> onBackToTitle = nullptr;
         Function<void> enableBlock = nullptr;
+        Rendering::FadeState initialFadeState;
 
     public:
         MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
             Function<void> clearHistory,
             Function<void> saveMap,
             Function<void> onBackToTitle,
-            Function<void> enableBlock);
+            Function<void> enableBlock,
+            Rendering::FadeState initialFadeState);
 
         void InitializeButtonEntities();
         MenuBarManager* GetMenuBarManager() const { return static_cast<MenuBarManager*>(manager.get()); };
@@ -52,7 +55,8 @@ namespace Beer::System
                 clearHistory,
                 saveMap,
                 onBackToTitle,
-                enableBlock);
+                enableBlock,
+                initialFadeState);
         }
 
         std::vector<UIRenderItem> GetRenderItems() override

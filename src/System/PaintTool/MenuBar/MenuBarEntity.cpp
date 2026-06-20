@@ -1,5 +1,6 @@
 #include "System/PaintTool/MenuBar/MenuBarEntity.hpp"
 #include "MenuBarManager.hpp"
+#include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -19,12 +20,14 @@ namespace Beer::System
         Function<void> clearHistory,
         Function<void> saveMap,
         Function<void> onBackToTitle,
-        Function<void> enableBlock)
+        Function<void> enableBlock,
+        Rendering::FadeState initialFadeState)
         : galaxyMapBuffer(galaxyMapBuffer)
         , clearHistory(clearHistory)
         , saveMap(saveMap)
         , onBackToTitle(onBackToTitle)
         , enableBlock(enableBlock)
+        , initialFadeState(initialFadeState)
         , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
         rootTransform.Anchor = AnchorMode::BottomRight;

@@ -38,6 +38,7 @@ namespace Beer::System
         Function<PlayerInput> getPlayerInput = nullptr;
         Function<bool> getReturnPressed = nullptr;
         bool isReturning = false;
+        bool isFadingIn = true;
 
         std::unique_ptr<WatercolorSubPipeline> watercolorSubPipeline = nullptr;
         std::unique_ptr<NebulaSubPipeline> nebulaSubPipeline = nullptr;
