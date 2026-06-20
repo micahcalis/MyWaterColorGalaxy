@@ -28,26 +28,22 @@ namespace SDF
     {
         public FieldOut Evaluate(MarchData data);
 
+        // Inigo Quilez TetraHedron Normal Method
         public float3 GetNormal(MarchData data)
         {
-            float eps = NORMAL_EPS + data.TotalDistance * NORMAL_EPS;
+            float2 k = float2(1.0f, -1.0f);
+    
+            MarchData d1 = data; d1.Position = data.Position + k.xyy * NORMAL_EPS;
+            MarchData d2 = data; d2.Position = data.Position + k.yyx * NORMAL_EPS;
+            MarchData d3 = data; d3.Position = data.Position + k.yxy * NORMAL_EPS;
+            MarchData d4 = data; d4.Position = data.Position + k.xxx * NORMAL_EPS;
 
-            MarchData a = data;
-            MarchData b = data;
+            float3 gradient = k.xyy * Evaluate(d1).SignedDist + 
+                k.yyx * Evaluate(d2).SignedDist + 
+                k.yxy * Evaluate(d3).SignedDist + 
+                k.xxx * Evaluate(d4).SignedDist;
 
-            a.Position = data.Position + float3(eps, 0, 0);
-            b.Position = data.Position - float3(eps, 0, 0);
-            float dx = Evaluate(a).SignedDist - Evaluate(b).SignedDist;
-
-            a.Position = data.Position + float3(0, eps, 0);
-            b.Position = data.Position - float3(0, eps, 0);
-            float dy = Evaluate(a).SignedDist - Evaluate(b).SignedDist;
-
-            a.Position = data.Position + float3(0, 0, eps);
-            b.Position = data.Position - float3(0, 0, eps);
-            float dz = Evaluate(a).SignedDist - Evaluate(b).SignedDist;
-            
-            return normalize(float3(dx, dy, dz));
+            return normalize(gradient + float3(1e-7f));
         }
     }
 

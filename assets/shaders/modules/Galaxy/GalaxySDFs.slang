@@ -501,7 +501,6 @@ namespace Galaxy
 
             testGradient = abs(accretionShape.SignedDist);
 
-
             if (voidDist < accretionShape.SignedDist)
             {
                 return SDF.FieldOut(voidDist, VOID_MAT);
@@ -529,7 +528,7 @@ namespace Galaxy
             float3 localPos = (position - center) * invScale;
             float distanceGrad = length(localPos);
             float3 rotatedPos = mul(basis, localPos);
-            float angleGrad = ((atan2(rotatedPos.z, rotatedPos.x) + PI) / TAU);
+            float angleGrad = ((atan2(rotatedPos.z, rotatedPos.x + 1e-6f) + PI) / TAU);
             angleGrad = frac(angleGrad + _Time * BLKHOLE_NOISE_SPEED);
             
             Noise.TileablePerlin perlin = Noise.TileablePerlin(seed, float2(distanceGrad, angleGrad));

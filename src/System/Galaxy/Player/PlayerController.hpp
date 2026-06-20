@@ -11,6 +11,7 @@ namespace Beer::System
     private:
         PlayerEntity* player;
         float speed = 0;
+        bool isBoosting;
 
     public:
         PlayerController(PlayerEntity* player)

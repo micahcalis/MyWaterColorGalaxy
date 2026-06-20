@@ -123,7 +123,7 @@ namespace Beer::System
         };
 
         Function<bool> isBoosting = [this]() -> bool {
-            return getPlayerInput().IsBoosting;
+            return getPlayerInput().IsBoosting && playerEntity->GetPlayerManager()->GetPhotoMode() == false;
         };
 
         playerVFXEntity = registry.CreateEntity<PlayerVFXEntity>(getPlayerTransformData,
