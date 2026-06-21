@@ -1,5 +1,6 @@
 #pragma once
 
+#include "System/Audio/AudioClip.hpp"
 #include "System/Menus/UI/MainMenuEntity.hpp"
 #include "Rendering/RenderPasses/DrawUIPass.hpp"
 #include "System/Context/IContext.hpp"
@@ -15,6 +16,7 @@ namespace Beer::System
     private:
         Rendering::DrawUIPass* drawUIPass = nullptr;
         MainMenuEntity* mainMenuEntity = nullptr;
+        std::shared_ptr<AudioClip> selectClip = nullptr;
 
     public:
         TitleUserIntContext()

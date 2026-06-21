@@ -2,6 +2,7 @@
 
 #include "Player/PlayerVFXEntity.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Galaxy/General/GalaxyEntity.hpp"
 #include "System/Galaxy/General/SunEntity.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
@@ -39,6 +40,7 @@ namespace Beer::System
         Function<bool> getReturnPressed = nullptr;
         bool isReturning = false;
         bool isFadingIn = true;
+        std::shared_ptr<AudioClip> transitionClip = nullptr;
 
         std::unique_ptr<WatercolorSubPipeline> watercolorSubPipeline = nullptr;
         std::unique_ptr<NebulaSubPipeline> nebulaSubPipeline = nullptr;

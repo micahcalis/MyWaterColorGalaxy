@@ -4,6 +4,7 @@
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -37,6 +38,9 @@ namespace Beer::System
 
         bool canFade = true;
         bool isFadingIn = true;
+
+        std::shared_ptr<AudioClip> selectClip = nullptr;
+        std::shared_ptr<AudioClip> transitionClip = nullptr;
 
     public:
         MenuBarManager(GalaxyMapBuffer* galaxyMapBuffer,

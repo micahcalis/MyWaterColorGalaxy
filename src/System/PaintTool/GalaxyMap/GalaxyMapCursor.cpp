@@ -4,6 +4,7 @@
 #include "GalaxyComponent.hpp"
 #include "GalaxyMapBuffer.hpp"
 #include "GalaxyMapCursor.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -12,7 +13,7 @@
 #include "System/PaintTool/GalaxyMap/GalaxySeed.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxySpriteFactory.hpp"
 #include <memory>
-#include <print>
+#include "System/Audio/SoundGlobalSettings.hpp"
 
 namespace Beer::System
 {
@@ -36,6 +37,15 @@ namespace Beer::System
     {
         factory = std::make_unique<GalaxySpriteFactory>();
         SetSize(0.5f);
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = PLACE_MAP_CLIP_VOLUME;
+        placeAudioClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_PlaceOnMap",
+            audioSettings);
+
+        audioSettings.Volume = ERASE_CLIP_VOLUME;
+        eraseAudioClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_Erase",
+            audioSettings);
     }
 
     void GalaxyMapCursor::Update(MouseInput input,
@@ -67,6 +77,7 @@ namespace Beer::System
             {
                 glm::vec2 mapSpacePosition = ToMapSpace(zoomedMousePos);
                 Place(GetNewData(mapSpacePosition));
+                placeAudioClip->Play();
             }
             CanUseCursor = !hit;
         } else if (Brush == GalaxyBrushType::Eraser)
@@ -74,6 +85,7 @@ namespace Beer::System
             if (hit && input.LeftClickHold && insideRect)
             {
                 Erase(hitInfo.Index);
+                eraseAudioClip->Play();
             }
             CanUseCursor = hit;
         } else if (Brush == GalaxyBrushType::MagnifyingGlass)
@@ -126,6 +138,7 @@ namespace Beer::System
             data));
 
         OnComponentPlaced.Invoke(index, data, fromHistory);
+
         return index;
     }
 

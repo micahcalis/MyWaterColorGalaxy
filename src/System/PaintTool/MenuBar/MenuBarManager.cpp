@@ -1,5 +1,6 @@
 #include "System/PaintTool/MenuBar/MenuBarManager.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
+#include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/Base/Clock/Clock.hpp"
 #include <memory>
 #include <print>
@@ -34,6 +35,15 @@ namespace Beer::System
         {
             isFadingIn = false;
         }
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = SELECT_CLIP_VOLUME;
+        selectClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_SelectButton",
+            audioSettings);
+
+        audioSettings.Volume = TRANSITION_VOLUME;
+        transitionClip = std::make_shared<AudioClip>("SoundEffects/Game/Audio_HyperSpace",
+            audioSettings);
     }
 
     void MenuBarManager::InitializeNewSeed(UITransform* newSeedTransform,
@@ -41,7 +51,11 @@ namespace Beer::System
     {
         newSeedButton = std::make_unique<Button>(newSeedTransform, newSeedMaterial);
 
-        newSeedButton->SetOnClick([this]() -> void { OnNewSeed.Invoke(); });
+        newSeedButton->SetOnClick([this]() -> void {
+            OnNewSeed.Invoke();
+            selectClip->Play();
+        });
+
         OnNewSeed.Subscribe([this]() -> void { galaxyMapBuffer->SetNewSeed(GalaxySeed()); });
         OnNewSeed.Subscribe(clearHistory);
     }
@@ -50,14 +64,21 @@ namespace Beer::System
         Rendering::Material* flyMaterial)
     {
         flyButton = std::make_unique<Button>(flyTransform, flyMaterial);
-        flyButton->SetOnClick([this]() -> void { InvokeFly(); });
+        flyButton->SetOnClick([this]() -> void {
+            InvokeFly();
+            selectClip->Play();
+            transitionClip->Play();
+        });
     }
 
     void MenuBarManager::InitializeBack(UITransform* backTransform,
         Rendering::Material* backMaterial)
     {
         backButton = std::make_unique<Button>(backTransform, backMaterial);
-        backButton->SetOnClick(onBackToTitle);
+        backButton->SetOnClick([this]() -> void {
+            onBackToTitle();
+            selectClip->Play();
+        });
     }
 
     void MenuBarManager::InvokeFly()
@@ -77,8 +98,6 @@ namespace Beer::System
         transitionPass->GetMaterial()->SetColor("_ColorB", colors[1]);
         transitionPass->GetMaterial()->SetColor("_ColorC", colors[2]);
         transitionPass->GetMaterial()->SetColor("_ColorD", colors[3]);
-        std::println("set color");
-
         enableBlock();
 
         auto timer = Clock::Timer(FADE_OUT_DURATION);

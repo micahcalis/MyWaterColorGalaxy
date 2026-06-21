@@ -3,6 +3,7 @@
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Text/FontMaterial.hpp"
 #include "Rendering/Text/TextBuffer.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Components/UI/TextTransform.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/Button.hpp"

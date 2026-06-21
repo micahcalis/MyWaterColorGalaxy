@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ColorMixerCursor.hpp"
+#include "System/Audio/AudioClip.hpp"
+#include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/ColorMixer/PigmentButton.hpp"
@@ -10,6 +12,7 @@
 #include "System/PaintTool/HelpToggle/HelpContainer.hpp"
 #include "System/PaintTool/HelpToggle/HelpToggle.hpp"
 #include <vector>
+#include "System/PaintTool/ToolBar/ToolBarManager.hpp"
 
 namespace Beer::System
 {
@@ -31,6 +34,8 @@ namespace Beer::System
         std::unique_ptr<ColorMixerCursor> colorMixerCursor = nullptr;
         UITransform* selectSpriteTransform = nullptr;
         bool enabled = false;
+        std::shared_ptr<AudioClip> selectClip = nullptr;
+        std::shared_ptr<AudioClip> clearCanvasClip = nullptr;
 
     public:
         ColorMixerManager(UITransform* canvasTransform,
@@ -40,6 +45,14 @@ namespace Beer::System
             , markDirty(markDirty)
             , getMouseInput(getMouseInput)
         {
+            AudioSettings audioSettings{};
+            audioSettings.Volume = SELECT_CLIP_VOLUME;
+            selectClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_SelectButton",
+                audioSettings);
+
+            audioSettings.Volume = CLEAR_CANVAS_VOLUME;
+            clearCanvasClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_ClearCanvas",
+                audioSettings);
         }
 
         void Update() override;

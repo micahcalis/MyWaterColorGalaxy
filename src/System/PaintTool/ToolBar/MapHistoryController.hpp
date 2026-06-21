@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/Material/Material.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
@@ -41,6 +42,8 @@ namespace Beer::System
 
         Function<uint32_t, const GalaxyComponentData&> addComponent = nullptr;
         Function<void, uint32_t> eraseComponent = nullptr;
+
+        std::shared_ptr<AudioClip> selectClip = nullptr;
 
     public:
         MapHistoryController(UITransform* undoTransform,

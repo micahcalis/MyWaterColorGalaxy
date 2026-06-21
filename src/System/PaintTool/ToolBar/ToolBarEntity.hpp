@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"

@@ -2,6 +2,7 @@
 #include <print>
 #include <stdexcept>
 #include <Core/Application/Managers/AudioManager.hpp>
+#include "System/Audio/LoopingStream.hpp"
 
 namespace Beer::System
 {
@@ -29,8 +30,8 @@ namespace Beer::System
         audioManager->PlayOnce(asset.get(), settings);
     }
 
-    void AudioClip::PlayAsBackground()
+    std::shared_ptr<LoopingStream> AudioClip::GetLoop()
     {
-        audioManager->SetBackgroundAsset(asset, settings);
+        return audioManager->GetLoopingStream(asset, settings);
     }
 } // namespace Beer::System

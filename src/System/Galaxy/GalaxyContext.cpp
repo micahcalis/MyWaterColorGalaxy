@@ -97,6 +97,7 @@ namespace Beer::System
             auto returnTimer = Clock::Timer(FADE_OUT_DURATION);
             returnTimer->OnTimerComplete.Subscribe(onFadeIn);
             returnTimer->Start();
+            transitionClip->Play();
 
             isReturning = true;
         }
@@ -182,6 +183,11 @@ namespace Beer::System
         auto timer = Clock::Timer(FADE_IN_DURATION);
         timer->OnTimerComplete.Subscribe([this]() -> void { isFadingIn = false; });
         timer->Start();
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = TRANSITION_VOLUME;
+        transitionClip = std::make_shared<AudioClip>("SoundEffects/Game/Audio_HyperSpace",
+            audioSettings);
     }
 
     void GalaxyContext::TryLoadMap()

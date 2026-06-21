@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GalaxyComponent.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
 #include "System/Base/Input/MouseInput.hpp"
@@ -20,6 +21,8 @@ namespace Beer::System
         GalaxyBrushType Brush = GalaxyBrushType::Planet;
         float Size = 0;
         bool CanUseCursor = false;
+        std::shared_ptr<AudioClip> placeAudioClip = nullptr;
+        std::shared_ptr<AudioClip> eraseAudioClip = nullptr;
 
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;

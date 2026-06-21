@@ -1,6 +1,8 @@
 #include "System/Galaxy/Player/PlayerManager.hpp"
 #include "PlayerEntity.hpp"
 #include "Rendering/Shader/Shader.hpp"
+#include "System/Audio/AudioClip.hpp"
+#include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
 #include "System/Components/General/Transform.hpp"
@@ -25,6 +27,11 @@ namespace Beer::System
         Function<float> getNormPlayerSpeed = [this]() -> float { return playerController->GetNormalizedSpeed(); };
         Function<bool> getPhotoMode = [this]() -> bool { return photoMode; };
         playerCamera = std::make_unique<PlayerCamera>(player, cameraEntity.get(), getNormPlayerSpeed, getPhotoMode);
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = PHOTO_MODE_VOLUME;
+        photoModeClip = std::make_shared<AudioClip>("SoundEffects/Game/Audio_PhotoMode",
+            audioSettings);
     }
 
     void PlayerManager::Update()
@@ -94,5 +101,6 @@ namespace Beer::System
     {
         photoMode = !photoMode;
         onSetPhotoMode->Invoke(photoMode);
+        photoModeClip->Play();
     }
 } // namespace Beer::System
