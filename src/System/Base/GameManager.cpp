@@ -3,6 +3,8 @@
 #include "Input/Input.hpp"
 #include "Input/MouseInput.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
+#include "System/Audio/AudioClip.hpp"
+#include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include "System/Base/Input/InputManager.hpp"
@@ -80,6 +82,11 @@ namespace Beer::System
 
         lightManager = std::make_unique<LightManager>();
         ILight::SetLightManager(lightManager.get());
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = BACKGROUND_VOLUME;
+        backgroundTrack = std::make_shared<AudioClip>("Tracks/Audio_MWG_Theme", audioSettings);
+        backgroundLoop = backgroundTrack->GetLoop();
     }
 
     void GameManager::InitializeContextFactory()

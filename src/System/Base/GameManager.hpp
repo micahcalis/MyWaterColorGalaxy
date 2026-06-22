@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Clock/ClockManager.hpp"
 #include "System/Base/Input/InputManager.hpp"
 #include "System/Components/Colliders/QuadColliderManager.hpp"
@@ -30,6 +31,8 @@ namespace Beer::System
 
         std::string currentMapName = "FallbackMap";
         Rendering::FadeState fadeState = Rendering::FadeState::Out;
+        std::shared_ptr<AudioClip> backgroundTrack = nullptr;
+        std::shared_ptr<LoopingStream> backgroundLoop = nullptr;
 
     public:
         ~GameManager();

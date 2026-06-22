@@ -84,12 +84,12 @@ public struct WatercolorProcessingSampler : WC.IWatercolorProcessingSampler
 
     public float4 SampleMain(float2 offset)
     {
-        return _BlitSource.Sample(uv + offset);
+        return _BlitSource.Sample(saturate(uv + offset));
     }
 
     public float4 SampleBlurred(float2 offset)
     {
-        return _BlurredColor.Sample(uv + offset);
+        return _BlurredColor.Sample(saturate(uv + offset));
     }
 
     public WC.PaperData SamplePaper(float2 offset)

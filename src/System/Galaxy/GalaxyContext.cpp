@@ -24,7 +24,7 @@
 
 namespace Beer::System
 {
-    static const uint32_t STAR_COUNT = 15'000;
+    static const uint32_t STAR_COUNT = 7'500;
     static const float STAR_BOX_SIZE = 100.0f;
     static const float FADE_OUT_DURATION = 2.0f;
     static const float FADE_IN_DURATION = 1.0f;

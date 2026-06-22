@@ -107,6 +107,8 @@ namespace Beer::Core
     {
         std::cout << "cleanup" << '\n';
 
+        gameManager.reset();
+
         if (audioManager != nullptr)
         {
             audioManager.reset();

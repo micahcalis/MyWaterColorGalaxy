@@ -21,6 +21,7 @@ namespace Beer::Core
                 SDL_DestroyAudioStream(stream);
             }
         }
+
         clipStreams.clear();
 
         Clear();
