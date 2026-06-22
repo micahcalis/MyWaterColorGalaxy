@@ -7,6 +7,7 @@
 #include "glm/geometric.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include <algorithm>
+#include "System/Audio/LoopingStream.hpp"
 #include <print>
 
 namespace Beer::System
@@ -15,6 +16,7 @@ namespace Beer::System
     {
         SanitizeMouseInput(playerInput.MouseVec);
         Move(playerInput);
+        HandleBoostAudio(playerInput.IsBoosting);
     }
 
     void PlayerController::Move(PlayerInput input)
@@ -75,5 +77,23 @@ namespace Beer::System
         {
             mouseVec = (mouseVec / currentMagnitude) * maxDeltaThisFrame;
         }
+    }
+
+    void PlayerController::HandleBoostAudio(bool isBoosting)
+    {
+        if (!wasBoosting && isBoosting)
+        {
+            loopingStream = boostClip->GetLoop();
+        }
+        if (wasBoosting && !isBoosting)
+        {
+            if (loopingStream != nullptr)
+            {
+                loopingStream->Stop();
+                loopingStream.reset();
+            }
+        }
+
+        wasBoosting = isBoosting;
     }
 } // namespace Beer::System

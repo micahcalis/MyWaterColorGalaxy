@@ -62,29 +62,29 @@ namespace Beer::System
     private:
         std::unique_ptr<Button> buttonHandle = nullptr;
         PigmentType pigment;
-        Function<void, PigmentType, UITransform*> pigmentCallback = nullptr;
+        Function<void, PigmentType, UITransform*, bool> pigmentCallback = nullptr;
 
     public:
         PigmentButton(UITransform* transform,
             Rendering::Material* spriteMaterial,
             PigmentType pigment,
-            Function<void, PigmentType, UITransform*> pigmentCallback)
+            Function<void, PigmentType, UITransform*, bool> pigmentCallback)
             : pigment(pigment)
             , pigmentCallback(pigmentCallback)
         {
             buttonHandle = std::make_unique<Button>(transform, spriteMaterial);
-            buttonHandle->SetOnClick([this]() -> void { ClickedCallback(); });
+            buttonHandle->SetOnClick([this]() -> void { ClickedCallback(true); });
         }
 
     public:
-        void ClickedCallback()
+        void ClickedCallback(bool clicked)
         {
             if (pigmentCallback == nullptr)
             {
                 return;
             }
 
-            pigmentCallback(pigment, buttonHandle->GetTransform());
+            pigmentCallback(pigment, buttonHandle->GetTransform(), clicked);
         }
     };
 } // namespace Beer::System

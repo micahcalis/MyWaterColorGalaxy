@@ -1,4 +1,6 @@
 #include "System/PaintTool/ToolBar/MapHistoryController.hpp"
+#include "System/Audio/AudioClip.hpp"
+#include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/Components/UI/Button.hpp"
 
 namespace Beer::System
@@ -21,6 +23,11 @@ namespace Beer::System
 
         mapHistory.reserve(MAX_HISTORY_LENGTH);
         redoHistory.reserve(MAX_HISTORY_LENGTH);
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = SELECT_CLIP_VOLUME;
+        selectClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_SelectButton",
+            audioSettings);
     }
 
     void MapHistoryController::AddPlaceAction(uint32_t index, GalaxyComponentData data)
@@ -54,6 +61,7 @@ namespace Beer::System
         mapHistory.pop_back();
         ExecuteMapAction(action, true);
         redoHistory.push_back(action);
+        selectClip->Play();
     }
 
     void MapHistoryController::Redo()
@@ -65,6 +73,7 @@ namespace Beer::System
         redoHistory.pop_back();
         ExecuteMapAction(action, false);
         mapHistory.push_back(action);
+        selectClip->Play();
     }
 
     void MapHistoryController::ExecuteMapAction(MapAction& action, bool isUndo)

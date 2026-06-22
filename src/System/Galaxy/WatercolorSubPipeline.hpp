@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/RenderPasses/Watercolor/BlitMainColorPass.hpp"
+#include "Rendering/RenderPasses/Watercolor/FilterPostProcessingPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/GaussianBlurPass.hpp"
 #include "Rendering/RenderPasses/Watercolor/OffsetEdgeBlurPass.hpp"
 #include "System/Components/General/ISubRenderPipeline.hpp"
@@ -19,6 +20,7 @@ namespace Beer::System
         std::unique_ptr<Rendering::OffsetEdgeBlurPass> edgeBlurHorizontalPass = nullptr;
         std::unique_ptr<Rendering::OffsetEdgeBlurPass> edgeBlurVerticalPass = nullptr;
         std::unique_ptr<Rendering::WatercolorPostProcessingPass> watercolorPostProcessingPass = nullptr;
+        std::unique_ptr<Rendering::FilterPostProcessingPass> watercolorFilteringPass = nullptr;
 
     public:
         WatercolorSubPipeline();

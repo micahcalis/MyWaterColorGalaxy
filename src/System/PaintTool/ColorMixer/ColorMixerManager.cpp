@@ -21,7 +21,9 @@ namespace Beer::System
 
         if (colorMixerCursor != nullptr)
         {
-            colorMixerCursor->Update(getMouseInput().PixelPos);
+            MouseInput mouseInput = getMouseInput();
+
+            colorMixerCursor->Update(mouseInput.PixelPos, mouseInput.leftClickStart);
 
             if (colorMixerCursor->IsActive())
             {
@@ -34,8 +36,13 @@ namespace Beer::System
         Rendering::Material* spriteMaterial,
         PigmentType pigment)
     {
-        Function<void, PigmentType, UITransform*> pigmentCallback = [this](PigmentType pigment, UITransform* transform) -> void {
+        Function<void, PigmentType, UITransform*, bool> pigmentCallback = [this](PigmentType pigment, UITransform* transform, bool clicked) -> void {
             SetCurrentPigment(pigment, transform);
+
+            if (clicked)
+            {
+                selectClip->Play();
+            }
         };
 
         pigmentButtons.emplace_back(std::make_unique<PigmentButton>(transform,
@@ -56,7 +63,7 @@ namespace Beer::System
     void ColorMixerManager::SetCurrentPigmentByIndex(uint32_t index)
     {
         index = std::clamp<uint32_t>(index, 0, pigmentButtons.size());
-        pigmentButtons[index]->ClickedCallback();
+        pigmentButtons[index]->ClickedCallback(false);
     }
 
     void ColorMixerManager::SetClearButton(Function<void> clearColorMixer,
@@ -66,7 +73,11 @@ namespace Beer::System
         this->clearColorMixer = clearColorMixer;
 
         clearButton = std::make_unique<Button>(clearTransform, clearMaterial);
-        clearButton->SetOnClick([this]() -> void { ClearColorMixer(); });
+
+        clearButton->SetOnClick([this]() -> void {
+            ClearColorMixer();
+            clearCanvasClip->Play();
+        });
     }
 
     void ColorMixerManager::SetColorPicker(Function<void, Function<void, ImagePixelData>> subscribeToReadback,

@@ -21,9 +21,14 @@ namespace Beer::System
         : settings(settings)
         , controlNoiseVolume(controlNoiseVolume)
     {
-        material = std::make_shared<Rendering::Material>(shaderPath);
-        settings->ApplyMaterialSettings(material.get());
-        material->SetTexture("_ControlNoiseVolume", controlNoiseVolume);
+        bool nullShader = shaderPath == nullptr || shaderPath[0] == '\0';
+
+        if (!nullShader)
+        {
+            material = std::make_shared<Rendering::Material>(shaderPath);
+            settings->ApplyMaterialSettings(material.get());
+            material->SetTexture("_ControlNoiseVolume", controlNoiseVolume);
+        }
 
         mesh = settings->GetMesh();
 
@@ -55,7 +60,11 @@ namespace Beer::System
 
         InitializeDataBuffer();
         InitializeDynamicPositions(serializedData, components);
-        InitializeMaterialData(serializedData);
+
+        if (!nullShader)
+        {
+            InitializeMaterialData(serializedData);
+        }
     }
 
     void GalaxyObjectBuffer::Update()
@@ -83,6 +92,11 @@ namespace Beer::System
         if (instanceCount == 0)
             return;
 
+        if (material == nullptr)
+        {
+            return;
+        }
+
         const Rendering::Shader* shader = material->GetShader();
 
         if (!shader->HasPass(pass))
@@ -92,16 +106,19 @@ namespace Beer::System
 
         commandBuffer->BindShaderPass(shader, shaderPass, context.Output);
 
-        size_t frameIndex = Rendering::UniformDescriptor::GetFrameIndex();
-        size_t rawSize = sizeof(glm::vec4) * objectPositions.size();
-        size_t alignedChunkSize = (rawSize + minAligment - 1) & ~(minAligment - 1);
-        uint32_t offset = static_cast<uint32_t>(alignedChunkSize * frameIndex);
-
-        commandBuffer->BindMaterial(material.get(), {offset});
+        commandBuffer->BindMaterial(material.get(), {GetPositionOffset()});
         commandBuffer->BindMesh(mesh.get(), &shaderPass->Input.BufferOrder);
 
         Rendering::MeshDrawInfo drawInfo = mesh->GetDrawInfo();
         commandBuffer->DrawMeshMultiple(drawInfo, instanceCount);
+    }
+
+    uint32_t GalaxyObjectBuffer::GetPositionOffset() const
+    {
+        size_t frameIndex = Rendering::UniformDescriptor::GetFrameIndex();
+        size_t rawSize = sizeof(glm::vec4) * objectPositions.size();
+        size_t alignedChunkSize = (rawSize + minAligment - 1) & ~(minAligment - 1);
+        return static_cast<uint32_t>(alignedChunkSize * frameIndex);
     }
 
     void GalaxyObjectBuffer::InitializeDataBuffer()

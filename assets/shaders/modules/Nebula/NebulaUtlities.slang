@@ -2,9 +2,19 @@
 
 import Core.BeerCore;
 
+public struct ObjectData
+{
+    public float4 ColorA;
+    public float4 ColorB;
+    public float4 ColorC;
+    public float4 ColorD;
+    public float Scale;
+    public uint Id;
+}
+
 namespace Nebula
 {
-    #define MAX_NEBULA_TILES 32
+    #define MAX_NEBULA_TILES 31
 
     public struct NebulaTile
     {
@@ -27,6 +37,7 @@ namespace Nebula
     {
         public float3 Position;
         public float Scale;
+        public int Id;
     }
 
     enum FrustumPlane : uint
@@ -138,5 +149,10 @@ namespace Nebula
         
             return viewSpace.xyz / viewSpace.w;
         }
+    }
+
+    public float GetDistortion(float wetness)
+    {
+        return pow(wetness, 0.75f) * 0.5f + 0.5f;
     }
 }

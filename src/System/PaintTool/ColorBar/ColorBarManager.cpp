@@ -5,8 +5,8 @@
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/BeerEvent.hpp"
-#include <print>
 #include <stdexcept>
+#include "System/PaintTool/ToolBar/ToolBarManager.hpp"
 
 namespace Beer::System
 {
@@ -52,6 +52,11 @@ namespace Beer::System
         });
 
         onNewSeed->Subscribe([this]() -> void { SetGalaxyColorsFromSeed(); });
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = SELECT_CLIP_VOLUME;
+        selectClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_SelectButton",
+            audioSettings);
     }
 
     void ColorBarManager::Update()
@@ -77,7 +82,11 @@ namespace Beer::System
             level,
             type);
 
-        controller->OnButtonClicked.Subscribe([this](ColorBarController* controller) -> void { OnColorBarButtonPressed(controller); });
+        controller->OnButtonClicked.Subscribe([this](ColorBarController* controller) -> void {
+            OnColorBarButtonPressed(controller);
+            selectClip->Play();
+        });
+
         controllersMap[level] = std::move(controller);
     }
 

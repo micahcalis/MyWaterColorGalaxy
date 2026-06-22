@@ -50,58 +50,58 @@ namespace SphereTracing
         }
     };
 
-public interface IBoundingVolume
-{
-    public bool IsInside(float3 position, float padding = 0);
-    public Ray AlignWithVolume(Ray ray);
-
-    public bool ShouldMarch(float3 position, bool isFrontFace, float nearPlane)
+    public interface IBoundingVolume
     {
-        bool isCameraInside = IsInside(position, nearPlane * SHOULD_MARCH_SCALAR);
-        return isCameraInside != isFrontFace; 
-    }
-}
+        public bool IsInside(float3 position, float padding = 0);
+        public Ray AlignWithVolume(Ray ray);
 
-public struct AABB : IBoundingVolume
-{
-    private float3 center;
-    private float3 extents;
-
-    public __init(float3 _center, float3 size)
-    {
-        center = _center;
-        extents = size * 0.5f;
+        public bool ShouldMarch(float3 position, bool isFrontFace, float nearPlane)
+        {
+            bool isCameraInside = IsInside(position, nearPlane * SHOULD_MARCH_SCALAR);
+            return isCameraInside != isFrontFace; 
+        }
     }
 
-    public bool IsInside(float3 position, float padding = 0)
+    public struct AABB : IBoundingVolume
     {
-        float3 dist = abs(position - center);
-        return all(dist <= extents + padding);
+        private float3 center;
+        private float3 extents;
+
+        public __init(float3 _center, float3 size)
+        {
+            center = _center;
+            extents = size * 0.5f;
+        }
+
+        public bool IsInside(float3 position, float padding = 0)
+        {
+            float3 dist = abs(position - center);
+            return all(dist <= extents + padding);
+        }
+
+        public Ray AlignWithVolume(Ray ray)
+        {
+            float3 directionRcp = rcp(ray.GetDirection());
+            float3 minPoint = center - extents;
+            float3 maxPoint = center + extents; 
+
+            float3 t0 = (minPoint - ray.GetOrigin()) * directionRcp;
+            float3 t1 = (maxPoint - ray.GetOrigin()) * directionRcp;
+
+            float3 tMin = min(t0, t1);
+            float3 tMax = max(t0, t1);
+
+            float tNear = max(max(tMin.x, tMin.y), tMin.z);
+            tNear = max(0.0f, tNear);
+            float tFar = min(min(tMax.x, tMax.y), tMax.z);
+
+            float3 intersect = ray.GetOrigin() + ray.GetDirection() * (tNear + 0.001f);
+
+            float maxLength = max(0.0f, (tFar - tNear) - MAX_LENGTH_BIAS);
+
+            return Ray(intersect, ray.GetDirection(), maxLength);
+        }
     }
-
-    public Ray AlignWithVolume(Ray ray)
-    {
-        float3 directionRcp = rcp(ray.GetDirection());
-        float3 minPoint = center - extents;
-        float3 maxPoint = center + extents; 
-
-        float3 t0 = (minPoint - ray.GetOrigin()) * directionRcp;
-        float3 t1 = (maxPoint - ray.GetOrigin()) * directionRcp;
-
-        float3 tMin = min(t0, t1);
-        float3 tMax = max(t0, t1);
-
-        float tNear = max(max(tMin.x, tMin.y), tMin.z);
-        tNear = max(0.0f, tNear);
-        float tFar = min(min(tMax.x, tMax.y), tMax.z);
-
-        float3 intersect = ray.GetOrigin() + ray.GetDirection() * (tNear + 0.001f);
-
-        float maxLength = max(0.0f, (tFar - tNear) - MAX_LENGTH_BIAS);
-
-        return Ray(intersect, ray.GetDirection(), maxLength);
-    }
-}
 
     public struct SphereVolume : IBoundingVolume
     {

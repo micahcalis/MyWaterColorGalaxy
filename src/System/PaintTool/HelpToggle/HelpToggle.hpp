@@ -1,6 +1,8 @@
 #pragma once
 
 #include "HelpButtonSubEntity.hpp"
+#include "System/Audio/AudioClip.hpp"
+#include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/Components/UI/Button.hpp"
 #include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 
@@ -14,6 +16,7 @@ namespace Beer::System
 
         std::unique_ptr<Button> helpButton = nullptr;
         std::unique_ptr<Button> popupButton = nullptr;
+        std::shared_ptr<AudioClip> selectClip = nullptr;
         bool popupActive = false;
 
     public:
@@ -33,6 +36,11 @@ namespace Beer::System
             helpButton->SetOnClick(onHelpClicked);
             popupButton->SetOnClick(onHelpClicked);
             this->markDirty();
+
+            AudioSettings audioSettings{};
+            audioSettings.Volume = SELECT_CLIP_VOLUME;
+            selectClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_SelectButton",
+                audioSettings);
         }
 
     private:
@@ -41,6 +49,7 @@ namespace Beer::System
             popupActive = !popupActive;
             helpEntity->SetPopupEnabled(popupActive);
             markDirty();
+            selectClip->Play();
         }
     };
 } // namespace Beer::System

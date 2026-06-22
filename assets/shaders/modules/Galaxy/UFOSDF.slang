@@ -1,6 +1,8 @@
 #include "Core/BeerMacros.slang"
 
 import SDF;
+import Noise.Hash;
+import Core.BeerCore;
 
 module UFOSDF;
 
@@ -22,117 +24,174 @@ namespace SDF
     static const float FINS_BEVEL = 0.01f;
     static const float3 FINS_POS = float3(0.4f, 0.23f, -0.25f);
 
+    static const float ALIEN_BODY_HEIGHT = 0.25f;
+    static const float ALIEN_BODY_SMOOTHNESS = 0.03f;
+    static const float ALIEN_BODY_STRETCH = rcp(3.0f);
+    static const float ALIEN_BODY_RADIUS = 0.07f;
+    static const float ALIEN_HEAD_HEIGHT = 0.35f;
+    static const float ALIEN_HEAD_RADIUS = 0.12f;
+    static const float ALIEN_ANTENNA_OFFSET = 0.15f;
+    static const float ALIEN_ANTENNA_TAIL_RADIUS = 0.03f;
+
     static const float COCKPIT_RADIUS = 0.35f;
     static const float COCKPIT_HEIGHT = 0.3f;
 
     static const float SAUCER_MAT = 0.0f;
     static const float FINS_MAT = 1.0f;
+    static const float ALIEN_MAT = 2.0f;
 
-public struct Saucer : SDF
-{
-    private float3 center;
-    private float scale;
-    private float invScale;
-    private float3x3 invRotation;
-    private float cutoff;
-
-    public __init(float3 _center, 
-        float _scale, 
-        float4x4 rotation,
-        float _cutoff)
+    public struct Saucer : SDF
     {
-        center = _center;
-        scale = _scale;
-        invScale = rcp(scale);
-        invRotation = (float3x3)transpose(rotation);
-        cutoff = (_cutoff - 0.5f) * 2.0f;
+        private float3 center;
+        private float scale;
+        private float invScale;
+        private float3x3 invRotation;
+        private float cutoff;
+        private float3 saucerColor;
+        private float3 finsColor;
+        private float3 alienColor;
+
+        public __init(float3 _center, 
+            float _scale, 
+            float4x4 rotation,
+            float _cutoff,
+            float3 _saucerColor,
+            float3 _finsColor,
+            float3 _alienColor)
+        {
+            center = _center;
+            scale = _scale;
+            invScale = rcp(scale);
+            invRotation = (float3x3)transpose(rotation);
+            cutoff = (_cutoff - 0.5f) * 2.0f;
+            saucerColor = _saucerColor;
+            finsColor = _finsColor;
+            alienColor = _alienColor;
+        }
+
+        public FieldOut Evaluate(MarchData data)
+        {
+            float3 localPos = (data.Position - center) * invScale;
+            FieldOut saucerDist = Saucer(localPos);
+            saucerDist.SignedDist *= scale;
+
+            return saucerDist;
+        }
+
+        private FieldOut Saucer(float3 localPos)
+        {
+            float3 rotatedPos = mul(invRotation, localPos);
+            float3 hullCoord = rotatedPos;
+
+            hullCoord.y = sqrt(hullCoord.y * hullCoord.y + SAUCER_SMOOTHNESS);
+            hullCoord.y += SAUCER_SQUISH;
+
+            float saucer = Functions.Sphere(hullCoord, 1.0f); 
+
+            float radialGrad = atan2(hullCoord.x, hullCoord.z);
+
+            saucer += GetGrooveModifier(radialGrad,
+                BIG_GROOVE_STRENGTH,
+                BIG_GROOVE_FREQUENCY,
+                0.8f,
+                0.9f);
+
+            saucer += GetGrooveModifier(radialGrad,
+                SMALL_GROOVE_STRENGTH,
+                SMALL_GROOVE_FREQUENCY,
+                0.9f,
+                1.0f);
+
+            float rim = GetRim(rotatedPos);
+
+            float base = Functions.SmoothMin(FieldOut(saucer, SAUCER_MAT), FieldOut(rim, FINS_MAT), 0.01f).SignedDist; 
+            float cockpit = Cockpit.GetCockpit(rotatedPos);
+            float fins = GetFins(rotatedPos);
+            float alien = GetAlien(rotatedPos);
+
+            FieldOut fullSaucer = Functions.Union(Functions.Subtraction(FieldOut(cockpit, SAUCER_MAT), FieldOut(base, SAUCER_MAT)), FieldOut(fins, FINS_MAT));
+            fullSaucer = Functions.Union(fullSaucer, FieldOut(alien, ALIEN_MAT));
+
+            ApplyCutoff(fullSaucer.SignedDist, rotatedPos, cutoff);
+
+            return fullSaucer;
+        }
+
+        private float GetGrooveModifier(float radialGrad,
+            float strength, 
+            float frequency,
+            float edgeMin,
+            float edgeMax)
+        {
+            float sinGrad = sin(radialGrad * frequency);
+            return smoothstep(edgeMin, edgeMax, sinGrad) * strength;
+        }
+
+        private float GetRim(float3 rotatedPos)
+        {
+            float3 hullCoord = rotatedPos;
+            hullCoord.y = sqrt(hullCoord.y * hullCoord.y + RIM_SMOOTHNESS);
+            hullCoord.y += RIM_SQUISH;
+
+            return Functions.Sphere(hullCoord, 1.0f + RIM_ADD);
+        }
+
+        private float GetFins(float3 rotatedPos)
+        {
+            float3 mirrorPos = float3(abs(rotatedPos.x), rotatedPos.yz);
+            float3 boxPos = mirrorPos - FINS_POS;
+            float box = Functions.Box(boxPos, float3(FINS_THICKNESS, FINS_HEIGHT, FINS_LENGTH));
+
+            float3 cutNormal = normalize(float3(0.0f, -3.0f, -1.0f)); 
+            float3 planePos = boxPos - float3(0.0f, 0.0f, -FINS_LENGTH * 0.8f); 
+            float cutPlane = dot(planePos, cutNormal);
+
+            float cutBox = max(box, cutPlane);
+
+            return cutBox - FINS_BEVEL;
+        }
+
+        private float GetAlien(float3 rotatedPos)
+        {
+            float3 hullCoord = rotatedPos;
+            hullCoord.y -= ALIEN_BODY_HEIGHT;
+            hullCoord.y = sqrt(hullCoord.y * hullCoord.y + ALIEN_BODY_SMOOTHNESS);
+            hullCoord.y *= ALIEN_BODY_STRETCH;
+            
+            float body = Functions.Sphere(hullCoord, ALIEN_BODY_RADIUS);
+            
+            float3 headCoord = rotatedPos;
+            headCoord.y -= ALIEN_HEAD_HEIGHT;
+            float head = Functions.Sphere(headCoord, ALIEN_HEAD_RADIUS);
+
+            float3 antennaCoord = headCoord;
+            antennaCoord.x = abs(antennaCoord.x);
+
+            float3 antennaOffset = float3(ALIEN_ANTENNA_OFFSET, ALIEN_ANTENNA_OFFSET, 0);
+            float antennaBase = Functions.Line(antennaCoord, 0, antennaOffset);
+            float antennaTail = Functions.Sphere(antennaCoord - antennaOffset, ALIEN_ANTENNA_TAIL_RADIUS);
+            float antenna = Functions.SmoothMin(FieldOut(antennaBase), FieldOut(antennaTail), 0.01f).SignedDist;
+
+            float headBody = Functions.SmoothMin(FieldOut(body), FieldOut(head), 0.01f).SignedDist;
+            float alien = Functions.Union(FieldOut(headBody), FieldOut(antenna)).SignedDist;
+
+            return alien;
+        }
+
+        public static void ApplyCutoff(inout float dist, float3 rotatedPos, float time)
+        {
+            float cutter = rotatedPos.y - time;
+            dist = Functions.Intersection(FieldOut(dist), FieldOut(cutter)).SignedDist;
+        } 
+
+        public float3 GetColor(float material)
+        {
+            float3 color = lerp(saucerColor, finsColor, clamp(material, 0.0f, 1.0f));
+            color = lerp(color, alienColor, clamp(material - 1.0f, 0.0f, 1.0f));
+            
+            return color;
+        }
     }
-
-    public FieldOut Evaluate(MarchData data)
-    {
-        float3 localPos = (data.Position - center) * invScale;
-        FieldOut saucerDist = Saucer(localPos);
-        saucerDist.SignedDist *= scale;
-
-        return saucerDist;
-    }
-
-    private FieldOut Saucer(float3 localPos)
-    {
-        float3 rotatedPos = mul(invRotation, localPos);
-        float3 hullCoord = rotatedPos;
-
-        hullCoord.y = sqrt(hullCoord.y * hullCoord.y + SAUCER_SMOOTHNESS);
-        hullCoord.y += SAUCER_SQUISH;
-
-        float saucer = Functions.Sphere(hullCoord, 1.0f); 
-
-        float radialGrad = atan2(hullCoord.x, hullCoord.z);
-
-        saucer += GetGrooveModifier(radialGrad,
-            BIG_GROOVE_STRENGTH,
-            BIG_GROOVE_FREQUENCY,
-            0.8f,
-            0.9f);
-
-        saucer += GetGrooveModifier(radialGrad,
-            SMALL_GROOVE_STRENGTH,
-            SMALL_GROOVE_FREQUENCY,
-            0.9f,
-            1.0f);
-
-        float rim = GetRim(rotatedPos);
-
-        float base = Functions.SmoothMin(FieldOut(saucer), FieldOut(rim), 0.01f).SignedDist; 
-        float cockpit = Cockpit.GetCockpit(rotatedPos);
-        float fins = GetFins(rotatedPos);
-
-        FieldOut fullSaucer = Functions.Union(Functions.Subtraction(FieldOut(cockpit, SAUCER_MAT), FieldOut(base, SAUCER_MAT)), FieldOut(fins, FINS_MAT));
-        ApplyCutoff(fullSaucer.SignedDist, rotatedPos, cutoff);
-
-        return fullSaucer;
-    }
-
-    private float GetGrooveModifier(float radialGrad,
-        float strength, 
-        float frequency,
-        float edgeMin,
-        float edgeMax)
-    {
-        float sinGrad = sin(radialGrad * frequency);
-        return smoothstep(edgeMin, edgeMax, sinGrad) * strength;
-    }
-
-    private float GetRim(float3 rotatedPos)
-    {
-        float3 hullCoord = rotatedPos;
-        hullCoord.y = sqrt(hullCoord.y * hullCoord.y + RIM_SMOOTHNESS);
-        hullCoord.y += RIM_SQUISH;
-
-        return Functions.Sphere(hullCoord, 1.0f + RIM_ADD);
-    }
-
-    private float GetFins(float3 rotatedPos)
-    {
-        float3 mirrorPos = float3(abs(rotatedPos.x), rotatedPos.yz);
-        float3 boxPos = mirrorPos - FINS_POS;
-        float box = Functions.Box(boxPos, float3(FINS_THICKNESS, FINS_HEIGHT, FINS_LENGTH));
-
-        float3 cutNormal = normalize(float3(0.0f, -3.0f, -1.0f)); 
-        float3 planePos = boxPos - float3(0.0f, 0.0f, -FINS_LENGTH * 0.8f); 
-        float cutPlane = dot(planePos, cutNormal);
-
-        float cutBox = max(box, cutPlane);
-
-        return cutBox - FINS_BEVEL;
-    }
-
-    public static void ApplyCutoff(inout float dist, float3 rotatedPos, float time)
-    {
-        float cutter = rotatedPos.y - time;
-        dist = Functions.Intersection(FieldOut(dist), FieldOut(cutter)).SignedDist;
-    } 
-}
 
     public struct Cockpit : SDF
     {
@@ -183,5 +242,84 @@ public struct Saucer : SDF
     {
         cutoff = (cutoff - 0.5f) * 2.0f;
         return 1.0f - smoothstep(cutoff, cutoff - thickness, positionOS.y);
+    }
+
+    static const float FLAME_RADIUS = 0.05f;
+    static const float3 FLAME_OFFSET = float3(0.18f, 0.1f, -0.27f);
+    static const float FLAME_TAPER = 4.0f;
+    static const float FLAME_LENGTH = 3.0f;
+    static const float FLICKER_POS_INTENSITY = 0.015f;
+    static const float FLICKER_POS_SPEED = 20.0f;
+    static const float FLICKER_RAD_INTENSITY = 0.015f;
+    static const float FLICKER_RAD_SPEED = 30.0f;
+
+    public struct Flame : SDF
+    {
+        private float3 center;
+        private float scale;
+        private float invScale;
+        private float3x3 invRotation;
+        private float4 innerFlameCol;
+        private float4 outerFlameCol;
+
+        public __init(float3 _center,
+            float _scale,
+            float4x4 _rotation,
+            float4 _innerFlameCol,
+            float4 _outerFlameCol)
+        {
+            center = _center;
+            scale = _scale;
+            invScale = rcp(scale);
+            invRotation = (float3x3)transpose(_rotation);
+            innerFlameCol = _innerFlameCol;
+            outerFlameCol = _outerFlameCol;
+        }
+
+        public FieldOut Evaluate(MarchData data)
+        {
+            float3 localPos = (data.Position - center) * invScale;
+            localPos = mul(invRotation, localPos);
+            FieldOut flameDist = Flame(localPos);
+            flameDist.SignedDist *= scale;
+            return flameDist;
+        }
+
+        public FieldOut Flame(float3 localPos)
+        {
+            float3 flameCoord = localPos;
+            float flameRadius = FLAME_RADIUS;
+            ApplyFlicker(flameCoord, flameRadius, sign(flameCoord.x));
+
+            flameCoord.x = abs(flameCoord.x);
+            flameCoord -= FLAME_OFFSET;
+
+            flameCoord.z /= FLAME_LENGTH;
+            float taper = 1.0 + pow(max(0.0, flameCoord.z), 2.0) * FLAME_TAPER;
+            flameCoord.xy *= taper;
+
+            float flame = Functions.Sphere(flameCoord, flameRadius);
+
+            return FieldOut(flame);
+        }
+
+        private void ApplyFlicker(inout float3 coord, inout float radius, int seed)
+        {
+            float3 timeHash = Noise.Functions.Hash13(int(_Time * FLICKER_POS_SPEED), 23 + seed) - 0.5f;
+            coord += timeHash * FLICKER_POS_INTENSITY;
+
+            float radiusHash = Noise.Functions.Hash11(int(_Time * FLICKER_RAD_SPEED), 3490 + seed) - 0.5f;
+            radius += radiusHash * FLICKER_RAD_INTENSITY;
+        }
+
+        public float4 GetColor(float3 viewDirWS, float3 normal)
+        {
+            float fresnel = 1.0f - saturate(dot(-viewDirWS, normal));
+            fresnel = fresnel * fresnel * fresnel;
+
+            float4 fresnelCol = lerp(innerFlameCol, outerFlameCol, fresnel);
+            float alpha = (1.0f - fresnel) * 0.5f + 0.5f;
+            return float4(fresnelCol.rgb, fresnelCol.a * alpha);
+        }
     }
 }

@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Player/PlayerVFXEntity.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Galaxy/General/GalaxyEntity.hpp"
 #include "System/Galaxy/General/SunEntity.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
@@ -15,6 +17,7 @@
 #include "System/Light/LightEntity.hpp"
 #include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include "System/Galaxy/NebulaSubPipeline.hpp"
 #include <memory>
 #include <vector>
 
@@ -28,6 +31,7 @@ namespace Beer::System
 
     private:
         PlayerEntity* playerEntity = nullptr;
+        PlayerVFXEntity* playerVFXEntity = nullptr;
         GalaxyEntity* galaxyEntity = nullptr;
         SunEntity* sunEntity = nullptr;
         StarsEntity* starsEntity = nullptr;
@@ -35,8 +39,11 @@ namespace Beer::System
         Function<PlayerInput> getPlayerInput = nullptr;
         Function<bool> getReturnPressed = nullptr;
         bool isReturning = false;
+        bool isFadingIn = true;
+        std::shared_ptr<AudioClip> transitionClip = nullptr;
 
         std::unique_ptr<WatercolorSubPipeline> watercolorSubPipeline = nullptr;
+        std::unique_ptr<NebulaSubPipeline> nebulaSubPipeline = nullptr;
         Rendering::DrawOpaquePass* opaquePass = nullptr;
         Rendering::DrawSkyboxPass* skyboxPass = nullptr;
         Rendering::DeferredShadePass* deferredShadePass = nullptr;

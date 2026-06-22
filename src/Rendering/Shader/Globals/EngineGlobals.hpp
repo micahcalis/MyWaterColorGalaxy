@@ -28,6 +28,7 @@ namespace Beer::Rendering
         ALIGN_16 glm::mat4 ViewDirMat;
         ALIGN_16 glm::mat4 ProjMat;
         ALIGN_16 glm::mat4 InvProjMat;
+        ALIGN_16 glm::mat4 InvViewMat;
         ALIGN_16 glm::mat4 UIOrthoProjMat;
     };
 } // namespace Beer::Rendering

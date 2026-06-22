@@ -53,6 +53,8 @@ namespace Beer::System
         Rendering::PhaseBuffer* GetPositionBuffer() const { return positionBuffer.get(); }
         uint32_t GetInstanceCount() const { return instanceCount; }
 
+        uint32_t GetPositionOffset() const;
+
     private:
         void InitializeDataBuffer();
         void InitializeDynamicPositions(const SerializableGalaxy& serializedData,

@@ -54,7 +54,7 @@ namespace Beer::System
             return *this;
         }
 
-        const SDL_AudioSpec* Spec() { return &wavSpec; }
+        const SDL_AudioSpec* Spec() const { return &wavSpec; }
         Uint8* Data() const { return wavData; }
         Uint32 Length() const { return wavLength; }
     };

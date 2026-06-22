@@ -3,6 +3,7 @@
 #include "ColorBarLevel.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -43,6 +44,8 @@ namespace Beer::System
         BeerEvent<void(glm::vec4)>* onColorPicked = nullptr;
         BeerEvent<void()>* onColorPickerClosed = nullptr;
         BeerEvent<void()>* onNewSeed = nullptr;
+
+        std::shared_ptr<AudioClip> selectClip = nullptr;
 
     public:
         ColorBarManager(UITransform* colorBarTransform,

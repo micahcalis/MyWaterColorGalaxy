@@ -11,6 +11,8 @@ namespace Beer::Core
 
 namespace Beer::System
 {
+    class LoopingStream;
+
     struct AudioSettings
     {
     public:
@@ -44,6 +46,6 @@ namespace Beer::System
         }
 
         void Play();
-        void PlayAsBackground();
+        std::shared_ptr<LoopingStream> GetLoop();
     };
 } // namespace Beer::System

@@ -32,11 +32,11 @@ namespace Beer::Core
 
     void Application::InitializeGame()
     {
-        gameManager = std::make_unique<System::GameManager>([this]() -> void { windowManager.QuitApplication(); });
-        gameManager->Initialize();
-
         audioManager = std::make_unique<AudioManager>();
         System::AudioClip::SetAudioManager(audioManager.get());
+
+        gameManager = std::make_unique<System::GameManager>([this]() -> void { windowManager.QuitApplication(); });
+        gameManager->Initialize();
     }
 
     void Application::MainLoop()
@@ -106,6 +106,8 @@ namespace Beer::Core
     void Application::Cleanup()
     {
         std::cout << "cleanup" << '\n';
+
+        gameManager.reset();
 
         if (audioManager != nullptr)
         {

@@ -1,6 +1,8 @@
 #include "System/Galaxy/GalaxyContext.hpp"
 #include "General/Buffer/GalaxyObjectBuffer.hpp"
 #include "General/GalaxyEntity.hpp"
+#include "NebulaSubPipeline.hpp"
+#include "Player/PlayerVFXEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
 #include "Rendering/RenderPasses/DeferredShadePass.hpp"
 #include "Rendering/RenderPasses/DrawOpaquePass.hpp"
@@ -10,18 +12,22 @@
 #include "System/Base/Clock/Clock.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Context/IContext.hpp"
+#include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
+#include "System/Galaxy/General/GalaxyObjectType.hpp"
 #include "System/Galaxy/Player/PlayerEntity.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "System/Galaxy/WatercolorSubPipeline.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include "System/PaintTool/TransitionMaterialGetter.hpp"
 #include <print>
 #include <stdexcept>
 
 namespace Beer::System
 {
-    static const uint32_t STAR_COUNT = 15'000;
+    static const uint32_t STAR_COUNT = 7'500;
     static const float STAR_BOX_SIZE = 100.0f;
-    static const float FADE_DURATION = 1.0f;
+    static const float FADE_OUT_DURATION = 2.0f;
+    static const float FADE_IN_DURATION = 1.0f;
 
     void GalaxyContext::Load()
     {
@@ -45,6 +51,11 @@ namespace Beer::System
             playerEntity->Update();
         }
 
+        if (playerVFXEntity != nullptr)
+        {
+            playerVFXEntity->Update();
+        }
+
         if (galaxyEntity != nullptr)
         {
             galaxyEntity->Update();
@@ -63,12 +74,17 @@ namespace Beer::System
         passes.push_back(transparentPass);
         passes.push_back(transitionPass);
 
+        if (nebulaSubPipeline != nullptr)
+        {
+            passes.append_range(nebulaSubPipeline->GetRenderPasses());
+        }
+
         return passes;
     }
 
     void GalaxyContext::FadeReturn()
     {
-        if (isReturning == false)
+        if (isReturning == false && isFadingIn == false)
         {
             Function<void> onFadeIn = [this]() -> void {
                 serializedMap.ExplorerHistory = SerializeExplorer();
@@ -76,11 +92,12 @@ namespace Beer::System
                 OnReturnToPainting.Invoke();
             };
 
-            transitionPass->SetFade(Rendering::FadeState::In, 1.0f / FADE_DURATION);
+            transitionPass->SetFade(Rendering::FadeState::In, 1.0f / FADE_OUT_DURATION);
 
-            auto returnTimer = Clock::Timer(FADE_DURATION);
+            auto returnTimer = Clock::Timer(FADE_OUT_DURATION);
             returnTimer->OnTimerComplete.Subscribe(onFadeIn);
             returnTimer->Start();
+            transitionClip->Play();
 
             isReturning = true;
         }
@@ -100,6 +117,18 @@ namespace Beer::System
 
         playerEntity = registry.CreateEntity<PlayerEntity>(getPlayerInput,
             &OnSetPhotoMode,
+            galaxyEntity->GetContainer()->GetControlNoiseVolume());
+
+        Function<Transform> getPlayerTransformData = [this]() -> Transform {
+            return *playerEntity->GetTransform();
+        };
+
+        Function<bool> isBoosting = [this]() -> bool {
+            return getPlayerInput().IsBoosting && playerEntity->GetPlayerManager()->GetPhotoMode() == false;
+        };
+
+        playerVFXEntity = registry.CreateEntity<PlayerVFXEntity>(getPlayerTransformData,
+            isBoosting,
             galaxyEntity->GetContainer()->GetControlNoiseVolume());
     }
 
@@ -146,11 +175,19 @@ namespace Beer::System
 
         if (!transitionPass->HasMaterial())
         {
-            auto transitionMaterial = std::make_shared<Rendering::Material>("Blit/SpaceTransitionBlit");
-            transitionPass->SetMaterial(transitionMaterial);
+            auto transitionInitializationFunc = TransitionMaterialGetter::GetHyperspaceInitialization();
+            transitionPass->Initialize(transitionInitializationFunc);
         }
 
-        transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_DURATION);
+        transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_IN_DURATION);
+        auto timer = Clock::Timer(FADE_IN_DURATION);
+        timer->OnTimerComplete.Subscribe([this]() -> void { isFadingIn = false; });
+        timer->Start();
+
+        AudioSettings audioSettings{};
+        audioSettings.Volume = TRANSITION_VOLUME;
+        transitionClip = std::make_shared<AudioClip>("SoundEffects/Game/Audio_HyperSpace",
+            audioSettings);
     }
 
     void GalaxyContext::TryLoadMap()
@@ -170,6 +207,16 @@ namespace Beer::System
         sunEntity->LoadFromSerialized(serializedMap.Galaxy);
         skyboxPass->InitializeNoiseCubemaps(serializedMap.Galaxy);
         playerEntity->GetPlayerManager()->LoadFromSerialized(serializedMap.ExplorerHistory);
+
+        GalaxyObjectBuffer* stardustBuffer = galaxyEntity->GetContainer()->TryGetBuffer(GalaxyObjectType::StarDust);
+
+        if (stardustBuffer != nullptr)
+        {
+            if (stardustBuffer->GetInstanceCount() > 0)
+            {
+                nebulaSubPipeline = std::make_unique<NebulaSubPipeline>(stardustBuffer);
+            }
+        }
     }
 
     void GalaxyContext::HandleReturn()

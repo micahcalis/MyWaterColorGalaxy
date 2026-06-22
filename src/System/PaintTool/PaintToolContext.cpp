@@ -27,6 +27,7 @@
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
+#include "TransitionMaterialGetter.hpp"
 #include "Vendor/magic_enum/magic_enum.hpp"
 #include <memory>
 #include <print>
@@ -34,8 +35,6 @@
 
 namespace Beer::System
 {
-    static const float FADE_DURATION = 1.0f;
-
     void PaintToolContext::Load()
     {
         drawUIPass = Rendering::IRenderPass::FetchFromRegister<Rendering::DrawUIPass>(
@@ -46,13 +45,8 @@ namespace Beer::System
 
         if (!transitionPass->HasMaterial())
         {
-            auto transitionMaterial = std::make_shared<Rendering::Material>("Blit/SpaceTransitionBlit");
-            transitionPass->SetMaterial(transitionMaterial);
-        }
-
-        if (initialFadeState == Rendering::FadeState::In)
-        {
-            transitionPass->SetFade(Rendering::FadeState::Out, 1.0f / FADE_DURATION);
+            auto transitionInitializationFunc = TransitionMaterialGetter::GetHyperspaceInitialization();
+            transitionPass->Initialize(transitionInitializationFunc);
         }
 
         InitializeColorPicker();
@@ -257,7 +251,8 @@ namespace Beer::System
             clearHistory,
             saveMap,
             onBackToTitle,
-            enableBlock);
+            enableBlock,
+            initialFadeState);
 
         menuBarEntity->InitializeButtonEntities();
     }

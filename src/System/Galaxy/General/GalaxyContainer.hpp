@@ -9,6 +9,7 @@
 #include "Rendering/Texture/Texture3D.hpp"
 #include "System/Galaxy/General/Buffer/GalaxyObjectBuffer.hpp"
 #include "GalaxyObjectType.hpp"
+#include "System/Galaxy/General/GalaxyObjectType.hpp"
 #include <array>
 #include <memory>
 #include <unordered_map>
@@ -54,7 +55,7 @@ namespace Beer::System
                       "Galaxy/BlackHole",
                       std::make_shared<BlackHoleBuferSettings>()),
                   GalaxyBufferDefinition(GalaxyObjectType::StarDust,
-                      "Galaxy/Planet",
+                      "",
                       std::make_shared<UnimplementedBufferSettings>(0.02f,
                           200.0f,
                           600.0f,
@@ -69,6 +70,18 @@ namespace Beer::System
 
         void CreateBuffers(const SerializableGalaxy& serializedData);
         void Update();
+
+        GalaxyObjectBuffer* TryGetBuffer(GalaxyObjectType type) const
+        {
+            auto it = bufferMap.find(type);
+
+            if (it == bufferMap.end())
+            {
+                return nullptr;
+            }
+
+            return it->second.get();
+        }
 
         void Draw(Rendering::CommandBuffer* commandBuffer,
             const Rendering::RenderContext& renderContext,

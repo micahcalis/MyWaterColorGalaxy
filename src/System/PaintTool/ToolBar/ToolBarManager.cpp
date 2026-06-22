@@ -18,8 +18,12 @@ namespace Beer::System
             material,
             brushType);
 
-        controller->OnBrushClicked.Subscribe(
-            [this](GalaxyBrushType type) { HandleNewBrushType(type); });
+        Function<void, GalaxyBrushType> onBrushClicked = [this](GalaxyBrushType type) {
+            HandleNewBrushType(type);
+            selectClip->Play();
+        };
+
+        controller->OnBrushClicked.Subscribe(onBrushClicked);
 
         brushControllers[brushType] = std::move(controller);
     }

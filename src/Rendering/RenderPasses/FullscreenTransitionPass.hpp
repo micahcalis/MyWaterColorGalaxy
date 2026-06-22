@@ -1,13 +1,19 @@
 #pragma once
 
+#include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 
 namespace Beer::Rendering
 {
-    enum class FadeState
+    using TransitionInitialization = System::Function<std::shared_ptr<Rendering::Material>,
+        std::shared_ptr<Rendering::ComputeContext>&,
+        std::shared_ptr<Rendering::Texture2D>&>;
+
+    enum class FadeState : int
     {
-        In,
-        Out
+        In = 0,
+        Out = 1
     };
 
     class FullscreenTransitionPass : public IRenderPass
@@ -17,6 +23,8 @@ namespace Beer::Rendering
         FadeState state = FadeState::Out;
         float fadeSpeed = 1.0f;
         float time = 0;
+        std::shared_ptr<Rendering::ComputeContext> transitionContext = nullptr;
+        std::shared_ptr<Rendering::Texture2D> transitionTexture = nullptr;
 
     public:
         FullscreenTransitionPass();
@@ -25,11 +33,12 @@ namespace Beer::Rendering
         {
             this->state = state;
             fadeSpeed = speed;
+            transitionMaterial->SetInt("_FadeState", static_cast<int>(state));
         }
 
-        void SetMaterial(std::shared_ptr<Rendering::Material> material)
+        void Initialize(TransitionInitialization initializationFunc)
         {
-            transitionMaterial = material;
+            transitionMaterial = initializationFunc(transitionContext, transitionTexture);
         }
 
         bool HasMaterial() const
@@ -41,6 +50,8 @@ namespace Beer::Rendering
         {
             return true;
         }
+
+        Material* GetMaterial() const { return transitionMaterial.get(); }
 
     private:
         void OnRenderSetup(const RenderContext& context) override;

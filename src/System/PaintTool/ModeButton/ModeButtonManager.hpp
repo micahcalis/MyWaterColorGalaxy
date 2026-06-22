@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/ButtonInput.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/Button.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/ToolBar/ToolBarManager.hpp"
 
 namespace Beer::System
 {
@@ -28,10 +30,16 @@ namespace Beer::System
 
         BrushMenuMode currentMode = BrushMenuMode::ToolMenu;
 
+        std::shared_ptr<AudioClip> selectClip = nullptr;
+
     public:
         ModeButtonManager(Function<ButtonInput> getTabKeyInput)
             : getTabKeyInput(getTabKeyInput)
         {
+            AudioSettings audioSettings{};
+            audioSettings.Volume = SELECT_CLIP_VOLUME;
+            selectClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_SelectButton",
+                audioSettings);
         }
 
         void Update() override
@@ -41,6 +49,7 @@ namespace Beer::System
             if (tabInput.ButtonStart)
             {
                 ToggleMode();
+                selectClip->Play();
             }
         }
 
@@ -59,7 +68,10 @@ namespace Beer::System
             this->colorModeTexture = colorModeTexture;
             this->brushModeTexture = brushModeTexture;
 
-            modeToggleButton->SetOnClick([this]() -> void { ToggleMode(); });
+            modeToggleButton->SetOnClick([this]() -> void {
+                ToggleMode();
+                selectClip->Play();
+            });
 
             currentMode = startMode;
             setColorModeActive(startMode == BrushMenuMode::ColorMenu);

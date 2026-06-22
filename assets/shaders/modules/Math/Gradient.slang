@@ -2,6 +2,8 @@
 
 import Core.BeerCore;
 
+module Gradient;
+
 namespace Color
 {
     public float4 Sample4ColorGrad(float4[4] colors, float time)

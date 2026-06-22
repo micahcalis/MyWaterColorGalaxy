@@ -2,12 +2,13 @@
 
 #include "GalaxyBrushController.hpp"
 #include "MapHistoryController.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include <memory>
 #include <unordered_map>
-#include <vector>
+#include "System/Audio/SoundGlobalSettings.hpp"
 
 namespace Beer::System
 {
@@ -21,10 +22,16 @@ namespace Beer::System
 
         std::unique_ptr<MapHistoryController> mapHistoryController = nullptr;
 
+        std::shared_ptr<AudioClip> selectClip = nullptr;
+
     public:
         ToolBarManager(Function<void, GalaxyBrushType> setBrushType)
             : setBrushType(setBrushType)
         {
+            AudioSettings audioSettings{};
+            audioSettings.Volume = SELECT_CLIP_VOLUME;
+            selectClip = std::make_shared<AudioClip>("SoundEffects/UI/Audio_SelectButton",
+                audioSettings);
         }
 
         void CreateGalaxyBrushController(UITransform* transform,

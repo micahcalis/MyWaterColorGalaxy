@@ -2,6 +2,7 @@
 
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/MouseInput.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/Delegate.hpp"
@@ -26,6 +27,9 @@ namespace Beer::System
         Rendering::Texture2D* pickerTexture = nullptr;
         Rendering::Texture2D* pickerMask = nullptr;
         bool isActive = false;
+        MixerCursorType currentType = MixerCursorType::Brush;
+        std::shared_ptr<AudioClip> paintClip = nullptr;
+        std::shared_ptr<AudioClip> pickClip = nullptr;
 
     public:
         ColorMixerCursor(UITransform* canvasTransform,
@@ -36,7 +40,7 @@ namespace Beer::System
             Rendering::Texture2D* pickerTexture,
             Rendering::Texture2D* pickerMask);
 
-        void Update(glm::vec2 mousePixelPos);
+        void Update(glm::vec2 mousePixelPos, bool isClicking);
         void SetCursor(MixerCursorType type, glm::vec4 color);
         bool IsActive() const { return isActive; }
     };

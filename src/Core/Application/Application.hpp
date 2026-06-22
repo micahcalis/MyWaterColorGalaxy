@@ -18,8 +18,8 @@ namespace Beer::Core
     private:
         WindowManager windowManager = {};
         Renderer renderer = {};
-        std::unique_ptr<System::GameManager> gameManager = nullptr;
         std::unique_ptr<Core::AudioManager> audioManager = nullptr;
+        std::unique_ptr<System::GameManager> gameManager = nullptr;
 
     public:
         void Run();

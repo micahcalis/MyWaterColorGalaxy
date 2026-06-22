@@ -6,61 +6,14 @@
 #include "SDL3/SDL_init.h"
 #include "System/Audio/AudioAsset.hpp"
 #include <format>
+#include <memory>
 #include <stdexcept>
+#include "System/Audio/LoopingStream.hpp"
 
 namespace Beer::Core
 {
-    void BackgroundPlayer::SetMusic(std::shared_ptr<System::AudioAsset> asset,
-        const System::AudioSettings& settings)
-    {
-        if (bgAsset != nullptr)
-        {
-            SDL_DestroyAudioStream(bgStream);
-            bgStream = nullptr;
-        }
-
-        bgAsset = asset;
-
-        if (bgAsset == nullptr)
-            return;
-
-        bgStream = SDL_CreateAudioStream(asset->Spec(), nullptr);
-        SDL_BindAudioStream(audioDevice, bgStream);
-
-        SDL_SetAudioStreamGain(bgStream, settings.Volume);
-        SDL_PutAudioStreamData(bgStream, asset->Data(), asset->Length());
-        SDL_FlushAudioStream(bgStream);
-    }
-
-    void BackgroundPlayer::Update()
-    {
-        if (bgAsset == nullptr
-            || bgStream == nullptr)
-        {
-            return;
-        }
-
-        if (SDL_GetAudioStreamAvailable(bgStream) < bgAsset->Length())
-        {
-            SDL_PutAudioStreamData(bgStream, bgAsset->Data(), bgAsset->Length());
-        }
-    }
-
-    void BackgroundPlayer::Stop()
-    {
-        if (bgStream != nullptr)
-        {
-            SDL_DestroyAudioStream(bgStream);
-        }
-
-        bgStream = nullptr;
-        bgAsset = nullptr;
-    }
-
     AudioManager::~AudioManager()
     {
-        bgPlayer.reset();
-
         for (SDL_AudioStream* stream : clipStreams)
         {
             if (stream != nullptr)
@@ -68,6 +21,7 @@ namespace Beer::Core
                 SDL_DestroyAudioStream(stream);
             }
         }
+
         clipStreams.clear();
 
         Clear();
@@ -90,8 +44,6 @@ namespace Beer::Core
         {
             throw std::runtime_error(SDL_GetError());
         }
-
-        bgPlayer = std::make_unique<BackgroundPlayer>(audioDevice);
     }
 
     std::shared_ptr<System::AudioAsset> AudioManager::Load(const std::filesystem::path& path)
@@ -113,18 +65,8 @@ namespace Beer::Core
 
     void AudioManager::Update()
     {
-        std::erase_if(clipStreams, [](const auto& stream) -> bool {
-            bool clipFinished = SDL_GetAudioStreamAvailable(stream) <= 0;
-
-            if (clipFinished)
-            {
-                SDL_DestroyAudioStream(stream);
-            }
-
-            return clipFinished;
-        });
-
-        bgPlayer->Update();
+        UpdateClips();
+        UpdateLoops();
     }
 
     void AudioManager::PlayOnce(System::AudioAsset* asset, const System::AudioSettings& settings)
@@ -138,10 +80,15 @@ namespace Beer::Core
         clipStreams.push_back(stream);
     }
 
-    void AudioManager::SetBackgroundAsset(std::shared_ptr<System::AudioAsset> asset,
-        const System::AudioSettings& settings)
+    std::shared_ptr<System::LoopingStream> AudioManager::GetLoopingStream(std::shared_ptr<System::AudioAsset> audioAsset, const System::AudioSettings& settings)
     {
-        bgPlayer->SetMusic(std::move(asset), settings);
+        std::shared_ptr<System::LoopingStream> loopingStream(new System::LoopingStream(audioDevice,
+            audioAsset,
+            settings));
+
+        activeLoops.push_back(std::weak_ptr<System::LoopingStream>(loopingStream));
+
+        return loopingStream;
     }
 
     const std::filesystem::path AudioManager::GetPath(const std::string& name)
@@ -149,4 +96,30 @@ namespace Beer::Core
         return AssetUtilities::GetAudioAssetPath(name);
     }
 
+    void AudioManager::UpdateClips()
+    {
+        std::erase_if(clipStreams, [](const auto& stream) -> bool {
+            bool clipFinished = SDL_GetAudioStreamAvailable(stream) <= 0;
+
+            if (clipFinished)
+            {
+                SDL_DestroyAudioStream(stream);
+            }
+
+            return clipFinished;
+        });
+    }
+
+    void AudioManager::UpdateLoops()
+    {
+        std::erase_if(activeLoops, [](const std::weak_ptr<System::LoopingStream>& weakLoop) -> bool {
+            if (auto loop = weakLoop.lock())
+            {
+                loop->Update();
+                return false;
+            }
+
+            return true;
+        });
+    }
 } // namespace Beer::Core

@@ -2,6 +2,7 @@
 
 #include "PlayerCamera.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "System/Audio/AudioClip.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/Registry/GameSubEntity.hpp"
 #include "System/Delegates/BeerEvent.hpp"
@@ -24,6 +25,7 @@ namespace Beer::System
         Function<PlayerInput> getPlayerInput;
         BeerEvent<void(bool)>* onSetPhotoMode = nullptr;
         Rendering::Material* playerMaterial = nullptr;
+        std::shared_ptr<AudioClip> photoModeClip = nullptr;
 
         bool photoMode = false;
         float cutoffValue = 1.0f;

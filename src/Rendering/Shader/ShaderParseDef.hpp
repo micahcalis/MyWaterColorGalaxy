@@ -84,6 +84,7 @@ namespace Beer::Rendering
         static constexpr std::string_view PASS_UI = "UserInterface";
         static constexpr std::string_view PASS_WC_PROCESSING = "WatercolorProcessing";
         static constexpr std::string_view PASS_BLITCOLOR = "BlitColor";
+        static constexpr std::string_view PASS_VOLUMETRICS = "Volumetrics";
 
         static constexpr std::string_view KERNEL_INDEX = "Kernel";
         static constexpr std::string_view KERNEL_NAME = "Compute";
