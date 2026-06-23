@@ -10,6 +10,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/Delegates/Delegate.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
 #include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 #include <memory>
 
@@ -49,6 +50,7 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> cursorSpriteMaterial = nullptr;
 
         std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
+        std::unique_ptr<ColorDisplaySubEntity> colorDisplaySubEntity = nullptr;
 
     public:
         ColorMixerEntity(Function<MouseInput> getMouseInput);
@@ -141,6 +143,11 @@ namespace Beer::System
                 renderItems.append_range(helpButtonSubEntity->GetRenderItems());
             }
 
+            if (colorDisplaySubEntity != nullptr)
+            {
+                renderItems.append_range(colorDisplaySubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
 
@@ -148,5 +155,6 @@ namespace Beer::System
         void InitializeSelectSpriteEntity();
         void InitializeCursorSprite();
         void InitializeHelpButton();
+        void InitializeColorDisplay();
     };
 } // namespace Beer::System

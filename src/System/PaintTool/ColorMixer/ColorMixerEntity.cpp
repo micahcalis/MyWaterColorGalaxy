@@ -7,6 +7,7 @@
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "glm/fwd.hpp"
 #include <array>
@@ -51,6 +52,8 @@ namespace Beer::System
     static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.75f, 0.4f);
     static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
     static const std::string HELP_TEXT = "This is your Color Mixing Canvas! Select a pigment and then paint on the canvas. Mix different pigments for new color possibilities. You can clear the canvas using the bin icon. When you are happy with the colors, you can capture them on your palette below.";
+
+    static const glm::vec2 COLOR_DISPLAY_DIM = glm::vec2(0.15f, 0.45f);
 
     ColorMixerEntity::ColorMixerEntity(Function<MouseInput> getMouseInput)
         : getMouseInput(getMouseInput)
@@ -125,6 +128,7 @@ namespace Beer::System
 
         InitializeSelectSpriteEntity();
         InitializeHelpButton();
+        InitializeColorDisplay();
 
         MarkDirty();
     }
@@ -251,5 +255,18 @@ namespace Beer::System
 
         GetMixerManager()->SetHelpToggle(helpButtonSubEntity.get(),
             [this]() -> void { MarkDirty(); });
+    }
+
+    void ColorMixerEntity::InitializeColorDisplay()
+    {
+        UITransform colorDisplayTransform{};
+        colorDisplayTransform.Anchor = AnchorMode::MiddleRight;
+        colorDisplayTransform.Pivot = AnchorMode::MiddleLeft;
+        colorDisplayTransform.Scale = COLOR_DISPLAY_DIM;
+
+        colorDisplaySubEntity = std::make_unique<ColorDisplaySubEntity>(colorDisplayTransform,
+            &rootTransform);
+
+        GetMixerManager()->InitializeColorDisplay(colorDisplaySubEntity.get());
     }
 } // namespace Beer::System

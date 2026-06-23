@@ -4,9 +4,11 @@
 #include "System/Audio/AudioClip.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "ToolBarManager.hpp"
+#include <print>
 
 namespace Beer::System
 {
@@ -28,6 +30,8 @@ namespace Beer::System
     static const std::array<std::string, 2> HISTORY_BUTTON_TEXTURE_PATHS = {
         "UI/ToolBar/Tex_UndoButton",
         "UI/ToolBar/Tex_RedoButton"};
+
+    static const glm::vec2 COLOR_DISPLAY_DIM = glm::vec2(0.15f, 0.45f);
 
     ToolBarEntity::ToolBarEntity(Function<void, GalaxyBrushType> setBrushType)
         : setBrushType(setBrushType)
@@ -136,5 +140,20 @@ namespace Beer::System
             eraseComponent);
 
         MarkDirty();
+    }
+
+    void ToolBarEntity::InitializeColorDisplay()
+    {
+        UITransform colorDisplayTransform{};
+        colorDisplayTransform.Anchor = AnchorMode::MiddleRight;
+        colorDisplayTransform.Pivot = AnchorMode::MiddleLeft;
+        colorDisplayTransform.Scale = COLOR_DISPLAY_DIM;
+
+        colorDisplaySubEntity = std::make_unique<ColorDisplaySubEntity>(colorDisplayTransform,
+            &rootTransform);
+
+        GetToolBarManager()->InitializeColorDisplay(colorDisplaySubEntity.get());
+
+        std::println("intialize tool bar color display");
     }
 } // namespace Beer::System

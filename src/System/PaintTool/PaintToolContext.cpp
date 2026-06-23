@@ -22,6 +22,7 @@
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
+#include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
@@ -171,9 +172,9 @@ namespace Beer::System
 
     void PaintToolContext::InitializeColorBar()
     {
-        if (colorMixerEntity == nullptr || menuBarEntity == nullptr)
+        if (colorMixerEntity == nullptr || menuBarEntity == nullptr || toolBarEntity == nullptr)
         {
-            throw std::runtime_error("Trying to Initialize Color Bar when Color Mixer or Menu Bar is null!");
+            throw std::runtime_error("Trying to Initialize Color Bar when Color Mixer or Menu Bar or Tool Bar is null!");
         }
 
         Function<void, glm::vec4> setColorDisplayColor = [this](glm::vec4 color) -> void { colorMixerEntity->SetColorDisplayColor(color); };
@@ -202,6 +203,16 @@ namespace Beer::System
             &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
             &colorMixerEntity->OnColorMixerClosed,
             &menuBarEntity->GetMenuBarManager()->OnNewSeed);
+
+        Function<void, glm::vec4, ColorBarType, ColorBarLevel> setDisplaysColor = [this](glm::vec4 color, ColorBarType type, ColorBarLevel level) -> void {
+            if (type == ColorBarType::Planet)
+            {
+                colorMixerEntity->GetMixerManager()->GetColorDisplayHandler()->SetColor(color, level);
+                toolBarEntity->GetToolBarManager()->GetColorDisplayHandler()->SetColor(color, level);
+            }
+        };
+
+        colorBarEntity->GetColorBarManager()->OnBarColorChanged.Subscribe(setDisplaysColor);
 
         colorBarEntity->InitializeColorLayers();
 

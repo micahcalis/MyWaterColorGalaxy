@@ -4,20 +4,22 @@
 #include "System/Audio/AudioClip.hpp"
 #include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/Base/Input/MouseInput.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "System/PaintTool/ColorMixer/PigmentButton.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/PaintTool/HelpToggle/HelpContainer.hpp"
-#include "System/PaintTool/HelpToggle/HelpToggle.hpp"
 #include <vector>
-#include "System/PaintTool/ToolBar/ToolBarManager.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplayHandler.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplayContainer.hpp"
 
 namespace Beer::System
 {
     class ColorMixerManager : public IEntityManager
         , public HelpContainer
+        , public ColorDisplayContainer
     {
     public:
         BeerEvent<void(PigmentType)> OnPigmentClicked;
@@ -133,6 +135,5 @@ namespace Beer::System
 
     private:
         void ClearColorMixer();
-        void CloseColorMixer();
     };
 } // namespace Beer::System

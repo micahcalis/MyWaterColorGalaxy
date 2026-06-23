@@ -5,6 +5,7 @@
 #include "System/Audio/AudioClip.hpp"
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplayContainer.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include <memory>
 #include <unordered_map>
@@ -13,6 +14,7 @@
 namespace Beer::System
 {
     class ToolBarManager : public IEntityManager
+        , public ColorDisplayContainer
     {
     private:
         std::unordered_map<GalaxyBrushType, std::unique_ptr<GalaxyBrushController>> brushControllers;

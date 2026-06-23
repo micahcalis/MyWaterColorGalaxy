@@ -5,8 +5,10 @@
 #include "System/Components/Colliders/QuadCollider.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/BeerEvent.hpp"
+#include <print>
 #include <stdexcept>
 #include "System/PaintTool/ToolBar/ToolBarManager.hpp"
+#include "Vendor/magic_enum/magic_enum.hpp"
 
 namespace Beer::System
 {
@@ -88,6 +90,8 @@ namespace Beer::System
         });
 
         controllersMap[level] = std::move(controller);
+
+        OnBarColorChanged.Invoke(initialColor, type, level);
     }
 
     void ColorBarManager::ForceSetColorsFromSeed()
@@ -108,6 +112,7 @@ namespace Beer::System
         }
 
         UpdateDisplayMaterials();
+        OnBarColorChanged.Invoke(color, currentController->GetType(), currentController->GetLevel());
     }
 
     void ColorBarManager::ReloadFromSerialized(const SerializablePaintTool& serializedPaintTool)
@@ -135,6 +140,7 @@ namespace Beer::System
             for (int l = 0; l < 4; l++)
             {
                 controllers[levels[l]]->SetColor(colors[l]);
+                OnBarColorChanged.Invoke(colors[l], types[t], levels[l]);
             }
         }
 

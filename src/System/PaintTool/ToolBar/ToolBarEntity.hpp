@@ -5,6 +5,7 @@
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
+#include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "ToolBarManager.hpp"
@@ -28,6 +29,8 @@ namespace Beer::System
         std::vector<std::shared_ptr<Rendering::Material>> historyMaterials;
         std::vector<std::shared_ptr<Rendering::Texture2D>> historyTextures;
 
+        std::unique_ptr<ColorDisplaySubEntity> colorDisplaySubEntity = nullptr;
+
         Function<void, GalaxyBrushType> setBrushType = nullptr;
 
     public:
@@ -43,6 +46,7 @@ namespace Beer::System
         {
             InitializeBrushes();
             InitializeHistoryButtons(addComponent, eraseComponent);
+            InitializeColorDisplay();
             MarkDirty();
         }
 
@@ -98,11 +102,18 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(historyButtons[i]->GetTransform(), historyMaterials[i].get()));
             }
 
+            if (colorDisplaySubEntity != nullptr)
+            {
+                renderItems.append_range(colorDisplaySubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
 
         void InitializeBrushes();
         void InitializeHistoryButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
             Function<void, uint32_t> eraseComponent);
+
+        void InitializeColorDisplay();
     };
 } // namespace Beer::System

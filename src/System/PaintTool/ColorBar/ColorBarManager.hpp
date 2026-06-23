@@ -8,6 +8,7 @@
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Delegates/BeerEvent.hpp"
+#include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
 #include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 #include "System/PaintTool/HelpToggle/HelpToggle.hpp"
 #include "System/PaintTool/HelpToggle/HelpContainer.hpp"
@@ -22,6 +23,7 @@ namespace Beer::System
     {
     public:
         BeerEvent<void(glm::vec4 color)> OnColorClicked;
+        BeerEvent<void(glm::vec4 color, ColorBarType type, ColorBarLevel level)> OnBarColorChanged;
 
     private:
         UITransform* colorBarTransform = nullptr;

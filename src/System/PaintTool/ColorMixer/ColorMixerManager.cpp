@@ -2,8 +2,10 @@
 #include "ColorMixerCursor.hpp"
 #include "PigmentButton.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
 #include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include <memory>
+#include <array>
 
 namespace Beer::System
 {
