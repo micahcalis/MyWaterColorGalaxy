@@ -19,6 +19,7 @@
 #include "System/Serialization/MapHandler.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
+#include "ToolBar/MapBarEntity.hpp"
 #include <memory>
 
 namespace Beer::System
@@ -36,6 +37,7 @@ namespace Beer::System
         GalaxyMapEntity* galaxyMapEntity = nullptr;
         MenuBarEntity* menuBarEntity = nullptr;
         ToolBarEntity* toolBarEntity = nullptr;
+        MapBarEntity* mapBarEntity = nullptr;
         BrushSizeBarEntity* brushSizeBarEntity = nullptr;
         HologramCursorEntity* hologramCursorEntity = nullptr;
         ModeButtonEntity* modeButtonEntity = nullptr;

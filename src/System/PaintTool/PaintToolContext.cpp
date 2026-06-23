@@ -20,6 +20,7 @@
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/CursorMode.hpp"
+#include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
 #include "System/PaintTool/ColorBar/ColorBarLevel.hpp"
@@ -27,6 +28,7 @@
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapManager.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
+#include "ToolBar/MapBarEntity.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
 #include "TransitionMaterialGetter.hpp"
 #include "Vendor/magic_enum/magic_enum.hpp"
@@ -101,6 +103,11 @@ namespace Beer::System
         if (toolBarEntity != nullptr)
         {
             toolBarEntity->Update();
+        }
+
+        if (mapBarEntity != nullptr)
+        {
+            mapBarEntity->Update();
         }
 
         if (brushSizeBarEntity != nullptr)
@@ -297,6 +304,8 @@ namespace Beer::System
 
         toolBarEntity = registry.CreateEntity<ToolBarEntity>(setBrushType);
 
+        toolBarEntity->InitializeButtons();
+
         Function<uint32_t, const GalaxyComponentData&> addComponent = [this](const GalaxyComponentData& data) -> uint32_t {
             return galaxyMapEntity->GetMapManager()->GetCursor()->Place(data, true);
         };
@@ -305,7 +314,25 @@ namespace Beer::System
             galaxyMapEntity->GetMapManager()->GetCursor()->Erase(index, true);
         };
 
-        toolBarEntity->InitializeButtons(addComponent, eraseComponent);
+        MapBarInitializationFunc initializeTools = [this](std::vector<std::unique_ptr<UISubEntity>>& entities,
+                                                       std::vector<std::shared_ptr<Rendering::Material>>& materials) {
+            toolBarEntity->InitializeTools(MapBarEntity::TOOL_TYPES,
+                entities,
+                materials);
+        };
+
+        MapBarInitializationFunc initializeHistory
+            = [this, addComponent, eraseComponent](std::vector<std::unique_ptr<UISubEntity>>& entities, std::vector<std::shared_ptr<Rendering::Material>>& materials) -> void {
+            toolBarEntity->InitializeHistoryButtons(addComponent,
+                eraseComponent,
+                entities,
+                materials);
+        };
+
+        mapBarEntity = registry.CreateEntity<MapBarEntity>();
+        mapBarEntity->InitializeButtons(galaxyMapEntity->GetRootTransform(),
+            initializeTools,
+            initializeHistory);
 
         toolBarEntity->BindHistoryActions(
             &galaxyMapEntity->GetMapManager()->GetCursor()->OnComponentPlaced,

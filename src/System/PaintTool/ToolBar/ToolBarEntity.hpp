@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Audio/AudioClip.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
@@ -25,10 +26,6 @@ namespace Beer::System
         std::vector<std::shared_ptr<Rendering::Material>> brushMaterials;
         std::vector<std::shared_ptr<Rendering::Texture2D>> brushTextures;
 
-        std::vector<std::unique_ptr<UISubEntity>> historyButtons;
-        std::vector<std::shared_ptr<Rendering::Material>> historyMaterials;
-        std::vector<std::shared_ptr<Rendering::Texture2D>> historyTextures;
-
         std::unique_ptr<ColorDisplaySubEntity> colorDisplaySubEntity = nullptr;
 
         Function<void, GalaxyBrushType> setBrushType = nullptr;
@@ -41,11 +38,9 @@ namespace Beer::System
             QuadTreeEntity::Update();
         }
 
-        void InitializeButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
-            Function<void, uint32_t> eraseComponent)
+        void InitializeButtons()
         {
             InitializeBrushes();
-            InitializeHistoryButtons(addComponent, eraseComponent);
             InitializeColorDisplay();
             MarkDirty();
         }
@@ -75,6 +70,15 @@ namespace Beer::System
             });
         }
 
+        void InitializeTools(const std::vector<GalaxyBrushType>& toolTypes,
+            std::vector<std::unique_ptr<UISubEntity>>& toolEntities,
+            std::vector<std::shared_ptr<Rendering::Material>>& toolMaterials);
+
+        void InitializeHistoryButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
+            Function<void, uint32_t> eraseComponent,
+            std::vector<std::unique_ptr<UISubEntity>>& historyButtons,
+            std::vector<std::shared_ptr<Rendering::Material>>& historyMaterials);
+
         [[nodiscard]] ToolBarManager* GetToolBarManager() const
         {
             return static_cast<ToolBarManager*>(manager.get());
@@ -97,11 +101,6 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(brushes[i]->GetTransform(), brushMaterials[i].get()));
             }
 
-            for (int i = 0; i < historyButtons.size(); i++)
-            {
-                renderItems.push_back(UIRenderItem(historyButtons[i]->GetTransform(), historyMaterials[i].get()));
-            }
-
             if (colorDisplaySubEntity != nullptr)
             {
                 renderItems.append_range(colorDisplaySubEntity->GetRenderItems());
@@ -111,8 +110,6 @@ namespace Beer::System
         }
 
         void InitializeBrushes();
-        void InitializeHistoryButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
-            Function<void, uint32_t> eraseComponent);
 
         void InitializeColorDisplay();
     };

@@ -7,6 +7,7 @@
 #include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
+#include "ToolBarEntity.hpp"
 #include "ToolBarManager.hpp"
 #include <print>
 
@@ -16,16 +17,20 @@ namespace Beer::System
     static const glm::vec2 BUTTON_SIZE = glm::vec2(0.25f, 0.25f);
     static const float BUTTON_PADDING = 0.02f;
 
-    static const uint32_t BRUSH_COUNT = 8;
+    static const uint32_t BRUSH_COUNT = 5;
     static const std::array<std::string, BRUSH_COUNT> BRUSH_TEXTURE_PATHS = {
         "UI/ToolBar/Tex_PlanetButton",
         "UI/ToolBar/Tex_AsteroidsButton",
         "UI/ToolBar/Tex_SpacegooButton",
         "UI/ToolBar/Tex_BlackholeButton",
-        "UI/ToolBar/Tex_StardustButton",
-        "UI/ToolBar/Tex_EraserButton",
-        "UI/ToolBar/Tex_HandButton",
-        "UI/ToolBar/Tex_MagnifyingGlassButton"};
+        "UI/ToolBar/Tex_StardustButton"};
+
+    static const std::array<GalaxyBrushType, BRUSH_COUNT> BRUSH_TYPES = {
+        GalaxyBrushType::Planet,
+        GalaxyBrushType::Asteroids,
+        GalaxyBrushType::SpaceGoo,
+        GalaxyBrushType::BlackHole,
+        GalaxyBrushType::StarDust};
 
     static const std::array<std::string, 2> HISTORY_BUTTON_TEXTURE_PATHS = {
         "UI/ToolBar/Tex_UndoButton",
@@ -83,7 +88,7 @@ namespace Beer::System
 
         for (int i = 0; i < BRUSH_COUNT; i++)
         {
-            GalaxyBrushType type = static_cast<GalaxyBrushType>(i);
+            GalaxyBrushType type = BRUSH_TYPES[i];
 
             toolBarManager->CreateGalaxyBrushController(brushes[i]->GetTransform(),
                 brushMaterials[i].get(),
@@ -94,42 +99,23 @@ namespace Beer::System
         MarkDirty();
     }
 
-    void ToolBarEntity::InitializeHistoryButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
-        Function<void, uint32_t> eraseComponent)
+    void ToolBarEntity::InitializeTools(const std::vector<GalaxyBrushType>& toolTypes,
+        std::vector<std::unique_ptr<UISubEntity>>& toolEntities,
+        std::vector<std::shared_ptr<Rendering::Material>>& toolMaterials)
     {
-        UITransform historyTransform{};
-        historyTransform.Anchor = AnchorMode::TopMiddle;
-        historyTransform.Scale = BUTTON_SIZE;
-        historyTransform.Position = glm::vec2(0, -0.1f) + glm::vec2(-BUTTON_SIZE.y - BUTTON_PADDING) * static_cast<float>(BRUSH_COUNT / 2);
+        for (int i = 0; i < toolTypes.size(); i++)
+        {
+            GetToolBarManager()->CreateGalaxyBrushController(toolEntities[i]->GetTransform(),
+                toolMaterials[i].get(),
+                toolTypes[i]);
+        }
+    }
 
-        historyButtons.reserve(2);
-        historyMaterials.reserve(2);
-        historyTextures.reserve(2);
-
-        historyTextures.emplace_back(std::make_shared<Rendering::Texture2D>(HISTORY_BUTTON_TEXTURE_PATHS[0]));
-        historyMaterials.emplace_back(std::make_shared<Rendering::Material>("UI/SpriteDefault"));
-        historyMaterials[0]->SetColor("_TintColor", glm::vec4(1, 1, 1, 1));
-        historyMaterials[0]->SetTexture("_SpriteTex", historyTextures[0].get());
-        historyMaterials[0]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
-
-        historyTransform.Pivot = AnchorMode::TopRight;
-        historyTransform.Position.x = -BUTTON_PADDING;
-
-        historyButtons.emplace_back(std::make_unique<UISubEntity>(historyTransform));
-        rootTransform.BindChild(historyButtons[0]->GetTransform());
-
-        historyTextures.emplace_back(std::make_shared<Rendering::Texture2D>(HISTORY_BUTTON_TEXTURE_PATHS[1]));
-        historyMaterials.emplace_back(std::make_shared<Rendering::Material>("UI/SpriteDefault"));
-        historyMaterials[1]->SetColor("_TintColor", glm::vec4(1, 1, 1, 1));
-        historyMaterials[1]->SetTexture("_SpriteTex", historyTextures[1].get());
-        historyMaterials[1]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
-
-        historyTransform.Pivot = AnchorMode::TopLeft;
-        historyTransform.Position.x = BUTTON_PADDING;
-
-        historyButtons.emplace_back(std::make_unique<UISubEntity>(historyTransform));
-        rootTransform.BindChild(historyButtons[1]->GetTransform());
-
+    void ToolBarEntity::InitializeHistoryButtons(Function<uint32_t, const GalaxyComponentData&> addComponent,
+        Function<void, uint32_t> eraseComponent,
+        std::vector<std::unique_ptr<UISubEntity>>& historyButtons,
+        std::vector<std::shared_ptr<Rendering::Material>>& historyMaterials)
+    {
         ToolBarManager* toolBarManager = GetToolBarManager();
 
         toolBarManager->CreateHistoryButtons(historyButtons[0]->GetTransform(),
@@ -138,8 +124,6 @@ namespace Beer::System
             historyMaterials[1].get(),
             addComponent,
             eraseComponent);
-
-        MarkDirty();
     }
 
     void ToolBarEntity::InitializeColorDisplay()
@@ -153,7 +137,5 @@ namespace Beer::System
             &rootTransform);
 
         GetToolBarManager()->InitializeColorDisplay(colorDisplaySubEntity.get());
-
-        std::println("intialize tool bar color display");
     }
 } // namespace Beer::System
