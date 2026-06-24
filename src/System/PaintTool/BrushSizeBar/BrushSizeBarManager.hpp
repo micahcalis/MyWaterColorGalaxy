@@ -31,8 +31,8 @@ namespace Beer::System
                 spriteMaterial,
                 buttonTransform,
                 0.5f,
-                SliderType::Vertical,
-                SliderDirection::Negative);
+                SliderType::Horizontal,
+                SliderDirection::Positive);
 
             brushSizeSlider->OnSliderChanged.Subscribe(setBrushSize);
         }

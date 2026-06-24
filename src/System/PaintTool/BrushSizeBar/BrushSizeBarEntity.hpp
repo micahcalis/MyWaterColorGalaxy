@@ -4,6 +4,7 @@
 #include "Rendering/Material/Material.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 #include <memory>
@@ -40,7 +41,7 @@ namespace Beer::System
             QuadTreeEntity::Update();
         }
 
-        void InitializeSlider();
+        void InitializeSlider(UITransform* parent);
 
         [[nodiscard]] BrushSizeBarManager* GetBrushSizeBarManager() const { return static_cast<BrushSizeBarManager*>(manager.get()); }
 

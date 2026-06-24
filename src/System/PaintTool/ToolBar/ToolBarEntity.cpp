@@ -5,16 +5,20 @@
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
+#include "System/PaintTool/ColorDisplay/PlanetDisplayHandler.hpp"
+#include "System/PaintTool/ColorDisplay/PlanetDisplaySubEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "ToolBarEntity.hpp"
 #include "ToolBarManager.hpp"
+#include <memory>
 #include <print>
 
 namespace Beer::System
 {
-    static const glm::vec2 PANEL_SIZE = glm::vec2(0.6f, 1.5f);
-    static const glm::vec2 BUTTON_SIZE = glm::vec2(0.25f, 0.25f);
+    static const float DISPLAY_SCALE = 0.75f;
+    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.22f, 0.35f);
+    static const glm::vec2 BUTTON_SIZE = glm::vec2(0.15f, 0.15f);
     static const float BUTTON_PADDING = 0.02f;
 
     static const uint32_t BRUSH_COUNT = 5;
@@ -46,22 +50,24 @@ namespace Beer::System
 
         backgroundMat = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         backgroundMat->SetColor("_TintColor", Rendering::CANVAS_COLOR);
-        backgroundMat->SetTexture("_SpriteTex", squareTexture.get());
+        // backgroundMat->SetTexture("_SpriteTex", squareTexture.get());
         backgroundMat->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-        rootTransform.Anchor = AnchorMode::TopLeft;
-        rootTransform.Pivot = AnchorMode::TopLeft;
+        rootTransform.Anchor = AnchorMode::MiddleLeft;
+        rootTransform.Pivot = AnchorMode::MiddleLeft;
         rootTransform.Position.x += 0.02f;
-        rootTransform.Scale = PANEL_SIZE;
+        rootTransform.Scale = glm::vec2(DISPLAY_SCALE);
+        rootTransform.Position = DISPLAY_OFFSET;
         MarkDirty();
     }
 
     void ToolBarEntity::InitializeBrushes()
     {
         UITransform brushesTransform{};
-        brushesTransform.Anchor = AnchorMode::TopMiddle;
+        brushesTransform.Anchor = AnchorMode::TopLeft;
+        brushesTransform.Pivot = AnchorMode::TopLeft;
         brushesTransform.Scale = BUTTON_SIZE;
-        brushesTransform.Position = glm::vec2(0, -0.1f);
+        brushesTransform.Position = glm::vec2(BUTTON_PADDING, 0);
 
         brushes.reserve(BRUSH_COUNT);
         brushMaterials.reserve(BRUSH_COUNT);
@@ -75,13 +81,10 @@ namespace Beer::System
             brushMaterials[i]->SetTexture("_SpriteTex", brushTextures[i].get());
             brushMaterials[i]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-            bool isEven = i % 2 == 0;
-            brushesTransform.Pivot = isEven ? AnchorMode::TopRight : AnchorMode::TopLeft;
-            brushesTransform.Position.x = isEven ? -BUTTON_PADDING : BUTTON_PADDING;
-            brushesTransform.Position.y += isEven && i != 0 ? -BUTTON_SIZE.y - BUTTON_PADDING : 0;
-
             brushes.emplace_back(std::make_unique<UISubEntity>(brushesTransform));
             rootTransform.BindChild(brushes[i]->GetTransform());
+
+            brushesTransform.Position.y += -BUTTON_SIZE.y - BUTTON_PADDING;
         }
 
         ToolBarManager* toolBarManager = GetToolBarManager();
@@ -137,5 +140,11 @@ namespace Beer::System
             &rootTransform);
 
         GetToolBarManager()->InitializeColorDisplay(colorDisplaySubEntity.get());
+    }
+
+    void ToolBarEntity::InitializePlanetDisplay()
+    {
+        planetDisplaySubEntity = std::make_unique<PlanetDisplaySubEntity>(&rootTransform);
+        GetToolBarManager()->InitializePlanetDisplay(planetDisplaySubEntity.get());
     }
 } // namespace Beer::System

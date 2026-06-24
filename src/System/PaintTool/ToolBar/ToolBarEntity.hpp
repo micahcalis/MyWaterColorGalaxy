@@ -7,6 +7,7 @@
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
+#include "System/PaintTool/ColorDisplay/PlanetDisplaySubEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "ToolBarManager.hpp"
@@ -27,6 +28,7 @@ namespace Beer::System
         std::vector<std::shared_ptr<Rendering::Texture2D>> brushTextures;
 
         std::unique_ptr<ColorDisplaySubEntity> colorDisplaySubEntity = nullptr;
+        std::unique_ptr<PlanetDisplaySubEntity> planetDisplaySubEntity = nullptr;
 
         Function<void, GalaxyBrushType> setBrushType = nullptr;
 
@@ -42,6 +44,7 @@ namespace Beer::System
         {
             InitializeBrushes();
             InitializeColorDisplay();
+            InitializePlanetDisplay();
             MarkDirty();
         }
 
@@ -106,11 +109,16 @@ namespace Beer::System
                 renderItems.append_range(colorDisplaySubEntity->GetRenderItems());
             }
 
+            if (planetDisplaySubEntity != nullptr)
+            {
+                renderItems.append_range(planetDisplaySubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
 
         void InitializeBrushes();
-
         void InitializeColorDisplay();
+        void InitializePlanetDisplay();
     };
 } // namespace Beer::System

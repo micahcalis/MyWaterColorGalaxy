@@ -6,10 +6,12 @@
 #include "System/Components/Registry/IEntityManager.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/ColorDisplay/ColorDisplayContainer.hpp"
+#include "System/PaintTool/ColorDisplay/PlanetDisplaySubEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include <memory>
 #include <unordered_map>
 #include "System/Audio/SoundGlobalSettings.hpp"
+#include "System/PaintTool/ColorDisplay/PlanetDisplayHandler.hpp"
 
 namespace Beer::System
 {
@@ -23,6 +25,7 @@ namespace Beer::System
         GalaxyBrushController* currentBrushController = nullptr;
 
         std::unique_ptr<MapHistoryController> mapHistoryController = nullptr;
+        std::unique_ptr<PlanetDisplayHandler> planetDisplayHandler = nullptr;
 
         std::shared_ptr<AudioClip> selectClip = nullptr;
 
@@ -52,6 +55,11 @@ namespace Beer::System
             Function<uint32_t, const GalaxyComponentData&> addComponent,
             Function<void, uint32_t> eraseComponent);
 
+        void InitializePlanetDisplay(PlanetDisplaySubEntity* planetDisplaySubEntity)
+        {
+            planetDisplayHandler = std::make_unique<PlanetDisplayHandler>(planetDisplaySubEntity);
+        }
+
         void Update() override
         {
         }
@@ -64,6 +72,16 @@ namespace Beer::System
             }
 
             return mapHistoryController.get();
+        }
+
+        [[nodiscard]] PlanetDisplayHandler* GetPlanetDisplayHandler() const
+        {
+            if (planetDisplayHandler == nullptr)
+            {
+                return nullptr;
+            }
+
+            return planetDisplayHandler.get();
         }
 
     private:

@@ -15,6 +15,7 @@ cbuffer MaterialData
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _SpriteTex;
+BIND_MATERIAL_TEX(2) Sampler2D _ColorMask;
 
 //$ Pass UserInterface
 //$ Vertex GalaxyCompVert
@@ -39,14 +40,14 @@ VERT Sprite.VertData GalaxyCompVert(Sprite.MeshData input)
     return output;
 }
 
-float4 Get4ColorGradient(float gradient)
+float4 GetMaskColor(float2 uv)
 {
-    float scaledT = saturate(gradient) * 3.0f;
-    float4 color = lerp(_PrimaryColor, _SecondaryColor, saturate(scaledT));
-    color = lerp(color, _TertiaryColor, saturate(scaledT - 1.0f));
-    color = lerp(color, _QuaternaryColor, saturate(scaledT - 2.0f));
-
-    return color;
+    float4 sample = _ColorMask.Sample(uv);
+    float4 color = _PrimaryColor;
+    color = lerp(color, _PrimaryColor, sample.r);
+    color = lerp(color, _SecondaryColor, sample.g);
+    color = lerp(color, _TertiaryColor, sample.b);
+    return lerp(color, _QuaternaryColor, sample.a);
 }
 
 FRAG float4 GalaxyCompFrag(Sprite.VertData input) : SV_Target
@@ -56,7 +57,8 @@ FRAG float4 GalaxyCompFrag(Sprite.VertData input) : SV_Target
         ClipInMap(input.positionCS.xy);
     }
 
-    float gradient = _SpriteTex.Sample(input.uv).r;
+    float4 sprite = _SpriteTex.Sample(input.uv);
+    float4 gradCol = GetMaskColor(input.uv);
 
-    return Get4ColorGradient(1.0 - gradient);
+    return sprite * gradCol;
 }

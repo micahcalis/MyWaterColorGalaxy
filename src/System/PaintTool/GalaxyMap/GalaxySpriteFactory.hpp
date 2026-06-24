@@ -27,6 +27,13 @@ namespace Beer::System
         "UI/GalaxyMap/Tex_HandCursor",
         "UI/GalaxyMap/Tex_ZoomCursor"};
 
+    static const std::array<std::string, BRUSH_TYPES> MASK_PATHS = {
+        "UI/ToolBar/Tex_PlanetMask",
+        "UI/ToolBar/Tex_AsteroidsMask",
+        "UI/ToolBar/Tex_SpacegooMask",
+        "UI/ToolBar/Tex_BlackholeMask",
+        "UI/ToolBar/Tex_StardustMask"};
+
     static const std::array<std::string, BRUSH_TYPES> SHADER_PATHS = {
         "UI/GalaxyComponentSprite",
         "UI/GalaxyComponentSprite",
@@ -44,12 +51,14 @@ namespace Beer::System
     {
     private:
         std::unordered_map<GalaxyBrushType, std::shared_ptr<Rendering::Texture2D>> spriteMap;
+        std::unordered_map<GalaxyBrushType, std::shared_ptr<Rendering::Texture2D>> maskMap;
         std::unordered_map<GalaxyBrushType, std::shared_ptr<Rendering::Shader>> shaderMap;
 
     public:
         GalaxySpriteFactory()
         {
             InitializeSpriteMap();
+            InitializeMaskMap();
             InitializeShaderMap();
         }
 
@@ -65,6 +74,7 @@ namespace Beer::System
 
             std::shared_ptr<Rendering::Material> newMaterial = std::make_shared<Rendering::Material>(shaderMap.at(data.Brush));
             newMaterial->SetTexture("_SpriteTex", spriteMap.at(data.Brush).get());
+            newMaterial->SetTexture("_ColorMask", maskMap.at(data.Brush).get());
 
             for (uint32_t i = 0; i < 4; i++)
             {
@@ -96,6 +106,14 @@ namespace Beer::System
             }
         }
 
+        void InitializeMaskMap()
+        {
+            for (uint32_t i = 0; i < BRUSH_TYPES; i++)
+            {
+                GalaxyBrushType type = static_cast<GalaxyBrushType>(i);
+                maskMap[type] = std::make_shared<Rendering::Texture2D>(MASK_PATHS[i]);
+            }
+        }
         void InitializeShaderMap()
         {
             for (uint32_t i = 0; i < BRUSH_TYPES; i++)

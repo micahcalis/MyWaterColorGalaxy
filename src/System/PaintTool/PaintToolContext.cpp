@@ -222,6 +222,7 @@ namespace Beer::System
             {
                 colorMixerEntity->GetMixerManager()->GetColorDisplayHandler()->SetColor(color, level);
                 toolBarEntity->GetToolBarManager()->GetColorDisplayHandler()->SetColor(color, level);
+                toolBarEntity->GetToolBarManager()->GetPlanetDisplayHandler()->SetColor(color, level);
             }
         };
 
@@ -231,6 +232,7 @@ namespace Beer::System
 
         galaxyMapEntity->GetMapManager()->OnNewBrush.Subscribe([this](GalaxyBrushType type) -> void {
             colorBarEntity->GetColorBarManager()->UpdateDisplayMaterials();
+            toolBarEntity->GetToolBarManager()->GetPlanetDisplayHandler()->SetType(type);
         });
 
         Function<void, PigmentType> deselectColorBar = [this](PigmentType pigment) -> void { colorBarEntity->GetColorBarManager()->DeselectColors(); };
@@ -349,9 +351,9 @@ namespace Beer::System
 
     void PaintToolContext::InitializeBrushSizeBar()
     {
-        if (galaxyMapEntity == nullptr)
+        if (galaxyMapEntity == nullptr || toolBarEntity == nullptr)
         {
-            throw std::runtime_error("Trying to Initialize Brush Size Bar when Galaxy Map is null!");
+            throw std::runtime_error("Trying to Initialize Brush Size Bar when Galaxy Map or Tool Bar is null!");
         }
 
         Function<void, float> setBrushSize = [this](float size) -> void {
@@ -359,7 +361,7 @@ namespace Beer::System
         };
 
         brushSizeBarEntity = registry.CreateEntity<BrushSizeBarEntity>(setBrushSize);
-        brushSizeBarEntity->InitializeSlider();
+        brushSizeBarEntity->InitializeSlider(toolBarEntity->GetRootTransform());
     }
 
     void PaintToolContext::InitializeHoloCursor()

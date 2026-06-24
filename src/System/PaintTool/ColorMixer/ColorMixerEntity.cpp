@@ -8,7 +8,6 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
-#include "System/PaintTool/ColorMixer/ColorPicker.hpp"
 #include "glm/fwd.hpp"
 #include <array>
 #include <memory>
@@ -85,7 +84,7 @@ namespace Beer::System
         for (int i = 0; i < NUM_PIGMENTS; i++)
         {
             UITransform transform{};
-            transform.Anchor = AnchorMode::TopRight;
+            transform.Anchor = AnchorMode::BottomRight;
             transform.Pivot = AnchorMode::BottomRight;
             transform.Scale = glm::vec2(PIGMENT_BUTTON_SCALE, PIGMENT_BUTTON_SCALE);
             transform.Depth = 0.1f;
@@ -111,7 +110,7 @@ namespace Beer::System
         }
 
         UITransform bgTransform{};
-        bgTransform.Anchor = AnchorMode::TopMiddle;
+        bgTransform.Anchor = AnchorMode::BottomMiddle;
         bgTransform.Pivot = AnchorMode::BottomMiddle;
         bgTransform.Scale = PIGMENT_BG_SCALE;
         bgTransform.Position = PIGMENT_BG_POS;

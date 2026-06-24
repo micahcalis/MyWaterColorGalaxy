@@ -8,11 +8,11 @@
 
 namespace Beer::System
 {
-    static const glm::vec2 PANEL_SIZE = glm::vec2(0.25f, 1.2f);
-    static const glm::vec2 PANEL_OFFSET = glm::vec2(0.6f, 0);
+    static const glm::vec2 PANEL_SIZE = glm::vec2(0.6f, 0.125f);
+    static const glm::vec2 PANEL_OFFSET = glm::vec2(0, 0);
 
-    static const glm::vec2 SLIDER_CONTAINER_SIZE = glm::vec2(0.1f, 0.8f);
-    static const glm::vec2 SLIDER_BUTTON_SIZE = glm::vec2(0.1f, 0.05f);
+    static const glm::vec2 SLIDER_CONTAINER_SIZE = glm::vec2(0.4f, 0.075f);
+    static const glm::vec2 SLIDER_BUTTON_SIZE = glm::vec2(0.05f, 0.1f);
     static const glm::vec2 SMALL_ICON_SIZE = glm::vec2(0.05f, 0.05f);
     static const glm::vec2 BIG_ICON_SIZE = glm::vec2(0.085f, 0.085f);
     static const float ICON_OFFSET = 0.02f;
@@ -33,17 +33,18 @@ namespace Beer::System
         backgroundMaterial->SetTexture("_SpriteTex", squareTexture.get());
         backgroundMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
-        rootTransform.Anchor = AnchorMode::TopLeft;
-        rootTransform.Pivot = AnchorMode::TopLeft;
+        rootTransform.Anchor = AnchorMode::BottomMiddle;
+        rootTransform.Pivot = AnchorMode::BottomMiddle;
         rootTransform.Scale = PANEL_SIZE;
         rootTransform.Position = PANEL_OFFSET;
 
         MarkDirty();
     }
 
-    void BrushSizeBarEntity::InitializeSlider()
+    void BrushSizeBarEntity::InitializeSlider(UITransform* parent)
     {
         BrushSizeBarManager* brushSizeBarManager = GetBrushSizeBarManager();
+        parent->BindChild(&rootTransform);
 
         UITransform sliderColliderTransform{};
         sliderColliderTransform.Anchor = AnchorMode::Center;
@@ -53,8 +54,8 @@ namespace Beer::System
         sliderColliderEntity = std::make_unique<UISubEntity>(sliderColliderTransform);
         rootTransform.BindChild(sliderColliderEntity->GetTransform());
 
-        sliderColliderTransform.Scale.x *= 0.2f;
-        sliderColliderTransform.Scale.y *= 1.2f;
+        sliderColliderTransform.Scale.x *= 1.1f;
+        sliderColliderTransform.Scale.y *= 0.2f;
 
         sliderBarEntity = std::make_unique<UISubEntity>(sliderColliderTransform);
         rootTransform.BindChild(sliderBarEntity->GetTransform());
@@ -84,18 +85,18 @@ namespace Beer::System
         sizeIconMaterial->SetTexture("_SpriteTex", brushSizeTexture.get());
 
         UITransform sliderIconTransform{};
-        sliderIconTransform.Anchor = AnchorMode::TopMiddle;
-        sliderIconTransform.Pivot = AnchorMode::BottomMiddle;
+        sliderIconTransform.Anchor = AnchorMode::MiddleLeft;
+        sliderIconTransform.Pivot = AnchorMode::MiddleRight;
         sliderIconTransform.Scale = SMALL_ICON_SIZE;
-        sliderIconTransform.Position.y = ICON_OFFSET;
+        sliderIconTransform.Position.x = -ICON_OFFSET;
 
         smallSizeEntity = std::make_unique<UISubEntity>(sliderIconTransform);
         sliderColliderEntity->GetTransform()->BindChild(smallSizeEntity->GetTransform());
 
-        sliderIconTransform.Anchor = AnchorMode::BottomMiddle;
-        sliderIconTransform.Pivot = AnchorMode::TopMiddle;
+        sliderIconTransform.Anchor = AnchorMode::MiddleRight;
+        sliderIconTransform.Pivot = AnchorMode::MiddleLeft;
         sliderIconTransform.Scale = BIG_ICON_SIZE;
-        sliderIconTransform.Position.y = -ICON_OFFSET;
+        sliderIconTransform.Position.x = ICON_OFFSET;
 
         bigSizeEntity = std::make_unique<UISubEntity>(sliderIconTransform);
         sliderColliderEntity->GetTransform()->BindChild(bigSizeEntity->GetTransform());
