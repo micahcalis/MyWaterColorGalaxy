@@ -5,6 +5,7 @@
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
+#include "System/Components/UI/UITransform.hpp"
 #include "System/Default/UI/QuadTreeEntity.hpp"
 #include "System/Delegates/Delegate.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapBuffer.hpp"
@@ -22,10 +23,6 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> seedButtonMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> seedButtonTexture = nullptr;
         std::unique_ptr<UISubEntity> seedButtonEntity = nullptr;
-
-        std::shared_ptr<Rendering::Material> flyButtonMaterial = nullptr;
-        std::shared_ptr<Rendering::Texture2D> flyButtonTexture = nullptr;
-        std::unique_ptr<UISubEntity> flyButtonEntity = nullptr;
 
         std::shared_ptr<Rendering::Material> backButtonMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> backButtonTexture = nullptr;
@@ -45,7 +42,7 @@ namespace Beer::System
             Function<void> enableBlock,
             Rendering::FadeState initialFadeState);
 
-        void InitializeButtonEntities();
+        void InitializeButtons(UITransform* flyTransform, Rendering::Material* flyMaterial);
         MenuBarManager* GetMenuBarManager() const { return static_cast<MenuBarManager*>(manager.get()); };
 
     protected:
@@ -64,9 +61,10 @@ namespace Beer::System
             std::vector<UIRenderItem> renderItems;
             renderItems.push_back(UIRenderItem(&rootTransform, backgroundMaterial.get()));
             renderItems.push_back(UIRenderItem(seedButtonEntity->GetTransform(), seedButtonMaterial.get()));
-            renderItems.push_back(UIRenderItem(flyButtonEntity->GetTransform(), flyButtonMaterial.get()));
             renderItems.push_back(UIRenderItem(backButtonEntity->GetTransform(), backButtonMaterial.get()));
             return renderItems;
         }
+
+        void InitializeButtonEntities();
     };
 } // namespace Beer::System

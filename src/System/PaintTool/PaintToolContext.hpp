@@ -3,6 +3,7 @@
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
 #include "ButtonBlocker/ButtonBlockerEntity.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
+#include "MenuBar/LaunchButtonEntity.hpp"
 #include "ModeButton/ModeButtonEntity.hpp"
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "System/Delegates/BeerEvent.hpp"
@@ -36,6 +37,7 @@ namespace Beer::System
         ColorBarEntity* colorBarEntity = nullptr;
         GalaxyMapEntity* galaxyMapEntity = nullptr;
         MenuBarEntity* menuBarEntity = nullptr;
+        LaunchButtonEntity* launchButtonEntity = nullptr;
         ToolBarEntity* toolBarEntity = nullptr;
         MapBarEntity* mapBarEntity = nullptr;
         BrushSizeBarEntity* brushSizeBarEntity = nullptr;

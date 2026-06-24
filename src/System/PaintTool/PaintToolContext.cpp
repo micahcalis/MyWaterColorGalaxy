@@ -12,6 +12,7 @@
 #include "GalaxyMap/GalaxyMapEntity.hpp"
 #include "GalaxyMap/GalaxySeed.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
+#include "MenuBar/LaunchButtonEntity.hpp"
 #include "MenuBar/MenuBarEntity.hpp"
 #include "ModeButton/ModeButtonEntity.hpp"
 #include "Rendering/Pipeline/IRenderPass.hpp"
@@ -88,6 +89,11 @@ namespace Beer::System
         if (menuBarEntity != nullptr)
         {
             menuBarEntity->Update();
+        }
+
+        if (launchButtonEntity != nullptr)
+        {
+            launchButtonEntity->Update();
         }
 
         if (galaxyMapEntity != nullptr)
@@ -272,7 +278,9 @@ namespace Beer::System
             enableBlock,
             initialFadeState);
 
-        menuBarEntity->InitializeButtonEntities();
+        launchButtonEntity = registry.CreateEntity<LaunchButtonEntity>();
+
+        menuBarEntity->InitializeButtons(launchButtonEntity->GetButtonTransform(), launchButtonEntity->GetButtonMaterial());
     }
 
     void PaintToolContext::InitializeGalaxyMap()

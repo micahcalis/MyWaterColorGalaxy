@@ -9,9 +9,9 @@
 
 namespace Beer::System
 {
-    static const float MENU_HEIGHT = 0.8f;
-    static const float MENU_WIDTH = 0.25f;
-    static const float MENU_OFFSET = 0.05f;
+    static const float MENU_HEIGHT = 0.25f;
+    static const float MENU_WIDTH = 0.8f;
+    static const float MENU_OFFSET = 0.0f;
     static const float SEED_BUTTON_SIZE = 0.2f;
     static const float FLY_BUTTON_SIZE = 0.2f;
     static const float BUTTON_PADDING = 0.05f;
@@ -30,8 +30,8 @@ namespace Beer::System
         , initialFadeState(initialFadeState)
         , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
-        rootTransform.Anchor = AnchorMode::BottomRight;
-        rootTransform.Pivot = AnchorMode::BottomRight;
+        rootTransform.Anchor = AnchorMode::TopLeft;
+        rootTransform.Pivot = AnchorMode::TopLeft;
         rootTransform.Scale = glm::vec2(MENU_WIDTH, MENU_HEIGHT);
         rootTransform.Position = glm::vec2(-MENU_OFFSET, MENU_OFFSET);
 
@@ -41,13 +41,23 @@ namespace Beer::System
         backgroundMaterial->SetVector("_Scale", glm::vec4(1));
         backgroundMaterial->SetTexture("_SpriteTex", backgroundTexture.get());
 
+        InitializeButtonEntities();
+
         MarkDirty();
+    }
+
+    void MenuBarEntity::InitializeButtons(UITransform* flyTransform, Rendering::Material* flyMaterial)
+    {
+        GetMenuBarManager()->InitializeButtons(seedButtonEntity->GetTransform(),
+            seedButtonMaterial.get(),
+            flyTransform,
+            flyMaterial,
+            backButtonEntity->GetTransform(),
+            backButtonMaterial.get());
     }
 
     void MenuBarEntity::InitializeButtonEntities()
     {
-        MenuBarManager* menuBarManager = GetMenuBarManager();
-
         seedButtonTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_NewSeed");
         seedButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         seedButtonMaterial->SetColor("_TintColor", glm::vec4(1.0f));
@@ -55,34 +65,19 @@ namespace Beer::System
         seedButtonMaterial->SetTexture("_SpriteTex", seedButtonTexture.get());
 
         UITransform seedTransform{};
-        seedTransform.Anchor = AnchorMode::TopMiddle;
-        seedTransform.Pivot = AnchorMode::TopMiddle;
+        seedTransform.Anchor = AnchorMode::TopLeft;
+        seedTransform.Pivot = AnchorMode::TopLeft;
         seedTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
-        seedTransform.Position = glm::vec2(0, -BUTTON_PADDING);
+        seedTransform.Position = glm::vec2(BUTTON_PADDING, -BUTTON_PADDING);
 
         seedButtonEntity = std::make_unique<UISubEntity>(seedTransform);
         rootTransform.BindChild(seedButtonEntity->GetTransform());
 
-        UITransform flyTransform{};
-        flyTransform.Anchor = AnchorMode::TopMiddle;
-        flyTransform.Pivot = AnchorMode::TopMiddle;
-        flyTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
-        flyTransform.Position = glm::vec2(0, -BUTTON_PADDING - SEED_BUTTON_SIZE);
-
-        flyButtonTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_Fly");
-        flyButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        flyButtonMaterial->SetColor("_TintColor", glm::vec4(1.0f));
-        flyButtonMaterial->SetVector("_Scale", glm::vec4(1));
-        flyButtonMaterial->SetTexture("_SpriteTex", flyButtonTexture.get());
-
-        flyButtonEntity = std::make_unique<UISubEntity>(flyTransform);
-        rootTransform.BindChild(flyButtonEntity->GetTransform());
-
         UITransform backTransform{};
-        backTransform.Anchor = AnchorMode::TopMiddle;
-        backTransform.Pivot = AnchorMode::TopMiddle;
+        backTransform.Anchor = AnchorMode::TopLeft;
+        backTransform.Pivot = AnchorMode::TopLeft;
         backTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
-        backTransform.Position = glm::vec2(0, -BUTTON_PADDING - (SEED_BUTTON_SIZE * 2.0f));
+        backTransform.Position = glm::vec2(SEED_BUTTON_SIZE + BUTTON_PADDING, -BUTTON_PADDING);
 
         backButtonTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_Back");
         backButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
@@ -92,13 +87,6 @@ namespace Beer::System
 
         backButtonEntity = std::make_unique<UISubEntity>(backTransform);
         rootTransform.BindChild(backButtonEntity->GetTransform());
-
-        menuBarManager->InitializeButtons(seedButtonEntity->GetTransform(),
-            seedButtonMaterial.get(),
-            flyButtonEntity->GetTransform(),
-            flyButtonMaterial.get(),
-            backButtonEntity->GetTransform(),
-            backButtonMaterial.get());
 
         MarkDirty();
     }
