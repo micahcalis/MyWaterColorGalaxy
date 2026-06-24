@@ -34,6 +34,7 @@ namespace Beer::System
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
         Function<std::array<glm::vec4, 4>> getGalaxyColors,
         Function<Rendering::Texture2D*> getBrushTexture,
+        Function<Rendering::Texture2D*> getBrushMask,
         Function<void> pickerSelectColor,
         BeerEvent<void()>* onColorPickerClosed,
         BeerEvent<void()>* onNewSeed)
@@ -44,6 +45,7 @@ namespace Beer::System
         , setGalaxyBufferColor(setGalaxyBufferColor)
         , getGalaxyColors(getGalaxyColors)
         , getBrushTexture(getBrushTexture)
+        , getBrushMask(getBrushMask)
         , pickerSelectColor(pickerSelectColor)
         , onColorPickerClosed(onColorPickerClosed)
         , onNewSeed(onNewSeed)
@@ -221,10 +223,16 @@ namespace Beer::System
             }
 
             Rendering::Texture2D* brushTexture = getBrushTexture();
+            Rendering::Texture2D* brushMask = getBrushMask();
 
             if (brushTexture != nullptr)
             {
                 planetDisplayMaterial->SetTexture("_SpriteTex", getBrushTexture(), false);
+            }
+
+            if (brushMask != nullptr)
+            {
+                planetDisplayMaterial->SetTexture("_ColorMask", brushMask, false);
             }
         }
 

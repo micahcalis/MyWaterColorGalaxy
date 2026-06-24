@@ -23,12 +23,20 @@ namespace Beer::System
 
     private:
         Function<MouseInput> getMouseInput = nullptr;
-        std::shared_ptr<Rendering::Material> colorMixerDisplayMat;
+        std::shared_ptr<Rendering::Material> backgroundMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> backgroundTexture = nullptr;
+
+        std::unique_ptr<UISubEntity> colorMixerDisplayEntity = nullptr;
+        std::shared_ptr<Rendering::Material> colorMixerDisplayMat = nullptr;
+        std::shared_ptr<Rendering::Texture2D> colorMixerDisplayTexture = nullptr;
+
+        std::unique_ptr<UISubEntity> colormixerBorderEntity = nullptr;
+        std::shared_ptr<Rendering::Texture2D> colorMixerBorderTexture = nullptr;
+        std::shared_ptr<Rendering::Material> colorMixerBorderMaterial = nullptr;
 
         std::vector<std::unique_ptr<UISubEntity>> pigmentEntities;
         std::vector<std::shared_ptr<Rendering::Material>> pigmentMaterials;
-        std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
-        std::shared_ptr<Rendering::Texture2D> circleTexture = nullptr;
+        std::vector<std::shared_ptr<Rendering::Texture2D>> pigmentTextures;
 
         std::unique_ptr<UISubEntity> clearButtonIcon = nullptr;
         std::shared_ptr<Rendering::Material> clearIconMaterial = nullptr;
@@ -40,6 +48,7 @@ namespace Beer::System
 
         std::unique_ptr<UISubEntity> selectSpriteEntity = nullptr;
         std::shared_ptr<Rendering::Material> selectSpriteMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> selectSpriteTexture = nullptr;
 
         std::unique_ptr<UISubEntity> cursorSpriteEntity = nullptr;
         std::unique_ptr<UISubEntity> cursorAnchorEntity = nullptr;
@@ -90,12 +99,14 @@ namespace Beer::System
                 return;
         }
 
+        UITransform* GetMixerTransform() const { return colorMixerDisplayEntity->GetTransform(); }
+
     protected:
         void InitializeManager() override
         {
             Function<void> markDirty = [this]() -> void { MarkDirty(); };
 
-            manager = std::make_unique<ColorMixerManager>(&rootTransform,
+            manager = std::make_unique<ColorMixerManager>(colorMixerDisplayEntity->GetTransform(),
                 markDirty,
                 getMouseInput);
 
@@ -106,7 +117,9 @@ namespace Beer::System
         std::vector<UIRenderItem> GetRenderItems() override
         {
             std::vector<UIRenderItem> renderItems;
-            renderItems.push_back(UIRenderItem(&rootTransform, colorMixerDisplayMat.get()));
+            renderItems.push_back(UIRenderItem(&rootTransform, backgroundMaterial.get()));
+            renderItems.push_back(UIRenderItem(colorMixerDisplayEntity->GetTransform(), colorMixerDisplayMat.get()));
+            renderItems.push_back(UIRenderItem(colormixerBorderEntity->GetTransform(), colorMixerBorderMaterial.get()));
 
             for (int i = 0; i < pigmentEntities.size(); i++)
             {

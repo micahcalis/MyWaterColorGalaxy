@@ -14,7 +14,7 @@ namespace Beer::System
     {
     private:
         std::shared_ptr<Rendering::Material> backgroundMat = nullptr;
-        std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
+        std::shared_ptr<Rendering::Texture2D> backgroundTexture = nullptr;
         std::vector<std::unique_ptr<UISubEntity>> colorLayers;
         std::vector<std::shared_ptr<Rendering::Material>> colorLayerMaterials;
         std::shared_ptr<Rendering::Texture2D> colorLayerSprite = nullptr;
@@ -28,6 +28,7 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> galaxyDisplayEntity = nullptr;
 
         std::shared_ptr<Rendering::Material> selectSpriteMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> selectSpriteTexture = nullptr;
         std::unique_ptr<UISubEntity> selectSpriteEntity = nullptr;
         std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
 
@@ -37,6 +38,7 @@ namespace Beer::System
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = nullptr;
         Function<std::array<glm::vec4, 4>> getGalaxyColors = nullptr;
         Function<Rendering::Texture2D*> getBrushTexture = nullptr;
+        Function<Rendering::Texture2D*> getBrushMask = nullptr;
         Function<void> pickerSelectColor = nullptr;
         BeerEvent<void(glm::vec4)>* onColorPicked = nullptr;
         BeerEvent<void()>* onColorPickerClosed = nullptr;
@@ -48,6 +50,7 @@ namespace Beer::System
             Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
             Function<std::array<glm::vec4, 4>> getGalaxyColors,
             Function<Rendering::Texture2D*> getBrushTexture,
+            Function<Rendering::Texture2D*> getBrushMask,
             Function<void> pickerSelectColor,
             BeerEvent<void(glm::vec4)>* onColorPicked,
             BeerEvent<void()>* onColorPickerClosed,
@@ -74,6 +77,7 @@ namespace Beer::System
                 setGalaxyBufferColor,
                 getGalaxyColors,
                 getBrushTexture,
+                getBrushMask,
                 pickerSelectColor,
                 onColorPickerClosed,
                 onNewSeed);

@@ -39,6 +39,7 @@ namespace Beer::System
         Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor = nullptr;
         Function<std::array<glm::vec4, 4>> getGalaxyColors = nullptr;
         Function<Rendering::Texture2D*> getBrushTexture = nullptr;
+        Function<Rendering::Texture2D*> getBrushMask = nullptr;
         Function<void> pickerSelectColor = nullptr;
 
         ColorBarController* currentController = nullptr;
@@ -57,6 +58,7 @@ namespace Beer::System
             Function<void, glm::vec4, ColorBarLevel> setGalaxyBufferColor,
             Function<std::array<glm::vec4, 4>> getGalaxyColors,
             Function<Rendering::Texture2D*> getBrushTexture,
+            Function<Rendering::Texture2D*> getBrushMask,
             Function<void> pickerSelectColor,
             BeerEvent<void()>* onColorPickerClosed,
             BeerEvent<void()>* onNewSeed);

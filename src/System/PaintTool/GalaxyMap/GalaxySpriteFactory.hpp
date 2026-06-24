@@ -90,10 +90,22 @@ namespace Beer::System
 
             if (it == spriteMap.end())
             {
-                throw std::runtime_error(std::format("Brush Type Texture Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(type)));
+                throw std::runtime_error(std::format("Brush Type Mask Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(type)));
             }
 
             return spriteMap.at(type).get();
+        }
+
+        Rendering::Texture2D* GetMask(const GalaxyBrushType type) const
+        {
+            auto it = maskMap.find(type);
+
+            if (it == maskMap.end())
+            {
+                throw std::runtime_error(std::format("Brush Type Texture Uninitialized in Galaxy Map Factory: {}", magic_enum::enum_name(type)));
+            }
+
+            return maskMap.at(type).get();
         }
 
     private:

@@ -159,7 +159,7 @@ namespace Beer::System
         paintSimSubPipeline = std::make_unique<PaintSimSubPipeline>(
             colorMixerEntity->GetColorMixerMat(),
             getMouseInput,
-            [this]() -> UITransform* { return colorMixerEntity->GetRootTransform(); },
+            [this]() -> UITransform* { return colorMixerEntity->GetMixerTransform(); },
             getDebugKeyInput);
 
         paintSimSubPipeline->GetInjectPaintPass()->SetGetCurrentPigment([this]() -> PigmentType {
@@ -207,11 +207,24 @@ namespace Beer::System
             return galaxyMapEntity->GetMapManager()->GetCursor()->GetFactory()->GetTexture(brushType);
         };
 
+        Function<Rendering::Texture2D*> getBrushMask =
+            [this]() -> Rendering::Texture2D* {
+            GalaxyBrushType brushType = galaxyMapEntity->GetMapManager()->GetCursor()->Brush;
+
+            if (!IsGalaxyComponent(brushType))
+            {
+                brushType = GalaxyBrushType::Planet;
+            }
+
+            return galaxyMapEntity->GetMapManager()->GetCursor()->GetFactory()->GetMask(brushType);
+        };
+
         colorBarEntity = registry.CreateEntity<ColorBarEntity>(getMouseInput,
             setColorDisplayColor,
             setGalaxyBufferColor,
             getGalaxyColors,
             getBrushTexture,
+            getBrushMask,
             pickerSelectColor,
             &colorMixerEntity->GetMixerManager()->GetColorPicker()->OnColorPicked,
             &colorMixerEntity->OnColorMixerClosed,
