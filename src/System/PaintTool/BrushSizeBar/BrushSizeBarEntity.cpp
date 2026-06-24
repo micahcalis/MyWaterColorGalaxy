@@ -2,6 +2,7 @@
 #include "BrushSizeBarManager.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/RenderPasses/Painting/WaterColorSimBuffers.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include <memory>
@@ -9,12 +10,12 @@
 namespace Beer::System
 {
     static const glm::vec2 PANEL_SIZE = glm::vec2(0.6f, 0.125f);
-    static const glm::vec2 PANEL_OFFSET = glm::vec2(0, 0);
+    static const glm::vec2 PANEL_OFFSET = glm::vec2(0, 0.55f);
 
-    static const glm::vec2 SLIDER_CONTAINER_SIZE = glm::vec2(0.4f, 0.075f);
+    static const glm::vec2 SLIDER_CONTAINER_SIZE = glm::vec2(0.25f, 0.075f);
     static const glm::vec2 SLIDER_BUTTON_SIZE = glm::vec2(0.05f, 0.1f);
-    static const glm::vec2 SMALL_ICON_SIZE = glm::vec2(0.05f, 0.05f);
-    static const glm::vec2 BIG_ICON_SIZE = glm::vec2(0.085f, 0.085f);
+    static const glm::vec2 SMALL_ICON_SIZE = glm::vec2(0.085f, 0.085f);
+    static const glm::vec2 BIG_ICON_SIZE = glm::vec2(0.085f * 1.75f, 0.085f);
     static const float ICON_OFFSET = 0.02f;
 
     static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.05f);
@@ -26,11 +27,8 @@ namespace Beer::System
     BrushSizeBarEntity::BrushSizeBarEntity(Function<void, float> setBrushSize)
         : setBrushSize(setBrushSize), QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
-        squareTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
-
         backgroundMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         backgroundMaterial->SetColor("_TintColor", Rendering::CANVAS_COLOR);
-        backgroundMaterial->SetTexture("_SpriteTex", squareTexture.get());
         backgroundMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
         rootTransform.Anchor = AnchorMode::BottomMiddle;
@@ -55,15 +53,16 @@ namespace Beer::System
         rootTransform.BindChild(sliderColliderEntity->GetTransform());
 
         sliderColliderTransform.Scale.x *= 1.1f;
-        sliderColliderTransform.Scale.y *= 0.2f;
+        sliderColliderTransform.Scale.y *= 0.4f;
 
         sliderBarEntity = std::make_unique<UISubEntity>(sliderColliderTransform);
         rootTransform.BindChild(sliderBarEntity->GetTransform());
 
+        sliderBarTexture = std::make_shared<Rendering::Texture2D>("UI/ToolBar/Tex_PlanetSlider");
         sliderBarMaterial = std::make_unique<Rendering::Material>("UI/SpriteDefault");
-        sliderBarMaterial->SetColor("_TintColor", glm::vec4(0.2f, 0.2f, 0.2f, 1));
+        sliderBarMaterial->SetColor("_TintColor", glm::vec4(1));
         sliderBarMaterial->SetVector("_Scale", glm::vec4(1));
-        sliderBarMaterial->SetTexture("_SpriteTex", squareTexture.get());
+        sliderBarMaterial->SetTexture("_SpriteTex", sliderBarTexture.get());
 
         UITransform sliderButtonTransform{};
         sliderButtonTransform.Anchor = AnchorMode::Center;
@@ -71,18 +70,25 @@ namespace Beer::System
         sliderButtonTransform.Scale = SLIDER_BUTTON_SIZE;
         sliderButtonTransform.Depth += 0.1f;
 
+        sliderButtonTexture = std::make_shared<Rendering::Texture2D>("UI/ToolBar/Tex_SliderButton");
         sliderButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         sliderButtonMaterial->SetColor("_TintColor", glm::vec4(0.4f, 0.4f, 0.4f, 1));
         sliderButtonMaterial->SetVector("_Scale", glm::vec4(1));
-        sliderButtonMaterial->SetTexture("_SpriteTex", squareTexture.get());
+        sliderButtonMaterial->SetTexture("_SpriteTex", sliderButtonTexture.get());
 
         sliderButtonEntity = std::make_unique<UISubEntity>(sliderButtonTransform);
 
-        brushSizeTexture = std::make_shared<Rendering::Texture2D>("UI/ToolBar/Tex_PlanetBrushSize");
-        sizeIconMaterial = std::make_unique<Rendering::Material>("UI/SpriteDefault");
-        sizeIconMaterial->SetColor("_TintColor", glm::vec4(1));
-        sizeIconMaterial->SetVector("_Scale", glm::vec4(1));
-        sizeIconMaterial->SetTexture("_SpriteTex", brushSizeTexture.get());
+        brushSizeTextureBig = std::make_shared<Rendering::Texture2D>("UI/ToolBar/Tex_PlanetBrushBig");
+        sizeIconMaterialBig = std::make_unique<Rendering::Material>("UI/SpriteDefault");
+        sizeIconMaterialBig->SetColor("_TintColor", glm::vec4(1));
+        sizeIconMaterialBig->SetVector("_Scale", glm::vec4(1));
+        sizeIconMaterialBig->SetTexture("_SpriteTex", brushSizeTextureBig.get());
+
+        brushSizeTextureSmall = std::make_shared<Rendering::Texture2D>("UI/ToolBar/Tex_PlanetBrushSmall");
+        sizeIconMaterialSmall = std::make_unique<Rendering::Material>("UI/SpriteDefault");
+        sizeIconMaterialSmall->SetColor("_TintColor", glm::vec4(1));
+        sizeIconMaterialSmall->SetVector("_Scale", glm::vec4(1));
+        sizeIconMaterialSmall->SetTexture("_SpriteTex", brushSizeTextureSmall.get());
 
         UITransform sliderIconTransform{};
         sliderIconTransform.Anchor = AnchorMode::MiddleLeft;

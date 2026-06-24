@@ -2,6 +2,7 @@
 
 #include "BrushSizeBarManager.hpp"
 #include "Rendering/Material/Material.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -15,8 +16,9 @@ namespace Beer::System
     {
     private:
         std::shared_ptr<Rendering::Material> backgroundMaterial = nullptr;
-        std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
 
+        std::shared_ptr<Rendering::Texture2D> sliderBarTexture = nullptr;
+        std::shared_ptr<Rendering::Texture2D> sliderButtonTexture = nullptr;
         std::unique_ptr<UISubEntity> sliderColliderEntity = nullptr;
 
         std::shared_ptr<Rendering::Material> sliderButtonMaterial = nullptr;
@@ -24,8 +26,10 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> sliderBarMaterial = nullptr;
         std::unique_ptr<UISubEntity> sliderBarEntity = nullptr;
 
-        std::shared_ptr<Rendering::Texture2D> brushSizeTexture = nullptr;
-        std::shared_ptr<Rendering::Material> sizeIconMaterial = nullptr;
+        std::shared_ptr<Rendering::Texture2D> brushSizeTextureBig = nullptr;
+        std::shared_ptr<Rendering::Texture2D> brushSizeTextureSmall = nullptr;
+        std::shared_ptr<Rendering::Material> sizeIconMaterialBig = nullptr;
+        std::shared_ptr<Rendering::Material> sizeIconMaterialSmall = nullptr;
         std::unique_ptr<UISubEntity> smallSizeEntity = nullptr;
         std::unique_ptr<UISubEntity> bigSizeEntity = nullptr;
 
@@ -59,14 +63,14 @@ namespace Beer::System
         std::vector<UIRenderItem> GetRenderItems() override
         {
             std::vector<UIRenderItem> renderItems;
-            renderItems.push_back(UIRenderItem(&rootTransform, backgroundMaterial.get()));
+            //  renderItems.push_back(UIRenderItem(&rootTransform, backgroundMaterial.get()));
 
             if (GetBrushSizeBarManager()->SliderInitialized())
             {
                 renderItems.push_back(UIRenderItem(sliderButtonEntity->GetTransform(), sliderButtonMaterial.get()));
                 renderItems.push_back(UIRenderItem(sliderBarEntity->GetTransform(), sliderBarMaterial.get()));
-                renderItems.push_back(UIRenderItem(smallSizeEntity->GetTransform(), sizeIconMaterial.get()));
-                renderItems.push_back(UIRenderItem(bigSizeEntity->GetTransform(), sizeIconMaterial.get()));
+                renderItems.push_back(UIRenderItem(smallSizeEntity->GetTransform(), sizeIconMaterialSmall.get()));
+                renderItems.push_back(UIRenderItem(bigSizeEntity->GetTransform(), sizeIconMaterialBig.get()));
             }
 
             if (helpButtonSubEntity != nullptr)

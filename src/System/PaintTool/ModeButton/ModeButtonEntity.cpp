@@ -6,8 +6,8 @@
 
 namespace Beer::System
 {
-    static const glm::vec2 BUTTON_SIZE = glm::vec2(0.3f, 0.3f);
-    static const glm::vec2 BUTTON_OFFSET = glm::vec2(0.05f, 0.05f);
+    static const glm::vec2 BUTTON_SIZE = glm::vec2(0.43f, 0.215f);
+    static const glm::vec2 BUTTON_OFFSET = glm::vec2(0.4f, -0.435f);
 
     ModeButtonEntity::ModeButtonEntity(Function<void, bool> setColorModeActive,
         Function<void, bool> setBrushModeActive,
@@ -24,8 +24,8 @@ namespace Beer::System
         colorModeTexture = std::make_shared<Rendering::Texture2D>("UI/ModeButton/Tex_ColorMode");
         brushModeTexture = std::make_shared<Rendering::Texture2D>("UI/ModeButton/Tex_BrushMode");
 
-        rootTransform.Anchor = AnchorMode::BottomLeft;
-        rootTransform.Pivot = AnchorMode::BottomLeft;
+        rootTransform.Anchor = AnchorMode::MiddleLeft;
+        rootTransform.Pivot = AnchorMode::MiddleLeft;
         rootTransform.Scale = BUTTON_SIZE;
         rootTransform.Position = BUTTON_OFFSET;
     }

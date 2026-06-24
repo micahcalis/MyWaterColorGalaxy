@@ -13,8 +13,6 @@ namespace Beer::System
     {
     private:
         std::unique_ptr<UISubEntity> container = nullptr;
-        std::shared_ptr<Rendering::Material> containerMaterial = nullptr;
-        std::shared_ptr<Rendering::Texture2D> containerTexture = nullptr;
 
         std::vector<std::unique_ptr<UISubEntity>> colorEntities;
         std::vector<std::shared_ptr<Rendering::Material>> colorMaterials;
@@ -33,8 +31,6 @@ namespace Beer::System
         {
             std::vector<UIRenderItem> renderItems;
             renderItems.reserve(5);
-
-            renderItems.push_back(UIRenderItem(container->GetTransform(), containerMaterial.get()));
 
             for (int i = 0; i < colorEntities.size(); i++)
             {

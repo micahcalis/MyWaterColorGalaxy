@@ -11,13 +11,14 @@
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
 #include "ToolBarEntity.hpp"
 #include "ToolBarManager.hpp"
+#include "vulkan/vulkan.hpp"
 #include <memory>
 #include <print>
 
 namespace Beer::System
 {
-    static const float DISPLAY_SCALE = 0.75f;
-    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.22f, 0.35f);
+    static const glm::vec2 DISPLAY_SCALE = glm::vec2(0.9f, 0.9f * 1.4f);
+    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.22f, 0.0f);
     static const glm::vec2 BUTTON_SIZE = glm::vec2(0.15f, 0.15f);
     static const float BUTTON_PADDING = 0.02f;
 
@@ -41,22 +42,29 @@ namespace Beer::System
         "UI/ToolBar/Tex_RedoButton"};
 
     static const glm::vec2 COLOR_DISPLAY_DIM = glm::vec2(0.15f, 0.45f);
+    static const glm::vec2 COLOR_DISPLAY_OFFSET = glm::vec2(-0.16f, 0.285f);
 
     ToolBarEntity::ToolBarEntity(Function<void, GalaxyBrushType> setBrushType)
         : setBrushType(setBrushType)
         , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
-        squareTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
+        backgroundTexture = std::make_shared<Rendering::Texture2D>("UI/ToolBar/Tex_ToolFrame");
+        buttonBackgroundTexture = std::make_shared<Rendering::Texture2D>("UI/ToolBar/Tex_ToolBackground");
 
         backgroundMat = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        backgroundMat->SetColor("_TintColor", Rendering::CANVAS_COLOR);
-        // backgroundMat->SetTexture("_SpriteTex", squareTexture.get());
+        backgroundMat->SetColor("_TintColor", glm::vec4(1));
+        backgroundMat->SetTexture("_SpriteTex", backgroundTexture.get());
         backgroundMat->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+
+        buttonBackgroundMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        buttonBackgroundMaterial->SetColor("_TintColor", glm::vec4(1));
+        buttonBackgroundMaterial->SetTexture("_SpriteTex", buttonBackgroundTexture.get());
+        buttonBackgroundMaterial->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
 
         rootTransform.Anchor = AnchorMode::MiddleLeft;
         rootTransform.Pivot = AnchorMode::MiddleLeft;
         rootTransform.Position.x += 0.02f;
-        rootTransform.Scale = glm::vec2(DISPLAY_SCALE);
+        rootTransform.Scale = DISPLAY_SCALE;
         rootTransform.Position = DISPLAY_OFFSET;
         MarkDirty();
     }
@@ -67,7 +75,7 @@ namespace Beer::System
         brushesTransform.Anchor = AnchorMode::TopLeft;
         brushesTransform.Pivot = AnchorMode::TopLeft;
         brushesTransform.Scale = BUTTON_SIZE;
-        brushesTransform.Position = glm::vec2(BUTTON_PADDING, 0);
+        brushesTransform.Position = glm::vec2(0.05f, -0.05f);
 
         brushes.reserve(BRUSH_COUNT);
         brushMaterials.reserve(BRUSH_COUNT);
@@ -75,11 +83,14 @@ namespace Beer::System
 
         for (int i = 0; i < BRUSH_COUNT; i++)
         {
-            brushTextures.emplace_back(std::make_shared<Rendering::Texture2D>(BRUSH_TEXTURE_PATHS[i]));
+            brushTextures.emplace_back(std::make_shared<Rendering::Texture2D>(BRUSH_TEXTURE_PATHS[i],
+                Rendering::Sampler::Get(vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge)));
+
             brushMaterials.emplace_back(std::make_shared<Rendering::Material>("UI/SpriteDefault"));
             brushMaterials[i]->SetColor("_TintColor", glm::vec4(1, 1, 1, 1));
             brushMaterials[i]->SetTexture("_SpriteTex", brushTextures[i].get());
-            brushMaterials[i]->SetVector("_Scale", glm::vec4(1, 1, 0, 0));
+            brushMaterials[i]->SetVector("_Scale", glm::vec4(1.5f, 1.5f, 0, 0));
+            brushMaterials[i]->SetVector("_Offset", glm::vec4(-0.3f, -0.3f, 0, 0));
 
             brushes.emplace_back(std::make_unique<UISubEntity>(brushesTransform));
             rootTransform.BindChild(brushes[i]->GetTransform());
@@ -135,6 +146,7 @@ namespace Beer::System
         colorDisplayTransform.Anchor = AnchorMode::MiddleRight;
         colorDisplayTransform.Pivot = AnchorMode::MiddleLeft;
         colorDisplayTransform.Scale = COLOR_DISPLAY_DIM;
+        colorDisplayTransform.Position = COLOR_DISPLAY_OFFSET;
 
         colorDisplaySubEntity = std::make_unique<ColorDisplaySubEntity>(colorDisplayTransform,
             &rootTransform);

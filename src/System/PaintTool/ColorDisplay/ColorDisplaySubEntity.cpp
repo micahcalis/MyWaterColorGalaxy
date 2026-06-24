@@ -1,7 +1,9 @@
 #include "System/PaintTool/ColorDisplay/ColorDisplaySubEntity.hpp"
+#include "Rendering/Sampler/Sampler.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "vulkan/vulkan.hpp"
 #include <utility>
 
 namespace Beer::System
@@ -16,16 +18,11 @@ namespace Beer::System
         container = std::make_unique<UISubEntity>(containerTransform);
         rootTransform->BindChild(container->GetTransform());
 
-        containerTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
-        containerMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        containerMaterial->SetTexture("_SpriteTex", containerTexture.get());
-        containerMaterial->SetColor("_TintColor", glm::vec4(1));
-        containerMaterial->SetVector("_Scale", glm::vec4(1));
-
         colorEntities.reserve(NUM_COLORS);
         colorMaterials.reserve(NUM_COLORS);
 
-        colorTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_CircleSprite");
+        colorTexture = std::make_shared<Rendering::Texture2D>("UI/SelectionScreen/Tex_LightBulb",
+            Rendering::Sampler::Get(vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge));
 
         UITransform colorTransform{};
         colorTransform.Scale = glm::vec2(COLOR_SCALE);
@@ -45,7 +42,8 @@ namespace Beer::System
             auto colorMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
             colorMaterial->SetTexture("_SpriteTex", colorTexture.get());
             colorMaterial->SetColor("_TintColor", glm::vec4(0.5f, 0.5f, 0.5f, 1.0));
-            colorMaterial->SetVector("_Scale", glm::vec4(1));
+            colorMaterial->SetVector("_Scale", glm::vec4(1.25f));
+            colorMaterial->SetVector("_Offset", glm::vec4(-0.15f));
 
             colorMaterials.push_back(std::move(colorMaterial));
         }

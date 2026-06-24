@@ -21,11 +21,14 @@ namespace Beer::System
     {
     private:
         std::shared_ptr<Rendering::Material> backgroundMat = nullptr;
-        std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
+        std::shared_ptr<Rendering::Texture2D> backgroundTexture = nullptr;
 
         std::vector<std::unique_ptr<UISubEntity>> brushes;
         std::vector<std::shared_ptr<Rendering::Material>> brushMaterials;
         std::vector<std::shared_ptr<Rendering::Texture2D>> brushTextures;
+
+        std::shared_ptr<Rendering::Texture2D> buttonBackgroundTexture = nullptr;
+        std::shared_ptr<Rendering::Material> buttonBackgroundMaterial = nullptr;
 
         std::unique_ptr<ColorDisplaySubEntity> colorDisplaySubEntity = nullptr;
         std::unique_ptr<PlanetDisplaySubEntity> planetDisplaySubEntity = nullptr;
@@ -98,6 +101,11 @@ namespace Beer::System
         {
             std::vector<UIRenderItem> renderItems;
             renderItems.push_back(UIRenderItem(&rootTransform, backgroundMat.get()));
+
+            for (int i = 0; i < brushes.size(); i++)
+            {
+                renderItems.push_back(UIRenderItem(brushes[i]->GetTransform(), buttonBackgroundMaterial.get()));
+            }
 
             for (int i = 0; i < brushes.size(); i++)
             {

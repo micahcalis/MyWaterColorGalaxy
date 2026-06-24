@@ -6,9 +6,9 @@
 
 namespace Beer::System
 {
-    static const float CONTAINER_SCALE = 0.5f;
-    static const glm::vec2 CONTAINER_OFFSET = glm::vec2(0.05f, 0.05f);
-    static const float DISPLAY_SCALE = 0.4f;
+    static const float CONTAINER_SCALE = 0.475f;
+    static const glm::vec2 CONTAINER_OFFSET = glm::vec2(0.025f, 0.325f);
+    static const float DISPLAY_SCALE = 0.38f;
 
     static const uint32_t SPRITE_COUNT = 5;
     static const std::array<std::string, SPRITE_COUNT> SPRITE_PATHS = {
