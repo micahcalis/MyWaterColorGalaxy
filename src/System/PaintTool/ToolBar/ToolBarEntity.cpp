@@ -18,7 +18,7 @@
 namespace Beer::System
 {
     static const glm::vec2 DISPLAY_SCALE = glm::vec2(0.9f, 0.9f * 1.4f);
-    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.22f, 0.0f);
+    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.18f, -0.05f);
     static const glm::vec2 BUTTON_SIZE = glm::vec2(0.15f, 0.15f);
     static const float BUTTON_PADDING = 0.02f;
 

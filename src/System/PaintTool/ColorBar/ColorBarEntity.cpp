@@ -12,7 +12,7 @@
 namespace Beer::System
 {
     static const glm::vec2 PANEL_SIZE = glm::vec2(0.5f, 0.5f * 0.311f * 2.0f);
-    static const glm::vec2 PANEL_OFFSET = glm::vec2(0.425f, -0.125f);
+    static const glm::vec2 PANEL_OFFSET = glm::vec2(0.375f, -0.175f);
     static const glm::vec2 BAR_SIZE = glm::vec2(0.5f, 0.5f * 0.311f);
     static const uint32_t PLANET_LAYERS_COUNT = 4;
     static const uint32_t GALAXY_LAYERS_COUNT = 4;

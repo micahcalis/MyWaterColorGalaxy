@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Rendering/Material/Material.hpp"
+#include "Rendering/Texture/Texture2D.hpp"
 #include "System/Components/UI/UIRenderItem.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -25,8 +27,6 @@ namespace Beer::System
 
     private:
         std::unique_ptr<UISubEntity> backgroundSubEntity = nullptr;
-        std::shared_ptr<Rendering::Material> backgroundMat = nullptr;
-        std::shared_ptr<Rendering::Texture2D> backgroundTexture = nullptr;
 
         std::vector<std::unique_ptr<UISubEntity>> toolEntities;
         std::vector<std::shared_ptr<Rendering::Material>> toolMaterials;
@@ -35,6 +35,9 @@ namespace Beer::System
         std::vector<std::unique_ptr<UISubEntity>> historyButtons;
         std::vector<std::shared_ptr<Rendering::Material>> historyMaterials;
         std::vector<std::shared_ptr<Rendering::Texture2D>> historyTextures;
+
+        std::shared_ptr<Rendering::Texture2D> slotTexture = nullptr;
+        std::shared_ptr<Rendering::Material> slotMaterial = nullptr;
 
     public:
         MapBarEntity();
@@ -51,11 +54,20 @@ namespace Beer::System
         std::vector<UIRenderItem> GetRenderItems() override
         {
             std::vector<UIRenderItem> renderItems;
-            renderItems.push_back(UIRenderItem(backgroundSubEntity->GetTransform(), backgroundMat.get()));
+
+            for (int i = 0; i < toolEntities.size(); i++)
+            {
+                renderItems.push_back(UIRenderItem(toolEntities[i]->GetTransform(), slotMaterial.get()));
+            }
 
             for (int i = 0; i < toolEntities.size(); i++)
             {
                 renderItems.push_back(UIRenderItem(toolEntities[i]->GetTransform(), toolMaterials[i].get()));
+            }
+
+            for (int i = 0; i < historyButtons.size(); i++)
+            {
+                renderItems.push_back(UIRenderItem(historyButtons[i]->GetTransform(), slotMaterial.get()));
             }
 
             for (int i = 0; i < historyButtons.size(); i++)

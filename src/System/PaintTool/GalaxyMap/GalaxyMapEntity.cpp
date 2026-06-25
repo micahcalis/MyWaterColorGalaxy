@@ -4,6 +4,7 @@
 #include "Rendering/Compute/ComputeContext.hpp"
 #include "Rendering/Material/Material.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
+#include "SDL3/SDL_gpu.h"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "System/Context/ContextType.hpp"
@@ -12,8 +13,10 @@
 
 namespace Beer::System
 {
-    static const float MAP_SCALE = 2.0f;
-    static const glm::vec2 MAP_OFFSET = glm::vec2(0.25f, 0);
+    static const float MAP_SCALE = 1.925f;
+    static const glm::vec2 MAP_OFFSET = glm::vec2(0.25f, 0.02f);
+    static const glm::vec2 FRAME_SCALE = glm::vec2(2.2f * 1.19f, 2.2f);
+    static const glm::vec2 FRAME_OFFSET = glm::vec2(0.1375f, -0.02f);
     static const float STARS_FREQUENCY = 10.0f;
     static const float STARS_SCALE = 0.2f;
     static const glm::vec4 STARS_COLOR = glm::vec4(0.97f, 0.97f, 0.7f, 1.0f);
@@ -65,12 +68,32 @@ namespace Beer::System
         rootTransform.Scale = glm::vec2(MAP_SCALE);
         rootTransform.Position = MAP_OFFSET;
 
+        InitializeFrame();
         InitializePerlinWorleyTex();
         InitializeStar();
         InitializePerlinTex();
         InitializePlayerIndicator();
         InitializeZoomIndicator();
         MarkDirty();
+    }
+
+    void GalaxyMapEntity::InitializeFrame()
+    {
+        UITransform frameTransform{};
+        frameTransform.Anchor = AnchorMode::Center;
+        frameTransform.Pivot = AnchorMode::Center;
+        frameTransform.Scale = FRAME_SCALE;
+        frameTransform.Position = FRAME_OFFSET;
+        frameTransform.Depth = 0.1f;
+
+        frameEntity = std::make_unique<UISubEntity>(frameTransform);
+        rootTransform.BindChild(frameEntity->GetTransform());
+
+        frameTexture = std::make_shared<Rendering::Texture2D>("UI/GalaxyMap/Tex_MapFrame");
+        frameMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
+        frameMaterial->SetTexture("_SpriteTex", frameTexture.get());
+        frameMaterial->SetColor("_TintColor", glm::vec4(1));
+        frameMaterial->SetVector("_Scale", glm::vec4(1));
     }
 
     void GalaxyMapEntity::InitializePerlinWorleyTex()

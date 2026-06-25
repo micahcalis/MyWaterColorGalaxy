@@ -7,7 +7,7 @@
 namespace Beer::System
 {
     static const glm::vec2 BUTTON_SIZE = glm::vec2(0.43f, 0.215f);
-    static const glm::vec2 BUTTON_OFFSET = glm::vec2(0.4f, -0.435f);
+    static const glm::vec2 BUTTON_OFFSET = glm::vec2(0.36f, -0.485f);
 
     ModeButtonEntity::ModeButtonEntity(Function<void, bool> setColorModeActive,
         Function<void, bool> setBrushModeActive,

@@ -23,9 +23,9 @@ namespace Beer::System
         "UI/ToolBar/Tex_SpacegooButton",
         "UI/ToolBar/Tex_BlackholeButton",
         "UI/ToolBar/Tex_StardustButton",
-        "UI/GalaxyMap/Tex_EraserCursor",
-        "UI/GalaxyMap/Tex_HandCursor",
-        "UI/GalaxyMap/Tex_ZoomCursor"};
+        "UI/ToolBar/Tex_EraserButton",
+        "UI/ToolBar/Tex_HandButton",
+        "UI/ToolBar/Tex_MagnifyingGlassButton"};
 
     static const std::array<std::string, BRUSH_TYPES> MASK_PATHS = {
         "UI/ToolBar/Tex_PlanetMask",

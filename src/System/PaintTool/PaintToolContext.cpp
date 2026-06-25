@@ -245,7 +245,11 @@ namespace Beer::System
 
         galaxyMapEntity->GetMapManager()->OnNewBrush.Subscribe([this](GalaxyBrushType type) -> void {
             colorBarEntity->GetColorBarManager()->UpdateDisplayMaterials();
-            toolBarEntity->GetToolBarManager()->GetPlanetDisplayHandler()->SetType(type);
+
+            if (IsGalaxyComponent(type))
+            {
+                toolBarEntity->GetToolBarManager()->GetPlanetDisplayHandler()->SetType(type);
+            }
         });
 
         Function<void, PigmentType> deselectColorBar = [this](PigmentType pigment) -> void { colorBarEntity->GetColorBarManager()->DeselectColors(); };

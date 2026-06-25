@@ -56,7 +56,7 @@ namespace Beer::System
         glm::vec2(0.05f, 0.20f)};
 
     static const glm::vec2 DISPLAY_SCALE = glm::vec2(0.9f, 0.9f * 1.4f);
-    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.22f, 0.0f);
+    static const glm::vec2 DISPLAY_OFFSET = glm::vec2(0.18f, -0.05f);
     static const float COLOR_MIXER_SCALE = 0.5f;
     static const glm::vec2 COLOR_MIXER_OFFSET = glm::vec2(0.025f, 0.325f);
     static const glm::vec2 COLOR_MIXER_BORDER_ADD = glm::vec2(0.05f);

@@ -19,9 +19,14 @@ namespace Beer::System
 
     private:
         GalaxyMapBuffer* galaxyMapBuffer = nullptr;
+
         std::shared_ptr<Rendering::Material> galaxyMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> perlinWorleyTexture = nullptr;
         std::shared_ptr<Rendering::ComputeContext> generatePerlinWorleyContext = nullptr;
+
+        std::unique_ptr<UISubEntity> frameEntity = nullptr;
+        std::shared_ptr<Rendering::Texture2D> frameTexture = nullptr;
+        std::shared_ptr<Rendering::Material> frameMaterial = nullptr;
 
         std::shared_ptr<Rendering::Texture2D> perlinTexture = nullptr;
         std::shared_ptr<Rendering::ComputeContext> generatePerlinContext = nullptr;
@@ -74,6 +79,7 @@ namespace Beer::System
         {
             std::vector<UIRenderItem> renderItems;
             renderItems.push_back(UIRenderItem(&rootTransform, galaxyMaterial.get()));
+            renderItems.push_back(UIRenderItem(frameEntity->GetTransform(), frameMaterial.get()));
             renderItems.push_back(UIRenderItem(playerIndicatorEntity->GetTransform(), playerIndicatorMaterial.get()));
             renderItems.push_back(UIRenderItem(zoomIndicatorEntity->GetTransform(), zoomIndicatorMaterial.get()));
 
@@ -93,6 +99,7 @@ namespace Beer::System
         }
 
     private:
+        void InitializeFrame();
         void InitializePerlinWorleyTex();
         void InitializeStar();
         void InitializePerlinTex();
