@@ -15,9 +15,10 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> headerMaterial = nullptr;
         std::unique_ptr<UISubEntity> headerEntity = nullptr;
 
-        std::shared_ptr<Rendering::Texture2D> squareTexture = nullptr;
+        std::shared_ptr<Rendering::Texture2D> backgroundTexture = nullptr;
         std::shared_ptr<Rendering::Material> backgroundMaterial = nullptr;
 
+        std::shared_ptr<Rendering::Texture2D> slotTexture = nullptr;
         std::vector<std::unique_ptr<UISubEntity>> slotEntities;
         std::vector<std::shared_ptr<Rendering::Material>> slotMaterials;
 
