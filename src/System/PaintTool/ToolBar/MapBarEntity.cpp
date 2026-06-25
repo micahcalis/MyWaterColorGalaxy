@@ -26,6 +26,8 @@ namespace Beer::System
     MapBarEntity::MapBarEntity()
         : QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
+        rootTransform.Depth = 0.02f;
+
         UITransform backgroundTransform{};
         backgroundTransform.Anchor = AnchorMode::MiddleRight;
         backgroundTransform.Pivot = AnchorMode::MiddleLeft;

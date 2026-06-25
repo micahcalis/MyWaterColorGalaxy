@@ -61,9 +61,9 @@ namespace Beer::System
         popupEntity = std::make_unique<UISubEntity>(popupTransform);
         buttonEntity->GetTransform()->BindChild(popupEntity->GetTransform());
 
-        popupSprite = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
+        popupSprite = std::make_shared<Rendering::Texture2D>("UI/HelpToggle/Tex_HelpFrame");
         popupMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        // popupMaterial->SetTexture("_SpriteTex", popupSprite.get());
+        popupMaterial->SetTexture("_SpriteTex", popupSprite.get());
         popupMaterial->SetColor("_TintColor", glm::vec4(1));
         popupMaterial->SetVector("_Scale", glm::vec4(1));
 

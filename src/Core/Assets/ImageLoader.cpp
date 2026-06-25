@@ -1,5 +1,6 @@
 #include "Core/Assets/ImageLoader.hpp"
 #include "ImageAsset.hpp"
+#include <format>
 #define STB_IMAGE_IMPLEMENTATION
 #include <Vendor/stb/stb_image.h>
 #include <filesystem>
@@ -20,7 +21,7 @@ namespace Beer::Core
 
         if (!imageAsset.Pixels)
         {
-            throw std::runtime_error("failed to load texture image");
+            throw std::runtime_error(std::format("failed to load texture image: {}", path.string()));
         }
 
         imageAsset.Width = static_cast<uint32_t>(texWidth);

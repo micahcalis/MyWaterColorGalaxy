@@ -127,6 +127,7 @@ namespace Beer::System
         componentTransform.Scale = screenSpaceScale;
         componentTransform.Anchor = AnchorMode::BottomLeft;
         componentTransform.Pivot = AnchorMode::Center;
+        componentTransform.Depth = 0.03f;
 
         std::unique_ptr<UISubEntity> componentEntity = std::make_unique<UISubEntity>(componentTransform);
         mapTransform->BindChild(componentEntity->GetTransform());

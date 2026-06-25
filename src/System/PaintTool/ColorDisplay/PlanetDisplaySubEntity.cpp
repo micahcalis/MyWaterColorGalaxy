@@ -32,6 +32,7 @@ namespace Beer::System
         containerTransform.Pivot = AnchorMode::Center;
         containerTransform.Scale = glm::vec2(CONTAINER_SCALE);
         containerTransform.Position = CONTAINER_OFFSET;
+        containerTransform.Depth = parent->Depth + 0.05f;
 
         container = std::make_unique<UISubEntity>(containerTransform);
         parent->BindChild(container->GetTransform());
@@ -46,6 +47,7 @@ namespace Beer::System
         displayTransform.Anchor = AnchorMode::Center;
         displayTransform.Pivot = AnchorMode::Center;
         displayTransform.Scale = glm::vec2(DISPLAY_SCALE);
+        displayTransform.Depth = parent->Depth + 0.05f;
 
         displayEntity = std::make_unique<UISubEntity>(displayTransform);
         container->GetTransform()->BindChild(displayEntity->GetTransform());

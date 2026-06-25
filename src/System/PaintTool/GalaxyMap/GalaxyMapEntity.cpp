@@ -37,9 +37,9 @@ namespace Beer::System
     static const float ZOOM_INDICATOR_SCALE = 0.2f;
     static const glm::vec2 ZOOM_INDICATOR_OFFSET = glm::vec2(0.05f, 0);
 
-    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.075f);
-    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(-0.15f, -0.05f);
-    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.7f, 0.4f);
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.1f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(-0.25f, 0.3f);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.7f, 0.43f);
     static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
     static const std::string HELP_TEXT = "This is your Galaxy Map! Here you can place and erase all your galaxy objects. Want to start over? Select ‘New’, which will replace your current map with a new empty map. Ready to explore your galaxy? Press ‘Fly’ to enter your generated creation!";
 
@@ -67,6 +67,7 @@ namespace Beer::System
         rootTransform.Pivot = AnchorMode::Center;
         rootTransform.Scale = glm::vec2(MAP_SCALE);
         rootTransform.Position = MAP_OFFSET;
+        rootTransform.Depth = 0.01f;
 
         InitializeFrame();
         InitializePerlinWorleyTex();
@@ -131,6 +132,7 @@ namespace Beer::System
         starTransform.Anchor = AnchorMode::BottomLeft;
         starTransform.Pivot = AnchorMode::Center;
         starTransform.Scale = glm::vec2(CENTER_STAR_SCALE);
+        starTransform.Depth = 0.02f;
 
         starEntity = std::make_unique<UISubEntity>(starTransform);
         rootTransform.BindChild(starEntity->GetTransform());
@@ -201,15 +203,15 @@ namespace Beer::System
     void GalaxyMapEntity::InitializeHelpButton()
     {
         UITransform helpButtonTransform{};
-        helpButtonTransform.Anchor = AnchorMode::TopRight;
-        helpButtonTransform.Pivot = AnchorMode::TopLeft;
+        helpButtonTransform.Anchor = AnchorMode::MiddleRight;
+        helpButtonTransform.Pivot = AnchorMode::MiddleLeft;
         helpButtonTransform.Scale = HELP_BUTTON_SCALE;
         helpButtonTransform.Position = HELP_BUTTON_OFFSET;
         helpButtonTransform.Depth = 0.5f;
 
         UITransform helpPopupTransform{};
-        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
-        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
+        helpPopupTransform.Anchor = AnchorMode::Center;
+        helpPopupTransform.Pivot = AnchorMode::Center;
         helpPopupTransform.Scale = HELP_POPUP_SCALE;
         helpPopupTransform.Position = HELP_POPUP_OFFSET;
         helpPopupTransform.Depth = 0.6f;

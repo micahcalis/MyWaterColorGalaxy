@@ -19,7 +19,6 @@
 namespace Beer::System
 {
     class ColorBarManager : public IEntityManager
-        , public HelpContainer
     {
     public:
         BeerEvent<void(glm::vec4 color)> OnColorClicked;

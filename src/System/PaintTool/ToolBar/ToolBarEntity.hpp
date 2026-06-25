@@ -10,6 +10,7 @@
 #include "System/PaintTool/ColorDisplay/PlanetDisplaySubEntity.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyComponent.hpp"
+#include "System/PaintTool/HelpToggle/HelpButtonSubEntity.hpp"
 #include "ToolBarManager.hpp"
 #include <memory>
 #include <print>
@@ -33,6 +34,8 @@ namespace Beer::System
         std::unique_ptr<ColorDisplaySubEntity> colorDisplaySubEntity = nullptr;
         std::unique_ptr<PlanetDisplaySubEntity> planetDisplaySubEntity = nullptr;
 
+        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
+
         Function<void, GalaxyBrushType> setBrushType = nullptr;
 
     public:
@@ -48,6 +51,7 @@ namespace Beer::System
             InitializeBrushes();
             InitializeColorDisplay();
             InitializePlanetDisplay();
+            InitializeHelpButton();
             MarkDirty();
         }
 
@@ -122,11 +126,17 @@ namespace Beer::System
                 renderItems.append_range(planetDisplaySubEntity->GetRenderItems());
             }
 
+            if (helpButtonSubEntity != nullptr)
+            {
+                renderItems.append_range(helpButtonSubEntity->GetRenderItems());
+            }
+
             return renderItems;
         }
 
         void InitializeBrushes();
         void InitializeColorDisplay();
         void InitializePlanetDisplay();
+        void InitializeHelpButton();
     };
 } // namespace Beer::System

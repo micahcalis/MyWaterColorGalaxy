@@ -19,10 +19,10 @@ namespace Beer::System
         "_QuaternaryColor"};
 
     static const std::array<std::string, 4> G_DISPLAY_PROP = {
-        "_ColorR",
-        "_ColorG",
-        "_ColorB",
-        "_ColorA"};
+        "_QuaternaryColor",
+        "_SecondaryColor",
+        "_TertiaryColor",
+        "_PrimaryColor"};
 
     static const float ANIMATION_SPEED = 3.0f;
     static const float OFFSET_SCALE = 0.05f;

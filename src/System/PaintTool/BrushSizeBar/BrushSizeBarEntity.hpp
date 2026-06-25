@@ -33,8 +33,6 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> smallSizeEntity = nullptr;
         std::unique_ptr<UISubEntity> bigSizeEntity = nullptr;
 
-        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
-
         Function<void, float> setBrushSize = nullptr;
 
     public:
@@ -63,7 +61,6 @@ namespace Beer::System
         std::vector<UIRenderItem> GetRenderItems() override
         {
             std::vector<UIRenderItem> renderItems;
-            //  renderItems.push_back(UIRenderItem(&rootTransform, backgroundMaterial.get()));
 
             if (GetBrushSizeBarManager()->SliderInitialized())
             {
@@ -71,11 +68,6 @@ namespace Beer::System
                 renderItems.push_back(UIRenderItem(sliderBarEntity->GetTransform(), sliderBarMaterial.get()));
                 renderItems.push_back(UIRenderItem(smallSizeEntity->GetTransform(), sizeIconMaterialSmall.get()));
                 renderItems.push_back(UIRenderItem(bigSizeEntity->GetTransform(), sizeIconMaterialBig.get()));
-            }
-
-            if (helpButtonSubEntity != nullptr)
-            {
-                renderItems.append_range(helpButtonSubEntity->GetRenderItems());
             }
 
             return renderItems;

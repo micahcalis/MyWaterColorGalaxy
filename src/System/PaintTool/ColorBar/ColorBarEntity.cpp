@@ -76,6 +76,7 @@ namespace Beer::System
         rootTransform.Pivot = AnchorMode::MiddleLeft;
         rootTransform.Position = PANEL_OFFSET;
         rootTransform.Scale = PANEL_SIZE;
+        rootTransform.Depth = 0.25f;
         MarkDirty();
     }
 
@@ -84,7 +85,6 @@ namespace Beer::System
         InitializeDisplays();
         InitializeBackgrounds();
         InitializeSelectSpriteEntity();
-        InitialzeHelpButton();
 
         colorLayerSprite = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_ColorLayer");
         glm::vec2 startPos = glm::vec2(0.06f, 0.05f);
@@ -94,7 +94,7 @@ namespace Beer::System
         colorLayersTransform.Scale = COLOR_LAYER_SIZE;
         colorLayersTransform.Anchor = AnchorMode::MiddleLeft;
         colorLayersTransform.Pivot = AnchorMode::BottomRight;
-        colorLayersTransform.Depth = 0.1f;
+        colorLayersTransform.Depth = 0.275f;
 
         colorLayers.reserve(PLANET_LAYERS_COUNT);
         colorLayerMaterials.reserve(PLANET_LAYERS_COUNT);
@@ -162,7 +162,7 @@ namespace Beer::System
         displayTransform.Pivot = AnchorMode::BottomRight;
         displayTransform.Scale = DISPLAY_SIZE;
         displayTransform.Position = planetDisplayOffset;
-        displayTransform.Depth = 0.1f;
+        displayTransform.Depth = 0.3f;
 
         planetDisplayEntity = std::make_unique<UISubEntity>(displayTransform);
         rootTransform.BindChild(planetDisplayEntity->GetTransform());
@@ -179,9 +179,12 @@ namespace Beer::System
         galaxyDisplayEntity = std::make_unique<UISubEntity>(displayTransform);
         rootTransform.BindChild(galaxyDisplayEntity->GetTransform());
 
-        galaxyDisplayTexture = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_GalaxyVisualizer");
-        galaxyDisplayMaterial = std::make_shared<Rendering::Material>("UI/ChannelMaskSprite");
+        galaxyDisplayTexture = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_GalaxyDisplay");
+        galaxyDisplayMask = std::make_shared<Rendering::Texture2D>("UI/ColorBar/Tex_GalaxyMask");
+        galaxyDisplayMaterial = std::make_shared<Rendering::Material>("UI/GalaxyComponentSprite");
         galaxyDisplayMaterial->SetTexture("_SpriteTex", galaxyDisplayTexture.get());
+        galaxyDisplayMaterial->SetTexture("_ColorMask", galaxyDisplayMask.get());
+        galaxyDisplayMaterial->SetInt("_OverrideMapClip", 1);
 
         ColorBarManager* colorBarManager = GetColorBarManager();
         colorBarManager->SetDisplayMaterials(planetDisplayMaterial.get(),
@@ -229,31 +232,5 @@ namespace Beer::System
         selectSpriteMaterial->SetTexture("_SpriteTex", selectSpriteTexture.get());
 
         GetColorBarManager()->SetSelectSpriteTransform(selectSpriteEntity->GetTransform());
-    }
-
-    void ColorBarEntity::InitialzeHelpButton()
-    {
-        UITransform helpButtonTransform{};
-        helpButtonTransform.Anchor = AnchorMode::MiddleRight;
-        helpButtonTransform.Pivot = AnchorMode::MiddleLeft;
-        helpButtonTransform.Scale = HELP_BUTTON_SCALE;
-        helpButtonTransform.Position = HELP_BUTTON_OFFSET;
-        helpButtonTransform.Depth = 0.5f;
-
-        UITransform helpPopupTransform{};
-        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
-        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
-        helpPopupTransform.Scale = HELP_POPUP_SCALE;
-        helpPopupTransform.Position = HELP_POPUP_OFFSET;
-        helpPopupTransform.Depth = 0.6f;
-
-        helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
-            &rootTransform,
-            helpButtonTransform,
-            HELP_TEXT,
-            helpPopupTransform);
-
-        GetColorBarManager()->SetHelpToggle(helpButtonSubEntity.get(),
-            [this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

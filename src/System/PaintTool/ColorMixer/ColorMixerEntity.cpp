@@ -76,11 +76,11 @@ namespace Beer::System
     static const glm::vec2 CURSOR_SIZE = glm::vec2(0.1f);
     static const glm::vec2 CURSOR_OFFSET = glm::vec2(-0.025f, -0.025f);
 
-    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.05f);
-    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(0.05f, 0);
-    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.75f, 0.4f);
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.1f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(-0.1f, 0.02f);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.75f, 0.625f);
     static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
-    static const std::string HELP_TEXT = "This is your Color Mixing Canvas! Select a pigment and then paint on the canvas. Mix different pigments for new color possibilities. You can clear the canvas using the bin icon. When you are happy with the colors, you can capture them on your palette below.";
+    static const std::string HELP_TEXT = "This is your Color Mixing Canvas! Select a Pigment from the palette and then paint on the canvas. Mix different Pigments for new color possibilities. You can clear the canvas using the Bin icon. When you are happy with the colors, you can capture them using your Color Bars below. The top Color Bar is for the Galaxy Objects you can place. The bottom Color Bar changes the Sun and Stardust colors.";
 
     static const glm::vec2 COLOR_DISPLAY_DIM = glm::vec2(0.15f, 0.45f);
     static const glm::vec2 COLOR_DISPLAY_OFFSET = glm::vec2(-0.16f, 0.285f);
@@ -104,13 +104,14 @@ namespace Beer::System
         rootTransform.Pivot = AnchorMode::MiddleLeft;
         rootTransform.Scale = glm::vec2(DISPLAY_SCALE);
         rootTransform.Position = DISPLAY_OFFSET;
+        rootTransform.Depth = 0.2f;
 
         UITransform mixerTransform{};
         mixerTransform.Anchor = AnchorMode::Center;
         mixerTransform.Pivot = AnchorMode::Center;
         mixerTransform.Scale = glm::vec2(COLOR_MIXER_SCALE);
         mixerTransform.Position = COLOR_MIXER_OFFSET;
-        mixerTransform.Depth = 0.1f;
+        mixerTransform.Depth = 0.25f;
 
         colorMixerDisplayEntity = std::make_unique<UISubEntity>(mixerTransform);
         rootTransform.BindChild(colorMixerDisplayEntity->GetTransform());
@@ -202,6 +203,7 @@ namespace Beer::System
         clearTransform.Pivot = AnchorMode::BottomRight;
         clearTransform.Anchor = AnchorMode::BottomLeft;
         clearTransform.Position = CLEAR_BUTTON_OFFSET;
+        clearTransform.Depth = 0.3f;
 
         clearButtonIcon = std::make_unique<UISubEntity>(clearTransform);
         rootTransform.BindChild(clearButtonIcon->GetTransform());
@@ -271,7 +273,7 @@ namespace Beer::System
         cursorTransform.Scale = CURSOR_SIZE;
         cursorTransform.Position = CURSOR_OFFSET;
         cursorTransform.Pivot = AnchorMode::BottomLeft;
-        cursorTransform.Depth = 0.1f;
+        cursorTransform.Depth = 0.5f;
 
         cursorSpriteEntity = std::make_unique<UISubEntity>(cursorTransform);
         cursorAnchorEntity->GetTransform()->BindChild(cursorSpriteEntity->GetTransform());
@@ -303,8 +305,8 @@ namespace Beer::System
         helpButtonTransform.Depth = 0.5f;
 
         UITransform helpPopupTransform{};
-        helpPopupTransform.Anchor = AnchorMode::BottomMiddle;
-        helpPopupTransform.Pivot = AnchorMode::TopMiddle;
+        helpPopupTransform.Anchor = AnchorMode::Center;
+        helpPopupTransform.Pivot = AnchorMode::Center;
         helpPopupTransform.Scale = HELP_POPUP_SCALE;
         helpPopupTransform.Position = HELP_POPUP_OFFSET;
         helpPopupTransform.Depth = 0.6f;
@@ -326,6 +328,7 @@ namespace Beer::System
         colorDisplayTransform.Pivot = AnchorMode::MiddleLeft;
         colorDisplayTransform.Scale = COLOR_DISPLAY_DIM;
         colorDisplayTransform.Position = COLOR_DISPLAY_OFFSET;
+        colorDisplayTransform.Depth = 0.3f;
 
         colorDisplaySubEntity = std::make_unique<ColorDisplaySubEntity>(colorDisplayTransform,
             &rootTransform);

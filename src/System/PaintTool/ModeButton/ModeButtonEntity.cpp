@@ -28,6 +28,7 @@ namespace Beer::System
         rootTransform.Pivot = AnchorMode::MiddleLeft;
         rootTransform.Scale = BUTTON_SIZE;
         rootTransform.Position = BUTTON_OFFSET;
+        rootTransform.Depth = 0.3f;
     }
 
     void ModeButtonEntity::InitializeModeButton(BrushMenuMode menuMode)

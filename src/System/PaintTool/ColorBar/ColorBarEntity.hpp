@@ -24,13 +24,13 @@ namespace Beer::System
         std::unique_ptr<UISubEntity> planetDisplayEntity = nullptr;
         std::unique_ptr<UISubEntity> galaxyBarBgEntity = nullptr;
         std::shared_ptr<Rendering::Texture2D> galaxyDisplayTexture = nullptr;
+        std::shared_ptr<Rendering::Texture2D> galaxyDisplayMask = nullptr;
         std::shared_ptr<Rendering::Material> galaxyDisplayMaterial = nullptr;
         std::unique_ptr<UISubEntity> galaxyDisplayEntity = nullptr;
 
         std::shared_ptr<Rendering::Material> selectSpriteMaterial = nullptr;
         std::shared_ptr<Rendering::Texture2D> selectSpriteTexture = nullptr;
         std::unique_ptr<UISubEntity> selectSpriteEntity = nullptr;
-        std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
         Function<void> markQuadTreeDirty = nullptr;
@@ -104,14 +104,7 @@ namespace Beer::System
             if (selectSpriteEntity->GetTransform()->Parent != nullptr)
             {
                 renderItems.push_back(UIRenderItem(selectSpriteEntity->GetTransform(), selectSpriteMaterial.get()));
-            }
-
-            if (helpButtonSubEntity != nullptr)
-            {
-                helpButtonSubEntity->GetRenderItems();
-            }
-
-            renderItems.append_range(helpButtonSubEntity->GetRenderItems());
+            };
 
             return renderItems;
         }
@@ -120,6 +113,5 @@ namespace Beer::System
         void InitializeDisplays();
         void InitializeBackgrounds();
         void InitializeSelectSpriteEntity();
-        void InitialzeHelpButton();
     };
 } // namespace Beer::System

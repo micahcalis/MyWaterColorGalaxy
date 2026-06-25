@@ -12,11 +12,13 @@
 #include <unordered_map>
 #include "System/Audio/SoundGlobalSettings.hpp"
 #include "System/PaintTool/ColorDisplay/PlanetDisplayHandler.hpp"
+#include "System/PaintTool/HelpToggle/HelpContainer.hpp"
 
 namespace Beer::System
 {
     class ToolBarManager : public IEntityManager
         , public ColorDisplayContainer
+        , public HelpContainer
     {
     private:
         std::unordered_map<GalaxyBrushType, std::unique_ptr<GalaxyBrushController>> brushControllers;

@@ -44,6 +44,12 @@ namespace Beer::System
     static const glm::vec2 COLOR_DISPLAY_DIM = glm::vec2(0.15f, 0.45f);
     static const glm::vec2 COLOR_DISPLAY_OFFSET = glm::vec2(-0.16f, 0.285f);
 
+    static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.1f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(-0.1f, 0.02f);
+    static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.8f, 0.465f);
+    static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.0f);
+    static const std::string HELP_TEXT = "This is your Tool Bar! Select your Galaxy Object type, and use them to paint on the map, and change the size of the objects using the Slider. On the right side of the Galaxy Map are additional tools. You can select the Eraser to remove unwanted Objects. Made a mistake? Use the Undo and Redo buttons to correct them.";
+
     ToolBarEntity::ToolBarEntity(Function<void, GalaxyBrushType> setBrushType)
         : setBrushType(setBrushType)
         , QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
@@ -66,6 +72,7 @@ namespace Beer::System
         rootTransform.Position.x += 0.02f;
         rootTransform.Scale = DISPLAY_SCALE;
         rootTransform.Position = DISPLAY_OFFSET;
+        rootTransform.Depth = 0.2f;
         MarkDirty();
     }
 
@@ -76,6 +83,7 @@ namespace Beer::System
         brushesTransform.Pivot = AnchorMode::TopLeft;
         brushesTransform.Scale = BUTTON_SIZE;
         brushesTransform.Position = glm::vec2(0.05f, -0.05f);
+        brushesTransform.Depth = 0.25f;
 
         brushes.reserve(BRUSH_COUNT);
         brushMaterials.reserve(BRUSH_COUNT);
@@ -147,6 +155,7 @@ namespace Beer::System
         colorDisplayTransform.Pivot = AnchorMode::MiddleLeft;
         colorDisplayTransform.Scale = COLOR_DISPLAY_DIM;
         colorDisplayTransform.Position = COLOR_DISPLAY_OFFSET;
+        colorDisplayTransform.Depth = 0.25f;
 
         colorDisplaySubEntity = std::make_unique<ColorDisplaySubEntity>(colorDisplayTransform,
             &rootTransform);
@@ -158,5 +167,31 @@ namespace Beer::System
     {
         planetDisplaySubEntity = std::make_unique<PlanetDisplaySubEntity>(&rootTransform);
         GetToolBarManager()->InitializePlanetDisplay(planetDisplaySubEntity.get());
+    }
+
+    void ToolBarEntity::InitializeHelpButton()
+    {
+        UITransform helpButtonTransform{};
+        helpButtonTransform.Anchor = AnchorMode::TopRight;
+        helpButtonTransform.Pivot = AnchorMode::TopLeft;
+        helpButtonTransform.Scale = HELP_BUTTON_SCALE;
+        helpButtonTransform.Position = HELP_BUTTON_OFFSET;
+        helpButtonTransform.Depth = 0.5f;
+
+        UITransform helpPopupTransform{};
+        helpPopupTransform.Anchor = AnchorMode::Center;
+        helpPopupTransform.Pivot = AnchorMode::Center;
+        helpPopupTransform.Scale = HELP_POPUP_SCALE;
+        helpPopupTransform.Position = HELP_POPUP_OFFSET;
+        helpPopupTransform.Depth = 0.6f;
+
+        helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
+            &rootTransform,
+            helpButtonTransform,
+            HELP_TEXT,
+            helpPopupTransform);
+
+        GetToolBarManager()->SetHelpToggle(helpButtonSubEntity.get(),
+            [this]() -> void { MarkDirty(); });
     }
 } // namespace Beer::System

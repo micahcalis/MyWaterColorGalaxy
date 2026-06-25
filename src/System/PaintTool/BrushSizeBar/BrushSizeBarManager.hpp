@@ -11,7 +11,6 @@
 namespace Beer::System
 {
     class BrushSizeBarManager : public IEntityManager
-        , public HelpContainer
     {
     private:
         std::unique_ptr<Slider> brushSizeSlider = nullptr;

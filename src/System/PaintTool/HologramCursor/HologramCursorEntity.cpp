@@ -13,6 +13,7 @@ namespace Beer::System
         rootTransform.Anchor = AnchorMode::BottomLeft;
         rootTransform.Pivot = AnchorMode::Center;
         rootTransform.Scale = glm::vec2(0.05f, 0.05f);
+        rootTransform.Depth = 0.5f;
 
         cursorMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         cursorMaterial->SetVector("_Scale", glm::vec4(1));
