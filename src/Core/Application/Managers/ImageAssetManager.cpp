@@ -14,6 +14,10 @@ namespace Beer::Core
 {
     constexpr const uint32_t COLOR_CHANNELS = 4;
     static uint32_t WHITE_PIXEL = 0xFFFFFFFF;
+
+    static std::array<uint32_t, 6> WHITE_CUBEMAP = {
+        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
+
     constexpr const vk::DeviceSize PIXEL_SIZE = vk::DeviceSize(sizeof(WHITE_PIXEL));
 
     std::shared_ptr<Rendering::Image> ImageAssetManager::Load(const std::filesystem::path& path)
@@ -75,7 +79,7 @@ namespace Beer::Core
                 *device));
 
         std::unique_ptr<ImageUploadJob> uploadJobCube = std::make_unique<ImageUploadJob>(
-            imageCube, (void*)&WHITE_PIXEL, PIXEL_SIZE);
+            imageCube, (void*)&WHITE_CUBEMAP, sizeof(WHITE_CUBEMAP));
 
         uploadManager->AddJob(std::move(uploadJobCube));
 

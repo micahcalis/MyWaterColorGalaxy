@@ -90,6 +90,8 @@ public float GetAspect()
 
 public void ClipInMap(float2 pixelPos)
 {
+    pixelPos.y = _ScreenParams.y - pixelPos.y;
+
     if (any(pixelPos < _MapBotLeft)
         || any(pixelPos > _MapTopRight))
     {

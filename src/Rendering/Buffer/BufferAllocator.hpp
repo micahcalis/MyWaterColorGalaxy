@@ -2,6 +2,9 @@
 
 #include "Rendering/Buffer/ImageAllocation.hpp"
 #define VMA_VULKAN_VERSION 1004000
+#define VMA_DEBUG_MARGIN 16
+#define VMA_DEBUG_DETECT_CORRUPTION 1
+#include <vulkan/vk_mem_alloc.h>
 #include <vulkan/vk_mem_alloc.h>
 #include "Core/Application/Renderer/Device.hpp"
 #include "Rendering/Buffer/BufferAllocation.hpp"

@@ -1,9 +1,13 @@
 #include "Rendering/Buffer/BufferAllocator.hpp"
 #include "ImageAllocation.hpp"
+#include "Rendering/Buffer/BufferAllocation.hpp"
 #include <stdexcept>
 
 namespace Beer::Rendering
 {
+    // if I would ever expend this engine, I would not allocated dedicated memory to every image (I promise).
+    static const VmaAllocationCreateFlags IMAGE_ALLOC_FLAGS = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+
     BufferAllocator::BufferAllocator(const Core::Device& device, const vk::raii::Instance& instance)
         : device(device), vmaAllocator(nullptr)
     {
@@ -125,6 +129,7 @@ namespace Beer::Rendering
 
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = memoryUsage;
+        allocInfo.flags = IMAGE_ALLOC_FLAGS;
 
         VkResult result = vmaCreateImage(vmaAllocator,
             &imageInfo,
@@ -168,6 +173,7 @@ namespace Beer::Rendering
 
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = memoryUsage;
+        allocInfo.flags = IMAGE_ALLOC_FLAGS;
 
         VkResult result = vmaCreateImage(vmaAllocator,
             &imageInfo,
