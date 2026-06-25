@@ -10,11 +10,10 @@
 namespace Beer::System
 {
     static const float MENU_HEIGHT = 0.25f;
-    static const float MENU_WIDTH = 0.8f;
+    static const float MENU_WIDTH = 0.5f;
     static const float MENU_OFFSET = 0.0f;
-    static const float SEED_BUTTON_SIZE = 0.2f;
-    static const float FLY_BUTTON_SIZE = 0.2f;
-    static const float BUTTON_PADDING = 0.05f;
+    static const glm::vec2 BUTTON_SIZE = glm::vec2(0.2f, 0.2f * 0.77f);
+    static const float BUTTON_PADDING = 0.035f;
 
     MenuBarEntity::MenuBarEntity(GalaxyMapBuffer* galaxyMapBuffer,
         Function<void> clearHistory,
@@ -35,7 +34,7 @@ namespace Beer::System
         rootTransform.Scale = glm::vec2(MENU_WIDTH, MENU_HEIGHT);
         rootTransform.Position = glm::vec2(-MENU_OFFSET, MENU_OFFSET);
 
-        backgroundTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
+        backgroundTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_MenuBackground");
         backgroundMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         backgroundMaterial->SetColor("_TintColor", glm::vec4(1));
         backgroundMaterial->SetVector("_Scale", glm::vec4(1));
@@ -67,8 +66,8 @@ namespace Beer::System
         UITransform seedTransform{};
         seedTransform.Anchor = AnchorMode::TopLeft;
         seedTransform.Pivot = AnchorMode::TopLeft;
-        seedTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
-        seedTransform.Position = glm::vec2(BUTTON_PADDING, -BUTTON_PADDING);
+        seedTransform.Scale = BUTTON_SIZE;
+        seedTransform.Position = glm::vec2(BUTTON_SIZE.x + BUTTON_PADDING, -BUTTON_PADDING * 0.77f);
 
         seedButtonEntity = std::make_unique<UISubEntity>(seedTransform);
         rootTransform.BindChild(seedButtonEntity->GetTransform());
@@ -76,8 +75,8 @@ namespace Beer::System
         UITransform backTransform{};
         backTransform.Anchor = AnchorMode::TopLeft;
         backTransform.Pivot = AnchorMode::TopLeft;
-        backTransform.Scale = glm::vec2(SEED_BUTTON_SIZE);
-        backTransform.Position = glm::vec2(SEED_BUTTON_SIZE + BUTTON_PADDING, -BUTTON_PADDING);
+        backTransform.Scale = BUTTON_SIZE;
+        backTransform.Position = glm::vec2(BUTTON_PADDING, -BUTTON_PADDING * 0.77f);
 
         backButtonTexture = std::make_shared<Rendering::Texture2D>("UI/MenuBar/Tex_Back");
         backButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");

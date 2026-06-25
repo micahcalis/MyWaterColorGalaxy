@@ -7,18 +7,18 @@
 namespace Beer::System
 {
     static const float FLY_CONTAINER_SIZE = 0.4f;
-    static const glm::vec FLY_CONTAINER_OFFSET = glm::vec2(-0.2f, 0.4f);
-    static const float FLY_BUTTON_SIZE = 0.3f;
+    static const glm::vec FLY_CONTAINER_OFFSET = glm::vec2(-0.1f, -0.45f);
+    static const float FLY_BUTTON_SIZE = 0.25f;
 
     LaunchButtonEntity::LaunchButtonEntity()
         : QuadTreeEntity(UITransform(), RenderRegister::CreateRenderComponent<QuadTreeRenderComponent>(ContextType::PaintTool))
     {
-        rootTransform.Anchor = AnchorMode::MiddleRight;
+        rootTransform.Anchor = AnchorMode::TopRight;
         rootTransform.Pivot = AnchorMode::MiddleRight;
         rootTransform.Scale = glm::vec2(FLY_CONTAINER_SIZE);
         rootTransform.Position = FLY_CONTAINER_OFFSET;
 
-        backgroundTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_SquareSprite");
+        backgroundTexture = std::make_shared<Rendering::Texture2D>("UI/LaunchButton/Tex_LaunchButtonBackground");
         backgroundMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         backgroundMaterial->SetTexture("_SpriteTex", backgroundTexture.get());
         backgroundMaterial->SetColor("_TintColor", glm::vec4(1));
@@ -33,10 +33,10 @@ namespace Beer::System
         flyButtonEntity = std::make_unique<UISubEntity>(flyButtonTransform);
         rootTransform.BindChild(flyButtonEntity->GetTransform());
 
-        flyButtonTexture = std::make_shared<Rendering::Texture2D>("UI/General/Tex_CircleSprite");
+        flyButtonTexture = std::make_shared<Rendering::Texture2D>("UI/LaunchButton/Tex_LaunchButton");
         flyButtonMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
         flyButtonMaterial->SetTexture("_SpriteTex", flyButtonTexture.get());
-        flyButtonMaterial->SetColor("_TintColor", glm::vec4(1, 0, 0, 1));
+        flyButtonMaterial->SetColor("_TintColor", glm::vec4(1));
         flyButtonMaterial->SetVector("_Scale", glm::vec4(1));
     }
 } // namespace Beer::System

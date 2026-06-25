@@ -38,7 +38,7 @@ namespace Beer::System
     static const glm::vec2 ZOOM_INDICATOR_OFFSET = glm::vec2(0.05f, 0);
 
     static const glm::vec2 HELP_BUTTON_SCALE = glm::vec2(0.075f);
-    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(0.0f, -0.05f);
+    static const glm::vec2 HELP_BUTTON_OFFSET = glm::vec2(-0.15f, -0.05f);
     static const glm::vec2 HELP_POPUP_SCALE = glm::vec2(0.7f, 0.4f);
     static const glm::vec2 HELP_POPUP_OFFSET = glm::vec2(0.0f, 0.05f);
     static const std::string HELP_TEXT = "This is your Galaxy Map! Here you can place and erase all your galaxy objects. Want to start over? Select ‘New’, which will replace your current map with a new empty map. Ready to explore your galaxy? Press ‘Fly’ to enter your generated creation!";
@@ -73,7 +73,6 @@ namespace Beer::System
         InitializeStar();
         InitializePerlinTex();
         InitializePlayerIndicator();
-        InitializeZoomIndicator();
         MarkDirty();
     }
 
@@ -199,29 +198,11 @@ namespace Beer::System
         playerIndicatorMaterial->SetColor("_TintColor", glm::vec4(1));
     }
 
-    void GalaxyMapEntity::InitializeZoomIndicator()
-    {
-        UITransform zoomTransform{};
-        zoomTransform.Anchor = AnchorMode::TopRight;
-        zoomTransform.Pivot = AnchorMode::TopLeft;
-        zoomTransform.Scale = glm::vec2(ZOOM_INDICATOR_SCALE);
-        zoomTransform.Position = ZOOM_INDICATOR_OFFSET;
-
-        zoomIndicatorEntity = std::make_unique<UISubEntity>(zoomTransform);
-        rootTransform.BindChild(zoomIndicatorEntity->GetTransform());
-
-        zoomIndicatorTexture = std::make_shared<Rendering::Texture2D>("UI/GalaxyMap/Tex_ZoomIndicator");
-        zoomIndicatorMaterial = std::make_shared<Rendering::Material>("UI/SpriteDefault");
-        zoomIndicatorMaterial->SetTexture("_SpriteTex", zoomIndicatorTexture.get());
-        zoomIndicatorMaterial->SetColor("_TintColor", glm::vec4(1));
-        zoomIndicatorMaterial->SetVector("_Scale", glm::vec4(1));
-    }
-
     void GalaxyMapEntity::InitializeHelpButton()
     {
         UITransform helpButtonTransform{};
-        helpButtonTransform.Anchor = AnchorMode::BottomMiddle;
-        helpButtonTransform.Pivot = AnchorMode::TopMiddle;
+        helpButtonTransform.Anchor = AnchorMode::TopRight;
+        helpButtonTransform.Pivot = AnchorMode::TopLeft;
         helpButtonTransform.Scale = HELP_BUTTON_SCALE;
         helpButtonTransform.Position = HELP_BUTTON_OFFSET;
         helpButtonTransform.Depth = 0.5f;
@@ -234,7 +215,7 @@ namespace Beer::System
         helpPopupTransform.Depth = 0.6f;
 
         helpButtonSubEntity = std::make_unique<HelpButtonSubEntity>(
-            zoomIndicatorEntity->GetTransform(),
+            frameEntity->GetTransform(),
             helpButtonTransform,
             HELP_TEXT,
             helpPopupTransform);

@@ -1,4 +1,5 @@
 #include "System/PaintTool/PaintToolContext.hpp"
+#include "Background/BackgroundEntity.hpp"
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
 #include "ButtonBlocker/ButtonBlockerEntity.hpp"
 #include "ColorBar/ColorBarEntity.hpp"
@@ -19,7 +20,6 @@
 #include "Rendering/RenderPasses/FullscreenTransitionPass.hpp"
 #include "Rendering/RenderPasses/RenderGlobalSettings.hpp"
 #include "Rendering/Texture/Texture2D.hpp"
-#include "System/Audio/AudioClip.hpp"
 #include "System/Base/Input/CursorMode.hpp"
 #include "System/Components/UI/UISubEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
@@ -32,9 +32,7 @@
 #include "ToolBar/MapBarEntity.hpp"
 #include "ToolBar/ToolBarEntity.hpp"
 #include "TransitionMaterialGetter.hpp"
-#include "Vendor/magic_enum/magic_enum.hpp"
 #include <memory>
-#include <print>
 #include <stdexcept>
 
 namespace Beer::System
@@ -62,6 +60,7 @@ namespace Beer::System
         InitializeBrushSizeBar();
         InitializeHoloCursor();
         InitializeModeButton();
+        InitializeBackground();
 
         TryOpenMap();
 
@@ -134,6 +133,11 @@ namespace Beer::System
         if (buttonBlockerEntity != nullptr)
         {
             buttonBlockerEntity->Update();
+        }
+
+        if (backgroundEntity != nullptr)
+        {
+            backgroundEntity->Update();
         }
     }
 
@@ -441,6 +445,11 @@ namespace Beer::System
         buttonBlockerEntity = registry.CreateEntity<ButtonBlockerEntity>(ContextType::PaintTool);
         buttonBlockerEntity->InitializeBlocker();
         buttonBlockerEntity->SetTreeEnabled(false);
+    }
+
+    void PaintToolContext::InitializeBackground()
+    {
+        backgroundEntity = registry.CreateEntity<BackgroundEntity>();
     }
 
     void PaintToolContext::TryOpenMap()

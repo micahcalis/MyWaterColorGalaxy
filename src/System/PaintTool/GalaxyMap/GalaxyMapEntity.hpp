@@ -37,10 +37,6 @@ namespace Beer::System
         std::shared_ptr<Rendering::Material> playerIndicatorMaterial = nullptr;
         std::unique_ptr<UISubEntity> playerIndicatorEntity = nullptr;
 
-        std::shared_ptr<Rendering::Texture2D> zoomIndicatorTexture = nullptr;
-        std::shared_ptr<Rendering::Material> zoomIndicatorMaterial = nullptr;
-        std::unique_ptr<UISubEntity> zoomIndicatorEntity = nullptr;
-
         std::unique_ptr<HelpButtonSubEntity> helpButtonSubEntity = nullptr;
 
         Function<MouseInput> getMouseInput = nullptr;
@@ -81,7 +77,6 @@ namespace Beer::System
             renderItems.push_back(UIRenderItem(&rootTransform, galaxyMaterial.get()));
             renderItems.push_back(UIRenderItem(frameEntity->GetTransform(), frameMaterial.get()));
             renderItems.push_back(UIRenderItem(playerIndicatorEntity->GetTransform(), playerIndicatorMaterial.get()));
-            renderItems.push_back(UIRenderItem(zoomIndicatorEntity->GetTransform(), zoomIndicatorMaterial.get()));
 
             if (starEntity != nullptr)
             {
@@ -104,7 +99,6 @@ namespace Beer::System
         void InitializeStar();
         void InitializePerlinTex();
         void InitializePlayerIndicator();
-        void InitializeZoomIndicator();
         void InitializeHelpButton();
         void UpdateStarPosition(glm::vec2 position);
     };

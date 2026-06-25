@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Background/BackgroundEntity.hpp"
 #include "BrushSizeBar/BrushSizeBarEntity.hpp"
 #include "ButtonBlocker/ButtonBlockerEntity.hpp"
 #include "HologramCursor/HologramCursorEntity.hpp"
@@ -44,6 +45,7 @@ namespace Beer::System
         HologramCursorEntity* hologramCursorEntity = nullptr;
         ModeButtonEntity* modeButtonEntity = nullptr;
         ButtonBlockerEntity* buttonBlockerEntity = nullptr;
+        BackgroundEntity* backgroundEntity = nullptr;
 
         std::unique_ptr<PaintSimSubPipeline> paintSimSubPipeline = nullptr;
         Rendering::DrawUIPass* drawUIPass = nullptr;
@@ -86,6 +88,7 @@ namespace Beer::System
         void InitializeHoloCursor();
         void InitializeModeButton();
         void InitializeButtonBlocker();
+        void InitializeBackground();
         void TryOpenMap();
         SerializablePaintTool SerializePaintTool() const;
     };
