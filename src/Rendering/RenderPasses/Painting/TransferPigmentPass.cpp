@@ -6,6 +6,8 @@
 
 namespace Beer::Rendering
 {
+    static const float CANVAS_SCALE = 0.5f;
+
     TransferPigmentPass::TransferPigmentPass(WaterColorSimBuffers* simulationBuffers)
         : simulationBuffers(simulationBuffers), IRenderPass("TransferPigmentPass", static_cast<uint32_t>(RenderPassEvent::WATER_COL_SIM) + 5)
     {
@@ -20,6 +22,7 @@ namespace Beer::Rendering
         simulationBuffers->SimulationContext->SetTexture("_DepositedPigment", simulationBuffers->DepositedPigment);
         simulationBuffers->SimulationContext->SetFloat("_TransferSpeed", 1.5f);
         simulationBuffers->SimulationContext->SetVector("_PaintResolution", glm::vec4((float)SIMULATION_RES_X, (float)SIMULATION_RES_Y, 0, 0));
+        simulationBuffers->SimulationContext->SetFloat("_CanvasScale", CANVAS_SCALE);
         simulationBuffers->SimulationContext->Update();
 
         simulationBuffers->debugMaterial->SetTexture("_DebugArrayTex", simulationBuffers->DepositedPigment);

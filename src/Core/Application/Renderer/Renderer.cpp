@@ -45,11 +45,13 @@ namespace Beer::Core
 {
     const std::vector<char const*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
-#ifdef NDEBUG
-    constexpr bool ENABLE_VALIDATION_LAYERS = false;
-#else
+    // #ifdef NDEBUG
+    //     constexpr bool ENABLE_VALIDATION_LAYERS = false;
+    // #else
+    //     constexpr bool ENABLE_VALIDATION_LAYERS = true;
+    // #endif
+
     constexpr bool ENABLE_VALIDATION_LAYERS = true;
-#endif
 
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 

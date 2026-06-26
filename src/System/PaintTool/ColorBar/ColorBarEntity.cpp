@@ -24,10 +24,10 @@ namespace Beer::System
 
     static const std::array<glm::vec4, PLANET_LAYERS_COUNT>
         PLANET_COLORS = {
-            glm::vec4(0.8f, 0.2f, 0.1f, 1),
-            glm::vec4(0.6f, 0.1f, 0.6f, 1),
-            glm::vec4(0.2f, 0.7f, 0.7f, 1),
-            glm::vec4(0.3f, 0.4f, 0.8f, 1)};
+            glm::vec4(0.84f, 0.65f, 0.02f, 1),
+            glm::vec4(0.22f, 0.22f, 0.76f, 1),
+            glm::vec4(0.62f, 0.14f, 0.45f, 1),
+            glm::vec4(0.73f, 0.37f, 0.65f, 1)};
 
     static const std::array<glm::vec4, PLANET_LAYERS_COUNT> GALAXY_COLORS = {
         glm::vec4(0.3f, 0.8f, 0.3f, 1),

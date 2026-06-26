@@ -28,6 +28,7 @@ cbuffer ComputeData
     float4 _CanvasColor;
     float _SuspendedOpacity;
     float _EvaporationRate;
+    float _CanvasScale;
 }
 
 BIND_MATERIAL_TEX(1) Sampler2D _CanvasSource;
@@ -271,7 +272,7 @@ public struct CanvasHeightReader : Painting.IHeightReader
 
     public float Read()
     {
-        return _CanvasSource.SampleLevel(uv, 0.0f).r;
+        return _CanvasSource.SampleLevel(uv * _CanvasScale, 0.0f).r;
     }
 }
 

@@ -62,5 +62,8 @@ namespace Beer::System
                 cursor->Brush,
                 cursor->Size * mapTransform->Scale.x * zoomer->Zoom};
         };
+
+    private:
+        void SetPlayerTransformPosition(glm::vec3 serializedPosition);
     };
 } // namespace Beer::System

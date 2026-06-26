@@ -7,6 +7,7 @@
 #include "System/Components/UI/UITransform.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyBrushType.hpp"
 #include "System/PaintTool/GalaxyMap/GalaxyMapCursor.hpp"
+#include "System/Serialization/SerializableGalaxy.hpp"
 #include <memory>
 #include <print>
 
@@ -21,6 +22,8 @@ namespace Beer::System
         , getMouseInput(getMouseInput)
         , playerIndicatorTransform(playerIndicatorTransform)
     {
+        SerializableExplorer dummyExplorer{};
+        SetPlayerTransformPosition(dummyExplorer.PlayerPosition);
     }
 
     void GalaxyMapManager::InitializeCursor(Function<glm::vec4, ColorBarLevel> getColor,
@@ -96,6 +99,11 @@ namespace Beer::System
         zoomer->Zoom = serializedData.ToolHistory.ZoomScale;
         zoomer->Panning = serializedData.ToolHistory.ZoomPanning;
 
-        playerIndicatorTransform->Position = glm::vec2(serializedData.ExplorerHistory.PlayerPosition.x, serializedData.ExplorerHistory.PlayerPosition.z) * mapTransform->Scale;
+        SetPlayerTransformPosition(serializedData.ExplorerHistory.PlayerPosition);
+    }
+
+    void GalaxyMapManager::SetPlayerTransformPosition(glm::vec3 serializedPosition)
+    {
+        playerIndicatorTransform->Position = glm::vec2(serializedPosition.x, serializedPosition.z) * mapTransform->Scale;
     }
 } // namespace Beer::System
