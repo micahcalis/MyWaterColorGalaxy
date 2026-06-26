@@ -61,7 +61,8 @@ namespace Blur
 
                 float depthSample = depthSampler.SampleLinear(offset * (float)i);
                 
-                float depthWeight = smoothstep(0, depthThreshold, abs(baseDepth - depthSample));
+                float safeThreshold = max(depthThreshold, 0.0001);
+                float depthWeight = smoothstep(0, safeThreshold, abs(baseDepth - depthSample));
 
                 float weight = gaussWeight * depthWeight;
 
@@ -69,7 +70,7 @@ namespace Blur
                 weightSum += weight;
             }
 
-            return colorSum / weightSum;    
+            return colorSum / max(weightSum, 0.0001);   
         }
     }
 }

@@ -91,5 +91,10 @@ FRAG float4 EdgeBlurFrag(VertexData input) : SV_Target
     float4 blurredColor = blurrer.GetBlurredColor();
     float4 baseSample = colorSampler.Sample(0);
 
+    if (any(isnan(blurredColor.ba)))
+    {
+        blurredColor.ba = baseSample.ba;
+    }
+
     return float4(baseSample.rg, blurredColor.ba);
 }
