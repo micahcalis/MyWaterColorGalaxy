@@ -32,8 +32,8 @@ namespace Painting
     #define FLOW_DIR_COUNT 4
     static const int2[FLOW_DIR_COUNT] FLOW_DIRS = int2[FLOW_DIR_COUNT](LEFT, RIGHT, UP, DOWN);
 
-    static const float GRAVITY = 9.81f;
-    static const float MAX_FLUX_ACCEL = 5.0f;
+    static const float GRAVITY = 100.0f;
+    static const float MAX_FLUX_ACCEL = 50.0f;
     static const float FLUX_DAMPING = 0.98f;
 
     public struct FluxUpdater<TVolumeReader : IVolumeReader>
@@ -70,7 +70,7 @@ namespace Painting
         private float CalculateAcceleration(float currentVolume, float compareVolume)
         {
             float pressureDelta = currentVolume - compareVolume;
-            float acceleration = pressureDelta * _DeltaTime * GRAVITY;
+            float acceleration = pressureDelta * _DeltaTime * _DeltaTime * GRAVITY;
 
             return clamp(acceleration, -MAX_FLUX_ACCEL, MAX_FLUX_ACCEL);
         }
@@ -78,10 +78,10 @@ namespace Painting
         private float ApplyAcceleration(float oldVal, float acceleration)
         {
             float newVal = oldVal + acceleration;
-            newVal *= FLUX_DAMPING;
+            newVal *= pow(FLUX_DAMPING, _DeltaTime * 60.0f); 
             return max(newVal, 0.0f);
         }
-    }
+    }   
 
     public interface IFluxResolver<TOutput, TFlow>
     {

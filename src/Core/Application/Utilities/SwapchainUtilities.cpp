@@ -20,7 +20,7 @@ namespace Beer::Core
 
     vk::PresentModeKHR SwapchainUtilities::ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes)
     {
-        return vk::PresentModeKHR::eMailbox;
+        return vk::PresentModeKHR::eFifo;
     }
 
     vk::Extent2D SwapchainUtilities::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities,

@@ -13,8 +13,6 @@
 
 namespace Beer::Core
 {
-    constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
     void Application::Run()
     {
         windowManager.InitializeWindow();
