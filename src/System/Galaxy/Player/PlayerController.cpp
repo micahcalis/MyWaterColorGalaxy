@@ -26,8 +26,8 @@ namespace Beer::System
         float horizontalInput = -input.MouseVec.x;
         float verticalInput = -input.MouseVec.y;
 
-        float pitchAngle = -verticalInput * PLAYER_SETTINGS.TurnSpeed * Clock::DeltaTime();
-        float rollAngle = -horizontalInput * PLAYER_SETTINGS.RollSpeed * Clock::DeltaTime();
+        float pitchAngle = -verticalInput * PLAYER_SETTINGS.TurnSpeed;  // * Clock::DeltaTime();
+        float rollAngle = -horizontalInput * PLAYER_SETTINGS.RollSpeed; // * Clock::DeltaTime();
 
         glm::quat pitchQuat = glm::angleAxis(pitchAngle, glm::vec3(1.0f, 0.0f, 0.0f));
         glm::quat rollQuat = glm::angleAxis(rollAngle, glm::vec3(0.0f, 0.0f, 1.0f));

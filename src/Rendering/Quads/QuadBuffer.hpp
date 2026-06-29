@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Rendering/Buffer/Buffer.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "System/Components/UI/UITransform.hpp"
+#include "vulkan/vulkan.hpp"
 #include <memory>
 
 namespace Beer::Rendering
@@ -9,9 +11,9 @@ namespace Beer::Rendering
     class QuadBuffer
     {
     private:
-        std::shared_ptr<Buffer> posBuffer;
-        std::shared_ptr<Buffer> uvBuffer;
-        std::shared_ptr<Buffer> indexBuffer;
+        std::vector<std::shared_ptr<Buffer>> posBuffers;
+        std::vector<std::shared_ptr<Buffer>> uvBuffers;
+        std::vector<std::shared_ptr<Buffer>> indexBuffers;
         uint32_t vertexCount;
         uint32_t indexCount;
 
@@ -22,9 +24,9 @@ namespace Beer::Rendering
     public:
         QuadBuffer();
 
-        [[nodiscard]] Buffer* GetPosBuffer() const { return posBuffer.get(); }
-        [[nodiscard]] Buffer* GetUVBuffer() const { return uvBuffer.get(); }
-        [[nodiscard]] Buffer* GetIndexBuffer() const { return indexBuffer.get(); }
+        [[nodiscard]] Buffer* GetPosBuffer() const { return posBuffers[UniformDescriptor::GetFrameIndex()].get(); }
+        [[nodiscard]] Buffer* GetUVBuffer() const { return uvBuffers[UniformDescriptor::GetFrameIndex()].get(); }
+        [[nodiscard]] Buffer* GetIndexBuffer() const { return indexBuffers[UniformDescriptor::GetFrameIndex()].get(); }
 
         uint32_t AddQuad(const System::PixelRect& rect);
         void Flush();

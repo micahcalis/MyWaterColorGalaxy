@@ -1,5 +1,6 @@
 #include "Rendering/Quads/QuadBuffer.hpp"
 #include "QuadBuffer.hpp"
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "System/Components/UI/UITransform.hpp"
 #include "glm/glm.hpp"
 #include <array>
@@ -23,17 +24,20 @@ namespace Beer::Rendering
 
     QuadBuffer::QuadBuffer()
     {
-        posBuffer = std::make_shared<Buffer>(Buffer::CreateDynamic(
-            MAX_QUADS * QUAD_VERTICES * sizeof(glm::vec2),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+        for (int i = 0; i < UniformDescriptor::GetFramesInFlight(); i++)
+        {
+            posBuffers.push_back(std::make_shared<Buffer>(Buffer::CreateDynamic(
+                MAX_QUADS * QUAD_VERTICES * sizeof(glm::vec2),
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)));
 
-        uvBuffer = std::make_shared<Buffer>(Buffer::CreateDynamic(
-            MAX_QUADS * QUAD_VERTICES * sizeof(glm::vec2),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+            uvBuffers.push_back(std::make_shared<Buffer>(Buffer::CreateDynamic(
+                MAX_QUADS * QUAD_VERTICES * sizeof(glm::vec2),
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)));
 
-        indexBuffer = std::make_shared<Buffer>(Buffer::CreateDynamic(
-            MAX_QUADS * QUAD_INDICES * sizeof(uint32_t),
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+            indexBuffers.push_back(std::make_shared<Buffer>(Buffer::CreateDynamic(
+                MAX_QUADS * QUAD_INDICES * sizeof(uint32_t),
+                VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)));
+        }
 
         vertexCount = 0;
         indexCount = 0;
@@ -61,9 +65,14 @@ namespace Beer::Rendering
         if (vertexCount == 0)
             return;
 
-        posBuffer->Upload(cpuPositions.data(), cpuPositions.size() * sizeof(glm::vec2));
-        uvBuffer->Upload(cpuUVs.data(), cpuUVs.size() * sizeof(glm::vec2));
-        indexBuffer->Upload(cpuIndices.data(), cpuIndices.size() * sizeof(uint32_t));
+        uint32_t frameIndex = UniformDescriptor::GetFrameIndex();
+
+        for (int i = 0; i < UniformDescriptor::GetFramesInFlight(); i++)
+        {
+            posBuffers[i]->Upload(cpuPositions.data(), cpuPositions.size() * sizeof(glm::vec2));
+            uvBuffers[i]->Upload(cpuUVs.data(), cpuUVs.size() * sizeof(glm::vec2));
+            indexBuffers[i]->Upload(cpuIndices.data(), cpuIndices.size() * sizeof(uint32_t));
+        }
     }
 
     void QuadBuffer::Clear()

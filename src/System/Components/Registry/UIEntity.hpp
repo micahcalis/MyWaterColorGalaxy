@@ -1,4 +1,5 @@
 #pragma once
+#include "Rendering/Uniforms/UniformDescriptor.hpp"
 #include "System/Components/Registry/IEntity.hpp"
 #include "System/Components/UI/UITransform.hpp"
 
@@ -8,7 +9,7 @@ namespace Beer::System
     {
     protected:
         UITransform rootTransform;
-        bool isDirty = false;
+        uint32_t dirtyFramesCountBuffer = 0;
         uint32_t screenVersion = 0;
 
     public:
@@ -17,7 +18,7 @@ namespace Beer::System
 
         void MarkDirty()
         {
-            isDirty = true;
+            dirtyFramesCountBuffer = Rendering::UniformDescriptor::GetFramesInFlight();
         }
 
     protected:
@@ -36,7 +37,15 @@ namespace Beer::System
 
         bool NeedsUpdate() const
         {
+            bool isDirty = dirtyFramesCountBuffer > 0;
             return isDirty || screenVersion != Core::Screen::Version();
+        }
+
+        virtual void UpdateDirty()
+        {
+            rootTransform.HierarchalUpdate();
+            dirtyFramesCountBuffer--;
+            screenVersion = Core::Screen::Version();
         }
     };
 } // namespace Beer::System

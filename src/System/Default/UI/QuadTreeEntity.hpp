@@ -26,10 +26,7 @@ namespace Beer::System
         {
             if (NeedsUpdate())
             {
-                rootTransform.HierarchalUpdate();
-                GetTreeRenderComp()->UpdateQuadDraw();
-                isDirty = false;
-                screenVersion = Core::Screen::Version();
+                UpdateDirty();
             }
         }
 
@@ -47,5 +44,11 @@ namespace Beer::System
         }
 
         virtual std::vector<UIRenderItem> GetRenderItems() = 0;
+
+        void UpdateDirty() override
+        {
+            UIEntity::UpdateDirty();
+            GetTreeRenderComp()->UpdateQuadDraw();
+        }
     };
 } // namespace Beer::System

@@ -10,6 +10,7 @@
 #include "System/PaintTool/GalaxyMap/GalaxySeed.hpp"
 #include "System/Serialization/SerializableGalaxy.hpp"
 #include <cstdint>
+#include <print>
 #include <unordered_map>
 #include <utility>
 
@@ -94,6 +95,18 @@ namespace Beer::System
         GalaxyComponentHitInfo CollisionCheck(const PixelRect& rect);
         std::vector<UIRenderItem> GetRenderItems() const;
         void SetColorByLevel(glm::vec4 newColor, ColorBarLevel level);
+
+        void PrintComponents()
+        {
+            for (auto& comp : componentMap)
+            {
+                std::println("id: {}", comp.first);
+                std::println("UI Pixel Rect TL: {}, {}", comp.second.Entity->GetTransform()->Rect.TopLeft.x, comp.second.Entity->GetTransform()->Rect.TopLeft.y);
+                std::println("UI Pixel Rect TR: {}, {}", comp.second.Entity->GetTransform()->Rect.TopRight.x, comp.second.Entity->GetTransform()->Rect.TopRight.y);
+                std::println("UI Pixel Rect BL: {}, {}", comp.second.Entity->GetTransform()->Rect.BotLeft.x, comp.second.Entity->GetTransform()->Rect.BotLeft.y);
+                std::println("UI Pixel Rect BR: {}, {}", comp.second.Entity->GetTransform()->Rect.BotRight.x, comp.second.Entity->GetTransform()->Rect.BotRight.y);
+            }
+        }
 
     private:
         void UpdateMaterials()

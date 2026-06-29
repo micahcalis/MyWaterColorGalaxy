@@ -51,10 +51,8 @@ namespace Beer::System
 
             if (NeedsUpdate())
             {
-                rootTransform.HierarchalUpdate();
-                GetTreeRenderComp()->UpdateQuadDraw();
-                isDirty = false;
-                screenVersion = Core::Screen::Version();
+                UpdateDirty();
+                //  galaxyMapBuffer->PrintComponents();
                 Rendering::Shader::Globals()->SetGalaxyMapRect(rootTransform.Rect);
             }
         }
